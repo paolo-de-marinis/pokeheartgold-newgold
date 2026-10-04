@@ -18,6 +18,7 @@ import unittest
 from pathlib import Path
 
 from test_level_cap import ROOT, function
+from test_machines import machine_code
 
 # (badges, price, TMs) for each step.
 STEPS = [
@@ -122,6 +123,88 @@ class TMShopTests(unittest.TestCase):
             self.assertEqual(sold, wanted, f"{badges} badges")
         self.assertEqual(len(celadon), 12)
         self.assertNotIn(ids["ITEM_TM094"], celadon)
+
+
+ONE = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32; typedef int16_t s16; typedef int32_t s32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#define NULL ((void *)0)
+#include "constants/items.h"
+enum { MART_TYPE_NORMAL, MART_TYPE_1, MART_TYPE_SEAL, MART_TYPE_3, MART_TYPE_4 };
+enum { TASK_MART_START, TASK_MART_1, TASK_MART_2, TASK_MART_3, TASK_MART_4, TASK_MART_5, TASK_MART_6, TASK_MART_7,
+       TASK_MART_8, TASK_MART_9, TASK_MART_10, TASK_MART_11, TASK_MART_12, TASK_MART_13, TASK_MART_14 };
+#define HEAP_ID_FIELD2 11
+typedef struct { void *sprites[19]; u16 spriteDrawn[2]; void *inventory; void *pokeathlonSave; void *apricornBox;
+                 u8 unk271; u8 martType; u16 item; s16 quantity; u16 unk288; int cost; int unk290; u32 unk298; } MartData;
+static u16 sHeld, sMoney = 2000;
+static int sQuantityScreen;
+#include <stddef.h>
+#define NELEMS(a) (sizeof(a) / sizeof(*(a)))
+@MACHINES@
+static u16 Bag_GetQuantity(void *bag, u16 item, int heap) { return item == sHeld; }
+static BOOL Bag_HasSpaceForItem(void *bag, u16 item, u16 quantity, int heap) { return !(ItemIsTM(item) && item == sHeld); }
+static int SealCase_CheckSealQuantity(void *c, u16 item, s16 q) { return 0; }
+static int ApricornBox_CountApricorn(void *box, int which) { return 0; }
+static BOOL PokeathlonSave_GetUnkB7C_AtIndex(void *s, int i) { return FALSE; }
+static BOOL PokeathlonSave_GetUnkB78_AtIndex(void *s, int i) { return FALSE; }
+static BOOL Sprite_GetDrawFlag(void *s) { return TRUE; }
+static void Sprite_SetDrawFlag(void *s, BOOL on) { }
+static void ov03_022586BC(MartData *data, int flag) { }
+static void ov03_022582C0(MartData *data, int which) { sQuantityScreen = which == 1; }
+static u32 ov03_02258120(MartData *data, u16 item) { return item == ITEM_POTION ? 300 : 1500; }
+static u32 ov03_022577F4(MartData *data, u32 martType) { return sMoney; }
+@NATIVE@
+static u8 pick(u16 item) {
+    static MartData data;
+    data.martType = MART_TYPE_NORMAL;
+    data.unk298 = 0;
+    sQuantityScreen = 0;
+    u8 state = ov03_02257874(&data, item);
+    printf("%u %u %u %d %d %d\n", item, state, data.unk298, data.quantity, sQuantityScreen, ov03_02257814(&data, sMoney));
+    return state;
+}
+int main(void) {
+    pick(ITEM_TM094);                  // not in the bag: straight to its price, one
+    sHeld = ITEM_TM094; pick(ITEM_TM094);  // in the bag: "You already have this!"
+    sHeld = 0; pick(ITEM_POTION);      // anything else: how many
+    sMoney = 1000; pick(ITEM_TM094);   // too dear
+    return 0;
+}
+"""
+
+
+class OneTMAtATimeTests(unittest.TestCase):
+    def test_a_tm_is_sold_once(self):
+        source = (ROOT / "src/overlay_03/shop_menu.c").read_text()
+        native = "\n".join(function(source, name) for name in
+                           ("Mart_SellsOneAtATime", "ov03_02257814", "ov03_02257CA0", "ov03_02257874"))
+        with tempfile.TemporaryDirectory(prefix="newgold-tm-once-") as temp:
+            c, exe = Path(temp) / "check.c", Path(temp) / "check"
+            machines = machine_code((ROOT / "src/item.c").read_text())
+            c.write_text(ONE.replace("@NATIVE@", native).replace("@MACHINES@", machines))
+            build = subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
+                                   ["-std=c11", "-O1", "-g", "-w", "-fsanitize=address,undefined",
+                                    "-iquote", str(ROOT / "include"), str(c), "-o", str(exe)],
+                                   capture_output=True, text=True)
+            self.assertEqual(build.returncode, 0, build.stderr)
+            run = subprocess.run([str(exe)], capture_output=True, text=True,
+                                 env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
+            self.assertEqual(run.returncode, 0, run.stderr)
+        ids = {name: int(value) for name, value in
+               re.findall(r"#define (ITEM_\w+)\s+(\d+)\b", (ROOT / "include/constants/items.h").read_text())}
+        # item, the state it goes to, the message (unk298), the quantity, the
+        # quantity screen, and ov03_02257814: 3 is "You already have this!"
+        self.assertEqual([[int(n) for n in line.split()] for line in run.stdout.splitlines()], [
+            [ids["ITEM_TM094"], 10, 3, 1, 0, 0],    # TASK_MART_10, "That'll be $1500", one
+            [ids["ITEM_TM094"], 14, 10, 1, 0, 3],   # TASK_MART_14, refused
+            [ids["ITEM_POTION"], 5, 2, 1, 1, 0],    # TASK_MART_5, "How many?"
+            [ids["ITEM_TM094"], 14, 10, 1, 0, 1],   # too dear: "You don't have enough money."
+        ])
 
 
 if __name__ == "__main__":
