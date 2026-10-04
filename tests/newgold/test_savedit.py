@@ -230,9 +230,13 @@ class SaveditLibraryTests(unittest.TestCase):
         page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
         label = page[page.index("<dt>Formato</dt>"):]
         label = label[:label.index("</dd>")]
-        self.assertIn("[i.layout_name]", label)
+        self.assertIn("LAYOUTS[i.layout_name]", label)
         self.assertNotIn("[i.layout]", label)
-        self.assertLessEqual(set(re.findall(r"\b(SAVE_LAYOUT_\w+):", label)), set(names) - {"SAVE_LAYOUT_NOW"})
+        self.assertIn("LAYOUTS[h.layout_name]", page)
+        labels = page[page.index("const LAYOUTS = {"):]
+        labels = labels[:labels.index("};")]
+        self.assertLessEqual(set(re.findall(r"\b(SAVE_LAYOUT_\w+):", labels)), set(names) - {"SAVE_LAYOUT_NOW"})
+        self.assertEqual(len(re.findall(r"\b(SAVE_LAYOUT_\w+):", labels)), len(names) - 1)
 
     def test_every_berry_slot_of_now_is_written_and_read(self):
         """The layout of now's Berries pocket holds every Berry, NUM_BAG_BERRIES
@@ -983,6 +987,29 @@ class SaveditLibraryTests(unittest.TestCase):
         again = sv.Save(path)
         self.assertEqual(again.layout, sv.LAYOUT_BEFORE_DEX_FORMS, "an edit keeps the layout the game will convert")
         self.assertEqual(sv.profile(again)["money"], 4242)
+
+    def test_the_half_before_a_conversion_reads_in_its_own_layout(self):
+        """The game converts an older save and saves it into the other
+        half: the flash then holds one half of each layout. Each half is
+        named valid in the layout it reads in, with its own counter, as the
+        game would fall back to it; before, the older one read as invalid."""
+        older, now = sv.blocks(layout=sv.LAYOUT_BEFORE_DEX_FORMS), sv.blocks()
+        before = bytearray(save_budget.REGION)
+        seal_footers(before, older, 1, sv.CHUNK_MAGIC_NOW)
+        raw = sv.build_save(before)
+        after = bytearray(save_budget.REGION)
+        seal_footers(after, now, 2)
+        raw[sv.HALF:sv.HALF + len(after)] = after
+        path = Path(self.tmp.name) / "converted.sav"
+        path.write_bytes(bytes(raw))
+        save = sv.Save(path)
+        self.assertEqual((save.layout, save.half), (sv.LAYOUT_NOW, sv.HALF))
+        self.assertEqual(sv.info(save)["halves"], [
+            {"at": 0, "valid": True, "counter": 1, "layout_name": "SAVE_LAYOUT_BEFORE_DEX_FORMS"},
+            {"at": sv.HALF, "valid": True, "counter": 2, "layout_name": "SAVE_LAYOUT_NOW"}])
+        raw[:sv.HALF] = bytes(sv.HALF)
+        path.write_bytes(bytes(raw))
+        self.assertEqual(sv.info(sv.Save(path))["halves"][0], {"at": 0, "valid": False, "counter": None, "layout_name": None})
 
     def test_flags_vars_and_position(self):
         save = self.open()

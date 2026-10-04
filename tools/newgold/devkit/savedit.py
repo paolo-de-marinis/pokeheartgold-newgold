@@ -896,24 +896,28 @@ class Save:
         self.region = bytearray(self.raw[self.half:self.half + HALF])
         self.opened = bytes(self.region)
 
-    def counter(self, half=None):
-        """The save counter SaveSlot_BuildFooter wrote into this half."""
-        return self._footer(self.half if half is None else half, self.specs[0])["count"]
+    def counter(self, half=None, layout=None):
+        """The save counter SaveSlot_BuildFooter wrote into this half (read
+        where `layout` puts the footer, by default this save's)."""
+        specs = self.specs if layout is None else slot_specs(blocks(self.build, layout))
+        return self._footer(self.half if half is None else half, specs[0])["count"]
 
     def _footer(self, half, spec):
         at = half + spec["offset"] + spec["size"] - CHUNK_FOOTER
         count, size, magic, slot, crc = struct.unpack("<IIIHH", self.raw[at:at + CHUNK_FOOTER])
         return {"count": count, "size": size, "magic": magic, "slot": slot, "crc": crc}
 
-    def magic(self):
-        """The footer magic of this save's layout."""
-        return CHUNK_MAGIC_NOW if self.layout <= LAYOUT_BEFORE_DEX_FORMS else CHUNK_MAGIC
+    def magic(self, layout=None):
+        """The footer magic of this save's layout, or of `layout`."""
+        return CHUNK_MAGIC_NOW if (self.layout if layout is None else layout) <= LAYOUT_BEFORE_DEX_FORMS else CHUNK_MAGIC
 
-    def valid(self, half):
-        """A half is good when every slot's footer says what it should."""
-        for spec in self.specs:
+    def valid(self, half, layout=None):
+        """A half is good when every slot's footer says what it should: in
+        this save's layout, or in `layout`."""
+        specs = self.specs if layout is None else slot_specs(blocks(self.build, layout))
+        for spec in specs:
             f = self._footer(half, spec)
-            if f["magic"] != self.magic() or f["size"] != spec["size"] or f["slot"] != spec["slot"]:
+            if f["magic"] != self.magic(layout) or f["size"] != spec["size"] or f["slot"] != spec["slot"]:
                 return False
             body = self.raw[half + spec["offset"]:half + spec["offset"] + spec["size"] - CHUNK_FOOTER]
             if crc16(body) != f["crc"]:
@@ -4126,10 +4130,21 @@ def layout_names():
     return names[:names.index("SAVE_LAYOUT_COUNT")]
 
 
+def half_info(save, half):
+    """A half of the flash, in the layout it reads in, newest first as the
+    game tries them (Save_GetSaveFilesStatus): once the game has converted a
+    save and saved it, the other half still holds the save before, in the
+    older layout, and the game falls back to it as it is."""
+    for layout in range(LAYOUT_COUNT):
+        if save.valid(half, layout):
+            return {"at": half, "valid": True, "counter": save.counter(half, layout), "layout_name": layout_names()[layout]}
+    return {"at": half, "valid": False, "counter": None, "layout_name": None}
+
+
 def info(save):
     return {"half": save.half, "counter": save.counter(), "legacy": save.legacy, "layout": save.layout,
             "layout_name": layout_names()[save.layout],
-            "halves": [{"at": h, "valid": save.valid(h), "counter": save.counter(h)} for h in (0, HALF)],
+            "halves": [half_info(save, h) for h in (0, HALF)],
             "blocks": [{k: b[k] for k in ("index", "id", "offset", "size", "slot")} for b in save.table],
             "slots": save.specs,
             "pockets": {p["name"]: p["slots"] for p in pockets(save.layout)}}   # in the save's own layout

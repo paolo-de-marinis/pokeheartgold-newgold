@@ -1961,16 +1961,18 @@ function renderFlags() {
 }
 
 // ---- Info ------------------------------------------------------------------
+// The older layouts savedit.info() names, by their constant (enum SaveLayout).
+const LAYOUTS = {SAVE_LAYOUT_BEFORE_DEX_FORMS: "quello di prima che il Pokédex registrasse le forme", SAVE_LAYOUT_BEFORE_BERRY_POCKET: "quello di prima che la tasca Bacche le tenesse tutte", SAVE_LAYOUT_BEFORE_DNA_SPLICERS: "quello di prima dei DNA Splicers"};
 function renderInfo() {
   const i = S.save.info, hx = n => "0x" + n.toString(16).padStart(6, "0");
   $("#tab").innerHTML = `<dl class="kv" style="font-size:14px">
       <dt>File</dt><dd class="mono">${esc(S.save.path)}</dd>
       <dt>Metà più recente</dt><dd>${hx(i.half)} · salvataggio n. ${i.counter}</dd>
-      ${i.legacy ? `<dt>Formato</dt><dd>${{SAVE_LAYOUT_BEFORE_DEX_FORMS: "quello di prima che il Pokédex registrasse le forme", SAVE_LAYOUT_BEFORE_BERRY_POCKET: "quello di prima che la tasca Bacche le tenesse tutte", SAVE_LAYOUT_BEFORE_DNA_SPLICERS: "quello di prima dei DNA Splicers"}[i.layout_name] || i.layout_name}: il gioco lo converte da solo quando lo carica, e le modifiche fatte qui lo lasciano com'è</dd>` : ""}
+      ${i.legacy ? `<dt>Formato</dt><dd>${LAYOUTS[i.layout_name] || i.layout_name}: il gioco lo converte da solo quando lo carica, e le modifiche fatte qui lo lasciano com'è</dd>` : ""}
     </dl>
     <div class="box"><h3>Le due metà della flash</h3><div class="scroll"><table><tr><th>Inizio</th><th>Valida</th><th class="num">Contatore</th></tr>
-      ${i.halves.map(h => `<tr><td class="mono">${hx(h.at)}</td><td>${h.valid ? "sì" : `<span class="invalid">no</span>`}</td><td class="num">${h.valid ? h.counter : "—"}</td></tr>`).join("")}</table></div>
-      <p class="note">Il gioco carica la metà valida col contatore più alto e salva nell'altra. Le modifiche fatte qui riscrivono solo la metà più recente: l'altra resta il salvataggio precedente.</p></div>
+      ${i.halves.map(h => `<tr><td class="mono">${hx(h.at)}</td><td>${!h.valid ? `<span class="invalid">no</span>` : h.layout_name === i.layout_name ? "sì" : `sì, nel formato precedente (${esc(LAYOUTS[h.layout_name] || h.layout_name)})`}</td><td class="num">${h.valid ? h.counter : "—"}</td></tr>`).join("")}</table></div>
+      <p class="note">Il gioco carica la metà valida col contatore più alto e salva nell'altra. Le modifiche fatte qui riscrivono solo la metà più recente: l'altra resta il salvataggio precedente, anche nel formato precedente quando il gioco ha appena convertito il salvataggio.</p></div>
     <div class="box"><h3>Blocchi</h3><div class="scroll"><table><tr><th>#</th><th>Blocco</th><th>Offset</th><th class="num">Byte</th><th>Slot</th></tr>
       ${i.blocks.map(b => `<tr><td class="muted">${b.index}</td><td class="mono">${esc(b.id)}</td><td class="mono">${hx(b.offset)}</td><td class="num">${b.size}</td><td>${esc(b.slot)}</td></tr>`).join("")}</table></div></div>`;
 }
