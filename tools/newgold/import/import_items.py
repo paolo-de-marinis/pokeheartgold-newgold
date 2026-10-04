@@ -528,11 +528,16 @@ PRICE = ("price", "price_high")
 RETAIL = "43b084839"
 
 
-def heartgold_priced():
-    """The items HeartGold has, by this tree's name: their price is retail's."""
+def priced_here():
+    """The items whose price is not the reference's, by this tree's name:
+    those HeartGold has, at retail's price, and TM93 to TM148, which sit on
+    the reference's TM items at the price of their step in Goldenrod's TM
+    shop (Paolo, 2026-10-04)."""
     text = subprocess.run(["git", "-C", str(ROOT), "show", f"{RETAIL}:files/itemtool/itemdata/item_data.csv"],
                           capture_output=True, text=True, check=True).stdout
-    return {row["item"] for row in csv.DictReader(text.splitlines())}
+    names = {number: name for name, number in defines(ITEMS_H.read_text(), "ITEM_").items()}
+    return ({row["item"] for row in csv.DictReader(text.splitlines())} |
+            {names[item] for item, _ in machine_items.machines_past_hm08()})
 
 KEPT = {
     # This engine evolves a Pokemon by a party-use routine, not by a hold
@@ -554,11 +559,12 @@ def sync(reference, pairs, effects, fields, rows, report):
     over with the ROM keeps the value Game Freak gave it even where konefr
     changed his. That is most of the economy -- an Amulet Coin is 100 here and
     30000 there -- and all of Natural Gift's sixth-generation powers. The
-    price of an item HeartGold has stays HeartGold's (heartgold_priced).
+    price of an item HeartGold has stays HeartGold's, and TM93 to TM148's
+    their shop step's (priced_here).
     """
     changed = {}
     index = {name: i for i, name in enumerate(fields)}
-    retail = heartgold_priced()
+    retail = priced_here()
     for theirs, ours in sorted(pairs.items()):
         if theirs not in reference.records or ours not in rows:
             continue

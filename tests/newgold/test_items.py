@@ -364,7 +364,8 @@ class SharedRecordTests(unittest.TestCase):
     sixth-generation powers. import_items.py --sync is what closes that, and
     this is what notices if it opens again. The prices of the items HeartGold
     has are the exception since 2026-10-04: they are HeartGold's (Paolo; the
-    reference's are Scarlet and Violet's), and RetailPriceTests holds them.
+    reference's are Scarlet and Violet's), and RetailPriceTests holds them;
+    so are TM93 to TM148's, their shop step's (test_tm_shop).
     """
 
     REFERENCE = Path("/home/paolo/Porting HGSS/hg-engine-newgold-reference")
@@ -385,7 +386,7 @@ class SharedRecordTests(unittest.TestCase):
         effects = importer.hold_effect_map(reference, importer.defines(header, "HOLD_EFFECT_"))
         rows = list(csv.reader(importer.ITEM_CSV.read_text().splitlines()))
         fields, mine = rows[0][1:], {r[0]: r[1:] for r in rows[1:]}
-        retail = importer.heartgold_priced()
+        retail = importer.priced_here()
         bad = []
         for theirs, ours in sorted(pairs.items()):
             if theirs not in reference.records or ours not in mine:
