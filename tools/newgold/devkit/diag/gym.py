@@ -999,7 +999,8 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                 found["heals"] = {item: in_bag(ram, markers.elf, item) for item in scorer.heal_items()}
             except SystemExit:
                 found["heals"] = {}
-        return scorer.choose(user, foe, usable, field, found["heals"] if battler == 0 else None,
+        # The bag is kept for trainers: a wild Pokemon is run from (flee) instead.
+        return scorer.choose(user, foe, usable, field, found["heals"] if battler == 0 and not wild_battle else None,
                              not reserves(ram, markers))
 
     def facing(ram):
