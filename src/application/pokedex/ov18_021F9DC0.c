@@ -4,7 +4,7 @@
 
 // The names the type search shows for each DEX_SEARCH_TYPE_*: its buttons
 // (ov18_021EF848) and the types chosen (ov18_021EFC9C). Fairy's is added to
-// msg_0802, as its last row.
+// msg_0802, row 176, before the forms' names.
 const u16 ov18_021F9DC0[] = {
     msg_0802_00058, // Normal
     msg_0802_00050, // Fighting

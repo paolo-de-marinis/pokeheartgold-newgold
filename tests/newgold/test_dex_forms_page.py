@@ -6,8 +6,9 @@ Each form is a species of its own here, recorded seen and caught on its own
 (PokedexAppData.seenForms) with a species' genders, or retail's forms for the
 species retail tells apart; after the genders now come the forms seen, each
 an entry of form 0 whose species seenFormSpecies holds, drawn and named as
-that species. ov18_021F09D8 names a regional form by its region, as the
-latest games' Dex does ("Galarian Form"), Paldean Tauros by its breed.
+that species. ov18_021F09D8 names each form as the latest games' Dex does:
+a regional one by its region ("Galarian Form"), Paldean Tauros by its
+breed, any other by its own name ("Midnight Form", "Mega Venusaur").
 
 Both are cut from the tree and compiled natively over a stand-in Dex.
 """
@@ -17,11 +18,15 @@ import os
 import re
 import shlex
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 from test_level_cap import ROOT, function
+
+sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+import import_species_text  # noqa: E402
 
 PAGE = ROOT / "src/application/pokedex/ov18_021E5C40.c"
 LABEL = ROOT / "src/application/pokedex/ov18_021F09D8.c"
@@ -86,6 +91,9 @@ static void SeenAsItself(Pokedex *dex, u16 species) {
     dex->caughtLanguages[species] &= ~DEX_SEEN_AS_FORM_ONLY;
 }
 
+static const char *sTexts[] = { @TEXTS@ };
+static const char *Text(int row) { return sTexts[row]; }
+
 static void Open(PokedexAppData *app, u16 species) {
     app->curSpecies = species;
     app->numSeenForms = 0;
@@ -109,7 +117,7 @@ int main(void) {
     Record(&dex, dex.formsSeen, SPECIES_SLOWPOKE_GALARIAN);
     Open(&app, SPECIES_SLOWPOKE);
     assert(app.numSeenForms == 3 && app.seenForms[2] == 0x80 && app.seenFormSpecies[2] == SPECIES_SLOWPOKE_GALARIAN);
-    assert(ov18_021F09D8(&app, 2) == msg_0802_00178);
+    assert(!strcmp(Text(ov18_021F09D8(&app, 2)), "Galarian Form"));
     assert(ov18_021F09D8(&app, 0) == msg_0802_00114 && ov18_021F09D8(&app, 1) == msg_0802_00115);
     // Slowbro's own list knows nothing of the Galarian Slowpoke.
     Open(&app, SPECIES_SLOWBRO);
@@ -123,7 +131,7 @@ int main(void) {
     Open(&app, SPECIES_SLOWPOKE);
     assert(app.numSeenForms == 2 && app.seenForms[0] == 1 && app.seenForms[1] == 2);
     assert(app.seenFormSpecies[0] == SPECIES_SLOWPOKE_GALARIAN && app.seenFormSpecies[1] == SPECIES_SLOWPOKE_GALARIAN);
-    assert(ov18_021F09D8(&app, 0) == msg_0802_00178);
+    assert(!strcmp(Text(ov18_021F09D8(&app, 0)), "Galarian Form") && !strcmp(Text(ov18_021F09D8(&app, 1)), "Galarian Form"));
     // Slowpoke itself seen: Slowpoke's genders first again, then the form.
     SeenAsItself(&dex, SPECIES_SLOWPOKE);
     assert(PokedexApp_ShownSpecies(&app, SPECIES_SLOWPOKE) == SPECIES_SLOWPOKE);
@@ -139,21 +147,21 @@ int main(void) {
     Open(&app, SPECIES_MEOWTH);
     assert(app.numSeenForms == 4);
     assert(app.seenFormSpecies[2] == SPECIES_MEOWTH_ALOLAN && app.seenFormSpecies[3] == SPECIES_MEOWTH_GALARIAN);
-    assert(ov18_021F09D8(&app, 2) == msg_0802_00177 && ov18_021F09D8(&app, 3) == msg_0802_00178);
+    assert(!strcmp(Text(ov18_021F09D8(&app, 2)), "Alolan Form") && !strcmp(Text(ov18_021F09D8(&app, 3)), "Galarian Form"));
 
     // Paldean Tauros by its breed.
     Record(&dex, dex.formsSeen, SPECIES_TAUROS_COMBAT);
     Record(&dex, dex.formsSeen, SPECIES_TAUROS_AQUA);
     Open(&app, SPECIES_TAUROS);
-    assert(app.numSeenForms == 4 && ov18_021F09D8(&app, 2) == msg_0802_00181 && ov18_021F09D8(&app, 3) == msg_0802_00183);
+    assert(app.numSeenForms == 4 && !strcmp(Text(ov18_021F09D8(&app, 2)), "Combat Breed")
+           && !strcmp(Text(ov18_021F09D8(&app, 3)), "Aqua Breed"));
 
-    // A form of no region is named as its species, as retail names a
-    // species seen genderless.
+    // A form of no region by its own name.
     Record(&dex, dex.formsSeen, SPECIES_LYCANROC_MIDNIGHT);
     Open(&app, SPECIES_LYCANROC);
     assert(app.numSeenForms == 3);
     sNamed = 0;
-    assert(ov18_021F09D8(&app, 2) == msg_0802_00159 && sNamed == 1);
+    assert(!strcmp(Text(ov18_021F09D8(&app, 2)), "Midnight Form") && sNamed == 0);
 
     // The species retail tells forms apart keep retail's list.
     Open(&app, SPECIES_SHELLOS);
@@ -345,8 +353,30 @@ int main(void) {
 }
 '''
 
+FORM_NAMES = r'''
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/species.h"
+typedef uint16_t u16;
+@DEFINES@
+@NATIVE@
+
+int main(void) {
+    static const u16 forms[] = { @FORMS@ };
+    for (unsigned i = 0; i < sizeof(forms) / sizeof(forms[0]); i++) {
+        printf("%d\n", PokedexApp_FormName(forms[i]));
+    }
+    return 0;
+}
+'''
+
 REGIONS = {"ALOLAN": "Alolan Form", "GALARIAN": "Galarian Form", "HISUIAN": "Hisuian Form", "PALDEAN": "Paldean Form"}
 BREEDS = {"TAUROS_COMBAT": "Combat Breed", "TAUROS_BLAZE": "Blaze Breed", "TAUROS_AQUA": "Aqua Breed"}
+
+
+def texts():
+    """msg_0802's English rows in order, as C strings."""
+    return ", ".join(json.dumps(text, ensure_ascii=False) for _, text in sorted(messages().values()))
 
 
 def messages():
@@ -382,11 +412,11 @@ class DexFormsPageTests(unittest.TestCase):
         table += "\n" + function(dex, "SpeciesToDexSpecies")
         native = "\n".join([function(page, "ov18_021E83D0"), function(page, "PokedexApp_AppendSeenForms"),
                             function(page, "PokedexApp_ShownSpecies"), function(page, "ov18_021E8254"),
-                            label[label.index("static const struct {"):label.index("int ov18_021F09D8(")],
+                            label[label.index("#define FORM_NAMES_FIRST"):label.index("// The name of the FORMS page")],
                             function(label, "ov18_021F09D8")])
         msgs = "\n".join(f"#define {name} {index}" for name, (index, _) in messages().items())
         program = (PREFIX.replace("@DEFINES@", defines).replace("@MESSAGES@", msgs).replace("@FORM_TABLE@", table)
-                   .replace("@NATIVE@", native) + MAIN)
+                   .replace("@NATIVE@", native) + MAIN).replace("@TEXTS@", texts())
         print(run(program))
 
     def test_moving_to_an_entry_plays_its_cry(self):
@@ -441,30 +471,47 @@ class DexFormsPageTests(unittest.TestCase):
         print(run(TOP.replace("@DEFINES@", defines).replace("@FORM_TABLE@", table)
                   .replace("@TYPES@", typed).replace("@NATIVE@", native)))
 
-    def test_a_regional_form_is_named_by_its_region(self):
-        """Every regional form the tree has falls in sRegionalForms under its
-        region's name, and nothing else does: the totems (_LARGE) and the
-        Galarian Darmanitan's Zen Mode, a battle's, are named as their
-        species."""
+    def test_every_form_has_its_name(self):
+        """Every form that is a species of its own here has a row of its own
+        among msg_0802's form names (PokedexApp_FormName, compiled): the
+        Galarian Slowpoke and Slowbro, then every species past the last Dex
+        species, and nothing after them. A regional form is named by its
+        region, Paldean Tauros by its breed, a totem (a _LARGE that is not
+        a Pumpkaboo's or Gourgeist's size) as one; any other by the latest
+        games' name of the form. Each fits the FORMS page's bar, where the
+        name sits in window 2 of ov18_021F9EBC, 15 tiles wide."""
         label = LABEL.read_text()
-        header = (ROOT / "include/constants/species.h").read_text()
-        numbers = {name: int(n) for name, n in re.findall(r"#define SPECIES_(\w+)\s+(\d+)", header)}
-        text = {name: t for name, (_, t) in messages().items()}
-        ranges = [(numbers[a], numbers[b], text[m]) for a, b, m in
-                  re.findall(r"\{ SPECIES_(\w+), SPECIES_(\w+), (msg_0802_\d+) \}", label)]
-        named = {}
+        header = (ROOT / "include/pokedex.h").read_text()
+        species_h = (ROOT / "include/constants/species.h").read_text()
+        numbers = {name: int(n) for name, n in re.findall(r"#define SPECIES_(\w+)\s+(\d+)\s*$", species_h, re.M)}
+        names = {}
         for name, number in numbers.items():
-            hits = [t for lo, hi, t in ranges if lo <= number <= hi]
-            if hits:
-                named[name] = hits[0]
-        expected = {}
-        for name in numbers:
+            names.setdefault(number, name)
+        last_dex = numbers[re.search(r"#define LAST_DEX_SPECIES\s+SPECIES_(\w+)", species_h).group(1)]
+        first = numbers["SLOWPOKE_GALARIAN"]
+        forms = [first, numbers["SLOWBRO_GALARIAN"]] + list(range(last_dex + 1, max(numbers.values()) + 1))
+        defines = "\n".join(re.findall(r"^#define (?:DEX_FIRST_FORM)\b.*$", header, re.M))
+        msgs = "\n".join(f"#define {name} {index}" for name, (index, _) in messages().items())
+        program = (FORM_NAMES.replace("@DEFINES@", defines + "\n" + msgs).replace("@FORMS@", ", ".join(map(str, forms)))
+                   .replace("@NATIVE@", label[label.index("#define FORM_NAMES_FIRST"):label.index("// The name of the FORMS page")]))
+        rows = [int(row) for row in run(program).split()]
+        text = {index: t for index, t in messages().values()}
+        self.assertEqual(rows, list(range(rows[0], rows[0] + len(forms))))
+        self.assertEqual(max(text), rows[-1], "rows past the last form's")
+        named = {names[form]: text[row] for form, row in zip(forms, rows)}
+        for name, form_name in named.items():
             region = next((r for r in REGIONS if name.endswith("_" + r)), None)
-            if region and not name.endswith("_LARGE") and "ZEN_MODE" not in name:
-                expected[name] = REGIONS[region]
-        expected.update(BREEDS)
-        self.assertEqual(named, expected)
-
+            if name.endswith("_LARGE") and not name.startswith(("PUMPKABOO", "GOURGEIST")):
+                self.assertEqual(form_name, "Totem Form", name)
+            elif region and "ZEN_MODE" not in name:
+                self.assertEqual(form_name, REGIONS[region], name)
+            self.assertLessEqual(import_species_text.line_widths(form_name)[0], 15 * 8, name)
+        self.assertEqual({k: named[k] for k in BREEDS}, BREEDS)
+        self.assertEqual([named[k] for k in ("LYCANROC_MIDNIGHT", "MEGA_VENUSAUR", "MEGA_CHARIZARD_X", "GIGANTAMAX_LAPRAS",
+                                             "PYROAR_FEMALE", "VIVILLON_POKE_BALL", "ORICORIO_PAU", "DARMANITAN_ZEN_MODE_GALARIAN",
+                                             "GOURGEIST_LARGE")],
+                         ["Midnight Form", "Mega Venusaur", "Mega Charizard X", "Gigantamax",
+                          "Female", "Poké Ball Pattern", "Pa’u Style", "Galarian Zen Mode", "Large Size"])
 
 if __name__ == "__main__":
     unittest.main()
