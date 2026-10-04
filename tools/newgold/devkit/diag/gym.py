@@ -519,7 +519,8 @@ class Scorer:
         """The party slot to bring in for `user`, as a player does, or None:
         `user` loses the exchange and needs three turns or more, and the one
         brought in, taking as it comes the move the foe would use on `user`,
-        wins it -- the first of rank() that does."""
+        wins it -- the first of rank() that does; when `user` cannot hurt the
+        foe at all (a Thunder Shock into a Larvitar), the first that can."""
         w = self.weigh(user, foe, [i for i in range(4) if user["moves"][i] and user["pp"][i]], field)
         if w["wins"] or w["needed"] < 3 or not w["threats"]:
             return None
@@ -527,7 +528,9 @@ class Scorer:
         for slot in self.rank(team, foe, field):
             mon = team[slot]
             hit = self.hit(aimed, foe, mon, field, field["sides"][0])[0] if mon else 0
-            if mon and hit < mon["hp"] and self.standing({**mon, "hp": mon["hp"] - hit}, foe, field)[0]:
+            standing = self.standing({**mon, "hp": mon["hp"] - hit}, foe, field) if mon and hit < mon["hp"] else None
+            # one that wins; or, when `user` cannot touch the foe at all, one that can
+            if standing and (standing[0] or (w["needed"] >= 99 and standing[1] > -99)):
                 return slot
         return None
 

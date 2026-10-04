@@ -505,6 +505,12 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(scorer.rank(team, scizor, field), [2, 1])
         self.assertIsNone(scorer.relief(team[2], scizor, {0: geodude}, field))       # the Quilava wins it already
         self.assertIsNone(scorer.relief(geodude, scizor, {1: team[1], 3: None}, field))
+        # A Mareep whose one damaging move cannot touch the rival's Larvitar
+        # used Growl eight times: one that can hurt it comes in, winning or not.
+        mareep, larvitar = mon("MAREEP", 15, ["GROWL", "THUNDER_SHOCK"]), mon("LARVITAR", 10, ["ROCK_THROW", "BITE"])
+        hoothoot = mon("HOOTHOOT", 12, ["CONFUSION", "PECK"])
+        self.assertFalse(scorer.standing(hoothoot, larvitar, field)[0])
+        self.assertEqual(scorer.relief(mareep, larvitar, {4: hoothoot}, field), 4)
 
     def test_a_foe_that_gave_its_move_is_asked_again_by_teach(self):
         # A foe gives its move as the turn's choosing starts, and the battle
