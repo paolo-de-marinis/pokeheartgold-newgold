@@ -483,7 +483,9 @@ Reading what the debug ROM records, and playing it without looking.
   writes a move into battler B's BattleMon in the running battle (found in
   RAM by what gDiagBattlers shows), for an AI to use a move no trainer's
   data gives -- a foe that has already given its move for the turn is
-  asked for it again; `set:B,FIELD,VALUE` writes its HP, status, ability, held
+  asked for it again, its AI drawing the battle's random numbers again, so
+  every roll after it moves with whether `teach:` came before the foe's
+  first choice or after it; `set:B,FIELD,VALUE` writes its HP, status, ability, held
   item or Speed the same way, for a state no battle starts in (two Speeds
   alike for `gDiagForceSpeedTie` to decide). `--scenario FILE`
   plays a scenario -- a save, savedit edits to a copy, the steps, and what

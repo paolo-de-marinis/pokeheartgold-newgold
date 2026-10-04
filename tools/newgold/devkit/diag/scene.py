@@ -33,7 +33,11 @@ A step is one of
     teach:B,SLOT,MOVE[,PP]      battler B's move in that slot (0-3), and its PP (5 by
                                 default), written into the running battle: a move
                                 no trainer's data gives, for the AI to use: a foe
-                                that has given its move this turn is asked again
+                                that has given its move this turn is asked again,
+                                and its AI draws the battle's random numbers again:
+                                every roll after it moves, so a scenario's rolls
+                                depend on whether teach: lands before the foe's
+                                first choice or after it (where fight:N:T stopped)
     set:B,FIELD,VALUE           battler B's hp, status (its flags as markers.py names
                                 them: "BRN", "PSN"), ability (ABILITY_...), item
                                 (ITEM_...) or speed (the stat before its stages),
