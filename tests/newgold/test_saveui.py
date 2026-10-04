@@ -768,10 +768,12 @@ class SaveUiTests(unittest.TestCase):
         self.assertIn("una MT è una sola", refused([{"item": items["ITEM_TM03"], "quantity": 2}]))
         self.assertIn("non è una MT", refused([{"item": items["ITEM_POTION"], "quantity": 1}]))
         self.assertIn("non è una MT", refused([{"item": items["ITEM_TR00"], "quantity": 1}]))
-        slots = next(p["slots"] for p in self.ok("/api/data")["pockets"] if p["name"] == "TMsHMs")
-        many = [{"item": row["item"], "quantity": 1} for row in table[:slots + 1]]
-        self.assertIn(f"ha {slots} posti: ne servirebbero", refused(many))
         self.assertEqual(len(self.backups()), 2, "a refused change writes nothing")
+        # The pocket holds every machine at once.
+        slots = next(p["slots"] for p in self.ok("/api/data")["pockets"] if p["name"] == "TMsHMs")
+        self.assertEqual(slots, len(table))
+        out = self.edit("machines", {"changes": [{"item": row["item"], "quantity": 1} for row in table]})
+        self.assertEqual(len(out["bag"]["TMsHMs"]), slots)
 
     def test_files(self):
         self.edit("trainer", {"money": 1})

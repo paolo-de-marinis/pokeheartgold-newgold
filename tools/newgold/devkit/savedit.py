@@ -270,16 +270,20 @@ def _layout():
         "BOX_MON": "sizeof(BoxPokemon)", "PARTY_MON": "sizeof(Pokemon)", "BLOCK": "sizeof(PokemonDataBlock)",
         "LOCATION": "sizeof(Location)",
         "CHUNK_MAGIC": "SAVE_CHUNK_MAGIC", "CHUNK_FOOTER": "sizeof(struct SaveChunkFooter)",
-        # The region's magic in the layout of now and the one before the Dex's
-        # record of the forms; SAVE_CHUNK_MAGIC is the older layouts'
-        # (docs/newgold/SAVE-LAYOUT.md), and the layouts.
+        # The region's magic in the layout of now and the two before it;
+        # SAVE_CHUNK_MAGIC is the older layouts' (docs/newgold/SAVE-LAYOUT.md),
+        # and the layouts.
         "CHUNK_MAGIC_NOW": "SAVE_CHUNK_MAGIC_BERRY_POCKET", "LAYOUT_NOW": "SAVE_LAYOUT_NOW",
+        "LAYOUT_BEFORE_TM_POCKET": "SAVE_LAYOUT_BEFORE_TM_POCKET",
         "LAYOUT_BEFORE_DEX_FORMS": "SAVE_LAYOUT_BEFORE_DEX_FORMS",
         "LAYOUT_BEFORE_BERRY_POCKET": "SAVE_LAYOUT_BEFORE_BERRY_POCKET",
         "LAYOUT_BEFORE_DNA_SPLICERS": "SAVE_LAYOUT_BEFORE_DNA_SPLICERS", "LAYOUT_COUNT": "SAVE_LAYOUT_COUNT",
-        # SAVE_BAG's Berries pocket, which grew from HeartGold's 64 slots.
+        # SAVE_BAG's Berries pocket, which grew from HeartGold's 64 slots, and
+        # its TMs/HMs pocket, from HeartGold's 101.
         "BERRIES_AT": f"{offset}(Bag, berries)", "ITEM_SLOT": "sizeof(ItemSlot)",
         "BAG_BERRIES": "NUM_BAG_BERRIES", "BAG_BERRIES_LEGACY": "NUM_BAG_BERRIES_LEGACY",
+        "TMS_HMS_AT": f"{offset}(Bag, TMsHMs)",
+        "BAG_TMS_HMS": "NUM_BAG_TMS_HMS", "BAG_TMS_HMS_LEGACY": "NUM_BAG_TMS_HMS_LEGACY",
         "CHUNK_CRC_AT": f"{offset}(struct SaveChunkFooter, crc)",
         "ARRAY_FOOTER": "sizeof(struct SaveArrayFooter)", "FOOTER_CRC_AT": f"{offset}(struct SaveArrayFooter, crc)",
         # SAVE_PLAYERDATA: the options, the profile, the coins, the play time.
@@ -750,16 +754,21 @@ def _pockets():
 
 
 def pockets(layout=0):
-    """_pockets as a save in `layout` has them: before the Berries pocket
-    held every Berry (LAYOUT_BEFORE_BERRY_POCKET and older) it had
-    BAG_BERRIES_LEGACY slots, and every pocket after it started that much
-    earlier (Save_LayoutGrowth)."""
+    """_pockets as a save in `layout` has them: before the TMs/HMs pocket held
+    every machine (LAYOUT_BEFORE_TM_POCKET and older) it had
+    BAG_TMS_HMS_LEGACY slots, before the Berries pocket held every Berry
+    (LAYOUT_BEFORE_BERRY_POCKET and older) that one BAG_BERRIES_LEGACY, and
+    every pocket after a smaller one started that much earlier
+    (Save_LayoutGrowth)."""
     rows = _pockets()
-    if layout < LAYOUT_BEFORE_BERRY_POCKET:
-        return rows
-    fewer = (BAG_BERRIES - BAG_BERRIES_LEGACY) * ITEM_SLOT
-    return [{**p, "slots": BAG_BERRIES_LEGACY} if p["at"] == BERRIES_AT else
-            {**p, "at": p["at"] - fewer} if p["at"] > BERRIES_AT else p for p in rows]
+    legacy = {}
+    if layout >= LAYOUT_BEFORE_TM_POCKET:
+        legacy[TMS_HMS_AT] = BAG_TMS_HMS_LEGACY
+    if layout >= LAYOUT_BEFORE_BERRY_POCKET:
+        legacy[BERRIES_AT] = BAG_BERRIES_LEGACY
+    return [{**p, "slots": legacy.get(p["at"], p["slots"]),
+             "at": p["at"] - sum((q["slots"] - legacy[q["at"]]) * ITEM_SLOT
+                                 for q in rows if q["at"] in legacy and q["at"] < p["at"])} for p in rows]
 
 
 def pocket_at(name, layout=0):
@@ -828,6 +837,8 @@ def set_dex_flag(block, at, species):
 def layout_growth(layout, build=None):
     """Save_LayoutGrowth: what the change from `layout` to the next newer
     one added -- the block, where in it its bytes start, and how many."""
+    if layout == LAYOUT_BEFORE_TM_POCKET:
+        return "SAVE_BAG", TMS_HMS_AT + BAG_TMS_HMS_LEGACY * ITEM_SLOT, (BAG_TMS_HMS - BAG_TMS_HMS_LEGACY) * ITEM_SLOT
     if layout == LAYOUT_BEFORE_DEX_FORMS:
         return "SAVE_POKEDEX", DEX_FORMS_SEEN, DEX_FORMS_SIZE
     if layout == LAYOUT_BEFORE_BERRY_POCKET:
@@ -843,7 +854,7 @@ def blocks(build=None, layout=0):
     This is SaveData_InitSubstructs: sizes come rounded up to a word with four
     bytes of checksum added, a slot's last block is followed by the chunk
     footer, and the next slot starts on a 0x100 boundary. With an older
-    `layout` (LAYOUT_BEFORE_DEX_FORMS and the older ones), that
+    `layout` (LAYOUT_BEFORE_TM_POCKET and the older ones), that
     layout's (Save_GetLayoutSlotSpecs): the same blocks, less what every
     change since added to them, laid out the same way.
     """
@@ -907,6 +918,9 @@ class Save:
             self.layout = LAYOUT_NOW
             self.table, self.specs = blocks(build), slot_specs(blocks(build))
         self.legacy = self.layout != LAYOUT_NOW
+        # The Dex's record of the forms is there from the layout before the
+        # TMs/HMs pocket grew on.
+        self.has_form_record = self.layout < LAYOUT_BEFORE_DEX_FORMS
         self.half = self._newest_half()
         self.region = bytearray(self.raw[self.half:self.half + HALF])
         self.opened = bytes(self.region)
@@ -2871,9 +2885,9 @@ def dex(save):
     # Pokedex_CheckMonCaughtFlag wants both flags.
     caught = [s for s in seen if _dex_bit(block, DEX_CAUGHT, s)]
     # A form caught counts as seen (Pokedex_RecordMonSeen records one or the
-    # other). A save in an older layout has no record of the forms.
-    forms_caught = [f for f in dex_forms() if not save.legacy and _form_bit(block, DEX_FORMS_CAUGHT, f)]
-    forms_seen = [f for f in dex_forms() if not save.legacy and (f in forms_caught or _form_bit(block, DEX_FORMS_SEEN, f))]
+    # other). A save from before the record of the forms has none.
+    forms_caught = [f for f in dex_forms() if save.has_form_record and _form_bit(block, DEX_FORMS_CAUGHT, f)]
+    forms_seen = [f for f in dex_forms() if save.has_form_record and (f in forms_caught or _form_bit(block, DEX_FORMS_SEEN, f))]
     return {"enabled": bool(block[DEX_ENABLED]) and flag_is_set(save, _got_pokedex()),
             "national": bool(block[DEX_NATIONAL]), "seen": seen, "caught": caught,
             "forms_seen": forms_seen, "forms_caught": forms_caught}
@@ -2901,8 +2915,8 @@ def set_form_record(save, form, seen, caught):
     caught counts as seen, and the base species is seen as well (set_dex),
     and caught when the form is; a base seen for the first time this way is
     shown as the form until it is seen itself (_shown_first_as). The record
-    is the layout of now's."""
-    if save.legacy:
+    is there from LAYOUT_BEFORE_TM_POCKET on."""
+    if not save.has_form_record:
         raise ValueError("a save in an older layout has no record of the forms: the game adds it when it loads the save")
     if form not in dex_forms():
         raise ValueError(f"species {form} is no form the Dex records")
@@ -2994,7 +3008,7 @@ def set_dex(save, species, seen, caught):
     valid = set(dex_species())
     seen = seen or caught
     forms = {}
-    if not caught and not save.legacy:
+    if not caught and save.has_form_record:
         for form, base in dex_forms().items():
             forms.setdefault(base, []).append(form)
     for s in species:

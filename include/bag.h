@@ -150,6 +150,10 @@ BOOL Pocket_TakeItem(ItemSlot *slots, u32 count, u16 itemId, u16 quantity);
  */
 BOOL Bag_PocketNotEmpty(Bag *bag, u32 pocket);
 
+// A save from before TM93 to TM148: the machines its TMs/HMs pocket holds
+// made New Gold's (src/bag.c).
+void Bag_ConvertLegacyMachines(Bag *bag);
+
 /*
  * u16 Bag_GetQuantity(Bag *bag, u16 itemId, enum HeapID heapID)
  * u16 Pocket_GetQuantity(ItemSlot *slots, u32 count, u16 itemId)

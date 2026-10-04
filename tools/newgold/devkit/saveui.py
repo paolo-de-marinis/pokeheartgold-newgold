@@ -951,7 +951,7 @@ class Library:
         for change in a["changes"]:
             species = number(change["id"], 1, 0xFFFF, "specie")
             if species in sv.dex_forms():
-                if save.legacy:
+                if not save.has_form_record:
                     raise Refused("il salvataggio è in un formato più vecchio, senza il registro delle forme: "
                                   "il gioco lo aggiunge quando lo carica")
                 sv.set_form_record(save, species, bool(change["seen"]), bool(change["caught"]))

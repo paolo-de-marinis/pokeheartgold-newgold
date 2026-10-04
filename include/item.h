@@ -285,6 +285,11 @@ u16 ItemToTMHMId(u16 itemId);
 // item that is not a machine.
 u16 ItemToMachineNumber(u16 itemId);
 
+// What a machine in a save from before TM93 to TM148 is now: New Gold's
+// machine with the same move, or ITEM_NONE where none has it (and for an
+// item that was no machine). TM01 to HM08 are themselves.
+u16 LegacyMachineToItem(u16 itemId);
+
 /*
  * BOOL ItemIdIsMail(u16 itemId)
  *

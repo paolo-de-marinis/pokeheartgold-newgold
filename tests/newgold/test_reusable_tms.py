@@ -197,8 +197,7 @@ class PocketSizeTests(unittest.TestCase):
 
     WIDENED = {"NUM_BAG_ITEMS": (165, 32), "NUM_BAG_BALLS": (24, 2), "NUM_BAG_KEY_ITEMS": (50, 42),
                "NUM_BAG_BERRIES": (64, 36)}
-    UNCHANGED = {"NUM_BAG_MEDICINE": 40, "NUM_BAG_TMS_HMS": 101,
-                 "NUM_BAG_MAIL": 12, "NUM_BAG_BATTLE_ITEMS": 30}
+    UNCHANGED = {"NUM_BAG_MEDICINE": 40, "NUM_BAG_MAIL": 12, "NUM_BAG_BATTLE_ITEMS": 30}
 
     def setUp(self):
         self.header = (ROOT / "include/constants/items.h").read_text()
@@ -217,6 +216,14 @@ class PocketSizeTests(unittest.TestCase):
             berries = sum(row["fieldPocket"] == "POCKET_BERRIES" for row in csv.DictReader(stream))
         base, added = re.search(r"#define NUM_BAG_BERRIES\s+\((\d+) \+ (\d+)\)", self.header).groups()
         self.assertLessEqual(berries, int(base) + int(added))
+
+    def test_every_machine_has_a_slot(self):
+        # The TMs/HMs pocket holds every machine at once: HeartGold's 92 TMs,
+        # TM93 to TM148 and the 8 HMs, 156 where HeartGold had 101.
+        with (ROOT / "files/itemtool/itemdata/item_data.csv").open() as stream:
+            machines = sum(row["fieldPocket"] == "POCKET_TMHMS" for row in csv.DictReader(stream))
+        self.assertRegex(self.header, r"#define NUM_BAG_TMS_HMS\s+\(92 \+ 56 \+ 8\)")
+        self.assertEqual(machines, 92 + 56 + 8)
 
     def test_the_rest_keep_their_size(self):
         for name, value in self.UNCHANGED.items():

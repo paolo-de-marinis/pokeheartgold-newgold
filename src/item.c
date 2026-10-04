@@ -1287,13 +1287,17 @@ static const struct MachineRun {
     { ITEM_TM101, ITEM_TM148, 108, 101, MACHINE_TM },
 };
 
-static const struct MachineRun *ItemToMachineRun(u16 itemId) {
-    for (int i = 0; i < NELEMS(sMachineRuns); i++) {
-        if (itemId >= sMachineRuns[i].first && itemId <= sMachineRuns[i].last) {
-            return &sMachineRuns[i];
+static const struct MachineRun *FindMachineRun(const struct MachineRun *runs, int count, u16 itemId) {
+    for (int i = 0; i < count; i++) {
+        if (itemId >= runs[i].first && itemId <= runs[i].last) {
+            return &runs[i];
         }
     }
     return NULL;
+}
+
+static const struct MachineRun *ItemToMachineRun(u16 itemId) {
+    return FindMachineRun(sMachineRuns, NELEMS(sMachineRuns), itemId);
 }
 
 static BOOL ItemIsMachineOfKind(u16 itemId, u8 kind) {
@@ -1321,6 +1325,70 @@ u16 ItemToTMHMId(u16 itemId) {
 u16 ItemToMachineNumber(u16 itemId) {
     const struct MachineRun *run = ItemToMachineRun(itemId);
     return run != NULL ? run->number + itemId - run->first : 0;
+}
+
+// A save from before TM93 to TM148 holds hg-engine's machines past HM08: the
+// runs its ItemToMachineMoveIndex numbered, places 100 to 339 (the number and
+// kind unused here), and for each of those places the place of New Gold's
+// machine with the same move, or MACHINE_GONE where none has it. TM01 to
+// HM08 are the same in both.
+#define MACHINE_GONE 0xFF
+
+static const struct MachineRun sLegacyMachineRuns[] = {
+    { ITEM_HM07_ORAS, ITEM_HM07_ORAS, 100 },
+    { ITEM_TM00,      ITEM_TM00,      101 },
+    { ITEM_TM093,     ITEM_TM095,     102 },
+    { ITEM_TM096,     ITEM_TM100,     105 },
+    { ITEM_TM100_SV,  ITEM_TM229,     110 },
+    { ITEM_TR00,      ITEM_TR99,      240 },
+};
+
+static const u8 sLegacyMachinePlaces[] = {
+    MACHINE_GONE, MACHINE_GONE,           90,           78,          109, MACHINE_GONE,           93,           47, MACHINE_GONE,          107,
+    MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,           89, MACHINE_GONE,           80, MACHINE_GONE,           60, MACHINE_GONE, MACHINE_GONE,
+    MACHINE_GONE,           18, MACHINE_GONE, MACHINE_GONE,           29,           58,           75, MACHINE_GONE, MACHINE_GONE,           52,
+              28, MACHINE_GONE, MACHINE_GONE,           94,          132,           34,           23, MACHINE_GONE, MACHINE_GONE,            3,
+    MACHINE_GONE, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,           12, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,
+    MACHINE_GONE,           37, MACHINE_GONE,           13, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,          100,           35,           25,
+              70, MACHINE_GONE,           67, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,           49,           51, MACHINE_GONE,
+    MACHINE_GONE,           91, MACHINE_GONE,           14, MACHINE_GONE, MACHINE_GONE,           24, MACHINE_GONE,           21, MACHINE_GONE,
+             133, MACHINE_GONE,            4, MACHINE_GONE, MACHINE_GONE,            5, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,          108,
+              73, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,          115, MACHINE_GONE,
+    MACHINE_GONE, MACHINE_GONE,            0, MACHINE_GONE,          134,          135,          136,          137,          138,          139,
+             140,          141, MACHINE_GONE,           76, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,          142,           96, MACHINE_GONE,
+             143, MACHINE_GONE,          144,          145,          110,          146, MACHINE_GONE, MACHINE_GONE,          147,          148,
+             149, MACHINE_GONE,          150, MACHINE_GONE, MACHINE_GONE,          151,          152,          153,          154,          155,
+              74, MACHINE_GONE,           34, MACHINE_GONE,           94,           12,           13, MACHINE_GONE,           23,           24,
+              25,           28, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,           37,           98, MACHINE_GONE,          109, MACHINE_GONE,
+              89, MACHINE_GONE,           35, MACHINE_GONE, MACHINE_GONE,          104,           57,           81, MACHINE_GONE, MACHINE_GONE,
+    MACHINE_GONE,           22, MACHINE_GONE,           29, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,           11, MACHINE_GONE, MACHINE_GONE,
+              47, MACHINE_GONE, MACHINE_GONE,           49, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,            1,            7,            3,
+    MACHINE_GONE, MACHINE_GONE,           73, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,           83,           78, MACHINE_GONE,
+              80, MACHINE_GONE,           58, MACHINE_GONE,           51,           52, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,
+              90, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,           70,           75,           85,          110, MACHINE_GONE,
+    MACHINE_GONE, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,          115,          101,          100, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,
+    MACHINE_GONE, MACHINE_GONE,          106, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE, MACHINE_GONE,          131,
+};
+
+u16 LegacyMachineToItem(u16 itemId) {
+    const struct MachineRun *run;
+    u8 place;
+    int i;
+
+    if (itemId >= ITEM_TM01 && itemId <= ITEM_HM08) {
+        return itemId;
+    }
+    run = FindMachineRun(sLegacyMachineRuns, NELEMS(sLegacyMachineRuns), itemId);
+    if (run == NULL) {
+        return ITEM_NONE;
+    }
+    place = sLegacyMachinePlaces[run->place + itemId - run->first - NUM_TMHMS];
+    for (i = 0; i < NELEMS(sMachineRuns); i++) {
+        if (place >= sMachineRuns[i].place && place <= sMachineRuns[i].place + sMachineRuns[i].last - sMachineRuns[i].first) {
+            return sMachineRuns[i].first + place - sMachineRuns[i].place;
+        }
+    }
+    return ITEM_NONE; // MACHINE_GONE
 }
 
 BOOL ItemIdIsMail(u16 itemId) {

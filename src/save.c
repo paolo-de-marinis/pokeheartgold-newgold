@@ -2,6 +2,7 @@
 
 #include "global.h"
 
+#include "bag.h"
 #include "bag_types_def.h"
 #include "heap.h"
 #include "math_util.h"
@@ -821,6 +822,12 @@ static u32 GetSaveChunkSizePlusCRC(int idx) {
 // What the change from an older layout (enum SaveLayout) to the next newer
 // one added: its bytes, in `block` from `at` on. Nothing else changed.
 static u32 Save_LayoutGrowth(const SaveData *saveData, u32 layout, int *block, u32 *at) {
+    if (layout == SAVE_LAYOUT_BEFORE_TM_POCKET) {
+        // The TMs/HMs pocket's slots past HeartGold's 101, before the mail.
+        *block = SAVE_BAG;
+        *at = offsetof(Bag, TMsHMs) + NUM_BAG_TMS_HMS_LEGACY * sizeof(ItemSlot);
+        return (NUM_BAG_TMS_HMS - NUM_BAG_TMS_HMS_LEGACY) * sizeof(ItemSlot);
+    }
     if (layout == SAVE_LAYOUT_BEFORE_DEX_FORMS) {
         // The Dex's record of the forms, after HeartGold's.
         *block = SAVE_POKEDEX;
@@ -858,24 +865,28 @@ static void Save_GetLayoutSlotSpecs(const SaveData *saveData, u32 layout, struct
 // The first slot, `size` bytes as a save in an older layout wrote it, made
 // this layout's one change at a time, the oldest first: each opens its bytes
 // where they go, clear as a new game's, and moves everything after them up.
-// A block is where it is now, less what the changes still to come add before
-// it.
+// A place is where it is now, less what the changes still to come add before
+// it: in an earlier block, or earlier in its own. The TMs/HMs pocket's
+// change also makes the machines it holds New Gold's (Bag_ConvertLegacyMachines).
 static void Save_ConvertFirstSlot(const SaveData *saveData, u8 *region, u32 layout, u32 size) {
     int block, other;
-    u32 at, offset, grow, later, unused;
+    u32 at, offset, grow, later, otherAt;
 
     for (; layout != SAVE_LAYOUT_NOW; layout--) {
         grow = Save_LayoutGrowth(saveData, layout, &block, &at);
         offset = saveData->arrayHeaders[block].offset + at;
         for (later = layout - 1; later != SAVE_LAYOUT_NOW; later--) {
-            u32 more = Save_LayoutGrowth(saveData, later, &other, &unused);
-            if (other < block) {
+            u32 more = Save_LayoutGrowth(saveData, later, &other, &otherAt);
+            if (other < block || (other == block && otherAt < at)) {
                 offset -= more;
             }
         }
         memmove(region + offset + grow, region + offset, size - offset);
         MI_CpuClear8(region + offset, grow);
         size += grow;
+        if (layout == SAVE_LAYOUT_BEFORE_TM_POCKET) {
+            Bag_ConvertLegacyMachines((Bag *)(region + saveData->arrayHeaders[SAVE_BAG].offset));
+        }
     }
 }
 

@@ -327,6 +327,33 @@ static void SortTMHMPocket(ItemSlot *slots, u32 count) {
     }
 }
 
+// A save from before TM93 to TM148 holds hg-engine's machines, and the pocket
+// HeartGold's 101 slots of them: each becomes New Gold's machine with its
+// move, or goes where none has it, one of each and a TM once, and the pocket
+// is sorted as Bag_AddItem sorts it. Save_ConvertFirstSlot calls this on the
+// bag of such a save, once the pocket has its 156 slots.
+void Bag_ConvertLegacyMachines(Bag *bag) {
+    ItemSlot *slots = bag->TMsHMs;
+    for (s32 i = 0; i < NUM_BAG_TMS_HMS; i++) {
+        u16 item = LegacyMachineToItem(slots[i].id);
+        for (s32 j = 0; j < i; j++) {
+            if (slots[j].id == item) {
+                item = ITEM_NONE;
+            }
+        }
+        if (item == ITEM_NONE || slots[i].quantity == 0) {
+            slots[i].id = ITEM_NONE;
+            slots[i].quantity = 0;
+        } else {
+            slots[i].id = item;
+            if (ItemIsTM(item)) {
+                slots[i].quantity = 1;
+            }
+        }
+    }
+    SortTMHMPocket(slots, NUM_BAG_TMS_HMS);
+}
+
 BagView *Bag_CreateView(Bag *bag, const u8 *pockets, enum HeapID heapID) {
     BagView *ret = BagView_New(heapID);
     for (u32 i = 0; pockets[i] != POCKET_BAG_VIEW_END; i++) {

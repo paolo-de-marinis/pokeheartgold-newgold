@@ -200,7 +200,11 @@ class SaveditLibraryTests(unittest.TestCase):
         region[player["offset"] + sv.NAME:player["offset"] + sv.NAME + 4] = struct.pack("<HH", sv.charcode("A")[0], 0xFFFF)
         items = sv.constants("include/constants/items.h", "ITEM_")
         bag = next(b for b in older if b["id"] == "SAVE_BAG")
-        balls = sv.BERRIES_AT + sv.BAG_BERRIES_LEGACY * sv.ITEM_SLOT       # where that layout's balls start
+        pocket = {p["const"]: p["name"] for p in sv.pockets()}
+        # Where that layout's balls start: after HeartGold's 101 machines and 64 Berries.
+        balls = sv.pocket_at(pocket["POCKET_BALLS"], sv.LAYOUT_BEFORE_BERRY_POCKET)[0]
+        self.assertEqual(sv.pocket_at(pocket["POCKET_BALLS"])[0] - balls,
+                         (sv.BAG_BERRIES - sv.BAG_BERRIES_LEGACY + sv.BAG_TMS_HMS - sv.BAG_TMS_HMS_LEGACY) * sv.ITEM_SLOT)
         struct.pack_into("<HH", region, bag["offset"] + balls, items["ITEM_ULTRA_BALL"], 7)
         seal_footers(region, older, 1, sv.CHUNK_MAGIC)
         path = Path(self.tmp.name) / "berries.sav"
@@ -208,7 +212,6 @@ class SaveditLibraryTests(unittest.TestCase):
         save = sv.Save(path)
         self.assertEqual(save.layout, sv.LAYOUT_BEFORE_BERRY_POCKET)
         self.assertEqual(save.table, older)
-        pocket = {p["const"]: p["name"] for p in sv.pockets()}
         self.assertEqual([(s["item"], s["quantity"]) for s in sv.bag(save)[pocket["POCKET_BALLS"]]], [(items["ITEM_ULTRA_BALL"], 7)])
         self.assertEqual(sv.pocket_at(pocket["POCKET_BERRIES"], save.layout)[1], sv.BAG_BERRIES_LEGACY)
         self.assertEqual(sv.info(save)["pockets"][pocket["POCKET_BERRIES"]], sv.BAG_BERRIES_LEGACY)   # what the page shows
@@ -219,6 +222,38 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(again.layout, sv.LAYOUT_BEFORE_BERRY_POCKET, "an edit keeps the layout the game will convert")
         self.assertEqual([(s["item"], s["quantity"]) for s in sv.bag(again)[pocket["POCKET_BERRIES"]]], [(items["ITEM_ORAN_BERRY"], 3)])
         self.assertEqual([(s["item"], s["quantity"]) for s in sv.bag(again)[pocket["POCKET_BALLS"]]], [(items["ITEM_ULTRA_BALL"], 7)])
+
+    def test_a_save_from_before_the_tm_pocket_grew(self):
+        """The layout before TM93 to TM148: the TMs/HMs pocket HeartGold's
+        101 slots, every pocket after it 220 bytes earlier, the footers with
+        the Berries pocket's magic, the PC's slot 0x100 lower; and the Dex's
+        record of the forms, which that layout had. The bag is read and
+        written where that layout has it."""
+        older, now = sv.blocks(layout=sv.LAYOUT_BEFORE_TM_POCKET), sv.blocks()
+        self.assertEqual([s["offset"] for s in sv.slot_specs(now)][1] - [s["offset"] for s in sv.slot_specs(older)][1], 0x100)
+        region = bytearray(save_budget.REGION)
+        player = next(b for b in older if b["id"] == "SAVE_PLAYERDATA")
+        region[player["offset"] + sv.NAME:player["offset"] + sv.NAME + 4] = struct.pack("<HH", sv.charcode("A")[0], 0xFFFF)
+        pocket = {p["const"]: p["name"] for p in sv.pockets()}
+        items = sv.constants("include/constants/items.h", "ITEM_")
+        bag = next(b for b in older if b["id"] == "SAVE_BAG")
+        mail = sv.pocket_at(pocket["POCKET_MAIL"], sv.LAYOUT_BEFORE_TM_POCKET)[0]
+        self.assertEqual(sv.pocket_at(pocket["POCKET_MAIL"])[0] - mail, (sv.BAG_TMS_HMS - sv.BAG_TMS_HMS_LEGACY) * sv.ITEM_SLOT)
+        struct.pack_into("<HH", region, bag["offset"] + mail, items["ITEM_GRASS_MAIL"], 2)
+        seal_footers(region, older, 1, sv.CHUNK_MAGIC_NOW)
+        path = Path(self.tmp.name) / "tms.sav"
+        path.write_bytes(bytes(sv.build_save(region)))
+        save = sv.Save(path)
+        self.assertEqual((save.layout, save.legacy, save.has_form_record), (sv.LAYOUT_BEFORE_TM_POCKET, True, True))
+        self.assertEqual(sv.info(save)["pockets"][pocket["POCKET_TMHMS"]], sv.BAG_TMS_HMS_LEGACY)
+        self.assertEqual([(s["item"], s["quantity"]) for s in sv.bag(save)[pocket["POCKET_MAIL"]]], [(items["ITEM_GRASS_MAIL"], 2)])
+        sv.set_item(save, items["ITEM_TM51"], 1)
+        sv.set_form_record(save, sv.species_numbers()["SLOWPOKE_GALARIAN"], True, False)
+        path.write_bytes(save.image())
+        again = sv.Save(path)
+        self.assertEqual(again.layout, sv.LAYOUT_BEFORE_TM_POCKET, "an edit keeps the layout the game will convert")
+        self.assertEqual([(s["item"], s["quantity"]) for s in sv.bag(again)[pocket["POCKET_TMHMS"]]], [(items["ITEM_TM51"], 1)])
+        self.assertIn(sv.species_numbers()["SLOWPOKE_GALARIAN"], sv.dex(again)["forms_seen"])
 
     def test_the_page_names_a_layout_by_its_constant(self):
         """enum SaveLayout is numbered newest first, so a layout added
@@ -1017,10 +1052,10 @@ class SaveditLibraryTests(unittest.TestCase):
         form recorded, and refuses one, which the game adds when it loads
         it."""
         older = sv.blocks(layout=sv.LAYOUT_BEFORE_DEX_FORMS)
-        now = sv.blocks()
+        newer = sv.blocks(layout=sv.LAYOUT_BEFORE_TM_POCKET)
         dex = lambda table: next(b for b in table if b["id"] == "SAVE_POKEDEX")  # noqa: E731
-        self.assertEqual(dex(now)["size"] - dex(older)["size"], sv.DEX_FORMS_SIZE)
-        self.assertEqual([s["offset"] for s in sv.slot_specs(now)][1] - [s["offset"] for s in sv.slot_specs(older)][1], 0x100)
+        self.assertEqual(dex(newer)["size"] - dex(older)["size"], sv.DEX_FORMS_SIZE)
+        self.assertEqual([s["offset"] for s in sv.slot_specs(newer)][1] - [s["offset"] for s in sv.slot_specs(older)][1], 0x100)
         region = bytearray(save_budget.REGION)
         player = next(b for b in older if b["id"] == "SAVE_PLAYERDATA")
         region[player["offset"] + sv.NAME:player["offset"] + sv.NAME + 4] = struct.pack("<HH", sv.charcode("A")[0], 0xFFFF)

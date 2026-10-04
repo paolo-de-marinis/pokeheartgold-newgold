@@ -37,7 +37,7 @@
 #define NUM_BAG_ITEMS        (165 + 32)
 #define NUM_BAG_MEDICINE     40
 #define NUM_BAG_BALLS        (24 + 2)
-#define NUM_BAG_TMS_HMS      101
+#define NUM_BAG_TMS_HMS      (92 + 56 + 8)
 #define NUM_BAG_BERRIES      (64 + 36)
 #define NUM_BAG_MAIL         12
 #define NUM_BAG_BATTLE_ITEMS 30
@@ -46,6 +46,10 @@
 // The Berries pocket before it held every Berry, HeartGold's: the save's
 // older layouts have it (docs/newgold/SAVE-LAYOUT.md).
 #define NUM_BAG_BERRIES_LEGACY 64
+
+// The TMs/HMs pocket before it held every machine, HeartGold's: the save's
+// layouts before TM93 to TM148 have it.
+#define NUM_BAG_TMS_HMS_LEGACY 101
 
 #define BAG_SLOT_QUANTITY_MAX 999
 #define BAG_TMHM_QUANTITY_MAX 99

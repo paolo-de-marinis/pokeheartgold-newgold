@@ -26,7 +26,8 @@ footers are, what size they give and which magic they carry.
 
 | Layout | First slot | PC's slot | Magic | Written by |
 | --- | --- | --- | --- | --- |
-| SAVE_LAYOUT_NOW | 65456 bytes | at 0x10000 | SAVE_CHUNK_MAGIC_BERRY_POCKET (0x20260925) | this port since the Dex records the forms |
+| SAVE_LAYOUT_NOW | 65676 bytes | at 0x10100 | SAVE_CHUNK_MAGIC_BERRY_POCKET (0x20260925) | this port since TM93 to TM148 |
+| SAVE_LAYOUT_BEFORE_TM_POCKET | 65456 bytes | at 0x10000 | SAVE_CHUNK_MAGIC_BERRY_POCKET | this port from the Dex recording the forms until then |
 | SAVE_LAYOUT_BEFORE_DEX_FORMS | 65232 bytes | at 0xFF00 | SAVE_CHUNK_MAGIC_BERRY_POCKET | this port from the Berries pocket holding every Berry until then |
 | SAVE_LAYOUT_BEFORE_BERRY_POCKET | 65088 bytes | at 0xFF00 | SAVE_CHUNK_MAGIC | this port from 34eb81136 until then |
 | SAVE_LAYOUT_BEFORE_DNA_SPLICERS | 64140 bytes | at 0xFB00 | SAVE_CHUNK_MAGIC | this port before 34eb81136 |
@@ -34,6 +35,11 @@ footers are, what size they give and which magic they carry.
 Each differs from the next newer one in one block, which grew at one place
 (Save_LayoutGrowth):
 
+- before TM93 to TM148, SAVE_BAG's TMs/HMs pocket had HeartGold's 101 slots
+  (NUM_BAG_TMS_HMS_LEGACY); now it has 156 (92 + 56 + 8), so the mail and
+  every pocket after it, and every block after the bag, sit 220 bytes
+  further on. The pocket's machines were hg-engine's, so this change also
+  rewrites what the pocket holds (Bag_ConvertLegacyMachines, below);
 - before the Dex recorded the forms, SAVE_POKEDEX ended at HeartGold's
   record, without formsSeen and formsCaught after it (a bit a species from
   DEX_FIRST_FORM, the Galarian Slowpoke, to the last form), 224 bytes less;
@@ -45,14 +51,14 @@ Each differs from the next newer one in one block, which grew at one place
   HeartGold's), without hg-engine's storedMons[4] and isMonStored[4] after it,
   948 bytes less.
 
-The PC's slot is the same 124156 bytes in all four. Nothing older is read: a
+The PC's slot is the same 124156 bytes in all five. Nothing older is read: a
 HeartGold save (eighteen boxes) or one from this port before thirty boxes
 (668543b5d) does not load. The PC's slot is also at the same place in the
 layouts before the Dex's record and before the Berries pocket: only the magic
 tells their footers apart, which is why the first of them has one of its
-own. The layout of now keeps that magic: its PC's slot is 0x100 further on,
-and its first slot's size another, so the footers' places and sizes tell it
-apart from the one before.
+own. The two layouts after it keep that magic: each moved the PC's slot
+0x100 further on and changed the first slot's size, so the footers' places
+and sizes tell them apart from the one before.
 
 Save_GetSaveFilesStatus checks both halves as SAVE_LAYOUT_NOW. Only when
 neither reads does it try the older layouts, newest first, each where it put
@@ -62,7 +68,13 @@ then reads that save through Save_LoadLegacySlots: the PC's slot from its old
 place to its new one, the first slot as it was, each checked against its own
 footer, and Save_ConvertFirstSlot makes the first slot this layout's one change
 at a time, the oldest first, each opening its bytes clear where they go and
-moving everything after them up. Both halves are marked for a full write, so
+moving everything after them up; a place in a block counts what the
+changes still to come add before it, in an earlier block or earlier in its
+own. The TMs/HMs pocket's change then makes the machines it holds New
+Gold's: each of hg-engine's becomes New Gold's machine with the same move
+(LegacyMachineToItem, from its place in hg-engine's numbering), or goes
+where none has it, one of each and a TM once, and the pocket is sorted.
+Both halves are marked for a full write, so
 the next two saves put everything in the layout of now. After the first of
 them the flash holds one half of each; the newer half reads, the older one
 reads as a bad half, and the game loads the newer half as it loads any save
@@ -122,7 +134,7 @@ it is the engine's or konefr's.
    newer, SAVE_CHUNK_MAGIC to the older ones).
 3. Save_LayoutGrowth learns the change: the block, where in it the new bytes
    start, and how many. A change that is not bytes added at one place needs a
-   step of its own in Save_ConvertFirstSlot.
+   step of its own in Save_ConvertFirstSlot, as the TMs/HMs pocket's has.
 4. What the new layout adds starts as a new game has it: clear, or set by the
    block's init function after the conversion.
 5. The pins in test_save_legacy take the new layout's slot sizes, and its
@@ -131,8 +143,9 @@ it is the engine's or konefr's.
 7. A save of each older layout is loaded in the emulator, continued, saved
    and loaded again, as 34eb81136 did with ~/hgss-saves/gyms/falkner.sav,
    the Berries pocket's change did with a copy of route29-official.sav given
-   balls, battle items and Berries, and the Dex's record of the forms did
-   with a save of the layout before it.
+   balls, battle items and Berries, the Dex's record of the forms did with a
+   save of the layout before it, and the TMs/HMs pocket's did with a copy of
+   the playthrough chain's Goldenrod save given hg-engine's machines.
 
 ## How savedit and saveui read every layout
 
@@ -146,9 +159,11 @@ says which one read (`Save.legacy`, whether it is an older one), and the
 newest valid half is the one opened. A save in an older layout is read and
 written in that layout: `reseal` writes its blocks' CRCs and its footers with
 its own sizes and magic, and the game converts it the next time it loads it.
-The bag's readers follow the layout: `pockets(layout)` has the Berries pocket
-at 64 slots, and the pockets after it that much earlier, before it grew. A
-save from before the Dex recorded the forms has no record to read
-(`dex(save)` gives none) or write (`set_form_record` refuses).
+The bag's readers follow the layout: `pockets(layout)` has the TMs/HMs pocket
+at 101 slots before it grew and the Berries pocket at 64 before that one
+grew, and each pocket after a smaller one that much earlier. A save from
+before the Dex recorded the forms has no record to read (`dex(save)` gives
+none) or write (`set_form_record` refuses); `Save.has_form_record` says
+which.
 saveui opens saves through `Save` and names an older layout on the save's
 page ("Formato").

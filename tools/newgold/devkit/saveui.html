@@ -1958,7 +1958,7 @@ function renderFlags() {
 
 // ---- Info ------------------------------------------------------------------
 // The older layouts savedit.info() names, by their constant (enum SaveLayout).
-const LAYOUTS = {SAVE_LAYOUT_BEFORE_DEX_FORMS: "quello di prima che il Pokédex registrasse le forme", SAVE_LAYOUT_BEFORE_BERRY_POCKET: "quello di prima che la tasca Bacche le tenesse tutte", SAVE_LAYOUT_BEFORE_DNA_SPLICERS: "quello di prima dei DNA Splicers"};
+const LAYOUTS = {SAVE_LAYOUT_BEFORE_TM_POCKET: "quello di prima delle MT93–MT148, con le macchine di hg-engine", SAVE_LAYOUT_BEFORE_DEX_FORMS: "quello di prima che il Pokédex registrasse le forme", SAVE_LAYOUT_BEFORE_BERRY_POCKET: "quello di prima che la tasca Bacche le tenesse tutte", SAVE_LAYOUT_BEFORE_DNA_SPLICERS: "quello di prima dei DNA Splicers"};
 function renderInfo() {
   const i = S.save.info, hx = n => "0x" + n.toString(16).padStart(6, "0");
   $("#tab").innerHTML = `<dl class="kv" style="font-size:14px">

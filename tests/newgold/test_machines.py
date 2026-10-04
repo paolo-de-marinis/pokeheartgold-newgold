@@ -222,9 +222,10 @@ int main(void) {
 
 
 def machine_code(source):
-    """src/item.c's machine runs and every function that reads them."""
+    """src/item.c's machine runs and every function that reads them, the
+    conversion of hg-engine's machines in an older save last."""
     start = source.index("enum MachineKind {")
-    return source[start:source.index("}", source.index("u16 ItemToMachineNumber(u16 itemId) {")) + 1]
+    return source[start:source.index("\n}\n", source.index("u16 LegacyMachineToItem(u16 itemId) {")) + 2]
 
 
 def item_ids():
@@ -291,6 +292,109 @@ NEW_GOLD_TMS = """
     TEMPER_FLARE SUPERCELL_SLAM TRIPLE_AXEL COACHING SCORCHING_SANDS EXPANDING_FORCE SKITTER_SMACK
     METEOR_BEAM BREAKING_SWIPE HARD_PRESS DRAGON_CHEER ALLURING_VOICE PSYCHIC_NOISE UPPER_HAND
 """.split()
+
+
+CONVERSION = r"""
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int32_t s32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#define NELEMS(a) (sizeof(a) / sizeof(*(a)))
+#include "constants/items.h"
+#include "constants/moves.h"
+typedef struct { u16 id, quantity; } ItemSlot;
+typedef struct { ItemSlot TMsHMs[NUM_BAG_TMS_HMS]; } Bag;
+static void SortTMHMPocket(ItemSlot *slots, u32 count);
+@NATIVE@
+
+int main(void) {
+    static Bag bag;
+    // A save from before TM93 to TM148, its pocket as hg-engine filled it.
+    const u16 had[][2] = {
+        { ITEM_HM05, 1 }, { ITEM_TR00, 5 }, { ITEM_TM51, 1 }, { ITEM_TM126, 1 }, { ITEM_TM24, 1 },
+        { ITEM_TR01, 2 }, { ITEM_TM093, 1 }, { ITEM_HM07_ORAS, 1 }, { ITEM_TM00, 1 }, { ITEM_TM100, 1 },
+        { ITEM_TM101, 1 }, { ITEM_TM170, 1 }, { ITEM_HM01, 1 }, { ITEM_TR08, 3 },
+    };
+    // Kept: TM51, TM24, HM01, HM05 and TM100 (Confide on the same item). Made
+    // New Gold's: TR00 Swords Dance TM75, TM093 Flash Cannon TM91, TM170
+    // Steel Beam the TM126 item, TM126 Thunderbolt TM24 (already there),
+    // TR08 Thunderbolt TM24 again. Gone: TR01 Body Slam, the second HM07
+    // (Dive), TM00 Mega Punch, TM101 Power Gem.
+    const u16 now[][2] = {
+        { ITEM_TM24, 1 }, { ITEM_TM51, 1 }, { ITEM_TM75, 1 }, { ITEM_TM91, 1 }, { ITEM_TM100, 1 },
+        { ITEM_TM126, 1 }, { ITEM_HM01, 1 }, { ITEM_HM05, 1 },
+    };
+    for (u32 i = 0; i < NELEMS(had); i++) {
+        bag.TMsHMs[i].id = had[i][0];
+        bag.TMsHMs[i].quantity = had[i][1];
+    }
+    Bag_ConvertLegacyMachines(&bag);
+    for (u32 i = 0; i < NUM_BAG_TMS_HMS; i++) {
+        if (i < NELEMS(now)) {
+            assert(bag.TMsHMs[i].id == now[i][0] && bag.TMsHMs[i].quantity == now[i][1]);
+        } else {
+            assert(bag.TMsHMs[i].id == ITEM_NONE && bag.TMsHMs[i].quantity == 0);
+        }
+    }
+    // Every one of hg-engine's 240 machines past HM08 becomes the machine
+    // with its move, or nothing; HeartGold's are themselves.
+    for (u16 item = ITEM_TM01; item <= ITEM_HM08; item++) assert(LegacyMachineToItem(item) == item);
+    assert(LegacyMachineToItem(ITEM_POTION) == ITEM_NONE && LegacyMachineToItem(ITEM_TR01) == ITEM_NONE);
+    assert(LegacyMachineToItem(ITEM_TR99) == ITEM_TM124);   // Body Press
+    puts("PASS: an older save's machines made New Gold's, one of each, sorted.");
+    return 0;
+}
+"""
+
+
+class LegacyMachineTests(unittest.TestCase):
+    """A save from before TM93 to TM148 holds hg-engine's machines; loading
+    it makes each New Gold's machine with its move, or drops it."""
+
+    def test_an_older_pocket_is_converted(self):
+        item = (ROOT / "src/item.c").read_text()
+        bag = (ROOT / "src/bag.c").read_text()
+        table = item[item.index("static const u16 sTMHMMoves[]"):]
+        native = [table[:table.index("};") + 2], machine_code(item)]
+        native += [function(bag, name) for name in ("SwapItemSlots", "MachineSortGroup", "SortTMHMPocket",
+                                                     "Bag_ConvertLegacyMachines")]
+        with tempfile.TemporaryDirectory(prefix="newgold-legacy-machines-") as temp:
+            c, exe = Path(temp) / "check.c", Path(temp) / "check"
+            c.write_text(CONVERSION.replace("@NATIVE@", "\n".join(native)))
+            build = subprocess.run(
+                shlex.split(os.environ.get("CC", "cc")) +
+                ["-std=c11", "-O1", "-g", "-fsanitize=address,undefined", "-fno-omit-frame-pointer",
+                 "-iquote", str(ROOT / "include"), str(c), "-o", str(exe)],
+                capture_output=True, text=True)
+            self.assertEqual(build.returncode, 0, build.stderr)
+            run = subprocess.run([str(exe)], capture_output=True, text=True,
+                                 env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
+            self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+            print(run.stdout.strip())
+
+    def test_the_conversion_is_the_old_table_s_moves(self):
+        """Each of hg-engine's machines past HM08 (its table as this tree had
+        it before TM93 to TM148, 48ab75d65) maps to the place of the same
+        move in the table now, or to none."""
+        old = subprocess.run(["git", "-C", str(ROOT), "show", "48ab75d65:src/item.c"], capture_output=True, text=True).stdout
+        if not old:
+            self.skipTest("48ab75d65 is not in this clone")
+        old = old[old.index("static const u16 sTMHMMoves[]"):]
+        old = re.findall(r"MOVE_([A-Z0-9_]+),", old[:old.index("};")])
+        source = (ROOT / "src/item.c").read_text()
+        new = source[source.index("static const u16 sTMHMMoves[]"):]
+        new = re.findall(r"MOVE_([A-Z0-9_]+),", new[:new.index("};")])
+        places = source[source.index("sLegacyMachinePlaces[] = {"):]
+        places = [255 if p == "MACHINE_GONE" else int(p)
+                  for p in re.findall(r"MACHINE_GONE|\d+", places[places.index("{"):places.index("};")])]
+        self.assertEqual(places, [new.index(m) if m in new else 255 for m in old[100:]])
 
 
 if __name__ == "__main__":
