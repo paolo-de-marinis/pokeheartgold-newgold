@@ -1736,12 +1736,16 @@ BOOL SheerForceTradedEffect(BattleContext *ctx) {
 // Anger Shell and Berserk are armed the same way
 // (CheckColorChangeAngerShellAndBerserk): each answers once the hit, or a
 // move that strikes more than once, has left its Pokemon at half or below,
-// from above.
+// from above. Anger Shell only by the move's first strike: a move that
+// found its Pokemon at half or below, a Sitrus Berry taking it back above
+// half between the strikes and a later one under again, does not crack it
+// (Pokemon Central, Iraguscio); Furore says no such thing of Berserk.
 void Battler_ArmRetreat(BattleContext *ctx, int battlerId) {
     int ability = GetBattlerAbility(ctx, battlerId);
 
     if ((ability == ABILITY_EMERGENCY_EXIT || ability == ABILITY_WIMP_OUT || ability == ABILITY_ANGER_SHELL || ability == ABILITY_BERSERK)
         && ctx->battleMons[battlerId].hp > (int)(ctx->battleMons[battlerId].maxHp / 2)
+        && (ability != ABILITY_ANGER_SHELL || ctx->multiHitCount == ctx->multiHitCountTemp)
         && !SheerForceTradedEffect(ctx)) {
         ctx->selfTurnData[battlerId].retreatArmed = TRUE;
     }

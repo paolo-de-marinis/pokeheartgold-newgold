@@ -386,6 +386,7 @@ typedef struct {
     BattleMon battleMons[4]; SelfTurnData selfTurnData[4];
     int battlerIdAttacker, battlerIdTarget, battlerIdStatChange, battlerIdTemp, msgTemp, statChangeParam, statChangeType;
     u32 moveNoCur, battleStatus2;
+    u8 multiHitCount, multiHitCountTemp;
 } BattleContext;
 static BOOL dragged, sheerForce;
 static MoveTbl move = { 30 };
@@ -403,16 +404,19 @@ static BattleSystem bs;
 static BattleContext ctx;
 static int script;
 static void strike(int damage) {
-    // A strike lands on 1: armed as it lands, then its damage taken.
+    // A strike lands on 1: armed as it lands, then its damage taken, and
+    // one strike fewer to come.
     Battler_ArmRetreat(&ctx, 1);
     ctx.battleMons[1].hp -= damage;
     ctx.selfTurnData[1].physicalDamage = -damage;
+    ctx.multiHitCount--;
 }
 static void reset(int ability, int hp) {
     memset(&ctx, 0, sizeof(ctx));
     dragged = sheerForce = FALSE;
     ctx.battlerIdTarget = 1;
     ctx.moveNoCur = MOVE_DOUBLE_KICK;
+    ctx.multiHitCount = ctx.multiHitCountTemp = 2;
     ctx.battleMons[1] = (BattleMon){ hp, 100, ability, TYPE_NORMAL, TYPE_NORMAL, { 6, 6, 6, 6, 6, 6, 6, 6 } };
     script = 0;
 }
@@ -450,6 +454,15 @@ int main(void) {
     assert(!answers());
     reset(ABILITY_ANGER_SHELL, 50); strike(5); strike(10);
     assert(!answers());
+    // Nor when it was at half or below as the move began and a Sitrus Berry
+    // took it back above half between the strikes, the second taking it to
+    // half or below again (Pokemon Central, Iraguscio): from 50, 10 to 40,
+    // the Berry's 25 to 65, 20 to 45. From 60 it was above half: 20 to 40,
+    // the Berry to 65, 20 to 45, and it cracks.
+    reset(ABILITY_ANGER_SHELL, 50); strike(10); ctx.battleMons[1].hp += 25; strike(20);
+    assert(ctx.battleMons[1].hp == 45 && !answers());
+    reset(ABILITY_ANGER_SHELL, 60); strike(20); ctx.battleMons[1].hp += 25; strike(20);
+    assert(ctx.battleMons[1].hp == 45 && answers());
     // A single hit: from 60 to 40.
     reset(ABILITY_ANGER_SHELL, 60); strike(20);
     assert(answers());
@@ -475,6 +488,10 @@ int main(void) {
     assert(!answers());
     reset(ABILITY_BERSERK, 50); strike(5); strike(10);
     assert(!answers());
+    // Furore has no such rule as Iraguscio's for a Berry between the
+    // strikes: back above half, the second strike arms it again.
+    reset(ABILITY_BERSERK, 50); strike(10); ctx.battleMons[1].hp += 25; strike(20);
+    assert(ctx.battleMons[1].hp == 45 && answers());
     reset(ABILITY_BERSERK, 60); strike(20); ctx.battleMons[1].statChanges[STAT_SPATK] = 12;
     assert(!answers());
     reset(ABILITY_BERSERK, 60); strike(20); dragged = TRUE;

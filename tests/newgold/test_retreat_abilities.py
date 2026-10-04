@@ -36,6 +36,7 @@ typedef struct {
     SelfTurnData selfTurnData[4];
     int battlerIdAttacker, battlerIdTemp, tempData, moveNoCur;
     int turnOrder[4];
+    u32 multiHitCount, multiHitCountTemp;
 } BattleContext;
 static BOOL sheerForceBoost, moldBreaker;
 static int GetBattlerAbility(BattleContext *ctx, int battlerId) { return ctx->battleMons[battlerId].ability; }

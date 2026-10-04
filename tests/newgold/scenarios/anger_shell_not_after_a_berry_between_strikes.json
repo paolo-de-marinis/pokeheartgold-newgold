@@ -1,0 +1,14 @@
+{
+  "about": "Anger Shell does not crack after a multi-strike move that found its Pokemon at half or below, when a Sitrus Berry took it back above half between the strikes and a later one took it under again (Pokemon Central, Iraguscio); before, the later strike, finding it above half, armed it. A level-5 Pikachu is given Twineedle in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash, given Anger Shell and a Sitrus Berry and set to 20 of its 40 HP (set:): the first needle takes it to 15, the Berry to 25, the second needle to 20, half, and nothing cracks (before, the Defense fell and the Attack rose after the hit count). Then, its Berry gone and its HP set to 24, above half, the two needles take it to 14 and the shell cracks, after the hit count. The damage roll is forced to the bottom of the range; the field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:5"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_TWINEEDLE", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,MOVE_SPLASH", "teach:1,2,MOVE_SPLASH", "teach:1,3,MOVE_SPLASH",
+            "set:1,ability,ABILITY_ANGER_SHELL", "set:1,item,ITEM_SITRUS_BERRY", "set:1,hp,20", "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Twineedle!", "restored its health using its Sitrus Berry!", "hit 2 time"],
+                        "no_lines": ["Defense fell!", "Attack rose!"], "battler1.hp": 20, "battler1.item": 0}},
+            "set:1,hp,24", "fight:1:1"],
+  "expect": {"new_lines": ["Pikachu used Twineedle!", "hit 2 time", "Defense fell!", "Attack rose!"], "battler1.hp": 14}
+}
