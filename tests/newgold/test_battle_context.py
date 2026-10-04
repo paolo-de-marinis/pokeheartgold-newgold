@@ -124,11 +124,12 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef int BOOL;
 #define TRUE 1
+#define FALSE 0
 typedef struct { u16 item; } Pokemon;
 typedef struct { int unused; } Bag;
 typedef struct { Pokemon party[PARTY_SIZE]; int count; u32 type; Bag bag; u8 outcome; } BattleSystem;
 typedef struct { u16 item; } BattleMon;
-typedef struct { BattleMon battleMons[BATTLER_MAX]; u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack, heldItemsTaken, heldItemsCount; u16 itemsTakenFromWild[2]; u8 heldItemsGiven; } BattleContext;
+typedef struct { BattleMon battleMons[BATTLER_MAX]; u16 itemsToRestore[PARTY_SIZE]; u8 heldItemsGivenBack, heldItemsTaken, heldItemsCount; u16 itemsTakenFromWild[2]; u8 heldItemsGiven; u8 heldItemOwner[BATTLER_MAX * PARTY_SIZE]; } BattleContext;
 static u32 MaskOfFlagNo(int flag) { return 1u << flag; }
 
 static u16 sAdded[8][2];
@@ -378,6 +379,42 @@ int main(void) {
     sAdds = 0;
     GiveBackHeldItems(&bs, &ctx);
     assert(sAdds == 0 && bs.party[5].item == ITEM_OVAL_STONE && bs.party[0].item == ITEM_FOCUS_SASH);
+
+    // An item back in the party's hands is no swap with the wild side, and
+    // not bagged. A White Herb the first Pokemon handed a wild Pokemon, which
+    // used it up (marked as lost), Recycled it and lost it to Thief: the
+    // first holds it again (its tag), keeps it, and the bag gets none.
+    // Before, it went to the bag for the mark and stayed held.
+    for (int i = 0; i < PARTY_SIZE; i++) {
+        ctx.itemsToRestore[i] = bs.party[i].item = i ? ITEM_NONE : ITEM_WHITE_HERB;
+    }
+    ctx.heldItemOwner[0] = 1;
+    ctx.heldItemsCount = PARTY_SIZE;
+    ctx.heldItemsGivenBack = 0;
+    ctx.heldItemsGiven = ctx.heldItemsTaken = 1 << 0;
+    bs.outcome = BATTLE_OUTCOME_WIN;
+    sAdds = 0;
+    GiveBackHeldItems(&bs, &ctx);
+    assert(sAdds == 0 && bs.party[0].item == ITEM_WHITE_HERB);
+    // Bestowed to the partner in a double, a Silk Scarf or an Oran Berry is
+    // the giver's again, the partner holding nothing again: no swap with the
+    // wild side, and nothing bagged. Before, the giver kept nothing and the
+    // item went to the bag.
+    for (int berry = 0; berry < 2; berry++) {
+        u16 item = berry ? ITEM_ORAN_BERRY : ITEM_SILK_SCARF;
+        for (int i = 0; i < PARTY_SIZE; i++) {
+            ctx.itemsToRestore[i] = bs.party[i].item = ITEM_NONE;
+            ctx.heldItemOwner[i] = 0;
+        }
+        ctx.itemsToRestore[0] = bs.party[1].item = item;
+        ctx.heldItemOwner[1] = 1;
+        ctx.heldItemsGivenBack = 0;
+        ctx.heldItemsGiven = 1 << 0;
+        ctx.heldItemsTaken = 0;
+        sAdds = 0;
+        GiveBackHeldItems(&bs, &ctx);
+        assert(sAdds == 0 && bs.party[0].item == item && bs.party[1].item == ITEM_NONE);
+    }
     return 0;
 }
 """
@@ -826,7 +863,8 @@ class RestoreItemsTests(unittest.TestCase):
     def test_the_real_function_on_a_party(self):
         source = CONTROLLER.read_text()
         program = (RESTORE_FIXTURE.replace("@IS_BERRY@", function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "BattleItemIsBerry"))
-                   .replace("@GIVE_BACK@", function(source, "GiveBackHeldItems") + function(source, "CaughtMonKeepsItem")))
+                   .replace("@GIVE_BACK@", function(source, "HeldItemBackInParty") + function(source, "GiveBackHeldItems")
+                               + function(source, "CaughtMonKeepsItem")))
         with tempfile.TemporaryDirectory(prefix="newgold-restore-") as directory:
             path = Path(directory)
             (path / "check.c").write_text(program)

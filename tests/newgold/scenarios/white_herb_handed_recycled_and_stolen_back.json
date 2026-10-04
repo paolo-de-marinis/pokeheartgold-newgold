@@ -1,0 +1,21 @@
+{
+  "about": "An item the player's Pokemon handed to a wild Pokemon, which used it up, Recycled it and lost it back to the player's Pokemon, is one item, held again by its owner: not also bagged at the battle's end. The forced wild Geodude on Route 29 holds nothing and knows Recycle alone; the Cyndaquil starts with a White Herb and is taught Trick, Leer and Thief (set:, teach:). Trick hands the Herb over, Leer has the Geodude use it up, its Recycle brings the Herb back, and Thief takes it back to the Cyndaquil; gym.py's player wins the battle. The Cyndaquil holds its White Herb, and the bag has none. Before, the Herb used up by the wild Pokemon was marked as lost, and the Herb went to the bag for the mark and stayed with the Cyndaquil too. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CYNDAQUIL:12:::WHITE_HERB"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0",
+            "set:1,item,ITEM_NONE", "teach:0,0,MOVE_TRICK", "teach:0,1,MOVE_LEER", "teach:0,2,MOVE_THIEF",
+            "teach:1,0,MOVE_RECYCLE", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1",
+            {"expect": {"lines": ["Cyndaquil used Trick!", "The wild Geodude obtained White Herb."],
+                        "battler0.item": "ITEM_NONE", "battler1.item": "ITEM_WHITE_HERB"}},
+            "fight:2:1",
+            {"expect": {"new_lines": ["Cyndaquil used Leer!", "White Herb", "The wild Geodude used Recycle!"],
+                        "battler1.item": "ITEM_WHITE_HERB"}},
+            "fight:3:1",
+            {"expect": {"new_lines": ["Cyndaquil used Thief!", "White Herb!"],
+                        "battler0.item": "ITEM_WHITE_HERB", "battler1.item": "ITEM_NONE"}},
+            "fight", "field"],
+  "expect": {"lines": ["The wild Geodude fainted!"], "party0.species": "SPECIES_CYNDAQUIL", "party0.item": "ITEM_WHITE_HERB",
+             "bag:ITEM_WHITE_HERB": 0}
+}

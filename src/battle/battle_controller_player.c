@@ -230,6 +230,18 @@ static void RememberHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
     }
 }
 
+// Whether the item party slot i started with is in the party's hands at the
+// battle's end, whoever of the party holds it: the tag goes with the item
+// (heldItemOwner), and a hand holding something has that something's tag.
+static BOOL HeldItemBackInParty(BattleContext *ctx, const u16 *held, int count, int i) {
+    for (int k = 0; k < count; k++) {
+        if (held[k] != ITEM_NONE && ctx->heldItemOwner[k] == i + 1) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 // As the reference's RESTORE_ITEMS_AT_BATTLE_END: outside a trainer battle,
 // any item the party holds more of than it started with was taken in battle
 // and goes to the bag; then every Pokemon gets back what it started with,
@@ -275,10 +287,21 @@ void GiveBackHeldItems(BattleSystem *battleSystem, BattleContext *ctx) {
         // Pokemon lost both go. Before, the Pokemon had its own item back and
         // the one it got went to the bag: the same two items, in each other's
         // place; and one knocked off was lost.
+        //
+        // Not an item back in the party's hands: one handed to the player's
+        // other Pokemon in a double, which never was the wild side's, or one
+        // the player's Pokemon took back from the wild Pokemon. It is the
+        // Pokemon's again, as anything of the party is: no swap lasts, and
+        // nothing goes to the bag. A handed Berry the wild Pokemon ate has
+        // no entry left (NoteHeldItemUsedUp), and the Pokemon keeps what it
+        // holds, as before. Before, a Bestow to the partner was taken for a
+        // swap with the wild side, the item going to the bag; and an item
+        // handed over, used up, Recycled and stolen back, marked as lost,
+        // went to the bag and stayed held.
         for (i = 0; i < count; i++) {
             u16 given = ctx->itemsToRestore[i];
 
-            if (!(ctx->heldItemsGiven >> i & 1)) {
+            if (!(ctx->heldItemsGiven >> i & 1) || (given != ITEM_NONE && HeldItemBackInParty(ctx, held, count, i))) {
                 continue;
             }
             for (j = 1; given != ITEM_NONE && j < BATTLER_MAX; j += 2) {
