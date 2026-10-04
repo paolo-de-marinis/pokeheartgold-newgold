@@ -7292,6 +7292,18 @@ void NoteHeldItemGiven(BattleSystem *battleSystem, BattleContext *ctx, int battl
     ctx->heldItemOwner[b] = ownerA;
 }
 
+// A Sticky Barb moving to the Pokemon that struck its holder: whose item it
+// is goes with it, unmarked, as with Symbiosis (TrySymbiosisHandOver). Its
+// subscript moves the item; the tag was left behind, and the empty hand it
+// went to kept the tag of an item it had used up: a Barb then taken or
+// knocked off it marked that eaten item as taken, and it came back.
+static void PassStickyBarbTag(BattleSystem *battleSystem, BattleContext *ctx) {
+    int from = Battler_PartySlot(battleSystem, ctx, ctx->battlerIdTarget);
+
+    ctx->heldItemOwner[Battler_PartySlot(battleSystem, ctx, ctx->battlerIdAttacker)] = ctx->heldItemOwner[from];
+    ctx->heldItemOwner[from] = 0;
+}
+
 // battlerId is using up the item it holds: eating its Berry, or losing it to
 // Pluck, Bug Bite, Fling, Natural Gift or Incinerate. A Berry one of the
 // player's own Pokemon handed it (NoteHeldItemGiven) is gone for good, not
@@ -9231,6 +9243,7 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
     switch (item) {
     case HOLD_EFFECT_DMG_USER_CONTACT_XFR: // sticky barb
         if (ctx->battleMons[ctx->battlerIdAttacker].hp && !(ctx->battleMons[ctx->battlerIdAttacker].item) && ctx->moveNoCur != MOVE_KNOCK_OFF && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
+            PassStickyBarbTag(battleSystem, ctx);
             *script = BATTLE_SUBSCRIPT_TRANSFER_STICKY_BARB;
             ret = TRUE;
         }
@@ -12490,6 +12503,7 @@ BOOL CheckItemEffectOnUTurn(BattleSystem *battleSystem, BattleContext *ctx, int 
     }
 
     if (itemTarget == HOLD_EFFECT_DMG_USER_CONTACT_XFR && ctx->battleMons[ctx->battlerIdAttacker].hp && !ctx->battleMons[ctx->battlerIdAttacker].item && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
+        PassStickyBarbTag(battleSystem, ctx);
         *script = BATTLE_SUBSCRIPT_TRANSFER_STICKY_BARB;
         ret = TRUE;
     }
