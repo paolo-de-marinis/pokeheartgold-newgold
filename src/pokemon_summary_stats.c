@@ -80,6 +80,11 @@ static const u16 sStatNumberMsg[] = {
     msg_0302_00122, msg_0302_00123, msg_0302_00124,
 };
 
+// A Hyper trained stat counts as 31, and the latest games never tell its true
+// IV: their Judge says "Hyper trained!" (Pokemon Central, Allenamento Pro). The
+// IV page shows it as 31 with a star, which this bit asks for.
+#define STAT_VALUE_HYPER_TRAINED 0x8000
+
 extern void *sub_0208A520(PokemonSummaryAppPrefix *summary);
 
 static void ReadStatValues(PokemonSummaryAppPrefix *summary, u32 mode, u16 *values) {
@@ -87,6 +92,7 @@ static void ReadStatValues(PokemonSummaryAppPrefix *summary, u32 mode, u16 *valu
     Pokemon *mon;
     int first;
     int i;
+    u32 trained;
 
     // A Pokemon shown from a box is a BoxPokemon, and the stat accessors want
     // the party form of it.
@@ -98,13 +104,22 @@ static void ReadStatValues(PokemonSummaryAppPrefix *summary, u32 mode, u16 *valu
     }
 
     first = mode == SUMMARY_STATS_EVS ? MON_DATA_HP_EV : MON_DATA_HP_IV;
+    trained = mode == SUMMARY_STATS_IVS ? GetMonData(mon, MON_DATA_UNUSED_114, NULL) : 0;
     for (i = 0; i < NELEMS(sStatReadOrder); i++) {
         values[i] = (u16)GetMonData(mon, first + sStatReadOrder[i], NULL);
+        if (trained & MON_HYPER_TRAINED_BIT(sStatReadOrder[i])) {
+            values[i] = STAT_VALUE_HYPER_TRAINED | MAX_IV;
+        }
     }
 
     if (summary->args->unk11 == 2) {
         Heap_Free(mon);
     }
+}
+
+static void PrintStatValue(PokemonSummaryAppPrefix *summary, int i, u16 value, u8 alignment) {
+    sub_0208C87C(summary, (value & STAT_VALUE_HYPER_TRAINED) ? msg_0302_00208 : sStatNumberMsg[i], value & ~STAT_VALUE_HYPER_TRAINED, 3, 0);
+    sub_0208C778(summary, &summary->pageWindows[i], MAKE_TEXT_COLOR(1, 2, 0), alignment);
 }
 
 void PokemonSummary_ShowStatValues(PokemonSummaryAppPrefix *summary, u32 mode) {
@@ -133,13 +148,11 @@ void PokemonSummary_ShowStatValues(PokemonSummaryAppPrefix *summary, u32 mode) {
         sub_0208C8C8(summary, 0, msg_0302_00117, msg_0302_00119, msg_0302_00118, values[0], summary->mon.maxHp, 3, GetWindowWidth(&summary->pageWindows[0]) * 4, 0);
     } else {
         ReadStatValues(summary, mode, values);
-        sub_0208C87C(summary, sStatNumberMsg[0], values[0], 3, 0);
-        sub_0208C778(summary, &summary->pageWindows[0], MAKE_TEXT_COLOR(1, 2, 0), 2);
+        PrintStatValue(summary, 0, values[0], 2);
     }
 
     for (i = 1; i < NELEMS(sStatReadOrder); i++) {
-        sub_0208C87C(summary, sStatNumberMsg[i], values[i], 3, 0);
-        sub_0208C778(summary, &summary->pageWindows[i], MAKE_TEXT_COLOR(1, 2, 0), 1);
+        PrintStatValue(summary, i, values[i], 1);
     }
 
     for (i = 0; i < NELEMS(sStatReadOrder); i++) {

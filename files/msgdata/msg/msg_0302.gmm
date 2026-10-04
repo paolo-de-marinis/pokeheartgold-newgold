@@ -862,4 +862,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">IV</language>
 	</row>
+	<row id="msg_0302_00208" index="208">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 52, 0, 0}★</language>
+	</row>
 </body>
