@@ -24,6 +24,7 @@ mapping is checked against it; where it is not, the numbers are pinned.
 import csv
 import os
 import re
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -361,7 +362,9 @@ class SharedRecordTests(unittest.TestCase):
     while every item that came over with the ROM kept its vanilla record even
     where the reference changed it -- 277 prices and all 64 of Natural Gift's
     sixth-generation powers. import_items.py --sync is what closes that, and
-    this is what notices if it opens again.
+    this is what notices if it opens again. The prices of the items HeartGold
+    has are the exception since 2026-10-04: they are HeartGold's (Paolo; the
+    reference's are Scarlet and Violet's), and RetailPriceTests holds them.
     """
 
     REFERENCE = Path("/home/paolo/Porting HGSS/hg-engine-newgold-reference")
@@ -382,12 +385,15 @@ class SharedRecordTests(unittest.TestCase):
         effects = importer.hold_effect_map(reference, importer.defines(header, "HOLD_EFFECT_"))
         rows = list(csv.reader(importer.ITEM_CSV.read_text().splitlines()))
         fields, mine = rows[0][1:], {r[0]: r[1:] for r in rows[1:]}
+        retail = importer.heartgold_priced()
         bad = []
         for theirs, ours in sorted(pairs.items()):
             if theirs not in reference.records or ours not in mine:
                 continue
             want = importer.record(reference, theirs, fields, effects, {})
             for field, wanted, got in zip(fields, want, mine[ours]):
+                if field in importer.PRICE and ours in retail:
+                    continue
                 if wanted != got and (ours, field) not in self.ALLOWED:
                     bad.append(f"{ours}.{field}: {got} here, {wanted} in the reference")
         self.assertEqual(bad, [], "run tools/newgold/import/import_items.py --sync --write")
@@ -395,6 +401,29 @@ class SharedRecordTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RetailPriceTests(unittest.TestCase):
+    """Every item HeartGold has costs what it cost in HeartGold (Paolo,
+    2026-10-04): retail pokeheartgold's item data (43b084839), price and no
+    high nibble, where the reference had Scarlet and Violet's (a Potion 200,
+    an Ultra Ball 800, an Amulet Coin 30000). Items HeartGold lacks keep the
+    reference's."""
+
+    def test_heartgold_s_items_cost_heartgold_s_prices(self):
+        retail = subprocess.run(["git", "-C", str(ROOT), "show", "43b084839:files/itemtool/itemdata/item_data.csv"],
+                                capture_output=True, text=True).stdout
+        if not retail:
+            self.skipTest("retail's item data is not in this clone")
+        retail = {row["item"]: row["price"] for row in csv.DictReader(retail.splitlines())}
+        now = {row["item"]: row for row in csv.DictReader((ROOT / "files/itemtool/itemdata/item_data.csv")
+                                                           .read_text().splitlines())}
+        self.assertEqual(len(retail), 514)
+        wrong = [f"{name}: {now[name]['price']} (+{now[name]['price_high']} << 16), retail {price}"
+                 for name, price in retail.items() if (now[name]["price"], now[name]["price_high"]) != (price, "0")]
+        self.assertEqual(wrong, [])
+        self.assertEqual((now["ITEM_POTION"]["price"], now["ITEM_ULTRA_BALL"]["price"], now["ITEM_AMULET_COIN"]["price"],
+                          now["ITEM_TM15"]["price"]), ("300", "1200", "100", "7500"))
 
 
 class PriceTests(unittest.TestCase):

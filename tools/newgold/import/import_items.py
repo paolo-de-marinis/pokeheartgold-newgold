@@ -67,6 +67,7 @@ import csv
 import hashlib
 import re
 import shutil
+import subprocess
 from pathlib import Path
 
 import gmm
@@ -519,6 +520,19 @@ def write_text(text, count, write):
 # that disagrees is a difference in how the two engines do the same thing,
 # and is named in KEPT below with the reason.
 SYNCED = ("price", "price_high", "naturalGiftPower", "flingPower", "holdEffectParam")
+PRICE = ("price", "price_high")
+
+# Every item HeartGold has costs what it cost there (Paolo, 2026-10-04): the
+# reference's prices are Scarlet and Violet's. Retail pokeheartgold's own item
+# data, before this port.
+RETAIL = "43b084839"
+
+
+def heartgold_priced():
+    """The items HeartGold has, by this tree's name: their price is retail's."""
+    text = subprocess.run(["git", "-C", str(ROOT), "show", f"{RETAIL}:files/itemtool/itemdata/item_data.csv"],
+                          capture_output=True, text=True, check=True).stdout
+    return {row["item"] for row in csv.DictReader(text.splitlines())}
 
 KEPT = {
     # This engine evolves a Pokemon by a party-use routine, not by a hold
@@ -539,16 +553,18 @@ def sync(reference, pairs, effects, fields, rows, report):
     The importer only ever adds an item it has not got, so a record that came
     over with the ROM keeps the value Game Freak gave it even where konefr
     changed his. That is most of the economy -- an Amulet Coin is 100 here and
-    30000 there -- and all of Natural Gift's sixth-generation powers.
+    30000 there -- and all of Natural Gift's sixth-generation powers. The
+    price of an item HeartGold has stays HeartGold's (heartgold_priced).
     """
     changed = {}
     index = {name: i for i, name in enumerate(fields)}
+    retail = heartgold_priced()
     for theirs, ours in sorted(pairs.items()):
         if theirs not in reference.records or ours not in rows:
             continue
         got = record(reference, theirs, fields, effects, {})
         for field in SYNCED:
-            if (ours, field) in KEPT:
+            if (ours, field) in KEPT or (field in PRICE and ours in retail):
                 continue
             at = index[field]
             if rows[ours][at] != got[at]:
