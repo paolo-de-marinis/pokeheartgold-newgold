@@ -1,0 +1,16 @@
+{
+  "about": "An ability that acts on entry, copied by Transform, acts as if its Pokemon had come in with it (Pokemon Central, Prepotenza: from the fourth generation Intimidate acts when gained in battle too; Showdown's gen-9 transformInto starts the new ability), even when the Pokemon's own entry ability had acted already. A level-10 Pikachu is given Hadron Engine and Splash, a forced wild Ditto Psychic Surge and Splash (set:, teach:): both act, the Ditto's Psychic Terrain last. The Ditto is then taught Transform, becomes a Pikachu with Hadron Engine, and its engine lays Electric Terrain. Before, Transform cleared retail's entry flags (Intimidate's, Trace's, Download's...) but not abilityActivatedFlag, which the Surges, Hadron Engine, Wind Power, Embody Aspect and Protean share, nor Unnerve's, Screen Cleaner's or Hospitality's, and the Ditto's flag, set by its Psychic Surge, kept the copied engine quiet: the field stayed psychic. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=132", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_SPLASH", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "set:0,ability,ABILITY_HADRON_ENGINE",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "set:1,ability,ABILITY_PSYCHIC_SURGE",
+            "fight:1:1",
+            "teach:1,0,MOVE_TRANSFORM",
+            "fight:1:1"],
+  "expect": {"lines": ["The battlefield got weird!", "The wild Ditto transformed into Pikachu!", "The wild Ditto turned the ground into Electric Terrain"],
+             "battler1.species": "SPECIES_PIKACHU"}
+}

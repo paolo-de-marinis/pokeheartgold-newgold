@@ -1793,6 +1793,21 @@ class TransformTests(unittest.TestCase):
         mon = header[header.index("typedef struct BattleMon {"):header.index("} BattleMon;")]
         self.assertLess(mon.index("u8 unusedAbility;"), mon.index("u16 ability;"))
 
+    def test_the_copied_ability_acts_as_on_entry(self):
+        # Every flag a switch-in clears for an ability that acts on entry,
+        # Transform clears for the ability it copies (Prepotenza: from the
+        # fourth generation it acts when gained in battle; Showdown's gen-9
+        # transformInto starts the new ability), as the reference clears
+        # ability_activated_flag: not the Air Balloon's, an item's, nor
+        # Imposter's, which Transform spends (below).
+        flags = function(OVERLAY.read_text(), "BattleSystem_GetBattleMon")
+        flags = flags[flags.index("ctx->battleMons[battlerId].sendOutFlag = 0;"):flags.index("ctx->battleMons[battlerId].neutralizingGasFlag = 0;")]
+        flags = set(re.findall(r"ctx->battleMons\[battlerId\]\.(\w+Flag) = 0;", flags)) - {"airBalloonFlag", "imposterFlag"}
+        self.assertGreaterEqual(len(flags), 14)
+        body = function(COMMANDS.read_text(), "BtlCmd_Transform")
+        for flag in sorted(flags):
+            self.assertIn(f"ctx->battleMons[ctx->battlerIdAttacker].{flag} = 0;", body)
+
     def test_a_copied_imposter_does_not_act(self):
         # Imposter acts on entry only (Pokemon Central, Sosia; Showdown's
         # gen-9 Imposter is a switch-in handler): Transform spends it, as the

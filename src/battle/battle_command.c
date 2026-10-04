@@ -4533,6 +4533,18 @@ BOOL BtlCmd_Transform(BattleSystem *battleSystem, BattleContext *ctx) {
     ctx->battleMons[ctx->battlerIdAttacker].unk88.slowStartTurns = ctx->totalTurns + 1;
     ctx->battleMons[ctx->battlerIdAttacker].slowStartFlag = 0;
     ctx->battleMons[ctx->battlerIdAttacker].slowStartEnded = 0;
+    // The copied ability acts as if the Pokemon had come in with it, as the
+    // retail ones cleared above do (Pokemon Central, Prepotenza: from the
+    // fourth generation it acts when gained in battle too; Showdown's gen-9
+    // transformInto starts the new ability): the later games' abilities
+    // that act on entry -- a Surge, Hadron Engine, Unnerve, Screen Cleaner,
+    // Hospitality -- and Protean's once an appearance, which these flags
+    // keep. The reference clears ability_activated_flag, which gates them
+    // all there.
+    ctx->battleMons[ctx->battlerIdAttacker].abilityActivatedFlag = 0;
+    ctx->battleMons[ctx->battlerIdAttacker].unnerveFlag = 0;
+    ctx->battleMons[ctx->battlerIdAttacker].screenCleanerFlag = 0;
+    ctx->battleMons[ctx->battlerIdAttacker].hospitalityFlag = 0;
     // Imposter acts as its Pokemon comes in and at no other time (Pokemon
     // Central, Sosia; Showdown's gen-9 Imposter is a switch-in handler), and
     // a transformed Pokemon transforms no more: one that copied Imposter is
