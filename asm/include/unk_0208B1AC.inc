@@ -88,3 +88,4 @@
 .public _u32_div_f
 .public gOverlayTemplate_Battle
 .public gNatureStatMods
+.public _02104C68
