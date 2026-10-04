@@ -592,6 +592,7 @@ Overlay field
     Object src/field/headbutt.o
     Object asm/overlay_01_022051EC.o
     Object asm/overlay_01_022053EC.o
+    Object src/field/scrcmd_ev_iv_trainer.o
 }
 Overlay OVY_2
 {
@@ -1658,4 +1659,10 @@ Overlay OVY_127
 Overlay OVY_128
 {
     After ds_protect
+}
+Overlay ev_iv_trainer
+{
+    After main
+    Object src/ev_iv_trainer_app.o
+    Object src/ev_iv_trainer_rules.o
 }

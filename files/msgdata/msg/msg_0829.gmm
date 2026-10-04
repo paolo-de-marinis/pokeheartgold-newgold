@@ -1,0 +1,263 @@
+<?xml version="1.0"?>
+<body language="English">
+	<row id="msg_0829_00000" index="0">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">EV/IV TRAINING</language>
+	</row>
+	<row id="msg_0829_00001" index="1">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">EFFORT VALUES</language>
+	</row>
+	<row id="msg_0829_00002" index="2">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">HYPER TRAINING</language>
+	</row>
+	<row id="msg_0829_00003" index="3">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">PRESETS</language>
+	</row>
+	<row id="msg_0829_00004" index="4">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">IV</language>
+	</row>
+	<row id="msg_0829_00005" index="5">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">EV</language>
+	</row>
+	<row id="msg_0829_00006" index="6">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Stat</language>
+	</row>
+	<row id="msg_0829_00007" index="7">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">new</language>
+	</row>
+	<row id="msg_0829_00008" index="8">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">EVs</language>
+	</row>
+	<row id="msg_0829_00009" index="9">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Left</language>
+	</row>
+	<row id="msg_0829_00010" index="10">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Total</language>
+	</row>
+	<row id="msg_0829_00011" index="11">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Nature</language>
+	</row>
+	<row id="msg_0829_00012" index="12">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">HP</language>
+	</row>
+	<row id="msg_0829_00013" index="13">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Attack</language>
+	</row>
+	<row id="msg_0829_00014" index="14">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Defense</language>
+	</row>
+	<row id="msg_0829_00015" index="15">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Speed</language>
+	</row>
+	<row id="msg_0829_00016" index="16">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sp. Atk</language>
+	</row>
+	<row id="msg_0829_00017" index="17">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sp. Def</language>
+	</row>
+	<row id="msg_0829_00018" index="18">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">HP</language>
+	</row>
+	<row id="msg_0829_00019" index="19">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Atk</language>
+	</row>
+	<row id="msg_0829_00020" index="20">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Def</language>
+	</row>
+	<row id="msg_0829_00021" index="21">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Spe</language>
+	</row>
+	<row id="msg_0829_00022" index="22">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">SpA</language>
+	</row>
+	<row id="msg_0829_00023" index="23">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">SpD</language>
+	</row>
+	<row id="msg_0829_00024" index="24">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">max {STRVAR_1 52, 0, 0}</language>
+	</row>
+	<row id="msg_0829_00025" index="25">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Max</language>
+	</row>
+	<row id="msg_0829_00026" index="26">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Clear</language>
+	</row>
+	<row id="msg_0829_00027" index="27">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">L/R: 10 at a time</language>
+	</row>
+	<row id="msg_0829_00028" index="28">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Sets</language>
+	</row>
+	<row id="msg_0829_00029" index="29">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Done</language>
+	</row>
+	<row id="msg_0829_00030" index="30">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">No Good</language>
+	</row>
+	<row id="msg_0829_00031" index="31">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Decent</language>
+	</row>
+	<row id="msg_0829_00032" index="32">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pretty Good</language>
+	</row>
+	<row id="msg_0829_00033" index="33">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Very Good</language>
+	</row>
+	<row id="msg_0829_00034" index="34">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Fantastic</language>
+	</row>
+	<row id="msg_0829_00035" index="35">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Best</language>
+	</row>
+	<row id="msg_0829_00036" index="36">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hyper trained!</language>
+	</row>
+	<row id="msg_0829_00037" index="37">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">A Bottle Cap trains one stat,</language>
+	</row>
+	<row id="msg_0829_00038" index="38">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">a Gold Bottle Cap all six.</language>
+	</row>
+	<row id="msg_0829_00039" index="39">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Train</language>
+	</row>
+	<row id="msg_0829_00040" index="40">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Train all</language>
+	</row>
+	<row id="msg_0829_00041" index="41">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">x{STRVAR_1 52, 0, 0}  (have {STRVAR_1 52, 1, 0})</language>
+	</row>
+	<row id="msg_0829_00042" index="42">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 52, 0, 0}/{STRVAR_1 52, 1, 0}</language>
+	</row>
+	<row id="msg_0829_00043" index="43">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Apply</language>
+	</row>
+	<row id="msg_0829_00044" index="44">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English"> / </language>
+	</row>
+	<row id="msg_0829_00045" index="45">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 52, 0, 0} in each stat</language>
+	</row>
+	<row id="msg_0829_00046" index="46">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">No EVs</language>
+	</row>
+	<row id="msg_0829_00047" index="47">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hyper Training is only for</language>
+	</row>
+	<row id="msg_0829_00048" index="48">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">There are no sets.</language>
+	</row>
+	<row id="msg_0829_00049" index="49">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Apply the new EVs?\nThe fee is ${STRVAR_1 55, 0, 0}.</language>
+	</row>
+	<row id="msg_0829_00050" index="50">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Apply the new EVs?\nTaking EVs away is free.</language>
+	</row>
+	<row id="msg_0829_00051" index="51">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hyper train it with\n{STRVAR_1 8, 0, 0}?</language>
+	</row>
+	<row id="msg_0829_00052" index="52">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Hyper train it with\n{STRVAR_1 52, 1, 0} {STRVAR_1 8, 0, 0}?</language>
+	</row>
+	<row id="msg_0829_00053" index="53">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">You don’t have enough money.</language>
+	</row>
+	<row id="msg_0829_00054" index="54">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">You don’t have\n{STRVAR_1 8, 0, 0}.</language>
+	</row>
+	<row id="msg_0829_00055" index="55">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Discard the changes?</language>
+	</row>
+	<row id="msg_0829_00056" index="56">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 1, 0, 0}’s training\nis done!</language>
+	</row>
+	<row id="msg_0829_00057" index="57">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">♂</language>
+	</row>
+	<row id="msg_0829_00058" index="58">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">♀</language>
+	</row>
+	<row id="msg_0829_00059" index="59">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 8, 0, 0}</language>
+	</row>
+	<row id="msg_0829_00060" index="60">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">{STRVAR_1 52, 0, 0}</language>
+	</row>
+	<row id="msg_0829_00061" index="61">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">+</language>
+	</row>
+	<row id="msg_0829_00062" index="62">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">-</language>
+	</row>
+	<row id="msg_0829_00063" index="63">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">★</language>
+	</row>
+	<row id="msg_0829_00064" index="64">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Pokémon at Lv. {STRVAR_1 52, 0, 0} or higher.</language>
+	</row>
+</body>

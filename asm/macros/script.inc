@@ -4788,6 +4788,13 @@
 	.short \item
 	.endm
 
+	; The EV/IV trainer: its party menu, then its screens for each Pokemon
+	; chosen; var is how many were trained.
+	.macro EvIvTrainer var
+	.short 854
+	.short \var
+	.endm
+
 	; Script headers
 
 	.macro MapScript kind, script
