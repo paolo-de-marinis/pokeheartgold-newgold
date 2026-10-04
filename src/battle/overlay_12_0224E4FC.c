@@ -7263,13 +7263,17 @@ static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ct
 // Taken from a wild Pokemon, it goes to the bag when the battle is over,
 // unless that Pokemon is caught: then it keeps its item and the bag gets no
 // copy (Pokemon Central, Arraffalesto and Furto, from the ninth generation).
+// Its own item, that is: one of the player's it was handed is not its own to
+// keep, but the player's back. Before, an item the player's Pokemon Tricked
+// to a wild Pokemon and stole back was written down as the wild Pokemon's:
+// caught, it was given that item, and the player's Pokemon kept it too.
 void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdTaker, int battlerIdLoser) {
     int from = Battler_PartySlot(battleSystem, ctx, battlerIdLoser);
     int owner = ctx->heldItemOwner[from];
 
     if (owner == from + 1) {
         ctx->heldItemsTaken |= MaskOfFlagNo(from);
-    } else if (Battler_IsWild(battleSystem, battlerIdLoser)) {
+    } else if (owner == 0 && Battler_IsWild(battleSystem, battlerIdLoser)) {
         ctx->itemsTakenFromWild[battlerIdLoser >> 1] = ctx->battleMons[battlerIdLoser].item;
     }
     ctx->heldItemOwner[from] = 0;

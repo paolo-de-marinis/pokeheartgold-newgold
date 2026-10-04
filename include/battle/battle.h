@@ -735,7 +735,8 @@ typedef struct BattleContext {
     u8 heldItemsCount;
     // The item the player's side took from each wild Pokemon -- Thief,
     // Covet, Magician, Pickpocket -- by battlerId >> 1, the wild ones being 1
-    // and 3 (NoteHeldItemTaken). A wild Pokemon caught gets it back; the
+    // and 3 (NoteHeldItemTaken): its own, not an item of the player's it was
+    // handed. A wild Pokemon caught gets it back; the
     // catch clears the other's, and GiveBackHeldItems bags no copy of what is
     // left.
     u16 itemsTakenFromWild[2];

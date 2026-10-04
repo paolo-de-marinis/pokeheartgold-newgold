@@ -1,0 +1,21 @@
+{
+  "about": "An item of the player's handed to a wild Pokemon and stolen back from it is not the wild Pokemon's own: caught, the wild Pokemon gets back only what it started with, and the player's Pokemon keeps its item (Pokemon Central, Furto: from the ninth generation a wild Pokemon caught keeps its own item). A level-5 Pikachu holding a Silk Scarf, with a Master Ball in the bag (savedit --party's item, --bag), is taught Trick and Thief (teach:) against a forced wild Chansey that holds nothing and knows only Splash (set:, teach:): Trick hands the Scarf over, Thief takes it back, the ball is thrown from the battle's bag (touch:, as in caught_pokemon_keeps_item.json), and the field step plays the battle's end on. The Pikachu holds the Silk Scarf, the caught Chansey nothing, and the bag has none. Before, Thief wrote the Scarf down as taken from the wild Pokemon, the catch gave it to the Chansey, and the Pikachu kept it as well. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:5:::SILK_SCARF", "--bag", "MASTER_BALL:1"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "set:1,item,ITEM_NONE", "teach:0,0,MOVE_TRICK", "teach:0,1,MOVE_THIEF",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Trick!", "The wild Chansey obtained Silk Scarf."],
+                        "battler0.item": "ITEM_NONE", "battler1.item": "ITEM_SILK_SCARF"}},
+            "fight:2:1",
+            {"expect": {"new_lines": ["Pikachu used Thief!", "Silk Scarf!"],
+                        "battler0.item": "ITEM_SILK_SCARF", "battler1.item": "ITEM_NONE"}},
+            "wait:60", "touch:40,170", "wait:60", "touch:192,55", "wait:60", "touch:64,40", "wait:60", "touch:100,168",
+            "field"],
+  "expect": {"lines": ["used one Master Ball!", "Gotcha! Chansey was caught!"],
+             "party": 2, "party0.species": "SPECIES_PIKACHU", "party0.item": "ITEM_SILK_SCARF",
+             "party1.species": "SPECIES_CHANSEY", "party1.item": "ITEM_NONE",
+             "bag:ITEM_SILK_SCARF": 0}
+}

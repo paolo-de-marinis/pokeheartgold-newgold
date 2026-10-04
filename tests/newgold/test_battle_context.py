@@ -455,6 +455,19 @@ int main(void) {
     NoteHeldItemTaken(&bs, &ctx, 2, 1);
     assert(ctx.itemsTakenFromWild[0] == ITEM_LEFTOVERS && ctx.itemsTakenFromWild[1] == ITEM_ESCAPE_ROPE);
     assert(ctx.heldItemsTaken == 0);
+    // An Oran Berry of the player's Tricked to a wild Pokemon holding
+    // nothing and stolen back is not the wild Pokemon's own: nothing is
+    // written down for it to have back when caught. Before, it was given the
+    // Berry, and the player's Pokemon kept it too.
+    reset(&bs, &ctx);
+    bs.type = BATTLE_TYPE_DOUBLES;
+    ctx.battleMons[1].item = ITEM_NONE;
+    NoteHeldItemGiven(&bs, &ctx, 0, 1);
+    ctx.battleMons[0].item = ITEM_NONE;
+    ctx.battleMons[1].item = ITEM_ORAN_BERRY;
+    NoteHeldItemTaken(&bs, &ctx, 0, 1);
+    assert(ctx.itemsTakenFromWild[0] == ITEM_NONE && ctx.itemsTakenFromWild[1] == ITEM_NONE);
+    assert(tag(&bs, &ctx, 0) == 2 && tag(&bs, &ctx, 1) == 0);
 
     // Trick and Switcheroo: the player's Pokemon handing over the Oran Berry
     // it started with is marked, and the two tags change places.
