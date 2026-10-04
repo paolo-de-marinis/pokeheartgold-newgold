@@ -1,0 +1,15 @@
+{
+  "about": "A Pokemon transformed into Giratina's Origin Forme keeps that form (Pokemon Central, Trasformazione (stato): from the fifth generation a transformed Pokemon changes form no more; Showdown's transformInto sets Giratina's form by the held item in the fourth generation only). A level-10 Giratina holding the Griseous Orb is put in its Origin Forme in the running battle (set: form 1, GIRATINA_ORIGIN, and the orb, which keeps its own) and given Splash (teach:) against a forced wild Ditto that knows only Transform: the Ditto becomes a Giratina in the Origin Forme and stays in it (battler1.form 1). Before, retail's transformed branch in Battler_CheckWeatherFormChange rebuilt it as an Altered Forme at once (\"The wild Ditto transformed!\", battler1.form 0). The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "GIRATINA:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=132", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_SPLASH", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "set:0,item,ITEM_GRISEOUS_ORB", "set:0,form,1",
+            "teach:1,0,MOVE_TRANSFORM", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "wait:2", {"expect": {"battler0.species": "SPECIES_GIRATINA", "battler0.form": 1, "battler1.species": "SPECIES_DITTO"}},
+            "fight:1:1"],
+  "expect": {"new_lines": ["The wild Ditto transformed into Giratina!"],
+             "no_lines": ["The wild Ditto transformed!"],
+             "battler0.form": 1, "battler1.species": "SPECIES_GIRATINA", "battler1.form": 1}
+}

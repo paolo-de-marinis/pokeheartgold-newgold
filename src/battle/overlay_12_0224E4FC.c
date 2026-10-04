@@ -10594,45 +10594,18 @@ BOOL Battler_CheckWeatherFormChange(BattleSystem *battleSystem, BattleContext *c
                 break;
             }
         }
-        if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_GIRATINA && ctx->battleMons[ctx->battlerIdTemp].hp && ctx->battleMons[ctx->battlerIdTemp].form == GIRATINA_ORIGIN) {
-            if ((ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM) || (!(BattleSystem_GetBattleSpecial(battleSystem) & BATTLE_SPECIAL_DISTORTION_WORLD) && !ItemGivesGiratinaOriginForm(ctx->battleMons[ctx->battlerIdTemp].item))) {
-                if (ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM) {
-                    Pokemon *mon2;
-                    int battlerIdTarget;
-                    int dat;
-
-                    mon2 = AllocMonZeroed(HEAP_ID_BATTLE);
-
-                    if (BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_DOUBLES) {
-                        battlerIdTarget = ctx->playerActions[ctx->battlerIdTemp].unk4;
-                    } else {
-                        battlerIdTarget = ctx->battlerIdTemp ^ 1;
-                    }
-                    CopyPokemonToPokemon(BattleSystem_GetPartyMon(battleSystem, battlerIdTarget, ctx->selectedMonIndex[battlerIdTarget]), mon2);
-                    dat = 0;
-                    SetMonData(mon2, MON_DATA_HELD_ITEM, &dat);
-                    dat = (u8)GIRATINA_ALTERED;
-                    SetMonData(mon2, MON_DATA_FORM, &dat);
-                    Mon_UpdateGiratinaForm(mon2);
-                    ctx->battleMons[ctx->battlerIdTemp].atk = GetMonData(mon2, MON_DATA_ATK, NULL);
-                    ctx->battleMons[ctx->battlerIdTemp].def = GetMonData(mon2, MON_DATA_DEF, NULL);
-                    ctx->battleMons[ctx->battlerIdTemp].speed = GetMonData(mon2, MON_DATA_SPEED, NULL);
-                    ctx->battleMons[ctx->battlerIdTemp].spAtk = GetMonData(mon2, MON_DATA_SP_ATK, NULL);
-                    ctx->battleMons[ctx->battlerIdTemp].spDef = GetMonData(mon2, MON_DATA_SP_DEF, NULL);
-                    ctx->battleMons[ctx->battlerIdTemp].ability = GetMonData(mon2, MON_DATA_ABILITY, NULL);
-                    ctx->battleMons[ctx->battlerIdTemp].form = GIRATINA_ALTERED;
-                    ctx->battleStatus2 |= BATTLE_STATUS2_FORM_CHANGE;
-                    BattleController_EmitBattleMonToPartyMonCopy(battleSystem, ctx, ctx->battlerIdTemp);
-                    Heap_Free(mon2);
-                    *script = BATTLE_SUBSCRIPT_FORM_CHANGE;
-                    ret = TRUE;
-                    break;
-                } else {
-                    *script = BATTLE_SUBSCRIPT_GIRATINA_FORM_CHANGE;
-                    ret = TRUE;
-                    break;
-                }
-            }
+        // A Pokemon transformed into Giratina's Origin Forme keeps the form it
+        // copied, as one transformed into Castform or Arceus does: from the
+        // fifth generation a transformed Pokemon changes form no more
+        // (Pokemon Central, Trasformazione (stato); Showdown's transformInto
+        // sets Giratina's form by the held item in the fourth generation
+        // only). Retail rebuilt it as an Altered Forme from the target's
+        // party data, its own Griseous Orb missing.
+        if (ctx->battleMons[ctx->battlerIdTemp].species == SPECIES_GIRATINA && ctx->battleMons[ctx->battlerIdTemp].hp && ctx->battleMons[ctx->battlerIdTemp].form == GIRATINA_ORIGIN
+            && !(ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM) && !(BattleSystem_GetBattleSpecial(battleSystem) & BATTLE_SPECIAL_DISTORTION_WORLD) && !ItemGivesGiratinaOriginForm(ctx->battleMons[ctx->battlerIdTemp].item)) {
+            *script = BATTLE_SUBSCRIPT_GIRATINA_FORM_CHANGE;
+            ret = TRUE;
+            break;
         }
         if (ctx->battleMons[ctx->battlerIdTemp].hp && !(ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM)) {
             form = Battler_ZenModeForm(ctx, ctx->battlerIdTemp);

@@ -89,6 +89,16 @@ class ItemFormTests(unittest.TestCase):
                           f" && GetBattlerAbility(ctx, ctx->battlerIdTemp) == ABILITY_{ability}"
                           " && !(ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM)) {", body)
 
+    def test_a_transformed_giratina_keeps_the_origin_forme(self):
+        # From the fifth generation (Trasformazione (stato); Showdown sets
+        # Giratina's form by the item in the fourth only): only a Giratina of
+        # its own goes back to the Altered Forme without its Griseous Orb.
+        body = function(OVERLAY.read_text(), "Battler_CheckWeatherFormChange")
+        giratina = body[body.index("SPECIES_GIRATINA"):body.index("Battler_ZenModeForm")]
+        self.assertIn("form == GIRATINA_ORIGIN\n            && !(ctx->battleMons[ctx->battlerIdTemp].status2 & STATUS2_TRANSFORM) && ", giratina)
+        self.assertNotIn("GIRATINA_ALTERED", giratina)
+        self.assertEqual(giratina.count("*script = "), 1)
+
 
 class EntryTests(unittest.TestCase):
     def setUp(self):
