@@ -15,7 +15,11 @@ a free slot from 300 row 219, and the EV/IV header from 302 rows 206/207.
 
 Bank 550 is Cherrygrove's map text. hg-engine has no file for it, so at the
 engine it is retail's 25 rows; konefr's data/text/550.txt keeps those 25 and
-appends 41 for his developer vendor and EV presets, which nothing here reads.
+appends 41 for his developer vendor and EV presets: the EV/IV trainer reads
+his presets' names as its sets, and in a diagnostics build his vendor's lines.
+
+After hg-engine's rows come the port's own, PORT_ROWS: the summary's star for
+a Hyper trained IV (302) and the EV/IV trainer's party menu line (300).
 
 Usage: import_interface_text.py [--revision REV]   (default: the engine)
 """
@@ -25,6 +29,11 @@ import re
 import gmm
 
 BANKS = (10, 24, 40, 203, 300, 302, 435)
+# Rows the port adds after hg-engine's in the banks it writes whole.
+PORT_ROWS = {
+    300: ["Train which Pokémon?"],      # PARTY_MENU_CONTEXT_TRAIN_MON's line
+    302: ["{STRVAR_1 52, 0, 0}★"],      # a Hyper trained IV, PrintStatValue
+}
 # Banks only New Gold writes, and how many rows retail has where it does not.
 RETAIL_WHERE_ABSENT = {550: 25}
 
@@ -40,7 +49,7 @@ def build(bank, lines, old):
     # Row ids are what scripts name: msg_0550_T21_00003, not msg_0550_00003.
     prefix = gmm.path_of(bank).stem
     rows = []
-    for index, line in enumerate(lines):
+    for index, line in enumerate(lines + PORT_ROWS.get(bank, [])):
         name = f"{prefix}_{index:05d}"
         had = old[index] if index < len(old) else None
         if line and not line.strip(" "):
