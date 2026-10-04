@@ -68,7 +68,7 @@ move a species can know at any level, each with every way it is learnt: its
 level-up learnset (`wotbl.narc`; level 0 is on evolving) without the moves
 `IsMoveUnimplemented` flags, which `LoadLevelUpLearnset_HandleAlternateForm`
 drops for every reader, the TMs, HMs and TRs its `personal.json` record is
-compatible with (`sTMHMMoves` and `ItemToTMHMId` in `src/item.c`), the move
+compatible with (`sTMHMMoves` and `sMachineRuns` in `src/item.c`), the move
 tutors (`waza_oshie.json` through `sTutorMoves`, at the record
 `GetMoveTutorLearnsetIndex` reads; and the Blackthorn tutor's script,
 `scr_seq_0948_T30R0601.s`, which teaches its move to a Pokemon of the type
@@ -185,7 +185,7 @@ laid out as `include/pokemon.h`'s `LEVEL_UP_LEARNSET_` macros and
 `struct MoveTbl` say. The tables are read out of the C that has them: the block
 order (`GetSubstruct`), `gNatureStatMods`, `ResolveMonForm`'s forms, the
 pockets (`struct Bag`, `Bag_GetItemPocket`, `sPockets`), which items are
-TMs, HMs and TRs (`ItemIsTM` and the rest), the message banks
+TMs, HMs and TRs (`sMachineRuns`, which `ItemIsTM` and the rest read), the message banks
 (`message_format.c`'s Buffer functions), the icons' numbers
 (`GetMonIconNaixEx`). The blocks' sizes are the one thing measured from the
 build, since the game's `Save_*_sizeof` exist in no other form; the page

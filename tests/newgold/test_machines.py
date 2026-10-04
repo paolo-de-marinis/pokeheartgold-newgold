@@ -176,6 +176,8 @@ typedef uint32_t u32;
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
+#define NELEMS(a) (sizeof(a) / sizeof(*(a)))
+#include <stddef.h>
 #include "constants/items.h"
 #include "constants/moves.h"
 
@@ -213,6 +215,12 @@ int main(void) {
 """
 
 
+def machine_code(source):
+    """src/item.c's machine runs and every function that reads them."""
+    start = source.index("enum MachineKind {")
+    return source[start:source.index("}", source.index("u16 ItemToMachineNumber(u16 itemId) {")) + 1]
+
+
 def item_ids():
     header = (ROOT / "include/constants/items.h").read_text()
     return {name: int(value) for name, value in re.findall(r"#define (ITEM_\w+)\s+(\d+)\b", header)}
@@ -225,8 +233,7 @@ class MachineItemTests(unittest.TestCase):
         source = (ROOT / "src/item.c").read_text()
         table = source[source.index("static const u16 sTMHMMoves[]"):]
         table = table[:table.index("};") + 2]
-        native = [table] + [function(source, name) for name in
-                            ("TMHMGetMove", "ItemIsTM", "ItemIsHM", "ItemIsTR", "ItemIsMachine", "ItemToTMHMId")]
+        native = [table, machine_code(source), function(source, "TMHMGetMove")]
         with tempfile.TemporaryDirectory(prefix="newgold-machine-items-") as temp:
             c, exe = Path(temp) / "check.c", Path(temp) / "check"
             c.write_text(MAPPING.replace("@NATIVE@", "\n".join(native)))

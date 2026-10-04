@@ -18,11 +18,14 @@ import tempfile
 import unittest
 
 from test_level_cap import ROOT, function
+from test_machines import machine_code
 
 PREFIX = r'''
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stddef.h>
+#define NELEMS(a) (sizeof(a) / sizeof(*(a)))
 #include <string.h>
 #include "constants/items.h"
 #include "constants/pokemon.h"
@@ -168,8 +171,8 @@ int main(void) {
 
 class ReusableTMTests(unittest.TestCase):
     def test_native_reusable_machines(self):
-        native = [function((ROOT / "src/item.c").read_text(), name)
-                  for name in ("ItemIsTM", "ItemIsHM", "ItemIsTR", "ItemIsMachine", "MoveIsHM")] + [
+        item = (ROOT / "src/item.c").read_text()
+        native = [machine_code(item), function(item, "MoveIsHM")] + [
                   function((ROOT / "src/bag.c").read_text(), "Bag_GetItemSlotForAdd").replace("static ", "", 1),
                   function((ROOT / "src/party_menu_items.c").read_text(), "PartyMenu_LearnMoveToSlot")]
         program = PREFIX.replace("@NATIVE@", "\n".join(native)) + MAIN
@@ -227,6 +230,8 @@ ROW = r"""
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stddef.h>
+#define NELEMS(a) (sizeof(a) / sizeof(*(a)))
 typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32; typedef int16_t s16;
 typedef int BOOL;
 #define TRUE 1
@@ -283,7 +288,7 @@ class BagDisplayTests(unittest.TestCase):
 
     def test_the_machine_row_counts_only_trs(self):
         item = (ROOT / "src/item.c").read_text()
-        native = [function(item, name) for name in ("ItemIsTM", "ItemIsHM", "ItemIsTR")]
+        native = [machine_code(item)]
         native.append(function((ROOT / "src/bag_item_row.c").read_text(), "ov15_021FF570"))
         with tempfile.TemporaryDirectory(prefix="newgold-bag-row-") as temp:
             c, exe = Path(temp) / "check.c", Path(temp) / "check"
@@ -299,6 +304,8 @@ SORT = r"""
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stddef.h>
+#define NELEMS(a) (sizeof(a) / sizeof(*(a)))
 typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32; typedef int32_t s32;
 typedef int BOOL;
 #define TRUE 1
@@ -334,7 +341,7 @@ class MachineSortTests(unittest.TestCase):
     def test_the_tm_case_sorts_tms_trs_then_hms(self):
         item = (ROOT / "src/item.c").read_text()
         bag = (ROOT / "src/bag.c").read_text()
-        native = [function(item, name) for name in ("ItemIsTM", "ItemIsHM", "ItemIsTR")]
+        native = [machine_code(item)]
         native += [function(bag, name) for name in ("SwapItemSlots", "MachineSortGroup", "SortTMHMPocket")]
         with tempfile.TemporaryDirectory(prefix="newgold-tm-sort-") as temp:
             c, exe = Path(temp) / "check.c", Path(temp) / "check"

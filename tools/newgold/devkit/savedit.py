@@ -776,15 +776,26 @@ def pocket_const(name):
 
 
 @tree_cache
+def machine_runs():
+    """sMachineRuns (src/item.c), the one table every machine question reads:
+    each run of machine items as (first, last, place, number, kind) -- the
+    place ItemToTMHMId gives the first, the number the bag labels it with,
+    and its MACHINE_ kind without the prefix."""
+    text = source("src/item.c").read_text()
+    table = text[text.index("sMachineRuns[] = {"):]
+    items = constants("include/constants/items.h", "ITEM_")
+    return [(items[first], items[last], int(place), int(number), kind) for first, last, place, number, kind in
+            re.findall(r"\{\s*(ITEM_\w+),\s*(ITEM_\w+),\s*(\d+),\s*(\d+),\s*MACHINE_(\w+)\s*\}",
+                       table[:table.index("};")])]
+
+
+@tree_cache
 def item_kind(test):
     """The items one of src/item.c's tests -- ItemIsTM, ItemIsHM, ItemIsTR --
-    says yes to: the ranges and the single items it names."""
-    body = c_function("src/item.c", f"BOOL {test}(")
-    items = constants("include/constants/items.h", "ITEM_")
-    out = {items[name] for name in re.findall(r"itemId == (ITEM_\w+)", body)}
-    for low, high in re.findall(r"itemId >= (ITEM_\w+) && itemId <= (ITEM_\w+)", body):
-        out.update(range(items[low], items[high] + 1))
-    return frozenset(out)
+    says yes to: the runs of its kind."""
+    kind = test[len("ItemIs"):]
+    return frozenset(item for first, last, _, _, of in machine_runs() if of == kind
+                     for item in range(first, last + 1))
 
 
 def item_limit(item):
@@ -1978,20 +1989,13 @@ def personal_row(species, form):
 def machines():
     """Each machine by its place in hg-engine's numbering -- the bit a
     species' record sets -- as (move, item): sTMHMMoves in src/item.c, and
-    the place ItemToTMHMId gives each machine item."""
+    the place ItemToTMHMId gives each machine item (machine_runs)."""
     text = source("src/item.c").read_text()
     table = text[text.index("sTMHMMoves[] = {"):]
     moves = move_numbers()
     taught = [moves[name] for name in re.findall(r"\bMOVE_(\w+),", table[:table.index("};")])]
-    body = text[text.index("u16 ItemToTMHMId("):]
-    body = body[:body.index("\n}\n")]
-    items = constants("include/constants/items.h", "ITEM_")
-    item_at = {int(place): items[item] for item, place in
-               re.findall(r"itemId == (ITEM_\w+)\) \{\s*return (\d+);", body)}
-    for low, high, base, add in re.findall(r"itemId >= (ITEM_\w+) && itemId <= (ITEM_\w+)\) \{\s*"
-                                           r"return itemId - (ITEM_\w+)(?: \+ (\d+))?;", body):
-        for item in range(items[low], items[high] + 1):
-            item_at[item - items[base] + int(add or 0)] = item
+    item_at = {place + item - first: item for first, last, place, _, _ in machine_runs()
+               for item in range(first, last + 1)}
     return [(move, item_at.get(place)) for place, move in enumerate(taught)]
 
 

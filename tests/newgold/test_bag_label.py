@@ -17,6 +17,7 @@ import zlib
 from pathlib import Path
 
 from test_level_cap import ROOT, function
+from test_machines import machine_code
 
 sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
 import make_tm_label  # noqa: E402
@@ -109,9 +110,8 @@ typedef enum { PRINTING_MODE_LEFT_ALIGN, PRINTING_MODE_RIGHT_ALIGN, PRINTING_MOD
 #define TM_DIGITS 3
 #define TR_DIGITS 2
 typedef int BOOL;
-BOOL ItemIsTM(u16 itemId);
-BOOL ItemIsHM(u16 itemId);
-BOOL ItemIsTR(u16 itemId);
+#include <stddef.h>
+#define NELEMS(a) (sizeof(a) / sizeof(*(a)))
 #define NUMBER_X 24
 #define NUMBER_Y 5
 
@@ -186,8 +186,7 @@ class NativeLabelTests(unittest.TestCase):
     def test_native_machine_label(self):
         source = (ROOT / "src/bag_machine_label.c").read_text()
         item = (ROOT / "src/item.c").read_text()
-        native = [function(item, name) for name in ("ItemIsTM", "ItemIsHM", "ItemIsTR")]
-        native += [function(source, "MachineNumber"), function(source, "ov15_021FE914")]
+        native = [machine_code(item), function(source, "ov15_021FE914")]
         program = NATIVE.replace("@NATIVE@", "\n".join(native))
         with tempfile.TemporaryDirectory(prefix="newgold-bag-label-") as temp:
             c, exe = Path(temp) / "check.c", Path(temp) / "check"

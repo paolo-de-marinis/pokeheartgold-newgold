@@ -284,6 +284,10 @@ BOOL ItemIsTR(u16 itemId);
 BOOL ItemIsMachine(u16 itemId);
 u16 ItemToTMHMId(u16 itemId);
 
+// The number the bag labels a machine with (TM05 is 5, TR00 0); 0 for an
+// item that is not a machine.
+u16 ItemToMachineNumber(u16 itemId);
+
 /*
  * BOOL ItemIdIsMail(u16 itemId)
  *

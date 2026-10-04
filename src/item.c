@@ -1441,50 +1441,76 @@ BOOL MoveIsHM(u16 moveId) {
     return FALSE;
 }
 
+// The machines, one row for each run of item ids that are machines one after
+// another: the place ItemToTMHMId gives its first item (the index into
+// sTMHMMoves and the bit in a species' record), the number the bag labels it
+// with, and what kind of machine it is. Every question about a machine is
+// answered from here.
+enum MachineKind {
+    MACHINE_TM,
+    MACHINE_HM,
+    MACHINE_TR,
+};
+
+static const struct MachineRun {
+    u16 first;
+    u16 last;
+    u16 place;
+    u8 number;
+    u8 kind;
+} sMachineRuns[] = {
+    { ITEM_TM01,      ITEM_TM92,      0,   1,   MACHINE_TM },
+    { ITEM_HM01,      ITEM_HM08,      92,  1,   MACHINE_HM },
+    // hg-engine's machines past HM08 (ItemToMachineMoveIndex and
+    // GetMachineMoveNumber in its src/item.c): the games that added machines
+    // numbered them on from TM92, started the TRs at 00, and Scarlet and
+    // Violet began again at TM100, so the number is not the place.
+    { ITEM_HM07_ORAS, ITEM_HM07_ORAS, 100, 7,   MACHINE_HM },
+    { ITEM_TM00,      ITEM_TM00,      101, 0,   MACHINE_TM },
+    { ITEM_TM093,     ITEM_TM095,     102, 93,  MACHINE_TM },
+    { ITEM_TM096,     ITEM_TM100,     105, 96,  MACHINE_TM },
+    { ITEM_TM100_SV,  ITEM_TM229,     110, 100, MACHINE_TM },
+    { ITEM_TR00,      ITEM_TR99,      240, 0,   MACHINE_TR },
+};
+
+static const struct MachineRun *ItemToMachineRun(u16 itemId) {
+    for (int i = 0; i < NELEMS(sMachineRuns); i++) {
+        if (itemId >= sMachineRuns[i].first && itemId <= sMachineRuns[i].last) {
+            return &sMachineRuns[i];
+        }
+    }
+    return NULL;
+}
+
+static BOOL ItemIsMachineOfKind(u16 itemId, u8 kind) {
+    const struct MachineRun *run = ItemToMachineRun(itemId);
+    return run != NULL && run->kind == kind;
+}
+
 BOOL ItemIsTM(u16 itemId) {
-    return (itemId >= ITEM_TM01 && itemId <= ITEM_TM92) || itemId == ITEM_TM00
-        || (itemId >= ITEM_TM093 && itemId <= ITEM_TM095) || (itemId >= ITEM_TM096 && itemId <= ITEM_TM100)
-        || (itemId >= ITEM_TM100_SV && itemId <= ITEM_TM229);
+    return ItemIsMachineOfKind(itemId, MACHINE_TM);
 }
 
 BOOL ItemIsHM(u16 itemId) {
-    return (itemId >= ITEM_HM01 && itemId <= ITEM_HM08) || itemId == ITEM_HM07_ORAS;
+    return ItemIsMachineOfKind(itemId, MACHINE_HM);
 }
 
 BOOL ItemIsTR(u16 itemId) {
-    return itemId >= ITEM_TR00 && itemId <= ITEM_TR99;
+    return ItemIsMachineOfKind(itemId, MACHINE_TR);
 }
 
 BOOL ItemIsMachine(u16 itemId) {
-    return ItemIsTM(itemId) || ItemIsHM(itemId) || ItemIsTR(itemId);
+    return ItemToMachineRun(itemId) != NULL;
 }
 
-// hg-engine's ItemToMachineMoveIndex: TM01 to HM08 keep HeartGold's places,
-// and the machines the later games added follow in hg-engine's order.
 u16 ItemToTMHMId(u16 itemId) {
-    if (itemId >= ITEM_TM01 && itemId <= ITEM_HM08) {
-        return itemId - ITEM_TM01;
-    }
-    if (itemId == ITEM_HM07_ORAS) {
-        return 100;
-    }
-    if (itemId == ITEM_TM00) {
-        return 101;
-    }
-    if (itemId >= ITEM_TM093 && itemId <= ITEM_TM095) {
-        return itemId - ITEM_TM093 + 102;
-    }
-    if (itemId >= ITEM_TM096 && itemId <= ITEM_TM100) {
-        return itemId - ITEM_TM096 + 105;
-    }
-    if (itemId >= ITEM_TM100_SV && itemId <= ITEM_TM229) {
-        return itemId - ITEM_TM100_SV + 110;
-    }
-    if (itemId >= ITEM_TR00 && itemId <= ITEM_TR99) {
-        return itemId - ITEM_TR00 + 240;
-    }
+    const struct MachineRun *run = ItemToMachineRun(itemId);
+    return run != NULL ? run->place + itemId - run->first : 0;
+}
 
-    return 0;
+u16 ItemToMachineNumber(u16 itemId) {
+    const struct MachineRun *run = ItemToMachineRun(itemId);
+    return run != NULL ? run->number + itemId - run->first : 0;
 }
 
 BOOL ItemIdIsMail(u16 itemId) {
