@@ -6,9 +6,10 @@
 // held in the temporary slot, because nothing is being used and moveNoCur
 // belongs to whatever turn this entry happened in the middle of.
 //
-// The ability has to be copied by hand: Transform copies only the front of
-// the record, which stops well short of it, and until this runs the copier
-// is still holding the Imposter the popup needed.
+// Transform copies the ability with the rest (BtlCmd_Transform copies it on
+// its own, since it was widened out of the record's front); the two lines
+// after the message copy it again, as they did when Transform did not.
+// Until this runs the copier is still holding the Imposter the popup needed.
 _000:
     PlayMoveAnimation BATTLER_NONE
     Wait

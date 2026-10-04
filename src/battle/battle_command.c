@@ -2352,9 +2352,11 @@ BOOL BtlCmd_SwitchAndUpdateMon(BattleSystem *battleSystem, BattleContext *ctx) {
     // (BtlCmd_PlayFaintAnimation): put back in its Normal Form, it took Tera
     // Shift a second time on its way back in. Nor a place left empty,
     // where what fainted last has no party slot to be found at any more: a
-    // Revive from the bag, or a Revival Blessing, fills it at the end of the
-    // turn, and battleMons still holds the fallen one's form, which went back
-    // in the party when it fainted (BtlCmd_PlayFaintAnimation).
+    // Revive from the bag fills it at the end of the turn, and a Revival
+    // Blessing at once when it revives the Pokemon that fell there
+    // (RevivalBlessingStep), at the turn's end when it revives another; and
+    // battleMons still holds the fallen one's form, which went back in the
+    // party when it fainted (BtlCmd_PlayFaintAnimation).
     if (!(ctx->switchInFlag & MaskOfFlagNo(battlerId))
         && Species_GetBattleFormReversion(ctx->battleMons[battlerId].species) != SPECIES_NONE
         && ctx->battleMons[battlerId].species != SPECIES_ZACIAN_CROWNED
