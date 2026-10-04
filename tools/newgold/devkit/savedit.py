@@ -2947,10 +2947,17 @@ def set_dex(save, species, seen, caught):
     the game reads it. A species seen for the first time gets the genders
     it can be (_set_seen_genders) and, with forms the Dex tells apart, its
     first form (_set_seen_form). Unown seen with no letter recorded gets
-    A, so the Dex's form page has one to show."""
+    A, so the Dex's form page has one to show. A species no longer seen
+    takes its forms' record with it, and one no longer caught its forms
+    caught: the game records a form only with its base (Pokedex_RecordForm),
+    and the FORMS page would list them again once the base was seen."""
     block = save.block("SAVE_POKEDEX")
     valid = set(dex_species())
     seen = seen or caught
+    forms = {}
+    if not caught and not save.legacy:
+        for form, base in dex_forms().items():
+            forms.setdefault(base, []).append(form)
     for s in species:
         if s not in valid:
             raise ValueError(f"species {s} has no Dex page")
@@ -2964,6 +2971,9 @@ def set_dex(save, species, seen, caught):
             for at, on in ((UNOWN_SEEN, seen), (UNOWN_CAUGHT, caught)):
                 if on and block[at] == 0xFF:
                     block[at] = 0
+        for form in forms.get(s, ()):
+            for at in (DEX_FORMS_CAUGHT,) if seen else (DEX_FORMS_SEEN, DEX_FORMS_CAUGHT):
+                block[at + ((form - DEX_FIRST_FORM) >> 3)] &= ~(1 << ((form - DEX_FIRST_FORM) & 7))
 
 
 def set_dex_switches(save, enabled=None, national=None):

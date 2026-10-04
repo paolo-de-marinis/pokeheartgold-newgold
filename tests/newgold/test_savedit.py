@@ -938,6 +938,20 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(sv.dex(save)["forms_seen"], [n["RATTATA_ALOLAN"]])
         with self.assertRaises(ValueError):
             sv.set_form_record(save, n["SLOWPOKE"], True, False)
+        # A species no longer caught has no form caught, and one no longer
+        # seen no form at all: the game never records a form without its
+        # base. Clearing the whole Dex (saveui's "Azzera") clears them all.
+        sv.set_form_record(save, n["SLOWPOKE_GALARIAN"], seen=True, caught=True)
+        sv.set_form_record(save, n["SLOWBRO_GALARIAN"], seen=True, caught=False)
+        sv.set_dex(save, [n["RATTATA"]], True, False)
+        self.assertEqual(sv.dex(save)["forms_caught"], [n["SLOWPOKE_GALARIAN"]])
+        self.assertIn(n["RATTATA_ALOLAN"], sv.dex(save)["forms_seen"])
+        sv.set_dex(save, [n["RATTATA"]], False, False)
+        self.assertNotIn(n["RATTATA_ALOLAN"], sv.dex(save)["forms_seen"])
+        sv.set_dex(save, sv.dex_species(), False, False)
+        self.assertEqual((sv.dex(save)["forms_seen"], sv.dex(save)["forms_caught"]), ([], []))
+        self.assertEqual(bytes(save.block("SAVE_POKEDEX")[sv.DEX_FORMS_SEEN:sv.DEX_FORMS_SEEN + sv.DEX_FORMS_SIZE]),
+                         bytes(sv.DEX_FORMS_SIZE))
         self.assert_only(save, ["SAVE_POKEDEX"])
 
     def test_a_save_from_before_the_dex_recorded_the_forms(self):
