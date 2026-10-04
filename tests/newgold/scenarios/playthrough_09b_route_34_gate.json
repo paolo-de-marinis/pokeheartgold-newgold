@@ -1,5 +1,5 @@
 {
-  "about": "The playthrough's way out of Ilex Forest, from Azalea's Pokemon Center: HM01 taught from the bag by machine:, as a player teaches it -- the start menu's BAG, the TMs & HMs tab, HM01, USE, the Quilava's panel (the Flaaffy, the Noctowl, the Geodude and the Misdreavus cannot learn it); it knows four, so yes to forgetting one, and on the summary screen gym.py's rule lets go of Quick Attack, the weakest of its Normal moves, for Cut -- then into the forest to the tree on the way north (16, 62), A, yes to Cut (FLAG_MAPTEMP_010, the tree's, set), and on through the forest's north to the gatehouse onto Route 34, where the game is saved (10,538 frames). The bot taught Cut with savedit --teach before. The party is otherwise the bot's own as leg 09 left it, carrying leg 08b's savedit --train. The field's RNG is pinned and the battle's seed fixed.",
+  "about": "The playthrough's way out of Ilex Forest, from Azalea's Pokemon Center: HM01 taught from the bag by machine:, as a player teaches it -- the start menu's BAG, the TMs & HMs tab, HM01, USE, the Quilava's panel (the Flaaffy, the Noctowl, the Geodude and the Misdreavus cannot learn it); it knows four, so yes to forgetting one, and on the summary screen gym.py's rule lets go of one for Cut: where the leg was written Quick Attack, the weakest of its Normal moves; on the merged tree of round 14, where the Quilava comes to Bugsy at 21 and leg 08b's savedit --train 22 gives it the moves the game has for it there (Smokescreen, Ember, Quick Attack, Flame Wheel), Smokescreen, in the first slot -- then into the forest to the tree on the way north (16, 62), A, yes to Cut (FLAG_MAPTEMP_010, the tree's, set), and on through the forest's north to the gatehouse onto Route 34, where the game is saved (10,538 frames; 10,560 as the joined chain plays it). The bot taught Cut with savedit --teach before. The party is otherwise the bot's own as leg 09 left it, carrying leg 08b's savedit --train. The field's RNG is pinned and the battle's seed fixed.",
   "from": "playthrough_09_ilex",
   "hold": {
     "gDiagBattleSeed": 1
@@ -17,8 +17,8 @@
     "machine:ITEM_HM01,2",
     {
       "expect": {
-        "party2.move2": "MOVE_CUT",
-        "party2.move1": "MOVE_FLAME_WHEEL",
+        "party2.move0": "MOVE_CUT",
+        "party2.move3": "MOVE_FLAME_WHEEL",
         "bag:ITEM_HM01": 1
       }
     },
