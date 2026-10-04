@@ -87,7 +87,8 @@ class ScenarioFileTests(unittest.TestCase):
         # levels (--level) or teaches it a move (--teach) -- the bot trains
         # in play, learns by gym.py's rule and teaches a machine from the
         # bag -- and the one that still raises it (--train, leg 08b) says so
-        # and why, through savedit.
+        # and why, through savedit. No step writes it either (set:, teach:,
+        # a poke: or hold: of anything but the pinned RNG and battle seed).
         legs_ = {path.stem: json.loads(path.read_text()) for path in SCENARIOS.glob("playthrough_*.json")}
         line, leg = [], "playthrough_10_goldenrod"
         while leg:
@@ -102,6 +103,15 @@ class ScenarioFileTests(unittest.TestCase):
                 self.assertLessEqual(set(options), {"--train"})
                 if options:
                     self.assertIn("savedit", spec["about"])
+                # Nor does a step write the party or the battle: the field's
+                # RNG is pinned and the battle's seed held, and nothing else
+                # is poked, held, set or taught.
+                self.assertLessEqual(set(spec.get("hold", {})), {"gDiagBattleSeed"})
+                for step in spec["steps"]:
+                    kind, _, rest = step.partition(":") if isinstance(step, str) else ("", "", "")
+                    self.assertNotIn(kind, ("set", "teach"), step)
+                    if kind in ("poke", "hold"):
+                        self.assertIn(rest.partition("=")[0], {"sLCRNG_State", "gDiagBattleSeed"}, step)
 
     def test_a_forced_wild_pokemon_is_rolled_from_a_pinned_rng(self):
         # A forced wild Pokemon's stats come from the field's RNG, which
