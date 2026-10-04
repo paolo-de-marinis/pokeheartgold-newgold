@@ -501,7 +501,7 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual([m["level"] for m in party[2:]], [20] * 4)
 
     def test_a_party_trained_to_a_level(self):
-        # --train, the playthrough's stand-in for grinding to the cap: raised
+        # --train, the stand-in for grinding to the cap (the playthrough's until round 15): raised
         # to the level, evolved by level on the way (Chikorita at 16, Pidgey
         # at 18; Geodude waits for 25), with the moves that species has there.
         save, n = self.open(), sv.species_numbers()

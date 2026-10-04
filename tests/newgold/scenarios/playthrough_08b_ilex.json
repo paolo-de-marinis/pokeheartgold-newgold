@@ -1,0 +1,104 @@
+{
+  "about": "The playthrough's Ilex Forest, from Azalea's Pokemon Center after the gym's trainers, before Bugsy: swap: puts the Quilava first, the team's strongest; west out of town, where the rival waits on the coord event Proton's defeat armed (VAR_UNK_4075 1 to 2), his five at 22 -- Misdreavus, Zubat, a Larvitar at 10, Teddiursa and Croconaw, the team against the Cyndaquil -- fought with gym.py's player; retry:on gives the battle after a loss a new seed, the coord event waiting for the walk back from the nurse (on round 15's tree the second battle was won: 31,636 frames to the gatehouse, so its goto has 90,000; 50,709 frames the whole leg). Back to the nurse, then into the forest, where the charcoal maker's son meets the player (a coord event, VAR_UNK_40F4 to 0) and the two Farfetch'd have to be herded by the twigs (each a coord event that turns the bird, the script's FARFETCHD*_BLIND_SPOT, VAR_FARFETCHD*_STICKS*) and caught from behind. The first, at the corner of its loop (25, 62): the twigs below it (25, 67) turn it away, the walk goes round the loop by way-points that keep off its other twigs, and it is caught from the north, facing south (FLAG_FOUND_FIRST_FARFETCHD; back to the son). The second, at (41, 54): talked to from below, it runs to the far corner; the twigs past it (53, 53), reached over the top row that keeps off the twigs at (50, 49), turn it to face them; back the same way, and caught from the west, facing east (FLAG_FOUND_SECOND_FARFETCHD). Then the charcoal maker comes and gives HM01 (FLAG_GOT_HM01); back to Azalea's nurse and the game's save. This leg came after Bugsy until round 15 (playthrough_09_ilex), its Noctowl from leg 08b's savedit --train taking the rival's five alone; now it comes first, the forest being where the team trains for him (leg 08c). The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_08a_azalea_gym_josh",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "swap:0,1",
+    {
+      "expect": {
+        "party0.species": [
+          "SPECIES_CYNDAQUIL",
+          "SPECIES_QUILAVA"
+        ]
+      }
+    },
+    "flee:40",
+    "retry:on",
+    "goto:MAP_AZALEA_ILEX_FOREST_GATEHOUSE,3,7,90000",
+    {
+      "expect": {
+        "var:VAR_UNK_4075": 2
+      }
+    },
+    "goto:MAP_AZALEA_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "goto:MAP_ILEX_FOREST,25,67",
+    "field",
+    {
+      "expect": {
+        "var:VAR_UNK_40F4": 0,
+        "var:VAR_FARFETCHD1_STICKS2": 1,
+        "flag:FLAG_FARFETCHD_NOTICED_YOU": 1,
+        "music": "SEQ_GS_D_CHIKATSUURO"
+      }
+    },
+    "goto:MAP_ILEX_FOREST,27,63",
+    "goto:MAP_ILEX_FOREST,27,62",
+    "goto:MAP_ILEX_FOREST,32,52",
+    "goto:MAP_ILEX_FOREST,25,61",
+    "A",
+    "field",
+    {
+      "expect": {
+        "flag:FLAG_FOUND_FIRST_FARFETCHD": 1,
+        "flag:FLAG_FOUND_SECOND_FARFETCHD": 0,
+        "x": 15,
+        "y": 65
+      }
+    },
+    "goto:MAP_ILEX_FOREST,41,55",
+    "A",
+    "field",
+    {
+      "expect": {
+        "var:VAR_FARFETCHD2_STICKS2": 1
+      }
+    },
+    "goto:MAP_ILEX_FOREST,48,48",
+    "goto:MAP_ILEX_FOREST,53,48",
+    "goto:MAP_ILEX_FOREST,53,53",
+    "field",
+    {
+      "expect": {
+        "var:VAR_FARFETCHD2_STICKS2": 2,
+        "var:VAR_FARFETCHD2_STICKS1": 1
+      }
+    },
+    "goto:MAP_ILEX_FOREST,53,48",
+    "goto:MAP_ILEX_FOREST,48,48",
+    "goto:MAP_ILEX_FOREST,47,53",
+    "goto:MAP_ILEX_FOREST,48,54",
+    "A",
+    "field",
+    {
+      "expect": {
+        "flag:FLAG_FOUND_SECOND_FARFETCHD": 1,
+        "flag:FLAG_GOT_HM01": 1,
+        "bag:ITEM_HM01": 1
+      }
+    },
+    "goto:MAP_AZALEA_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_AZALEA_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "badges": 1,
+    "party": 6,
+    "music": "SEQ_GS_POKESEN",
+    "lines": [
+      "You are challenged by Rival",
+      "You defeated Rival"
+    ]
+  }
+}

@@ -96,12 +96,12 @@ class ScenarioFileTests(unittest.TestCase):
     def test_the_playthrough_is_one_chain_from_a_new_game_with_its_own_team(self):
         # Every leg follows the one before it, from the new game to
         # Goldenrod's Radio Card, one line with no branch; the party is the one the
-        # bot caught and trained: no leg replaces it (--party), sets its
-        # levels (--level) or teaches it a move (--teach) -- the bot trains
-        # in play, learns by gym.py's rule and teaches a machine from the
-        # bag -- and the one that still raises it (--train, leg 08b) says so
-        # and why, through savedit. No step writes it either (set:, teach:,
-        # a poke: or hold: of anything but the pinned RNG and battle seed).
+        # bot caught and trained: no leg edits the save (--party, --level,
+        # --teach, --train, the last of them gone from leg 08b's Bugsy in
+        # round 15) -- the bot trains in play, learns by gym.py's rule and
+        # teaches a machine from the bag. No step writes it either (set:,
+        # teach:, a poke: or hold: of anything but the pinned RNG and battle
+        # seed).
         legs_ = {path.stem: json.loads(path.read_text()) for path in SCENARIOS.glob("playthrough_*.json")}
         line, leg = [], "playthrough_10_goldenrod"
         while leg:
@@ -112,10 +112,7 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertEqual(sorted(line), sorted(legs_))
         for name, spec in legs_.items():
             with self.subTest(name):
-                options = [part for part in spec.get("edit", []) if part.startswith("--")]
-                self.assertLessEqual(set(options), {"--train"})
-                if options:
-                    self.assertIn("savedit", spec["about"])
+                self.assertNotIn("edit", spec)
                 # Nor does a step write the party or the battle: the field's
                 # RNG is pinned and the battle's seed held, and nothing else
                 # is poked, held, set or taught.

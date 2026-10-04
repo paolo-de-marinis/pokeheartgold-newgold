@@ -1,0 +1,57 @@
+{
+  "about": "The playthrough trains the Hoothoot for Bugsy, from Azalea's Pokemon Center after leg 08c: back to Ilex Forest's floor inside the gatehouse (12, 77 to 12, 81), the Hoothoot first, relieved at the first prompt by the Quilava (shift:) as in leg 08c, until it has 18, where it learns Air Slash -- by gym.py's rule, in place of the weakest of its moves -- four times as strong against Bugsy's Heracross, whose Guts and Flame Orb swept the rest of the team seven times running in round 15's probes. flee:40 and heal: as before (62,520 frames from 16 to 18 where the leg was written; 18 to 20, where it is a Noctowl, is leg 08e's). Then swaps put the team in the order for Bugsy: the Geodude first, its Rock moves four times as strong against his Ledian, the Quilava second for his Scizor, the Hoothoot third for his Heracross, the Misdreavus and the Flaaffy; the nurse, and the game's save. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_08c_ilex_training",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "heal:MAP_AZALEA_POKECENTER_1F,8,13",
+    {
+      "expect": {
+        "party0.species": "SPECIES_HOOTHOOT",
+        "party4.species": "SPECIES_QUILAVA"
+      }
+    },
+    "shift:4",
+    "pace:MAP_ILEX_FOREST,12,77,12,81,party0.level,18,80000",
+    "shift:none",
+    {
+      "expect": {
+        "party0.move1": "MOVE_AIR_SLASH"
+      }
+    },
+    "swap:0,3",
+    "swap:1,4",
+    "swap:2,3",
+    {
+      "expect": {
+        "party0.species": "SPECIES_GEODUDE",
+        "party1.species": "SPECIES_QUILAVA",
+        "party2.species": "SPECIES_HOOTHOOT",
+        "party3.species": "SPECIES_MISDREAVUS",
+        "party4.species": "SPECIES_FLAAFFY"
+      }
+    },
+    "goto:MAP_AZALEA_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_AZALEA_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "badges": 1,
+    "party": 6,
+    "music": "SEQ_GS_POKESEN",
+    "party2.level": [
+      18,
+      22
+    ],
+    "bag:ITEM_SUPER_POTION": 10
+  }
+}

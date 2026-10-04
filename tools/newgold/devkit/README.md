@@ -33,9 +33,9 @@ is the map's number), script
 flags (`--flag NAME`, and `--flag NAME=0` to clear one) and variables (`--var NAME=VALUE`); `--dex` takes a
 form as well (`SLOWPOKE_GALARIAN`), caught as the game records one; `--train LEVEL`
 raises the party already there to a level, evolving by level on the way
-with the moves the game gives there, eggs apart -- the one edit the
-playthrough still makes, before Bugsy, for the Noctowl its bot's Hoothoot
-does not become in play -- and `--teach SLOT:MOVE` teaches a party
+with the moves the game gives there, eggs apart (the playthrough made its
+last edit with it before Bugsy until round 15; its bot trains and buys
+Super Potions in play now) -- and `--teach SLOT:MOVE` teaches a party
 Pokemon a move as a machine does (the playthrough's bot teaches its HM
 from the bag now, scene.py's `machine:`). The gym saves in
 `~/hgss-saves/gyms` are made with it; their README says how.

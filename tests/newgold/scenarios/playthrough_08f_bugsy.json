@@ -1,0 +1,116 @@
+{
+  "about": "The playthrough's Leader Bugsy, from Azalea's Pokemon Center after the training in Ilex Forest, the team in the order leg 08e left: the Geodude first, its Rock moves four times as strong against his Ledian, the Quilava second, kept for his Scizor, whom its Fire hits four times as hard, the Noctowl third, whose Air Slash takes his Heracross (Guts and a Flame Orb) in one hit, the Misdreavus and the Flaaffy. Into the gym, whose carts and switches the game sets again on entering (AzaleaGymInit), by the shortest way to him -- station 0 to the middle, station 7 to the top left, the switch there (4, 7), station 9 down to the middle left, the switch (2, 18), station 6 up to the top middle -- then Bugsy and his five at 20 to 22, fought with gym.py's player: it brings in the Quilava for the Geodude against Scizor, uses the Super Potions leg 08c bought where the HP wins the exchange or on a hurt Pokemon on the bench while his Shuckle walls the Geodude, and sends the best of the bench after a faint. A loss sends the player to the nurse, and again: walks the gym again and fights him again, each attempt a new battle (the battle seed one higher), six times more at most; each loss keeps what the team won. The Hive Badge, TM89 and FLAG_GOT_TM89_FROM_BUGSY; out again by the switch beside him (11, 8), station 10 and station 4, the nurse, and the game's save. Where the leg was written he fell at the first attempt, the Noctowl's Air Slash taking his Heracross (25,625 frames). Until round 15 the leg raised the party to 22 with savedit --train, Noctowl and Flaaffy made by the edit: the team the bot brought had lost to him ten times; without the Noctowl, his Heracross swept the trained team seven times running in round 15's probes. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_08e_ilex_noctowl",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    {
+      "expect": {
+        "party0.species": "SPECIES_GEODUDE",
+        "party1.species": "SPECIES_QUILAVA",
+        "party2.species": "SPECIES_NOCTOWL",
+        "bag:ITEM_SUPER_POTION": [
+          1,
+          10
+        ]
+      }
+    },
+    "goto:MAP_AZALEA_GYM,3,33",
+    "UP*2",
+    "field",
+    {
+      "expect": {
+        "map": "MAP_AZALEA_GYM",
+        "x": 9,
+        "y": 23
+      }
+    },
+    "goto:MAP_AZALEA_GYM,9,18",
+    "UP*2",
+    "field",
+    {
+      "expect": {
+        "x": 3,
+        "y": 8
+      }
+    },
+    "goto:MAP_AZALEA_GYM,4,7",
+    "A",
+    "field",
+    "goto:MAP_AZALEA_GYM,3,8",
+    "DOWN*2",
+    "field",
+    {
+      "expect": {
+        "x": 3,
+        "y": 18
+      }
+    },
+    "goto:MAP_AZALEA_GYM,2,18",
+    "A",
+    "field",
+    "goto:MAP_AZALEA_GYM,3,18",
+    "UP*2",
+    "field",
+    {
+      "expect": {
+        "x": 9,
+        "y": 8,
+        "music": "SEQ_GS_GYM"
+      }
+    },
+    "goto:MAP_AZALEA_GYM,9,5",
+    "A",
+    "fight",
+    "field",
+    "again:26,badges,2,6",
+    {
+      "expect": {
+        "badges": 2,
+        "flag:FLAG_GOT_TM89_FROM_BUGSY": 1,
+        "bag:ITEM_TM89": 1
+      }
+    },
+    "goto:MAP_AZALEA_GYM,11,8",
+    "A",
+    "field",
+    "goto:MAP_AZALEA_GYM,9,8",
+    "DOWN*2",
+    "field",
+    {
+      "expect": {
+        "x": 9,
+        "y": 18
+      }
+    },
+    "goto:MAP_AZALEA_GYM,9,23",
+    "DOWN*2",
+    "field",
+    {
+      "expect": {
+        "x": 3,
+        "y": 33
+      }
+    },
+    "goto:MAP_AZALEA_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_AZALEA_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "badges": 2,
+    "party": 6,
+    "music": "SEQ_GS_POKESEN",
+    "lines": [
+      "You are challenged by Leader Bugsy!",
+      "You defeated Leader Bugsy!"
+    ]
+  }
+}
