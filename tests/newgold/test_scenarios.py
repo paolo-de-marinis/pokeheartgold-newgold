@@ -468,6 +468,34 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertTrue(scene.readable("machine:ITEM_HM01,2"))
         self.assertTrue(scene.readable("party2.move3", key=True))
 
+    def test_buy_walks_a_mart_s_cursor_to_any_item_from_anywhere(self):
+        # buy: moves the mart list's cursor by keys, as Task_Mart reads them
+        # (ov03_0225947A): two to a row, six to a page, RIGHT off the right
+        # column and LEFT off the left one turn the page, and DOWN off the
+        # right column's bottom lands on cancel. From every place the cursor
+        # can be, every item of a ten- and a fourteen-item list is reached
+        # and A pressed on it.
+        table = [[4, 2, 6, 1], [8, 3, 0, 7], [0, 4, 6, 3], [1, 5, 2, 7], [2, 0, 6, 5], [3, 8, 4, 7], [4, 0, 8, 8],
+                 [4, 0, 8, 8], [5, 1, 8, 8]]
+        keys = {"UP": 0, "DOWN": 1, "LEFT": 2, "RIGHT": 3}
+        import re
+        source = re.search(r"ov03_0225947A\[9\]\[4\] = \{(.*?)\};", (ROOT / "src/overlay_03/shop_menu.c").read_text(), re.S)
+        self.assertEqual([[int(v) for v in row] for row in re.findall(r"\{ (\d), (\d), (\d), (\d) \}", source.group(1))], table)
+        for count in (10, 14):
+            for index in range(count):
+                for start in range(9):
+                    page, cursor, key = 0, start, None
+                    for _ in range(20):
+                        key = scene.mart_key(index, page, cursor)
+                        if key == "A":
+                            break
+                        after = table[cursor][keys[key]]
+                        if (key, after) in (("RIGHT", 7), ("LEFT", 6)):
+                            page += 6 if key == "RIGHT" and page + 6 < count else -6 if key == "LEFT" and page else 0
+                        else:
+                            cursor = after
+                    self.assertEqual((key, page + cursor), ("A", index), (count, index, start))
+
     def test_retry_gives_the_battle_after_a_loss_a_new_seed(self):
         # retry:on -- after a loss on a goto, the held seed one higher; a win
         # leaves it, and a seed not held is not made one.

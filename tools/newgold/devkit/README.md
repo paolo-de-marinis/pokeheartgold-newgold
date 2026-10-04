@@ -495,7 +495,10 @@ Reading what the debug ROM records, and playing it without looking.
   expectation. `answers:YN...` plays the scene a script runs, A through its
   lines, and answers each yes/no it waits on (the script's native wait of
   ScrCmd_GetMenuChoice) in order, A for Y and B for N: the Radio Tower's
-  quiz. `shift:SLOT` has a wild battle's first
+  quiz. `buy:ITEM,COUNT` buys from the mart clerk the player faces, across
+  the counter: A on BUY, then on the mart's screen (Task_Mart's MartData)
+  the cursor walked to the item, the quantity, yes, and out -- Super
+  Potions before a gym, as a player buys them. `shift:SLOT` has a wild battle's first
   Pokemon relieved by that party slot at the first prompt: the slot fights
   and the first, out at the start, shares the experience -- how a catch too
   weak to win its own battles is trained. `again:K,KEY,V` plays the K

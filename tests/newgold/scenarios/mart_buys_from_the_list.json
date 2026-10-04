@@ -1,0 +1,22 @@
+{
+  "about": "scene.py's buy: buys from a mart as a player does: Violet City's, the player put across the counter from its clerk (savedit --where 157:4:6:2, facing him; no badge: the list is Poke Ball, Potion, Antidote, Parlyz Heal, src/scrcmd_mart.c's first tier). buy: talks to him, A on BUY, and on the mart's screen (Task_Mart's MartData) walks the cursor to the item -- two to a row: Parlyz Heal is the second row's right -- raises the quantity, says yes and leaves through his farewell. The bag holds one Potion and no Parlyz Heal to begin with (savedit --bag); it ends with four and two, and the player stands where it was.",
+  "save": "gyms/falkner.sav",
+  "edit": [
+    "--bag",
+    "POTION:1",
+    "--where",
+    "157:4:6:2"
+  ],
+  "steps": [
+    "field",
+    "buy:ITEM_POTION,3",
+    "buy:ITEM_PARLYZ_HEAL,2"
+  ],
+  "expect": {
+    "bag:ITEM_POTION": 4,
+    "bag:ITEM_PARLYZ_HEAL": 2,
+    "map": "MAP_VIOLET_POKEMART",
+    "x": 4,
+    "y": 6
+  }
+}

@@ -83,6 +83,10 @@ A step is one of
                                 the bag, as a player teaches one: with four moves known,
                                 the one gym.py's rule lets go is forgotten on the
                                 summary screen (the rule keeping all four fails it)
+    buy:ITEM,COUNT              COUNT of ITEM bought from the mart clerk the player
+                                faces (across the counter): A through the clerk's lines
+                                and on BUY, the item found in the mart's list, the
+                                quantity, yes, and out; as a player buys Potions
     pace:MAP,X1,Y1,X2,Y2,KEY,V[,N]  walk from one tile to the other and back, through
                                 what the grass sends, until the expectation KEY reads
                                 at least V (party 3, party1.level 8, caught:SPECIES_...
@@ -218,7 +222,7 @@ CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/
              "TYPE_": "include/constants/pokemon.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
          "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace", "swap", "shift", "again", "retry",
-         "machine", "answers")
+         "machine", "answers", "buy")
 
 
 def readable(step_or_key, key=False):
@@ -418,6 +422,41 @@ def app_layout():
     out["START_MENU_STATE_HANDLE_INPUT"] = values[-1]
     return {key.replace("__builtin_offsetof(struct ", "").replace(", ", ".").rstrip(")"): value
             for key, value in out.items()}
+
+
+@savedit.tree_cache
+def mart_layout():
+    """What buy: reads of a mart's MartData (include/overlay_03.h): its
+    state (Task_Mart's), the list of what it sells and how many, the page's
+    first and the cursor on it, and the quantity being bought."""
+    names = ("state", "unk268", "unk270", "unk271", "unk290", "quantity")
+    values = savedit.compile_c(exprs=tuple(f"__builtin_offsetof(MartData, {n})" for n in names),
+                               headers=savedit.LAYOUT_HEADERS + ("overlay_03.h",))[0]
+    return dict(zip(("state", "items", "count", "page", "cursor", "quantity"), values))
+
+
+# Task_Mart's states that buy: answers (src/overlay_03/shop_menu.c): the list,
+# the quantity, the yes/no, and the lines after a purchase or a refusal.
+MART_LIST, MART_QUANTITY, MART_CONFIRM, MART_BOUGHT, MART_REFUSED = 3, 7, 11, 13, 14
+
+
+def mart_key(index, page, cursor):
+    """The key that takes a mart list's cursor toward item `index`: its page
+    (six to a page, the page's first item `page`) by RIGHT off the right
+    column or LEFT off the left one, then its column, then its row by UP or
+    DOWN, never past the top or bottom (the right column's would land on
+    cancel); A on it. The cursor's 0 to 5 run two to a row; 6 and 7 are the
+    page arrows and 8 cancel, UP off each (ov03_0225947A)."""
+    want = index - page
+    if cursor > 5:
+        return "UP"
+    if want >= 6 or want < 0:
+        return "RIGHT" if want >= 6 else "LEFT"
+    if cursor % 2 != want % 2:
+        return "RIGHT" if want % 2 else "LEFT"
+    if cursor // 2 != want // 2:
+        return "DOWN" if want // 2 > cursor // 2 else "UP"
+    return "A"
 
 
 # -- the navigator's map, from the tree -------------------------------------
@@ -882,6 +921,9 @@ class Scene:
         elif kind == "machine":
             item, slot = rest.split(",")
             return self.machine(self.number(item), int(slot))
+        elif kind == "buy":
+            item, count = rest.split(",")
+            return self.buy(self.number(item), int(count))
         elif kind == "fight":
             import gym
             idle = presses = 0
@@ -1290,6 +1332,52 @@ class Scene:
             else:
                 core.step(2, hooks)
         return [f"answers: {len(given) - len(left)} of {given} given in {frames} frames"]
+
+    def buy(self, item, count, frames=12000):
+        """buy:ITEM,COUNT -- from a mart's clerk the player faces: A through
+        the clerk's lines and on BUY, the menu's first choice; on the mart's
+        own screen (Task_Mart, the field's task, its MartData read for its
+        state) the cursor walked to the item in the list (paged six at a
+        time, two to a row), A, the quantity raised to COUNT, A, yes; then
+        B out of the list and through the clerk's farewell. Done when the
+        player can move again; a refusal (no money, no room) fails it."""
+        core, hooks, end = self.core, self.hooks, self.core.frames + frames
+        layout, mart, task_mart = app_layout(), mart_layout(), self.markers.address("Task_Mart") & ~1
+        bought = False
+        while core.frames < end:
+            task = self._chain("FieldSystem.taskman")
+            data = (core.word(task + layout["TaskManager.env"])
+                    if task and core.word(task + layout["TaskManager.func"]) & ~1 == task_mart else 0)
+            if not data:
+                if bought and self.movable():
+                    self.say(f"[{core.frames}] buy: {count} of item {item}")
+                    return None
+                core.press("B" if bought else "A", 6, hooks)    # the clerk's lines; BUY
+                core.step(20, hooks)
+                continue
+            state = core.word(data + mart["state"], 1)
+            if state == MART_REFUSED:
+                return [f"buy: the mart refused item {item} (money or room)"]
+            if state == MART_LIST and bought:
+                key = "B"
+            elif state == MART_LIST:
+                listed = [core.word(core.word(data + mart["items"]) + 2 * k, 2) for k in range(core.word(data + mart["count"], 1))]
+                if item not in listed:
+                    return [f"buy: this mart does not sell item {item}"]
+                key = mart_key(listed.index(item), core.word(data + mart["page"], 1), core.word(data + mart["cursor"]))
+            elif state == MART_QUANTITY:
+                have = core.word(data + mart["quantity"], 2)
+                key = "UP" if have < count else "DOWN" if have > count else "A"
+            elif state == MART_CONFIRM:
+                key = "A"
+            elif state == MART_BOUGHT:
+                key, bought = "A", True
+            else:
+                core.step(4, hooks)
+                continue
+            core.press(key, 6, hooks)
+            core.step(12, hooks)
+        return [f"buy: item {item} not bought in {frames} frames"]
 
     def mons(self):
         """party.mons once the game has sealed every Pokemon (party.sealed),
