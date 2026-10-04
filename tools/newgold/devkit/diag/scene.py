@@ -40,7 +40,8 @@ A step is one of
                                 first choice or after it (where fight:N:T stopped)
     set:B,FIELD,VALUE           battler B's hp, status (its flags as markers.py names
                                 them: "BRN", "PSN"), ability (ABILITY_...), item
-                                (ITEM_...) or speed (the stat before its stages),
+                                (ITEM_...), speed (the stat before its stages) or
+                                form (a number: the form alone, not its stats),
                                 written into the running battle: a state no battle
                                 starts in, two speeds alike for a tie (hp last: the
                                 battler is found by the HP gDiagBattlers shows, a
@@ -827,12 +828,18 @@ class Scene:
                 return [f"battler {battler} is not in the battle: {self.markers.battle(core.ram())}"]
             self.teach(int(battler), at, int(slot), self.number(move), int(pp[0]) if pp else 5)
         elif kind == "set":
-            # set:BATTLER,FIELD,VALUE -- a battler's hp, status, ability, item or speed,
+            # set:BATTLER,FIELD,VALUE -- a battler's hp, status, ability, item, speed or form,
             # written into the battle as it runs, as teach: writes its moves.
             battler, field, value = rest.split(",")
             at, layout = self.battle_mon(int(battler)), battle_layout()
             if at is None:
                 return [f"battler {battler} is not in the battle: {self.markers.battle(core.ram())}"]
+            if field == "form":
+                # The low five bits of the byte after type2: the shiny bit and
+                # the critical-hit count above them are kept.
+                at += layout["type2"] + 1
+                core.poke(at, core.word(at, 1) & 0xE0 | int(value), 1)
+                return None
             if field == "status":
                 number = sum(mask for mask, name in STATUS if name in value.split())
             else:
