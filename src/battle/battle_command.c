@@ -10801,10 +10801,11 @@ static void Battlers_SwapPlaces(BattleContext *ctx, int a, int b) {
         }
     }
     // Kept by battler and party slot: the two Pokemon's own entries move.
+    // Not onceOnlyEntryAbilityDone or rageFistHits, kept by the party's row
+    // (Battler_PartySlot): the two share one party, Ally Switch failing in a
+    // multi or tag battle, and so one row, which stays where it is.
     for (j = 0; j < 2; j++) {
-        SwapBytes(&ctx->onceOnlyEntryAbilityDone[a][slots[j]], &ctx->onceOnlyEntryAbilityDone[b][slots[j]], 1);
         SwapBytes(&ctx->berryEaten[a][slots[j]], &ctx->berryEaten[b][slots[j]], 1);
-        SwapBytes(&ctx->rageFistHits[a][slots[j]], &ctx->rageFistHits[b][slots[j]], 1);
         ctx->fieldSideConditionData[j].battlerIdFollowMe = OtherOfPair(ctx->fieldSideConditionData[j].battlerIdFollowMe, a, b);
     }
     for (i = 0; i < BATTLER_MAX; i++) {

@@ -967,7 +967,7 @@ int main(void) {
     // Works beside a standing ally in a double battle; the user's battler is
     // its new place's, the Pokemon change battlers with what is theirs.
     reset(); ctx.battleMons[1].unk88.battlerIdMeanLook = 0; ctx.battleMons[1].status2 = 1u << (STATUS2_ATTRACT_SHIFT + 0);
-    ctx.rageFistHits[0][0] = 3; ctx.roundUsers = 1; ctx.fieldCondition = 1u << FIELD_CONDITION_UPROAR_SHIFT;
+    ctx.rageFistHits[0][0] = 3; ctx.onceOnlyEntryAbilityDone[0][0] = 1; ctx.roundUsers = 1; ctx.fieldCondition = 1u << FIELD_CONDITION_UPROAR_SHIFT;
     ctx.battleMons[3].ability = ABILITY_STALWART; ctx.playerActions[3].unk4 = 0; ctx.playerActions[0].unk8 = 7;
     ctx.moveConditions[1].skyDropHolder = 0 + 1;
     EXPECT(AllySwitchWorks(&bs, &ctx), TRUE);
@@ -979,9 +979,11 @@ int main(void) {
     // A Pokemon Sky Drop holds is held by its holder in the holder's new place.
     EXPECT(ctx.moveConditions[1].skyDropHolder, 2 + 1);
     EXPECT((int)ctx.battleMons[1].status2, (int)(1u << (STATUS2_ATTRACT_SHIFT + 2)));
-    EXPECT(ctx.rageFistHits[2][0], 3); EXPECT(ctx.rageFistHits[0][0], 0); EXPECT(ctx.roundUsers, 4);
+    // Rage Fist's count stays in the party's row, which both read.
+    EXPECT(ctx.rageFistHits[0][0], 3); EXPECT(ctx.rageFistHits[2][0], 0); EXPECT(ctx.roundUsers, 4);
     EXPECT((int)ctx.fieldCondition, (int)(4u << FIELD_CONDITION_UPROAR_SHIFT));
     EXPECT(ctx.turnOrder[0] * 1000 + ctx.turnOrder[1] * 100 + ctx.turnOrder[2] * 10 + ctx.turnOrder[3], 2103);
+    EXPECT(ctx.onceOnlyEntryAbilityDone[0][0], 1); EXPECT(ctx.onceOnlyEntryAbilityDone[2][0], 0);
     EXPECT(ctx.unk_312C[0][0], 1); EXPECT(ctx.unk_312C[0][1], 0);
     // A foe's move stays aimed at the place, Stalwart's at the Pokemon.
     EXPECT(ctx.playerActions[1].unk4, 1); EXPECT(ctx.playerActions[3].unk4, 2);

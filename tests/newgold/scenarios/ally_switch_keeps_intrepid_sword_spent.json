@@ -1,0 +1,14 @@
+{
+  "about": "Ally Switch leaves what is kept by the party's row where both partners read it: Intrepid Sword, once per battle, does not act again after it (Pokemon Central, Spada Indomita, from the ninth generation once per battle). The Twins' double battle in the Azalea Gym against a scratch copy of Paolo's Bugsy save with a level-30 Zacian and a level-30 Pawmot on the twins' platform; the Pawmot is given only Ally Switch in the running battle (teach:), everyone else only Splash. The Zacian's Intrepid Sword raises its Attack as it comes in, the two change places, and the sword says nothing more. Before, Battlers_SwapPlaces moved the row's entries to rows nobody reads, and the Zacian's Attack rose again at once in its new place.",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "ZACIAN:30,PAWMOT:30", "--where", "180:3:8:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:0,0,MOVE_SPLASH", "teach:2,0,MOVE_ALLY_SWITCH",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:3,0,MOVE_SPLASH", "teach:3,1,0,0", "teach:3,2,0,0", "teach:3,3,0,0",
+            "fight:1:1"],
+  "expect": {"lines": ["Go! Zacian and Pawmot!", "Pawmot used Ally Switch!", "Pawmot and Zacian switched places!"],
+             "once_lines": ["Zacian’s IntrepidSword raised its Attack!"],
+             "battler0.species": "SPECIES_PAWMOT", "battler2.species": "SPECIES_ZACIAN"}
+}
