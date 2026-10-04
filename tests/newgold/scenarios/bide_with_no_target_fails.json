@@ -1,0 +1,16 @@
+{
+  "about": "Bide with no one left to hit fails as from the fifth generation, \"But it failed!\" (subscript 282, BATTLE_SUBSCRIPT_BIDE_NO_TARGET; Showdown's gen-9 '-fail' where the fourth generation said \"But there was no target...\"), until now seen only by test_miss_lines. Falkner, from Route 29's save put in his room, against a level-40 Snorlax that knows only Bide (teach:), given Rough Skin and a Rocky Helmet (set:); his Hoothoot, 41 HP, knows only Extreme Speed, whose +2 beats Bide's +1 every turn, and is set to 33 HP: each contact costs it 11 (6 for the Helmet, 5 for the skin), so it stands at 22 and 11 after the first two turns -- not under a quarter, where the AI would spend a Super Potion -- and faints to the third, the turn Bide is released, before Snorlax moves. The energy stored from the second and third hits has no one to go to: the Hoothoot's place is empty until the turn's end, when Doduo comes in.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "SNORLAX:40", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceEffect": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:0,0,MOVE_BIDE", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_EXTREME_SPEED", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "set:0,ability,ABILITY_ROUGH_SKIN", "set:0,item,ITEM_ROCKY_HELMET", "set:1,hp,33",
+            "fight:1:1"],
+  "expect": {"lines": ["Snorlax used Bide!", "The opposing Hoothoot used Extreme Speed!", "Snorlax is storing energy!",
+                       "The opposing Hoothoot used Extreme Speed!", "The opposing Hoothoot fainted!",
+                       "Snorlax unleashed energy!", "But it failed!", "Leader Falkner sent out Doduo!"],
+             "no_lines": ["But there was no target"],
+             "battler1.species": "SPECIES_DODUO"}
+}
