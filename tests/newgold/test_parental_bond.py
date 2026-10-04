@@ -346,9 +346,10 @@ class ParentalBondTests(unittest.TestCase):
         run_c(AFTER_STRIKES.replace("@FUNCTIONS@", function(overlay, "Battler_ArmRetreat")
                                     + function(overlay, "CheckColorChangeAngerShellAndBerserk")))
         on_hit = function(overlay, "CheckAbilityEffectOnHit")
-        case = on_hit[on_hit.index("case ABILITY_COLOR_CHANGE:\n    case ABILITY_ANGER_SHELL:\n    case ABILITY_BERSERK:"):]
+        case = on_hit[on_hit.index("case ABILITY_ANGER_SHELL:\n    case ABILITY_BERSERK: {"):]
+        case = case[:case.index("case ABILITY_GULP_MISSILE:")]
         self.assertIn("if (ctx->multiHitCountTemp == 0 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {\n"
-                      "            ret = CheckColorChangeAngerShellAndBerserk(battleSystem, ctx, script);", case[:case.index("break;")])
+                      "            ret = CheckColorChangeAngerShellAndBerserk(battleSystem, ctx, script);", case)
         # The first of the post-move steps, before the recoil and the drag,
         # for a move that struck more than once.
         end = function(controller, "ov12_0224E1BC")
@@ -362,6 +363,34 @@ class ParentalBondTests(unittest.TestCase):
         self.assertLess(end.index("case 0:"), end.index(ask))
         self.assertLess(end.index(ask), end.index("case 1:"))
         self.assertLess(end.index("case 1:"), end.index("TryRecoil(ctx)"))
+
+    def test_berserk_and_anger_shell_answer_a_hit_after_the_stat_items(self):
+        # Absorb Bulb, Weakness Policy and Luminous Moss act before Berserk
+        # (Pokemon Central, Furore), Cell Battery and Snowball with them, and
+        # Anger Shell waits for them as Berserk does (Showdown's gen-9 items in
+        # onDamagingHit, the abilities in onAfterMoveSecondary): a holder of
+        # one has a single hit answered by the step after
+        # CheckItemEffectOnHit, before the thaw and the other held items; a
+        # Sitrus Berry's holder, as before, where CheckAbilityEffectOnHit asks,
+        # before the Berry (TryUseHeldItem). Color Change does not wait.
+        on_hit = function(OVERLAY.read_text(), "CheckAbilityEffectOnHit")
+        case = on_hit[on_hit.index("case ABILITY_ANGER_SHELL:\n    case ABILITY_BERSERK: {"):on_hit.index("case ABILITY_COLOR_CHANGE:")]
+        self.assertIn("if (ctx->multiHitCountTemp == 0\n"
+                      "            && ((item >= HOLD_EFFECT_BOOST_SPECIAL_ATTACK_ON_WATER_HIT && item <= HOLD_EFFECT_BOOST_ATK_ON_ICE_HIT)\n"
+                      "                || item == HOLD_EFFECT_BOOST_SPECIAL_DEFENSE_ON_WATER_HIT || item == HOLD_EFFECT_BOOST_ATK_AND_SPATK_ON_SE)) {\n"
+                      "            ctx->selfTurnData[ctx->battlerIdTarget].answerAfterItem = TRUE;\n"
+                      "            break;", case)
+        items = (ROOT / "include/constants/items.h").read_text()
+        numbers = [int(re.search(rf"#define {name}\s+(\d+)", items).group(1)) for name in (
+            "HOLD_EFFECT_BOOST_SPECIAL_ATTACK_ON_WATER_HIT", "HOLD_EFFECT_BOOST_ATK_ON_ELECTRIC_HIT", "HOLD_EFFECT_BOOST_ATK_ON_ICE_HIT")]
+        self.assertEqual(numbers, list(range(numbers[0], numbers[0] + 3)))
+        steps = function(CONTROLLER.read_text(), "ov12_0224CC88")
+        item = steps.index("CheckItemEffectOnHit(battleSystem, ctx, &script)")
+        after = steps.index("if (ctx->battlerIdTarget != BATTLER_NONE && ctx->selfTurnData[ctx->battlerIdTarget].answerAfterItem\n"
+                            "            && CheckColorChangeAngerShellAndBerserk(battleSystem, ctx, &script) == TRUE) {")
+        self.assertLess(item, after)
+        self.assertLess(after, steps.index("BATTLE_SUBSCRIPT_THAW_OUT"))
+        self.assertLess(steps.index("TryUseHeldItem(battleSystem, ctx, ctx->battlerIdTarget)"), item)
 
 
 AFTER_STRIKES = r"""

@@ -4820,6 +4820,21 @@ void ov12_0224CC88(BattleSystem *battleSystem, BattleContext *ctx) {
     }
         // fallthrough
     case 6: {
+        int script;
+        // Berserk and Anger Shell, on a holder of an item that raises a stat
+        // on a hit, once the item has (CheckAbilityEffectOnHit). The mark
+        // goes with the action's SelfTurnData (BattleContext_Init).
+        ctx->unk_40++;
+        if (ctx->battlerIdTarget != BATTLER_NONE && ctx->selfTurnData[ctx->battlerIdTarget].answerAfterItem
+            && CheckColorChangeAngerShellAndBerserk(battleSystem, ctx, &script) == TRUE) {
+            ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
+            ctx->commandNext = ctx->command;
+            ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
+            return;
+        }
+    }
+        // fallthrough
+    case 7: {
         int moveType = BattleMoveAdjustedType(ctx, ctx->battlerIdAttacker, ctx->moveNoCur);
 
         ctx->unk_40++;
@@ -4844,7 +4859,7 @@ void ov12_0224CC88(BattleSystem *battleSystem, BattleContext *ctx) {
         }
     }
         // fallthrough
-    case 7: {
+    case 8: {
         int battlerId;
         int flag = 0;
         int script;

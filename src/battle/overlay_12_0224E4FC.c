@@ -7643,9 +7643,28 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
             ret = TRUE;
         }
         break;
-    case ABILITY_COLOR_CHANGE:
     case ABILITY_ANGER_SHELL:
-    case ABILITY_BERSERK:
+    case ABILITY_BERSERK: {
+        // Absorb Bulb, Cell Battery, Snowball, Luminous Moss and Weakness
+        // Policy act on a hit before Berserk and Anger Shell answer it
+        // (Pokemon Central, Furore: "Bulbo, Vulneropolizza e Muschioluce si
+        // attivano prima di Furore"; Showdown's gen-9 items in
+        // onDamagingHit, both abilities in onAfterMoveSecondary), and a Berry
+        // that restores HP after them (Furore: Baccaenigma, Baccacedro). A
+        // Pokemon holds one item, so a holder of one of the five has a single
+        // hit answered after CheckItemEffectOnHit (ov12_0224CC88), any
+        // other here.
+        int item = GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget);
+
+        if (ctx->multiHitCountTemp == 0
+            && ((item >= HOLD_EFFECT_BOOST_SPECIAL_ATTACK_ON_WATER_HIT && item <= HOLD_EFFECT_BOOST_ATK_ON_ICE_HIT)
+                || item == HOLD_EFFECT_BOOST_SPECIAL_DEFENSE_ON_WATER_HIT || item == HOLD_EFFECT_BOOST_ATK_AND_SPATK_ON_SE)) {
+            ctx->selfTurnData[ctx->battlerIdTarget].answerAfterItem = TRUE;
+            break;
+        }
+    }
+        // fallthrough
+    case ABILITY_COLOR_CHANGE:
         // A move that strikes more than once is answered once it is over, by
         // the post-move steps.
         if (ctx->multiHitCountTemp == 0 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {

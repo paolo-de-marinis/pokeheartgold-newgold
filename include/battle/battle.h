@@ -159,7 +159,11 @@ typedef struct SelfTurnData {
     // (BattleSystem_CheckMoveHit), for an ability that swallows the move to
     // give back (ov12_0224BC2C).
     u32 micleSpent : 1;
-    u32 unk0_11 : 7;
+    // Berserk or Anger Shell: this Pokemon answers the hit after its Absorb
+    // Bulb, Cell Battery, Snowball, Luminous Moss or Weakness Policy has
+    // (CheckAbilityEffectOnHit, ov12_0224CC88).
+    u32 answerAfterItem : 1;
+    u32 unk0_11 : 6;
     int physicalDamage;
     int battlerIdPhysicalAttacker;
     int specialDamage;
