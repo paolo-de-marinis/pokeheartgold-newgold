@@ -1,0 +1,18 @@
+{
+  "about": "The player's Sticky Barb that latches onto a wild Pokemon which is then caught stays with the caught Pokemon, and the player's Pokemon does not have it back: one Barb, not two. Pokemon Central's Vischiopunta says nothing of the battle's end; its Furto and Raggiro say that from the ninth generation a wild Pokemon caught keeps the item that went to it from the player's side, or came from it, and the bag gets no copy, and the Barb moving to the Pokemon that struck its holder is taken as Thief takes (NoteHeldItemTaken). A level-30 Pikachu holding a Sticky Barb (savedit --party's item), with a Master Ball in the bag (--bag), Splashes; the forced wild Chansey holds nothing and knows only Pound (set:, teach:), and its Pound takes the Barb. The ball is thrown from the battle's bag (touch:, as in caught_pokemon_keeps_item.json), and the field step plays the battle's end on. The caught Chansey holds the Barb, the Pikachu nothing, and the bag has none. Before, the Barb went with nothing marked, the Pikachu had it back at the battle's end, and the Chansey kept it as well. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:30:::STICKY_BARB", "--bag", "MASTER_BALL:1"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "set:1,item,ITEM_NONE", "teach:0,0,MOVE_SPLASH",
+            "teach:1,0,MOVE_POUND", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Splash!", "The wild Chansey used Pound!"],
+                        "battler0.item": "ITEM_NONE", "battler1.item": "ITEM_STICKY_BARB"}},
+            "wait:60", "touch:40,170", "wait:60", "touch:192,55", "wait:60", "touch:64,40", "wait:60", "touch:100,168",
+            "field"],
+  "expect": {"lines": ["used one Master Ball!", "Gotcha! Chansey was caught!"],
+             "party": 2, "party0.species": "SPECIES_PIKACHU", "party0.item": "ITEM_NONE",
+             "party1.species": "SPECIES_CHANSEY", "party1.item": "ITEM_STICKY_BARB",
+             "bag:ITEM_STICKY_BARB": 0}
+}

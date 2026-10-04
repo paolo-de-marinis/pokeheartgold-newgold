@@ -508,30 +508,42 @@ int main(void) {
     ctx.battleMons[0].item = ITEM_NONE;
     NoteHeldItemGiven(&bs, &ctx, 0, 1);
     assert(ctx.heldItemsGiven == 0 && ctx.heldItemsTaken == 0 && tag(&bs, &ctx, 0) == 0 && tag(&bs, &ctx, 1) == 0);
-    // A Sticky Barb goes with its tag. The player's Pokemon eats its own
-    // Oran Berry, then strikes the trainer's Barb holder and gets the Barb
-    // (its subscript moves the item); the foe's Thief takes it back: nobody
-    // is marked, and the Berry stays eaten. Before, the hand kept the
-    // Berry's tag under the Barb, and the theft marked the Berry as taken.
+    // A Sticky Barb is taken as Thief takes (NoteHeldItemTaken, the
+    // attacker taking), its tag going with it. The player's Pokemon eats its
+    // own Oran Berry, then strikes the trainer's Barb holder and gets the
+    // Barb (its subscript moves the item); the foe's Thief takes it back:
+    // nobody is marked, and the Berry stays eaten.
     reset(&bs, &ctx);
     NoteHeldItemUsedUp(&bs, &ctx, 0);
     ctx.battleMons[0].item = ITEM_NONE;
-    ctx.battlerIdAttacker = 0;
-    ctx.battlerIdTarget = 1;
-    PassStickyBarbTag(&bs, &ctx);
-    assert(tag(&bs, &ctx, 0) == 0 && tag(&bs, &ctx, 1) == 0);
+    ctx.battleMons[1].item = ITEM_STICKY_BARB;
+    NoteHeldItemTaken(&bs, &ctx, 0, 1);
+    assert(tag(&bs, &ctx, 0) == 0 && tag(&bs, &ctx, 1) == 0 && ctx.heldItemsTaken == 0);
     ctx.battleMons[0].item = ITEM_STICKY_BARB;
     ctx.battleMons[1].item = ITEM_NONE;
     NoteHeldItemTaken(&bs, &ctx, 1, 0);
     assert(ctx.heldItemsTaken == 0 && ctx.heldItemsGiven == 0);
-    // One of the player's own Barb moved to a foe keeps its owner's tag.
+    // The player's own Barb moving to a wild Pokemon is marked as taken, the
+    // tag going with it: caught with it, the wild Pokemon keeps it, and the
+    // player's Pokemon has nothing back (CaughtMonKeepsItem). Before, nothing
+    // was marked, and the Barb was had twice.
     reset(&bs, &ctx);
+    bs.type = BATTLE_TYPE_DOUBLES;
     ctx.battleMons[0].item = ctx.itemsToRestore[1] = ITEM_STICKY_BARB;
     ctx.battleMons[1].item = ITEM_NONE;
-    ctx.battlerIdAttacker = 1;
-    ctx.battlerIdTarget = 0;
-    PassStickyBarbTag(&bs, &ctx);
-    assert(tag(&bs, &ctx, 1) == 2 && tag(&bs, &ctx, 0) == 0);
+    NoteHeldItemTaken(&bs, &ctx, 1, 0);
+    assert(ctx.heldItemsTaken == 1 << 1 && tag(&bs, &ctx, 1) == 2 && tag(&bs, &ctx, 0) == 0);
+    assert(ctx.itemsTakenFromWild[0] == ITEM_NONE && ctx.itemsTakenFromWild[1] == ITEM_NONE);
+    // A wild Pokemon's own Barb moving to the player's Pokemon, which has
+    // eaten its Berry, is written down, for the wild Pokemon to have back if
+    // caught; nobody is marked.
+    reset(&bs, &ctx);
+    bs.type = BATTLE_TYPE_DOUBLES;
+    NoteHeldItemUsedUp(&bs, &ctx, 0);
+    ctx.battleMons[0].item = ITEM_NONE;
+    ctx.battleMons[1].item = ITEM_STICKY_BARB;
+    NoteHeldItemTaken(&bs, &ctx, 0, 1);
+    assert(ctx.itemsTakenFromWild[0] == ITEM_STICKY_BARB && ctx.heldItemsTaken == 0 && tag(&bs, &ctx, 0) == 0);
 
     // In a wild battle, a Focus Sash used up and then the wild Pokemon's
     // Leftovers Tricked off it: nothing marked, so the Sash is the
@@ -690,7 +702,7 @@ class TakenItemTests(unittest.TestCase):
         overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
         program = NOTE_FIXTURE.replace("@FUNCTIONS@", function(overlay, "Battler_IsWild") + function(overlay, "Battler_PartySlot")
                                                 + function(overlay, "NoteHeldItemTaken")
-                                                + function(overlay, "NoteHeldItemGiven") + function(overlay, "PassStickyBarbTag")
+                                                + function(overlay, "NoteHeldItemGiven")
                                                 + function(overlay, "NoteHeldItemUsedUp"))
         with tempfile.TemporaryDirectory(prefix="newgold-taken-") as directory:
             path = Path(directory)
@@ -771,12 +783,13 @@ class TakenItemTests(unittest.TestCase):
                                r"\s*ctx->heldItemOwner\[Battler_PartySlot\(battleSystem, ctx, battlerId\)\] = ctx->heldItemOwner\[k\];\n"
                                r"\s*ctx->heldItemOwner\[k\] = 0;\n")
 
-    def test_a_sticky_barb_takes_its_tag_along(self):
-        # Wherever the Barb's subscript is chosen, the tag goes first.
+    def test_a_sticky_barb_is_taken_as_thief_takes(self):
+        # Wherever the Barb's subscript is chosen, NoteHeldItemTaken is told
+        # first: the attacker takes the Barb its target held.
         overlay = (ROOT / "src/battle/overlay_12_0224E4FC.c").read_text()
         self.assertEqual(overlay.count("*script = BATTLE_SUBSCRIPT_TRANSFER_STICKY_BARB;"), 2)
-        self.assertEqual(len(re.findall(r"PassStickyBarbTag\(battleSystem, ctx\);\n\s*\*script = BATTLE_SUBSCRIPT_TRANSFER_STICKY_BARB;",
-                                        overlay)), 2)
+        self.assertEqual(len(re.findall(r"NoteHeldItemTaken\(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget\);\n"
+                                        r"\s*\*script = BATTLE_SUBSCRIPT_TRANSFER_STICKY_BARB;", overlay)), 2)
 
     def test_a_fetched_ball_is_nobody_s(self):
         # Ball Fetch's ball is none of the party's starting items: the hand

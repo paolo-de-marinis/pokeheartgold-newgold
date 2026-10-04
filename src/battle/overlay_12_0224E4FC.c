@@ -7250,15 +7250,17 @@ static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ct
 }
 
 // battlerIdLoser's item is being taken by battlerIdTaker, by Magician,
-// Pickpocket, Thief or Covet. Taken from one of the player's own Pokemon, it
-// is theirs again when the battle is over, a Berry too, and even one the
-// taker has used up (Pokemon Central: Furto, items stolen from any trainer
-// come back at the battle's end from the fifth generation; Prestigiatore,
-// even consumed from the eighth). GiveBackHeldItems reads the mark; a Berry
-// not marked that its holder no longer has was eaten, and stays so. The mark
-// is for the item the Pokemon started with: taking one it got in the battle
-// says nothing of that, and a Berry it has back and eats itself undoes it
-// (NoteHeldItemUsedUp). Whose item it is goes with it (heldItemOwner).
+// Pickpocket, Thief or Covet, or it is a Sticky Barb moving to the Pokemon
+// that struck its holder (its subscript moves the item). Taken from one of
+// the player's own Pokemon, it is theirs again when the battle is over, a
+// Berry too, and even one the taker has used up (Pokemon Central: Furto,
+// items stolen from any trainer come back at the battle's end from the
+// fifth generation; Prestigiatore, even consumed from the eighth).
+// GiveBackHeldItems reads the mark; a Berry not marked that its holder no
+// longer has was eaten, and stays so. The mark is for the item the Pokemon
+// started with: taking one it got in the battle says nothing of that, and a
+// Berry it has back and eats itself undoes it (NoteHeldItemUsedUp). Whose
+// item it is goes with it (heldItemOwner).
 //
 // Taken from a wild Pokemon, it goes to the bag when the battle is over,
 // unless that Pokemon is caught: then it keeps its item and the bag gets no
@@ -7267,6 +7269,15 @@ static BOOL CanAbilityTakeHeldItem(BattleSystem *battleSystem, BattleContext *ct
 // keep, but the player's back. Before, an item the player's Pokemon Tricked
 // to a wild Pokemon and stole back was written down as the wild Pokemon's:
 // caught, it was given that item, and the player's Pokemon kept it too.
+//
+// Pokemon Central's Vischiopunta says nothing of the battle's end, and the
+// Barb goes as a taken item does: the player's own Barb on a wild Pokemon
+// that is caught stays with it, and a wild Pokemon's own Barb on the
+// player's Pokemon is the caught Pokemon's again (Furto, Raggiro: from the
+// ninth generation a wild Pokemon caught keeps the item, and the bag gets
+// no copy). Before, the Barb went unmarked: the player's Pokemon had its
+// Barb back at the battle's end and the caught Pokemon kept it too, and a
+// wild Pokemon's went to the bag, the caught Pokemon holding nothing.
 void NoteHeldItemTaken(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdTaker, int battlerIdLoser) {
     int from = Battler_PartySlot(battleSystem, ctx, battlerIdLoser);
     int owner = ctx->heldItemOwner[from];
@@ -7307,18 +7318,6 @@ void NoteHeldItemGiven(BattleSystem *battleSystem, BattleContext *ctx, int battl
     }
     ctx->heldItemOwner[a] = ownerB;
     ctx->heldItemOwner[b] = ownerA;
-}
-
-// A Sticky Barb moving to the Pokemon that struck its holder: whose item it
-// is goes with it, unmarked, as with Symbiosis (TrySymbiosisHandOver). Its
-// subscript moves the item; the tag was left behind, and the empty hand it
-// went to kept the tag of an item it had used up: a Barb then taken or
-// knocked off it marked that eaten item as taken, and it came back.
-static void PassStickyBarbTag(BattleSystem *battleSystem, BattleContext *ctx) {
-    int from = Battler_PartySlot(battleSystem, ctx, ctx->battlerIdTarget);
-
-    ctx->heldItemOwner[Battler_PartySlot(battleSystem, ctx, ctx->battlerIdAttacker)] = ctx->heldItemOwner[from];
-    ctx->heldItemOwner[from] = 0;
 }
 
 // battlerId is using up the item it holds: eating its Berry, or losing it to
@@ -9260,7 +9259,7 @@ BOOL CheckItemEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int *s
     switch (item) {
     case HOLD_EFFECT_DMG_USER_CONTACT_XFR: // sticky barb
         if (ctx->battleMons[ctx->battlerIdAttacker].hp && !(ctx->battleMons[ctx->battlerIdAttacker].item) && ctx->moveNoCur != MOVE_KNOCK_OFF && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
-            PassStickyBarbTag(battleSystem, ctx);
+            NoteHeldItemTaken(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);
             *script = BATTLE_SUBSCRIPT_TRANSFER_STICKY_BARB;
             ret = TRUE;
         }
@@ -12493,7 +12492,7 @@ BOOL CheckItemEffectOnUTurn(BattleSystem *battleSystem, BattleContext *ctx, int 
     }
 
     if (itemTarget == HOLD_EFFECT_DMG_USER_CONTACT_XFR && ctx->battleMons[ctx->battlerIdAttacker].hp && !ctx->battleMons[ctx->battlerIdAttacker].item && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && BattleMoveMakesContact(ctx, ctx->moveNoCur)) {
-        PassStickyBarbTag(battleSystem, ctx);
+        NoteHeldItemTaken(battleSystem, ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);
         *script = BATTLE_SUBSCRIPT_TRANSFER_STICKY_BARB;
         ret = TRUE;
     }

@@ -1,0 +1,18 @@
+{
+  "about": "A wild Pokemon's own Sticky Barb that latched onto the player's Pokemon is the wild Pokemon's again when it is caught, and the bag gets no copy, as with an item Thief takes from a wild Pokemon (Pokemon Central, Furto: from the ninth generation); the Barb moving is taken as Thief takes (NoteHeldItemTaken). A level-5 Pikachu holding nothing, with a Master Ball in the bag (--bag), is taught False Swipe (teach:), which makes contact and leaves the Pokemon standing; the forced wild Chansey is given a Sticky Barb and knows only Splash (set:, teach:). False Swipe takes the Barb, the ball is thrown from the battle's bag (touch:, as in caught_pokemon_keeps_item.json), and the field step plays the battle's end on. The caught Chansey holds the Barb, the Pikachu nothing, and the bag has none. Before, the Barb went to the bag and the Chansey was caught holding nothing. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:5", "--bag", "MASTER_BALL:1"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "set:1,item,ITEM_STICKY_BARB", "teach:0,0,MOVE_FALSE_SWIPE",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1",
+            {"expect": {"lines": ["Pikachu used False Swipe!"],
+                        "battler0.item": "ITEM_STICKY_BARB", "battler1.item": "ITEM_NONE"}},
+            "wait:60", "touch:40,170", "wait:60", "touch:192,55", "wait:60", "touch:64,40", "wait:60", "touch:100,168",
+            "field"],
+  "expect": {"lines": ["used one Master Ball!", "Gotcha! Chansey was caught!"],
+             "party": 2, "party0.species": "SPECIES_PIKACHU", "party0.item": "ITEM_NONE",
+             "party1.species": "SPECIES_CHANSEY", "party1.item": "ITEM_STICKY_BARB",
+             "bag:ITEM_STICKY_BARB": 0}
+}
