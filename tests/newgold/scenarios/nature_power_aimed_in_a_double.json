@@ -1,0 +1,17 @@
+{
+  "about": "Nature Power is aimed at the Pokemon its user chose, and the move it turns into hits that one (Pokemon Central, Naturforza: from the sixth generation an adjacent target rather than the user; Showdown's gen-9 naturepower hands useMove its target). Before, its record kept retail's target, the user, so a double battle offered no target screen, and the move it called was aimed at a foe picked at random. Twins Amy & Mimi in the Azalea Gym against a scratch copy of Paolo's Bugsy save with a level-30 Pawmot and a level-30 Magikarp on the twins' platform: the Pawmot knows only Nature Power, everyone else only Splash (teach:), and the Pawmot aims at the Ledyba, the foe on the left (gym.py's first target). In the Azalea Gym's building it turns into Tri Attack, which takes the Ledyba from 51 to 27 and leaves the Spinarak's 47 alone; with the record fixed but the called move aimed again, as before, the same turn sent Tri Attack into the Spinarak and fainted it.",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "PAWMOT:30,MAGIKARP:30", "--where", "180:3:8:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceEffect": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "A", "fight:1:0",
+            "teach:0,0,MOVE_NATURE_POWER", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:2,0,MOVE_SPLASH", "teach:2,1,0,0", "teach:2,2,0,0", "teach:2,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:3,0,MOVE_SPLASH", "teach:3,1,0,0", "teach:3,2,0,0", "teach:3,3,0,0",
+            "fight:1:1"],
+  "expect": {"lines": ["Pawmot used Nature Power!", "Nature Power turned into Tri Attack!", "Pawmot used Tri Attack!",
+                       "The opposing Ledyba used Splash!", "The opposing Spinarak used Splash!"],
+             "no_lines": ["fainted!"],
+             "battler1.species": "SPECIES_SPINARAK", "battler1.hp": 47, "battler1.maxHp": 47,
+             "battler3.species": "SPECIES_LEDYBA", "battler3.hp": 27, "battler3.maxHp": 51}
+}

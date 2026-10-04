@@ -150,6 +150,11 @@ class MoveTests(unittest.TestCase):
         record = struct.unpack(import_moves.RECORD, self.table[self.moves["MOVE_CONVERSION_2"]])
         self.assertEqual(record[7], ranges["RANGE_SINGLE_TARGET"])
 
+    def test_nature_power_aims_at_one_pokemon(self):
+        ranges = import_moves.constants("include/constants/moves.h", "RANGE_")
+        record = struct.unpack(import_moves.RECORD, self.table[self.moves["MOVE_NATURE_POWER"]])
+        self.assertEqual(record[7], ranges["RANGE_SINGLE_TARGET"])
+
     def test_poison_gas_and_cotton_spore_hit_both_foes(self):
         ranges = import_moves.constants("include/constants/moves.h", "RANGE_")
         for name in ("POISON_GAS", "COTTON_SPORE"):
@@ -172,6 +177,8 @@ class MoveTests(unittest.TestCase):
     RETAIL_EXCEPTIONS = {
         ("CONVERSION_2", "target"): "the engine's aims at every adjacent Pokemon; from Generation V "
                                     "it is one target, whose last move it reads (TARGETS_FIXED)",
+        ("NATURE_POWER", "target"): "the engine's is retail's, the user; from Generation VI the user "
+                                    "picks an adjacent Pokemon, which the move it calls hits (TARGETS_FIXED)",
     }
 
     @unittest.skipUnless(REFERENCE.exists(), "the reference checkout is not here")

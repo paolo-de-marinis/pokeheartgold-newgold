@@ -2101,10 +2101,19 @@ BOOL BtlCmd_GoToMoveScript(BattleSystem *battleSystem, BattleContext *ctx) {
     ctx->battleStatus &= ~BATTLE_STATUS_NO_ATTACK_MESSAGE;
     ctx->battleStatus &= ~BATTLE_STATUS_MOVE_ANIMATIONS_OFF;
 
+    // A called move picks its own target, but Nature Power's goes where
+    // Nature Power was aimed: from the sixth generation at an adjacent
+    // Pokemon its user chose, an ally too (Pokemon Central, Naturforza;
+    // Showdown's gen-9 naturepower hands useMove its target). Lightning Rod
+    // and Storm Drain may still draw it, as they draw a chosen move.
+    BOOL aimed = ctx->moveNoCur == MOVE_NATURE_POWER;
+
     ctx->moveNoCur = ctx->moveTemp;
 
     if (unkA == 0) {
-        ctx->battlerIdTarget = ov12_022506D4(battleSystem, ctx, ctx->battlerIdAttacker, (u16)ctx->moveTemp, 1, 0);
+        if (!aimed) {
+            ctx->battlerIdTarget = ov12_022506D4(battleSystem, ctx, ctx->battlerIdAttacker, (u16)ctx->moveTemp, 1, 0);
+        }
         ov12_02250A18(battleSystem, ctx, ctx->battlerIdAttacker, ctx->moveTemp);
         ctx->playerActions[ctx->battlerIdAttacker].unk4 = ctx->battlerIdTarget;
     }

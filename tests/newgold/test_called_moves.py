@@ -66,6 +66,15 @@ int main(void) {
     assert(ctx.unk_2184 == (MULTIHIT_SKIP_OBEDIENCE_CHECK | MULTIHIT_SKIP_STATUS_CHECK | MULTIHIT_CALLED_MOVE));
     assert(!(ctx.unk_2184 & MULTIHIT_SKIP_PP_DECREMENT));
     assert(!(ctx.battleStatus & (BATTLE_STATUS_NO_ATTACK_MESSAGE | BATTLE_STATUS_MOVE_ANIMATIONS_OFF)));
+    // Nature Power's move goes where Nature Power was aimed, the user's ally
+    // here, not at a foe picked for it; Lightning Rod may still draw it.
+    ctx.moveNoCur = MOVE_NATURE_POWER;
+    ctx.moveTemp = MOVE_TRI_ATTACK;
+    ctx.battlerIdTarget = 2;
+    ctx.playerActions[0].unk4 = 2;
+    assert(BtlCmd_GoToMoveScript(&bs, &ctx) == TRUE);
+    assert(ctx.moveNoCur == MOVE_TRI_ATTACK && ctx.battlerIdTarget == 2 && ctx.playerActions[0].unk4 == 2);
+    assert(redirected == 2);
     return 0;
 }
 """

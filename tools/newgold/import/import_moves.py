@@ -315,7 +315,11 @@ RETAIL_EFFECTS = ("STRING_SHOT", "TAIL_GLOW", "CHATTER", "SWEET_SCENT", "HOWL")
 # the move at every adjacent Pokemon, while from Generation V the move picks one
 # and reads the move that one last used (Pokemon Central, Conversione2;
 # BtlCmd_TryConversion2), so it takes a single target. Retail's was the user.
-TARGETS_FIXED = {"CONVERSION_2": "RANGE_SINGLE_TARGET"}
+# Nature Power's the engine keeps from retail, the user, the called move then
+# picking a foe at random; from Generation VI it is aimed at an adjacent
+# Pokemon the user chooses, an ally too, and the move it turns into hits that
+# one (Pokemon Central, Naturforza; BtlCmd_GoToMoveScript).
+TARGETS_FIXED = {"CONVERSION_2": "RANGE_SINGLE_TARGET", "NATURE_POWER": "RANGE_SINGLE_TARGET"}
 # Added moves the engine leaves as a bare MOVE_EFFECT_HIT under
 # FLAG_UNUSABLE_UNIMPLEMENTED, and this game gives their canonical effect
 # (Pokemon Central), so without the flag. An effect is named as this game's
