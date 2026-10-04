@@ -163,11 +163,45 @@ const u16 *_0210FA3C[] = {
     _020FBBD8,
 };
 
+// Goldenrod's TM floor (the Department Store's 5F, special mart list 7):
+// after HeartGold's twelve TMs, TM93 to TM148, a step of seven every two
+// badges, Johto's and Kanto's both counted (Paolo, 2026-10-04), the way the
+// Poke Mart adds its wares as badges come in. Each with the badges it needs.
+#define SPECIAL_MART_GOLDENROD_TMS 7
+
+static const struct BadgeMartItems sGoldenrodTMSteps[] = {
+    { ITEM_TM094,  2 }, { ITEM_TM104,  2 }, { ITEM_TM106,  2 }, { ITEM_TM107,  2 }, { ITEM_TM120,  2 }, { ITEM_TM121,  2 }, { ITEM_TM122,  2 },
+    { ITEM_TM095,  4 }, { ITEM_TM098,  4 }, { ITEM_TM100,  4 }, { ITEM_TM101,  4 }, { ITEM_TM105,  4 }, { ITEM_TM116,  4 }, { ITEM_TM119,  4 },
+    { ITEM_TM096,  6 }, { ITEM_TM109,  6 }, { ITEM_TM110,  6 }, { ITEM_TM112,  6 }, { ITEM_TM113,  6 }, { ITEM_TM118,  6 }, { ITEM_TM127,  6 },
+    { ITEM_TM099,  8 }, { ITEM_TM111,  8 }, { ITEM_TM115,  8 }, { ITEM_TM117,  8 }, { ITEM_TM129,  8 }, { ITEM_TM143,  8 }, { ITEM_TM148,  8 },
+    { ITEM_TM123, 10 }, { ITEM_TM128, 10 }, { ITEM_TM132, 10 }, { ITEM_TM135, 10 }, { ITEM_TM139, 10 }, { ITEM_TM141, 10 }, { ITEM_TM147, 10 },
+    { ITEM_TM097, 12 }, { ITEM_TM102, 12 }, { ITEM_TM108, 12 }, { ITEM_TM114, 12 }, { ITEM_TM125, 12 }, { ITEM_TM130, 12 }, { ITEM_TM146, 12 },
+    { ITEM_TM093, 14 }, { ITEM_TM103, 14 }, { ITEM_TM124, 14 }, { ITEM_TM133, 14 }, { ITEM_TM138, 14 }, { ITEM_TM140, 14 }, { ITEM_TM144, 14 },
+    { ITEM_TM126, 16 }, { ITEM_TM131, 16 }, { ITEM_TM134, 16 }, { ITEM_TM136, 16 }, { ITEM_TM137, 16 }, { ITEM_TM142, 16 }, { ITEM_TM145, 16 },
+};
+
 BOOL ScrCmd_SpecialMartBuy(ScriptContext *ctx) {
     u16 which;
+    const u16 *items;
+    u16 goldenrod[NELEMS(_020FBC34) + NELEMS(sGoldenrodTMSteps)];
 
     which = ScriptGetVar(ctx);
-    Mart_Init(ctx->taskman, ctx->fieldSystem, _0210FA3C[which], 0, 0, 0, NULL);
+    items = _0210FA3C[which];
+    if (which == SPECIAL_MART_GOLDENROD_TMS) {
+        s32 badges = PlayerProfile_CountBadges(Save_PlayerData_GetProfile(ctx->fieldSystem->saveData));
+        u32 n, i;
+        for (n = 0; items[n] != 0xFFFF; n++) {
+            goldenrod[n] = items[n];
+        }
+        for (i = 0; i < NELEMS(sGoldenrodTMSteps); i++) {
+            if (badges >= sGoldenrodTMSteps[i].tier) {
+                goldenrod[n++] = sGoldenrodTMSteps[i].item_id;
+            }
+        }
+        goldenrod[n] = 0xFFFF;
+        items = goldenrod;
+    }
+    Mart_Init(ctx->taskman, ctx->fieldSystem, items, 0, 0, 0, NULL);
     return TRUE;
 }
 
