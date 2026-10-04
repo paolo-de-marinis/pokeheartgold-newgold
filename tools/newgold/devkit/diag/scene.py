@@ -150,7 +150,8 @@ battlerN.species|hp|maxHp|level|partySlot|status|item|moveK|ppK|form|movePos
 (gDiagBattlers; N counts the player's side even, K is a move slot, 0 to
 3; form is the battle's, which a species keeps through Castform's weather
 or Cherrim's sun: CASTFORM_SNOWY 3; movePos the slot it chose last, 0 to
-3), battlerN.types (the species' two types in the tree's personal.json: a
+3), battlerN.types (its two types as the battle has them, BattleMon's type1
+and type2 -- a form's, Castform's in the rain, or the one Soak gave: a
 TYPE_... expected is one of them), music (the sequence the field's sound
 handle plays, -1 for none: a load the sound heap cannot hold leaves it empty
 and counts as no failed allocation), or any gDiag* global. A value is a
@@ -230,13 +231,15 @@ def readable(step_or_key, key=False):
 
 @savedit.tree_cache
 def battle_layout():
-    """BattleMon's size and the offsets teach: and set: write, from the tree's headers."""
+    """BattleMon's size and the offsets teach: and set: write and battlerN.types reads, from the tree's headers."""
     names = ("sizeof(BattleMon)", "__builtin_offsetof(BattleMon, moves)", "__builtin_offsetof(BattleMon, movePPCur)",
              "__builtin_offsetof(BattleMon, hp)", "__builtin_offsetof(BattleContext, battleMons)",
              "__builtin_offsetof(BattleContext, unk_0)", "__builtin_offsetof(BattleMon, status)",
              "__builtin_offsetof(BattleMon, ability)", "__builtin_offsetof(BattleMon, item)",
-             "__builtin_offsetof(BattleMon, speed)", "__builtin_offsetof(BattleContext, unk_314C)")
-    return dict(zip(("size", "moves", "pp", "hp", "mons", "select", "status", "ability", "item", "speed", "chose"), savedit.compile_c(
+             "__builtin_offsetof(BattleMon, speed)", "__builtin_offsetof(BattleContext, unk_314C)",
+             "__builtin_offsetof(BattleMon, type1)", "__builtin_offsetof(BattleMon, type2)")
+    return dict(zip(("size", "moves", "pp", "hp", "mons", "select", "status", "ability", "item", "speed", "chose",
+                     "type1", "type2"), savedit.compile_c(
         exprs=names, headers=savedit.LAYOUT_HEADERS + ("battle/battle.h",))[0]))
 
 
@@ -1623,12 +1626,9 @@ class Scene:
             battler, field = name[len("battler"):].split(".")
             at = markers.address("gDiagBattlers") - 0x02000000 + int(battler) * struct.calcsize(BATTLER)
             shown = struct.unpack_from(BATTLER, ram, at)
-            if field == "types":
-                species, form = shown[BATTLER_FIELDS.index("species")], shown[BATTLER_FIELDS.index("form")]
-                if form:
-                    raise SystemExit(f"battler {battler} is in form {form}: scene.py reads only a species' types")
-                record = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"][species]
-                return [self.number(t) for t in record["types"]]
+            if field == "types":    # the battle's own, a form's or a move's: BattleMon.type1 and type2
+                mon, layout = self.battle_mon(int(battler)), battle_layout()
+                return None if mon is None else [ram[mon - 0x02000000 + layout[t]] for t in ("type1", "type2")]
             return shown[BATTLER_FIELDS.index(field)]
         raise SystemExit(f"a scenario asks for {name!r}, which scene.py cannot read")
 

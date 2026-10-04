@@ -509,6 +509,24 @@ class ScenarioFileTests(unittest.TestCase):
             self.assertTrue(scene.readable(key, key=True), key)
         for key in ("battler0.pp4", "party6.item", "party0.ability", "party0.move4", "options.speed"):
             self.assertFalse(scene.readable(key, key=True), key)
+        # A battler's types are the battle's, read in its BattleMon (found
+        # by what gDiagBattlers shows): a Castform in its Snowy Form, form 3,
+        # is Ice, which no record in personal.json says.
+        from markers import BATTLER
+        layout, ram = scene.battle_layout(), bytearray(0x400000)
+        struct.pack_into(BATTLER, ram, 0x100000 + struct.calcsize(BATTLER), 351, 30, 31, 10, 0, 0, 0,
+                         *[0] * 8, 3, 0)
+        mon = 0x200000
+        struct.pack_into("<H", ram, mon, 351)
+        struct.pack_into("<iI", ram, mon + layout["hp"], 30, 31)
+        ram[mon + layout["type1"]] = ram[mon + layout["type2"]] = scene.Scene.number("TYPE_ICE")
+        s = scene.Scene.__new__(scene.Scene)
+        s.core = type("Core", (), {"ram": lambda self: bytes(ram)})()
+        s.markers = type("Markers", (), {"address": lambda self, name: 0x02100000})()
+        types = s.value(bytes(ram), "battler1.types")
+        self.assertEqual(types, [15, 15])
+        self.assertTrue(scene.Scene.wanted("battler1.types", "TYPE_ICE")[0](types))
+        self.assertFalse(scene.Scene.wanted("battler1.types", "TYPE_NORMAL")[0](types))
         # The options word leads PLAYERDATA: text speed in its low four bits,
         # the battle style and scene the two above the sound method's two.
         layout = scene.options_layout()
