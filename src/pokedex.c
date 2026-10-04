@@ -1768,9 +1768,11 @@ static u32 Pokedex_GetSeenFormNum_Deoxys(Pokedex *pokedex) {
 // Pokedex_SetMonCaughtFlag alike: the gender it was seen in, or the second
 // one, Spinda's spots the first time, retail's forms, and a form that is a
 // species of its own here, which the Dex credits to its base species, as
-// itself in forms: formsSeen, or formsCaught. It returns the Dex species
-// the Pokemon counts for, or SPECIES_NONE for none, and leaves the species'
-// flags to its callers.
+// itself in forms: formsSeen, or formsCaught. A species seen first as such
+// a form is shown as that form (DEX_SEEN_AS_FORM_ONLY, DEX_FORM_SEEN_FIRST)
+// until it is seen as itself. It returns the Dex species the Pokemon counts
+// for, or SPECIES_NONE for none, and leaves the species' flags to its
+// callers.
 static u16 Pokedex_RecordMonSeen(Pokedex *pokedex, Pokemon *mon, u32 *forms) {
     u16 form = GetMonData(mon, MON_DATA_SPECIES, NULL);
     u16 species = SpeciesToDexSpecies(form);
@@ -1791,8 +1793,17 @@ static u16 Pokedex_RecordMonSeen(Pokedex *pokedex, Pokemon *mon, u32 *forms) {
             pokedex->spindaPersonality = personality;
         }
         Pokedex_SetSeenGenderFlag(pokedex, gender, 0, species);
-    } else if (CheckDexFlag((const u8 *)pokedex->seenGenders[0], species) != gender) {
-        Pokedex_SetSeenGenderFlag(pokedex, gender, 1, species);
+        if (form != species) {
+            pokedex->caughtLanguages[species] |= DEX_SEEN_AS_FORM_ONLY;
+            pokedex->caughtLanguages[form - DEX_FIRST_FORM] |= DEX_FORM_SEEN_FIRST;
+        }
+    } else {
+        if (CheckDexFlag((const u8 *)pokedex->seenGenders[0], species) != gender) {
+            Pokedex_SetSeenGenderFlag(pokedex, gender, 1, species);
+        }
+        if (form == species) {
+            pokedex->caughtLanguages[species] &= ~DEX_SEEN_AS_FORM_ONLY;
+        }
     }
     Pokedex_TryAppendSeenForm(pokedex, species, mon);
     return species;

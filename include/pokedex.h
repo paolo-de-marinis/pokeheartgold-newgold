@@ -27,6 +27,17 @@
 #define DEX_FIRST_FORM     SPECIES_SLOWPOKE_GALARIAN
 #define NUM_DEX_FORM_WORDS (CEILDIV(NUM_SPECIES - DEX_FIRST_FORM + 1, 32))
 
+// The look the Dex shows a species in. caughtLanguages keeps a language a bit
+// in its six low bits (LanguageToDexFlag; its 6, no language of the Dex, is
+// never kept), and the port two flags in the two above them, clear in every
+// save from before them: DEX_SEEN_AS_FORM_ONLY in a species' byte while the
+// Dex has seen it only as its forms (DEX_FIRST_FORM on), and
+// DEX_FORM_SEEN_FIRST in the byte at a form's place in formsSeen (form -
+// DEX_FIRST_FORM) for the form its species was seen as the first time. The
+// Dex shows the species as that form until it sees the species itself.
+#define DEX_SEEN_AS_FORM_ONLY 0x80
+#define DEX_FORM_SEEN_FIRST   0x40
+
 typedef struct Pokedex {
     u32 magic;
     u32 caughtSpecies[NUM_DEX_FLAG_WORDS];

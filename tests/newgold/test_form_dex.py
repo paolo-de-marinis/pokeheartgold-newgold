@@ -104,9 +104,19 @@ typedef struct Pokedex {
     u32 seenSpecies[WORDS];
     u32 seenGenders[2][WORDS];
     u32 spindaPersonality;
+    u8 caughtLanguages[(NATIONAL_DEX_COUNT + 3) & ~3];
     u32 formsSeen[NUM_DEX_FORM_WORDS];
     u32 formsCaught[NUM_DEX_FORM_WORDS];
 } Pokedex;
+
+// The look the Dex shows a species in: as the form it was seen as first,
+// while it has been seen only as its forms.
+static int ShownAsForm(const Pokedex *dex, u16 species) {
+    return (dex->caughtLanguages[species] & DEX_SEEN_AS_FORM_ONLY) != 0;
+}
+static int SeenFirst(const Pokedex *dex, u16 form) {
+    return (dex->caughtLanguages[form - DEX_FIRST_FORM] & DEX_FORM_SEEN_FIRST) != 0;
+}
 
 static int FormRecorded(const u32 *forms, u16 species) {
     return (forms[(species - DEX_FIRST_FORM) / 32] >> ((species - DEX_FIRST_FORM) % 32)) & 1;
@@ -136,11 +146,31 @@ int main(void) {
     assert(FormRecorded(dex.formsSeen, SPECIES_SLOWPOKE_GALARIAN));
     assert(!FormRecorded(dex.formsCaught, SPECIES_SLOWPOKE_GALARIAN));
     assert(!FormRecorded(dex.formsSeen, SPECIES_SLOWBRO_GALARIAN));
-    // A Kantonian Slowbro caught records no form.
+    // Slowpoke seen as the Galarian form alone is shown as it; seeing it
+    // again changes nothing, and the Kantonian Slowpoke seen makes Slowpoke
+    // itself the look shown, for good.
+    assert(ShownAsForm(&dex, SPECIES_SLOWPOKE) && SeenFirst(&dex, SPECIES_SLOWPOKE_GALARIAN));
+    Pokedex_SetMonSeenFlag(&dex, &larrys);
+    assert(ShownAsForm(&dex, SPECIES_SLOWPOKE));
+    Pokemon slowpoke = { SPECIES_SLOWPOKE };
+    Pokedex_SetMonSeenFlag(&dex, &slowpoke);
+    assert(!ShownAsForm(&dex, SPECIES_SLOWPOKE));
+    Pokedex_SetMonSeenFlag(&dex, &larrys);
+    assert(!ShownAsForm(&dex, SPECIES_SLOWPOKE));
+    // A Kantonian Slowbro caught records no form; the Galarian one seen
+    // after it is not the look shown.
     Pokemon slowbro = { SPECIES_SLOWBRO };
     Pokedex_SetMonCaughtFlag(&dex, &slowbro);
     assert(Pokedex_CheckMonCaughtFlag(&dex, SPECIES_SLOWBRO));
     assert(!FormRecorded(dex.formsSeen, SPECIES_SLOWBRO_GALARIAN) && !FormRecorded(dex.formsCaught, SPECIES_SLOWBRO_GALARIAN));
+    Pokemon nelsons = { SPECIES_SLOWBRO_GALARIAN };
+    Pokedex_SetMonSeenFlag(&dex, &nelsons);
+    assert(!ShownAsForm(&dex, SPECIES_SLOWBRO) && !SeenFirst(&dex, SPECIES_SLOWBRO_GALARIAN));
+    // Of two forms seen before the species, the first is the one shown.
+    Pokemon alolan = { SPECIES_MEOWTH_ALOLAN }, galarian = { SPECIES_MEOWTH_GALARIAN };
+    Pokedex_SetMonSeenFlag(&dex, &alolan);
+    Pokedex_SetMonSeenFlag(&dex, &galarian);
+    assert(ShownAsForm(&dex, SPECIES_MEOWTH) && SeenFirst(&dex, SPECIES_MEOWTH_ALOLAN) && !SeenFirst(&dex, SPECIES_MEOWTH_GALARIAN));
 
     // A female Litleo evolved: the scene registers the mon as Pyroar's
     // female form, and the Dex credits Pyroar, female.
@@ -151,8 +181,10 @@ int main(void) {
     assert(CheckDexFlag((const u8 *)dex.seenGenders[0], SPECIES_PYROAR));
     // Asking about the form asks about its base.
     assert(Pokedex_CheckMonCaughtFlag(&dex, SPECIES_PYROAR_FEMALE));
-    // The form itself is recorded caught.
+    // The form itself is recorded caught, and a form caught first is the
+    // look shown, as one seen first is.
     assert(FormRecorded(dex.formsCaught, SPECIES_PYROAR_FEMALE));
+    assert(ShownAsForm(&dex, SPECIES_PYROAR) && SeenFirst(&dex, SPECIES_PYROAR_FEMALE));
 
     // Seeing a form is seeing its base, and no more than that.
     Pokemon meowstic = { SPECIES_MEOWSTIC_FEMALE };
@@ -190,6 +222,11 @@ int main(void) {
             continue;
         }
         assert(SpeciesToDexSpecies(species) == species);
+    }
+    // The languages' own bits are untouched: no species was caught in one
+    // (GetMonData's language here is 0, no language of the Dex's).
+    for (u32 i = 0; i < sizeof(dex.caughtLanguages); i++) {
+        assert(!(dex.caughtLanguages[i] & 0x3F));
     }
     assert(SpeciesToDexSpecies(SPECIES_SLOWPOKE_GALARIAN) == SPECIES_SLOWPOKE);
     assert(SpeciesToDexSpecies(SPECIES_SLOWBRO_GALARIAN) == SPECIES_SLOWBRO);
@@ -268,7 +305,8 @@ NATIVE = ["CheckDexFlag", "SetDexFlag", "SetDexFlagState",
 def form_defines():
     """include/pokedex.h's sizes of the record of the forms."""
     header = (ROOT / "include/pokedex.h").read_text()
-    return "\n".join(re.findall(r"^#define (?:CEILDIV|DEX_FIRST_FORM|NUM_DEX_FORM_WORDS)\b.*$", header, re.M))
+    return "\n".join(re.findall(r"^#define (?:CEILDIV|DEX_FIRST_FORM|NUM_DEX_FORM_WORDS|DEX_SEEN_AS_FORM_ONLY|DEX_FORM_SEEN_FIRST)\b.*$",
+                                header, re.M))
 
 
 class FormTableTests(unittest.TestCase):

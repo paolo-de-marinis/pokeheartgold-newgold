@@ -68,6 +68,19 @@ them the flash holds one half of each; the newer half reads, the older one
 reads as a bad half, and the game loads the newer half as it loads any save
 with one good half.
 
+## Bits the port keeps in HeartGold's fields
+
+One change used bits no save had ever set, and needed no layout: the two top
+bits of each byte of the Dex's caughtLanguages (DEX_SEEN_AS_FORM_ONLY and
+DEX_FORM_SEEN_FIRST, include/pokedex.h), which shows which look the Dex draws
+a species in. HeartGold keeps a language a bit there in the six low bits
+(LanguageToDexFlag) and never sets the two above them, so every save from
+before has them clear, and clear is what such a save meant: the species
+drawn as itself. A save made before them where a species was seen only as
+its forms draws it as itself, as it did then. A field reused this way is an
+exception to the rule below only because a save from before reads the same
+through it; anything else is a new layout.
+
 ## Why the magic, and not a version number
 
 The reference has no version. hg-engine's ALLOW_SAVE_CHANGES, on at d0380a487
