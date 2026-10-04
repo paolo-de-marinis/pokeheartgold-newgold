@@ -52,6 +52,9 @@ static void PokedexApp_ShowFormTypes(PokedexAppData *pokedexApp, int pair, u16 s
     u16 type1 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_TYPE1);
     u16 type2 = GetMonBaseStat_HandleAlternateForm(species, form, BASE_TYPE2);
 
+#ifdef NEWGOLD_DIAG
+    gDiagDexFormTypes = type1 | type2 << 8;
+#endif
     PokedexApp_HideFormTypeIcons(pokedexApp);
     ov18_021F21FC(pokedexApp, spriteIdx, type1);
     if (type1 == type2) {
@@ -102,6 +105,9 @@ void ov18_021F5EFC(PokedexAppData *pokedexApp, int idx, int a2) {
         ov18_021F11C0(pokedexApp, 1, 0);
         ov18_021F11C0(pokedexApp, 2, 0);
     }
+#ifdef NEWGOLD_DIAG
+    gDiagDexFormShown = species | form << 16;
+#endif
     PokedexApp_ShowFormTypes(pokedexApp, pokedexApp->unk_18C7_5, species, form);
     pokedexApp->unk_18C7_5 ^= 1;
     ov18_021F1A7C(pokedexApp, species, form, gender, 2, front, a2);

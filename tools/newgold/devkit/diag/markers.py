@@ -214,6 +214,10 @@ class Markers:
         if items:
             last = w("gDiagAiItemLast")
             parts.append(f"trainer items {items}, the last {_names('include/constants/items.h', 'ITEM_').get(last, last)}")
+        if w("gDiagDexFormShown") or w("gDiagDexAreaSpecies"):
+            shown = w("gDiagDexFormShown")
+            parts.append(f"dex forms page {shown & 0xFFFF} form {shown >> 16} types {w('gDiagDexFormTypes'):#06x}"
+                         f", area page {w('gDiagDexAreaSpecies')} in {w('gDiagDexAreaPlaces')} places")
         # Each check names its roll just before it takes it, so between frames
         # none is waiting: one that is was named by a check that took no roll,
         # and a forced switch would answer the battle's next roll in its place.

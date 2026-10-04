@@ -1890,6 +1890,10 @@ void ov18_021E8528(PokedexAppData *pokedexApp, int a1, int a2) {
     nMaps += pokedexApp->unk_18DC.unk_08.nMaps - 1;
     nMaps += pokedexApp->unk_18DC.unk_10.nMaps - 1;
     nMaps += pokedexApp->unk_18DC.unk_18.nMaps - 1;
+#ifdef NEWGOLD_DIAG
+    gDiagDexAreaSpecies = species;
+    gDiagDexAreaPlaces = nMaps - 1;
+#endif
 
     pokedexApp->unk_18DC.unk_20.maps = Heap_Alloc(HEAP_ID_POKEDEX_APP, sizeof(u32) * nMaps);
     pokedexApp->unk_18DC.unk_28 = Heap_Alloc(HEAP_ID_POKEDEX_APP, sizeof(u32) * nMaps);
