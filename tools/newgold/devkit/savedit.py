@@ -303,6 +303,10 @@ def _layout():
         # The Dex's record of the forms, one bit a species from DEX_FIRST_FORM.
         "DEX_FORMS_SEEN": f"{offset}(Pokedex, formsSeen)", "DEX_FORMS_CAUGHT": f"{offset}(Pokedex, formsCaught)",
         "DEX_FORMS_SIZE": f"sizeof(Pokedex) - {offset}(Pokedex, formsSeen)", "DEX_FIRST_FORM": "DEX_FIRST_FORM",
+        # The look the Dex shows a species in, two bits above the languages'
+        # in each byte of caughtLanguages (include/pokedex.h).
+        "DEX_LOOKS": f"{offset}(Pokedex, caughtLanguages)",
+        "DEX_SEEN_AS_FORM_ONLY": "DEX_SEEN_AS_FORM_ONLY", "DEX_FORM_SEEN_FIRST": "DEX_FORM_SEEN_FIRST",
         **{f"ORDER_{name}": f"{offset}(Pokedex, {field})" for name, (field, _) in DEX_FORM_FIELDS.items()},
         # SAVE_PCSTORAGE.
         "NUM_BOXES": "NUM_BOXES", "MONS_PER_BOX": "MONS_PER_BOX", "BOX_NAME_LENGTH": "BOX_NAME_LENGTH",
@@ -1237,7 +1241,8 @@ def add_machines(save, machines):
 
 def mark_dex(save, names):
     """Seen and caught, and the Dex and the National Dex switched on. A form
-    is caught as the game records it (set_form_record)."""
+    is caught as the game records it (set_form_record); a species is seen
+    as itself, and the Dex shows it so."""
     block = save.block("SAVE_POKEDEX")
     numbers = species_numbers()
     for name in names:
@@ -1251,6 +1256,7 @@ def mark_dex(save, names):
             _set_seen_form(block, numbers[name])
         set_dex_flag(block, DEX_SEEN, numbers[name])
         set_dex_flag(block, DEX_CAUGHT, numbers[name])
+        block[DEX_LOOKS + numbers[name]] &= ~DEX_SEEN_AS_FORM_ONLY
     block[DEX_ENABLED] = 1
     block[DEX_NATIONAL] = 1
 
@@ -2889,7 +2895,9 @@ def _form_bit(block, at, form):
 def set_form_record(save, form, seen, caught):
     """A form seen and caught, as the game records one (Pokedex_RecordMonSeen):
     caught counts as seen, and the base species is seen as well (set_dex),
-    and caught when the form is. The record is the layout of now's."""
+    and caught when the form is; a base seen for the first time this way is
+    shown as the form until it is seen itself (_shown_first_as). The record
+    is the layout of now's."""
     if save.legacy:
         raise ValueError("a save in an older layout has no record of the forms: the game adds it when it loads the save")
     if form not in dex_forms():
@@ -2900,8 +2908,21 @@ def set_form_record(save, form, seen, caught):
         byte, bit = at + ((form - DEX_FIRST_FORM) >> 3), 1 << ((form - DEX_FIRST_FORM) & 7)
         block[byte] = block[byte] | bit if on else block[byte] & ~bit
     base = dex_forms()[form]
-    if seen and not _dex_bit(block, DEX_SEEN, base) or caught and not _dex_bit(block, DEX_CAUGHT, base):
+    first = seen and not _dex_bit(block, DEX_SEEN, base)
+    if first or caught and not _dex_bit(block, DEX_CAUGHT, base):
         set_dex(save, [base], True, caught or bool(_dex_bit(block, DEX_CAUGHT, base)))
+    if first:
+        _shown_first_as(block, form)
+
+
+def _shown_first_as(block, form):
+    """What Pokedex_RecordMonSeen marks when a species is seen the first time
+    as one of its forms: the species is shown as that form
+    (DEX_SEEN_AS_FORM_ONLY in its byte of caughtLanguages, DEX_FORM_SEEN_FIRST
+    in the byte at the form's place) until it is seen itself."""
+    block[DEX_LOOKS + dex_forms()[form]] |= DEX_SEEN_AS_FORM_ONLY
+    block[DEX_LOOKS + form - DEX_FIRST_FORM] |= DEX_FORM_SEEN_FIRST
+
 
 
 def _set_seen_genders(block, species):
@@ -2958,10 +2979,13 @@ def set_dex(save, species, seen, caught):
     the game reads it. A species seen for the first time gets the genders
     it can be (_set_seen_genders) and, with forms the Dex tells apart, its
     first form (_set_seen_form). Unown seen with no letter recorded gets
-    A, so the Dex's form page has one to show. A species no longer seen
-    takes its forms' record with it, and one no longer caught its forms
-    caught: the game records a form only with its base (Pokedex_RecordMonSeen),
-    and the FORMS page would list them again once the base was seen."""
+    A, so the Dex's form page has one to show. A species seen here is seen
+    as itself: the Dex no longer shows it as a form it was seen as first
+    (DEX_SEEN_AS_FORM_ONLY); one already seen keeps the look it has. A
+    species no longer seen takes its forms' record with it, the look
+    included, and one no longer caught its forms caught: the game records a
+    form only with its base (Pokedex_RecordMonSeen), and the FORMS page
+    would list them again once the base was seen."""
     block = save.block("SAVE_POKEDEX")
     valid = set(dex_species())
     seen = seen or caught
@@ -2975,6 +2999,8 @@ def set_dex(save, species, seen, caught):
         if seen and not _dex_bit(block, DEX_SEEN, s):
             _set_seen_genders(block, s)
             _set_seen_form(block, s)
+        if not seen or not _dex_bit(block, DEX_SEEN, s):
+            block[DEX_LOOKS + s] &= ~DEX_SEEN_AS_FORM_ONLY
         for at, on in ((DEX_SEEN, seen), (DEX_CAUGHT, caught)):
             bit = 1 << ((s - 1) & 7)
             block[at + ((s - 1) >> 3)] = block[at + ((s - 1) >> 3)] | bit if on else block[at + ((s - 1) >> 3)] & ~bit
@@ -2985,6 +3011,8 @@ def set_dex(save, species, seen, caught):
         for form in forms.get(s, ()):
             for at in (DEX_FORMS_CAUGHT,) if seen else (DEX_FORMS_SEEN, DEX_FORMS_CAUGHT):
                 block[at + ((form - DEX_FIRST_FORM) >> 3)] &= ~(1 << ((form - DEX_FIRST_FORM) & 7))
+            if not seen:
+                block[DEX_LOOKS + form - DEX_FIRST_FORM] &= ~DEX_FORM_SEEN_FIRST
 
 
 def set_dex_switches(save, enabled=None, national=None):

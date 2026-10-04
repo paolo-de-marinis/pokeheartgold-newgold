@@ -978,6 +978,38 @@ class SaveditLibraryTests(unittest.TestCase):
                          bytes(sv.DEX_FORMS_SIZE))
         self.assert_only(save, ["SAVE_POKEDEX"])
 
+    def test_a_species_seen_first_as_a_form_is_shown_as_it(self):
+        """The look the Dex shows a species in, as Pokedex_RecordMonSeen
+        records it: a species first seen as one of its forms is marked
+        (DEX_SEEN_AS_FORM_ONLY) and the form too (DEX_FORM_SEEN_FIRST); a form
+        seen after the species, or after another form, marks nothing; the
+        species seen itself (--dex) loses its mark, and a species cleared
+        from the Dex takes its forms' marks with it."""
+        save = self.open()
+        n = sv.species_numbers()
+        block = save.block("SAVE_POKEDEX")
+        shown = lambda s: block[sv.DEX_LOOKS + s] & sv.DEX_SEEN_AS_FORM_ONLY  # noqa: E731
+        first = lambda f: block[sv.DEX_LOOKS + f - sv.DEX_FIRST_FORM] & sv.DEX_FORM_SEEN_FIRST  # noqa: E731
+        sv.set_dex(save, [n["SLOWPOKE"], n["SLOWBRO"], n["MEOWTH"]], False, False)
+        sv.set_form_record(save, n["SLOWPOKE_GALARIAN"], seen=True, caught=False)
+        self.assertTrue(shown(n["SLOWPOKE"]) and first(n["SLOWPOKE_GALARIAN"]))
+        sv.set_dex(save, [n["SLOWPOKE"]], True, False)      # already seen: the look stays
+        self.assertTrue(shown(n["SLOWPOKE"]))
+        sv.mark_dex(save, ["SLOWPOKE"])
+        self.assertFalse(shown(n["SLOWPOKE"]))
+        sv.set_dex(save, [n["SLOWBRO"]], True, False)
+        sv.set_form_record(save, n["SLOWBRO_GALARIAN"], seen=True, caught=True)
+        self.assertFalse(shown(n["SLOWBRO"]) or first(n["SLOWBRO_GALARIAN"]))
+        sv.set_form_record(save, n["MEOWTH_ALOLAN"], seen=True, caught=False)
+        sv.set_form_record(save, n["MEOWTH_GALARIAN"], seen=True, caught=True)
+        self.assertTrue(shown(n["MEOWTH"]) and first(n["MEOWTH_ALOLAN"]) and not first(n["MEOWTH_GALARIAN"]))
+        sv.set_dex(save, [n["MEOWTH"], n["SLOWPOKE"]], False, False)
+        self.assertFalse(shown(n["MEOWTH"]) or first(n["MEOWTH_ALOLAN"]) or first(n["SLOWPOKE_GALARIAN"]))
+        # The languages' bits are left as they were.
+        self.assertEqual([b & 0x3F for b in block[sv.DEX_LOOKS:sv.DEX_LOOKS + sv.NATIONAL_DEX_COUNT]],
+                         [b & 0x3F for b in self.open().block("SAVE_POKEDEX")[sv.DEX_LOOKS:sv.DEX_LOOKS + sv.NATIONAL_DEX_COUNT]])
+        self.assert_only(save, ["SAVE_POKEDEX"])
+
     def test_a_save_from_before_the_dex_recorded_the_forms(self):
         """The layout before the Dex's record of the forms: the Dex block
         that much shorter, every block after it earlier, the footers with the
