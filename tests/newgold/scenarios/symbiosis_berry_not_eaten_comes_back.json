@@ -1,0 +1,17 @@
+{
+  "about": "A Berry the player's Pokemon hands its partner by Symbiosis, which the partner does not eat, is the giver's again when the battle is over, as one handed over by Bestow is (Pokemon Central, Raggiro and Simbiosi: from the fifth generation an item that changed hands in a battle against a trainer comes back unless it was consumed). Twins Amy & Mimi in the Azalea Gym (konefr's level-20 bugs) against a scratch copy of Paolo's Bugsy save with a level-30 Pawmot holding a Pomeg Berry, which no battle eats, and a level-30 Baxcalibur holding a White Herb, put on the twins' platform facing them as in double_replacement.json. The Pawmot is given Symbiosis, both are taught Splash for the first turn, and the twins' two know only Leer (set:, teach:): the Leer has the Baxcalibur use its Herb up, and the Pawmot shares its Pomeg Berry with it. gym.py's player then wins the battle. The Pawmot holds its Pomeg Berry again, the Baxcalibur its White Herb. Before, nobody was marked by Symbiosis, and the Berry, no longer in the Pawmot's hand, was taken for one it ate: the Pawmot ended with nothing.",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "PAWMOT:30:::POMEG_BERRY,BAXCALIBUR:30:::WHITE_HERB", "--where", "180:3:8:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "A", "fight:1:0",
+            "set:0,ability,ABILITY_SYMBIOSIS", "teach:0,0,MOVE_SPLASH", "teach:2,0,MOVE_SPLASH",
+            "teach:1,0,MOVE_LEER", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "teach:3,0,MOVE_LEER", "teach:3,1,0,0", "teach:3,2,0,0", "teach:3,3,0,0",
+            "fight:1:1",
+            {"expect": {"lines": ["Go! Pawmot and Baxcalibur!", "used Leer!", "White Herb", "Pawmot shared its Pomeg Berry with Baxcalibur!"],
+                        "battler0.item": "ITEM_NONE", "battler2.item": "ITEM_POMEG_BERRY"}},
+            "fight", "field"],
+  "expect": {"lines": ["You defeated Twins Amy & Mimi!"], "asserts": 0,
+             "party0.species": "SPECIES_PAWMOT", "party0.item": "ITEM_POMEG_BERRY",
+             "party1.species": "SPECIES_BAXCALIBUR", "party1.item": "ITEM_WHITE_HERB"}
+}

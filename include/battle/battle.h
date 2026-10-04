@@ -741,8 +741,8 @@ typedef struct BattleContext {
     // left.
     u16 itemsTakenFromWild[2];
     // The player's own Pokemon that handed the item they started with to
-    // another by Trick, Switcheroo or Bestow, a bit each by party slot
-    // (NoteHeldItemGiven), for GiveBackHeldItems: such an item comes back
+    // another by Trick, Switcheroo, Bestow or Symbiosis, a bit each by party
+    // slot (NoteHeldItemGiven), for GiveBackHeldItems: such an item comes back
     // even if it was a Berry, unless the one it went to used it up
     // (BtlCmd_RemoveItem), where a taken one comes back all the same.
     u8 heldItemsGiven;

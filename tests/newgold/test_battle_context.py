@@ -811,14 +811,15 @@ class TakenItemTests(unittest.TestCase):
         self.assertIn("ctx->heldItemOwner[i] = ctx->itemsToRestore[i] != ITEM_NONE ? i + 1 : 0;",
                       function(CONTROLLER.read_text(), "RememberHeldItems"))
 
-    def test_symbiosis_hands_the_tag_over_with_the_item(self):
-        # The partner's item goes with whose it is, unmarked: a Berry of the
-        # player's handed on by Symbiosis and eaten is gone, as eaten.
+    def test_symbiosis_hands_over_as_bestow_does(self):
+        # The partner's item goes as Bestow's does (NoteHeldItemGiven), told
+        # before it moves: whose it is goes with it, and one of the player's
+        # handed on is marked, a Berry not eaten being had back.
         hand = function((ROOT / "src/battle/overlay_12_0224E4FC.c").read_text(), "TrySymbiosisHandOver")
-        self.assertRegex(hand, r"ctx->battleMons\[j\]\.item = ITEM_NONE;\n(\s*//.*\n)*"
-                               r"\s*k = Battler_PartySlot\(battleSystem, ctx, j\);\n"
-                               r"\s*ctx->heldItemOwner\[Battler_PartySlot\(battleSystem, ctx, battlerId\)\] = ctx->heldItemOwner\[k\];\n"
-                               r"\s*ctx->heldItemOwner\[k\] = 0;\n")
+        self.assertRegex(hand, r"\n\s*NoteHeldItemGiven\(battleSystem, ctx, j, battlerId\);\n"
+                               r"\s*ctx->itemTemp = ctx->battleMons\[j\]\.item;\n"
+                               r"\s*ctx->battleMons\[battlerId\]\.item = ctx->battleMons\[j\]\.item;\n")
+        self.assertNotIn("heldItemOwner", hand)
 
     def test_a_sticky_barb_is_taken_as_thief_takes(self):
         # Wherever the Barb's subscript is chosen, NoteHeldItemTaken is told

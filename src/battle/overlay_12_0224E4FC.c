@@ -5944,7 +5944,6 @@ static BOOL TryOpportunistCopy(BattleSystem *battleSystem, BattleContext *ctx, i
 static BOOL TrySymbiosisHandOver(BattleSystem *battleSystem, BattleContext *ctx, int *script) {
     int i;
     int j;
-    int k;
     int battlerId;
     int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
 
@@ -5957,16 +5956,17 @@ static BOOL TrySymbiosisHandOver(BattleSystem *battleSystem, BattleContext *ctx,
         j = BattleSystem_GetBattlerIdPartner(battleSystem, battlerId);
         if (j != battlerId && ctx->battleMons[battlerId].hp && ctx->battleMons[battlerId].item == ITEM_NONE
             && ctx->battleMons[j].hp && GetBattlerAbility(ctx, j) == ABILITY_SYMBIOSIS && CanStealHeldItem(battleSystem, ctx, battlerId, j) == TRUE) {
+            // Handed over as Bestow hands it (NoteHeldItemGiven): whose item
+            // it is goes with it, and one of the player's own handing over
+            // what it started with is marked, so it has it back when the
+            // battle is over, a Berry too, unless the partner uses it up
+            // (GiveBackHeldItems, NoteHeldItemUsedUp). Before, nobody was
+            // marked: a Berry handed on and not eaten was taken for one its
+            // holder ate, and lost.
+            NoteHeldItemGiven(battleSystem, ctx, j, battlerId);
             ctx->itemTemp = ctx->battleMons[j].item;
             ctx->battleMons[battlerId].item = ctx->battleMons[j].item;
             ctx->battleMons[j].item = ITEM_NONE;
-            // Whose item it is goes with it, and nobody is marked: one of
-            // the player's own handing its Berry to its partner has it back
-            // unless the partner eats it, as with its own Berry eaten
-            // (GiveBackHeldItems, NoteHeldItemUsedUp).
-            k = Battler_PartySlot(battleSystem, ctx, j);
-            ctx->heldItemOwner[Battler_PartySlot(battleSystem, ctx, battlerId)] = ctx->heldItemOwner[k];
-            ctx->heldItemOwner[k] = 0;
             CopyBattleMonToPartyMon(battleSystem, ctx, battlerId);
             CopyBattleMonToPartyMon(battleSystem, ctx, j);
             ctx->battlerIdTemp = j;
