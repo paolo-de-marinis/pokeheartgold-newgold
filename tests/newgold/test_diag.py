@@ -472,6 +472,15 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertGreater(w["ahead"][0], geodude["hp"])                  # Bullet Punch first takes it down
         self.assertNotEqual(scorer.choose(geodude, scizor, [0, 1], field)[2], "knocks it out")
         self.assertEqual(scorer.rank({3: geodude, 2: misdreavus}, scizor, field), [2, 3])
+        # A Quilava at 12 HP, faster than Scizor at 16, is not winning: its
+        # Flame Wheel would knock it out, but Bullet Punch comes first. A
+        # Super Potion, Aerial Ace taken in the turn, wins it.
+        _, _, _, items = self._picker()
+        scizor = mon("SCIZOR", 21, ["BULLET_PUNCH", "AERIAL_ACE"], "TECHNICIAN", "METAL_COAT", hp=16)
+        quilava = mon("QUILAVA", 22, ["FLAME_WHEEL"], hp=12)
+        self.assertFalse(scorer.weigh(quilava, scizor, [0], field)["wins"])
+        self.assertEqual(scorer.choose(quilava, scizor, [0], field, {items["ITEM_SUPER_POTION"]: 3})[:2],
+                         ("item", items["ITEM_SUPER_POTION"]))
 
     def test_gym_gives_hp_back_where_it_wins_the_exchange(self):
         # A Potion from the bag when the Pokemon loses the exchange below half

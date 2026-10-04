@@ -418,7 +418,7 @@ class Scorer:
         most of them (threat), the most the foe takes before each move acts
         (ahead), whether each acts before the foe's hardest hit (first), the
         foe's hits the user lasts, the best move, the turns it needs, and
-        whether it wins: the foe down before the user falls."""
+        whether it wins: the foe down before the user falls (taken)."""
         moves = {slot: user["moves"][slot] for slot in usable}
         hits = {slot: self.hit(move, user, foe, field, field["sides"][1]) for slot, move in moves.items()}
         slow = {slot: 0.5 if self.record(moves[slot])[0] in SLOW and hits[slot][0] < foe["hp"] else 1 for slot in usable}
@@ -443,7 +443,19 @@ class Scorer:
                   if best is not None and value[best] else 99)
         return {"moves": moves, "hits": hits, "value": value, "threats": threats, "threat": threat,
                 "speed": (mine, theirs), "ahead": ahead, "first": first, "lasts": lasts, "best": best, "needed": needed,
-                "wins": needed <= (lasts if first.get(best) else lasts - 1)}
+                "wins": best is not None and self.taken(needed, threat, ahead[best], first[best]) < user["hp"],
+                # the share of the foe's HP it takes before it falls: its best move each turn it acts
+                "dealt": 0 if best is None or ahead[best] >= user["hp"] else
+                min(1, value[best] * max(0, lasts if first[best] else lasts - 1) / max(foe["hp"], 1))}
+
+    @staticmethod
+    def taken(needed, threat, ahead, first):
+        """The HP the user loses before its last needed hit lands: the foe's
+        hardest hit each turn before that one, and on that turn, when the
+        user moves before that hit, what the foe can still bring first
+        (`ahead`: Bullet Punch); otherwise the hardest hit again."""
+        turns = math.ceil(needed)
+        return (turns - 1) * threat + (ahead if first else threat)
 
     def choose(self, user, foe, usable, field, heals=None, last=False):
         """What the player does this turn, weighed as a player weighs it:
@@ -481,8 +493,7 @@ class Scorer:
                      for item, count in sorted((heals or {}).items()) if count and self.heal(item)]
 
             def turns(hp):      # whether the user wins from `hp` after the turn the HP took
-                left = math.ceil(hp / threat)
-                return needed <= (left if first.get(best) else left - 1)
+                return best is not None and self.taken(needed, threat, w["ahead"][best], first[best]) < hp
             after = [(slot, item, given, user["hp"] + given - threat) for slot, item, given in ways]
             buys = [w for w in after if w[3] > 0 and (turns(w[3]) or (last and w[3] > user["hp"] - threat))]
             if buys:
@@ -514,35 +525,38 @@ class Scorer:
 
     def standing(self, mon, foe, field):
         """How a Pokemon fares against `foe` with every move it has PP for:
-        (whether it wins the exchange, the turns it needs, negated, the hits
-        it lasts); (False, -99, 0) for an egg (None)."""
+        (whether it wins the exchange, the share of the foe's HP it takes
+        before it falls, the turns it needs, negated, the hits it lasts);
+        (False, 0, -99, 0) for an egg (None)."""
         if mon is None:
-            return False, -99, 0
+            return False, 0, -99, 0
         w = self.weigh(mon, foe, [i for i in range(4) if mon["moves"][i] and mon["pp"][i]], field)
-        return w["wins"], -w["needed"], w["lasts"]
+        return w["wins"], w["dealt"], -w["needed"], w["lasts"]
 
     def rank(self, team, foe, field):
         """The party slots of `team`, {slot: battler}, best first against `foe`:
-        those that win the exchange, then by the turns they need, then by the
-        hits they last; on a tie the earlier slot."""
+        those that win the exchange, then by the share of its HP they take
+        before they fall, the turns they need, the hits they last; on a tie
+        the earlier slot."""
         return sorted(team, key=lambda slot: (self.standing(team[slot], foe, field), -slot), reverse=True)
 
     def relief(self, user, foe, team, field):
         """The party slot to bring in for `user`, as a player does, or None:
-        `user` loses the exchange and needs three turns or more, and the one
-        brought in, taking as it comes the move the foe would use on `user`,
-        wins it -- the first of rank() that does; when `user` cannot hurt the
-        foe at all (a Thunder Shock into a Larvitar), the first that can."""
+        `user` loses the exchange, and the one brought in, taking as it comes
+        the move the foe would use on `user`, wins it, or takes half the
+        foe's HP more than `user` would before falling -- the first of
+        rank() that does (a Quilava for a Geodude that Scizor's Bullet Punch
+        takes down before it moves; anyone that can hurt a Larvitar for a
+        Mareep whose Thunder Shock cannot)."""
         w = self.weigh(user, foe, [i for i in range(4) if user["moves"][i] and user["pp"][i]], field)
-        if w["wins"] or w["needed"] < 3 or not w["threats"]:
+        if w["wins"] or not w["threats"]:
             return None
         aimed = max(w["threats"], key=w["threats"].get)     # what the foe would use on the one going out
         for slot in self.rank(team, foe, field):
             mon = team[slot]
             hit = self.hit(aimed, foe, mon, field, field["sides"][0])[0] if mon else 0
             standing = self.standing({**mon, "hp": mon["hp"] - hit}, foe, field) if mon and hit < mon["hp"] else None
-            # one that wins; or, when `user` cannot touch the foe at all, one that can
-            if standing and (standing[0] or (w["needed"] >= 99 and standing[1] > -99)):
+            if standing and (standing[0] or standing[1] >= w["dealt"] + 0.5 or (w["needed"] >= 99 and standing[1] > 0)):
                 return slot
         return None
 
