@@ -1809,7 +1809,7 @@ void ov18_021E8254(PokedexAppData *pokedexApp) {
 // The forms of the species shown that the Dex has seen, after its genders,
 // as the latest games' Dex lists a species' regional forms: each is a
 // species of its own here, which the Dex records on its own
-// (Pokedex_RecordForm), drawn and named as that species. An entry is a form
+// (Pokedex_RecordMonSeen), drawn and named as that species. An entry is a form
 // 0 (0x80), and seenFormSpecies says which species.
 static void PokedexApp_AppendSeenForms(PokedexAppData *pokedexApp) {
     const Pokedex *pokedex = pokedexApp->args->pokedex;

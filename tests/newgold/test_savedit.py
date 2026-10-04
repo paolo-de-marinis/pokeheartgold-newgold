@@ -935,7 +935,7 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assert_only(save, ["SAVE_POKEDEX", "SAVE_PLAYERDATA", "SAVE_FLAGS"])
 
     def test_the_dex_s_record_of_the_forms(self):
-        """A form seen and caught, as Pokedex_RecordForm records it: one bit
+        """A form seen and caught, as Pokedex_RecordMonSeen records it: one bit
         a species from DEX_FIRST_FORM, caught counting as seen, and its base
         species seen, or caught, with it. The forms are the species
         SpeciesToDexSpecies credits to another."""

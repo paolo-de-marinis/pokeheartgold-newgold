@@ -259,10 +259,10 @@ int main(void) {
 }
 '''
 
-NATIVE = ["CheckDexFlag", "SetDexFlag", "SetDexFlagState", "CheckDexGender",
+NATIVE = ["CheckDexFlag", "SetDexFlag", "SetDexFlagState",
           "Pokedex_SetSeenGenderFlagInternal", "Pokedex_SetSeenGenderFlag",
           "DexSpeciesIsInvalid", "SpeciesToDexSpecies", "Pokedex_CheckMonCaughtFlag",
-          "Pokedex_CheckMonSeenFlag", "Pokedex_RecordForm", "Pokedex_SetMonSeenFlag", "Pokedex_SetMonCaughtFlag"]
+          "Pokedex_CheckMonSeenFlag", "Pokedex_RecordMonSeen", "Pokedex_SetMonSeenFlag", "Pokedex_SetMonCaughtFlag"]
 
 
 def form_defines():

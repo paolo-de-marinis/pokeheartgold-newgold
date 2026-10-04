@@ -1076,14 +1076,6 @@ static inline void SetDex3Flag(u32 *arr, u32 idx, u32 form) {
     *arr |= (form << (3 * idx));
 }
 
-static inline u8 CheckDexGender(const u8 *arr, u16 species) {
-    if (CheckDexFlag(arr, species)) {
-        return MON_FEMALE;
-    } else {
-        return MON_MALE;
-    }
-}
-
 static void Pokedex_SetSeenGenderFlagInternal(Pokedex *pokeDex, u8 state, u8 num, u16 flagId) {
     if (num == 0) {
         SetDexFlagState((u8 *)pokeDex->seenGenders[1], state, flagId);
@@ -1772,75 +1764,53 @@ static u32 Pokedex_GetSeenFormNum_Deoxys(Pokedex *pokedex) {
     return Pokedex_CountSeenDeoxysForms(pokedex);
 }
 
-// The Dex species a Pokemon counts for. A form, a species of its own here
-// that counts for its base species, is also recorded as itself in forms:
-// formsSeen, or formsCaught.
-static u16 Pokedex_RecordForm(Pokemon *mon, u32 *forms) {
+// What seeing a Pokemon records, for Pokedex_SetMonSeenFlag and
+// Pokedex_SetMonCaughtFlag alike: the gender it was seen in, or the second
+// one, Spinda's spots the first time, retail's forms, and a form that is a
+// species of its own here, which the Dex credits to its base species, as
+// itself in forms: formsSeen, or formsCaught. It returns the Dex species
+// the Pokemon counts for, or SPECIES_NONE for none, and leaves the species'
+// flags to its callers.
+static u16 Pokedex_RecordMonSeen(Pokedex *pokedex, Pokemon *mon, u32 *forms) {
     u16 form = GetMonData(mon, MON_DATA_SPECIES, NULL);
     u16 species = SpeciesToDexSpecies(form);
+    u32 personality = GetMonData(mon, MON_DATA_PERSONALITY, NULL);
+    u32 gender = GetMonGender(mon);
     u32 i;
 
+    ASSERT_POKEDEX(pokedex);
     if (form != species) {
         i = form - DEX_FIRST_FORM;
         ((u8 *)forms)[i / 8] |= 1 << (i % 8);
     }
+    if (DexSpeciesIsInvalid(species)) {
+        return SPECIES_NONE;
+    }
+    if (!CheckDexFlag((const u8 *)pokedex->seenSpecies, species)) {
+        if (species == SPECIES_SPINDA) {
+            pokedex->spindaPersonality = personality;
+        }
+        Pokedex_SetSeenGenderFlag(pokedex, gender, 0, species);
+    } else if (CheckDexFlag((const u8 *)pokedex->seenGenders[0], species) != gender) {
+        Pokedex_SetSeenGenderFlag(pokedex, gender, 1, species);
+    }
+    Pokedex_TryAppendSeenForm(pokedex, species, mon);
     return species;
 }
 
 void Pokedex_SetMonSeenFlag(Pokedex *pokedex, Pokemon *mon) {
-    u16 species;
-    u32 personality;
-    u32 gender;
-    u8 seenGender;
+    u16 species = Pokedex_RecordMonSeen(pokedex, mon, pokedex->formsSeen);
 
-    species = Pokedex_RecordForm(mon, pokedex->formsSeen);
-    personality = GetMonData(mon, MON_DATA_PERSONALITY, NULL);
-    gender = GetMonGender(mon);
-
-    ASSERT_POKEDEX(pokedex);
-    if (!DexSpeciesIsInvalid(species)) {
-        if (!CheckDexFlag((const u8 *)pokedex->seenSpecies, species)) {
-            if (species == SPECIES_SPINDA) {
-                pokedex->spindaPersonality = personality;
-            }
-            Pokedex_SetSeenGenderFlag(pokedex, gender, 0, species);
-        } else {
-            seenGender = CheckDexFlag((const u8 *)pokedex->seenGenders[0], species);
-            if (seenGender != gender) {
-                Pokedex_SetSeenGenderFlag(pokedex, gender, 1, species);
-            }
-        }
-        Pokedex_TryAppendSeenForm(pokedex, species, mon);
+    if (species != SPECIES_NONE) {
         SetDexFlag((u8 *)pokedex->seenSpecies, species);
     }
 }
 
 void Pokedex_SetMonCaughtFlag(Pokedex *pokedex, Pokemon *mon) {
-    u16 species;
-    u32 language;
-    u32 personality;
-    u32 gender;
-    u32 gender_ct;
+    u32 language = GetMonData(mon, MON_DATA_LANGUAGE, NULL);
+    u16 species = Pokedex_RecordMonSeen(pokedex, mon, pokedex->formsCaught);
 
-    species = Pokedex_RecordForm(mon, pokedex->formsCaught);
-    language = GetMonData(mon, MON_DATA_LANGUAGE, NULL);
-    personality = GetMonData(mon, MON_DATA_PERSONALITY, NULL);
-    gender = GetMonGender(mon);
-
-    ASSERT_POKEDEX(pokedex);
-    if (!DexSpeciesIsInvalid(species)) {
-        if (!CheckDexFlag((const u8 *)pokedex->seenSpecies, species)) {
-            if (species == SPECIES_SPINDA) {
-                pokedex->spindaPersonality = personality;
-            }
-            Pokedex_SetSeenGenderFlag(pokedex, gender, 0, species);
-        } else {
-            gender_ct = CheckDexGender((const u8 *)pokedex->seenGenders[0], species);
-            if (gender_ct != gender) {
-                Pokedex_SetSeenGenderFlag(pokedex, gender, 1, species);
-            }
-        }
-        Pokedex_TryAppendSeenForm(pokedex, species, mon);
+    if (species != SPECIES_NONE) {
         if (species == SPECIES_UNOWN) {
             Pokedex_TryAppendUnownLetter(pokedex, GetMonUnownLetter(mon), TRUE);
         }

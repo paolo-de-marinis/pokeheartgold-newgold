@@ -2,7 +2,7 @@
 """The Dex's FORMS page lists the forms of a species that were seen.
 
 Each form is a species of its own here, recorded seen and caught on its own
-(Pokedex_RecordForm, test_form_dex). ov18_021E8254 fills the page's list
+(Pokedex_RecordMonSeen, test_form_dex). ov18_021E8254 fills the page's list
 (PokedexAppData.seenForms) with a species' genders, or retail's forms for the
 species retail tells apart; after the genders now come the forms seen, each
 an entry of form 0 whose species seenFormSpecies holds, drawn and named as

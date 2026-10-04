@@ -2860,7 +2860,7 @@ def dex(save):
     seen = [s for s in dex_species() if _dex_bit(block, DEX_SEEN, s)]
     # Pokedex_CheckMonCaughtFlag wants both flags.
     caught = [s for s in seen if _dex_bit(block, DEX_CAUGHT, s)]
-    # A form caught counts as seen (Pokedex_RecordForm records one or the
+    # A form caught counts as seen (Pokedex_RecordMonSeen records one or the
     # other). A save in an older layout has no record of the forms.
     forms_caught = [f for f in dex_forms() if not save.legacy and _form_bit(block, DEX_FORMS_CAUGHT, f)]
     forms_seen = [f for f in dex_forms() if not save.legacy and (f in forms_caught or _form_bit(block, DEX_FORMS_SEEN, f))]
@@ -2887,7 +2887,7 @@ def _form_bit(block, at, form):
 
 
 def set_form_record(save, form, seen, caught):
-    """A form seen and caught, as the game records one (Pokedex_RecordForm):
+    """A form seen and caught, as the game records one (Pokedex_RecordMonSeen):
     caught counts as seen, and the base species is seen as well (set_dex),
     and caught when the form is. The record is the layout of now's."""
     if save.legacy:
@@ -2960,7 +2960,7 @@ def set_dex(save, species, seen, caught):
     first form (_set_seen_form). Unown seen with no letter recorded gets
     A, so the Dex's form page has one to show. A species no longer seen
     takes its forms' record with it, and one no longer caught its forms
-    caught: the game records a form only with its base (Pokedex_RecordForm),
+    caught: the game records a form only with its base (Pokedex_RecordMonSeen),
     and the FORMS page would list them again once the base was seen."""
     block = save.block("SAVE_POKEDEX")
     valid = set(dex_species())
