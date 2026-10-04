@@ -24,7 +24,7 @@ first scenario test runs, for every scenario the run selected: a chain's
 legs in one worker, leg before leg, so each finds the save of the one
 before, and the others take the single scenarios meanwhile -- the chain,
 a new game to Goldenrod's Radio Card in 25 legs, plays for about two hours
-and ten minutes alone.
+and a half alone.
 """
 import json
 import os
