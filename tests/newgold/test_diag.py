@@ -456,6 +456,23 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(scorer.hit(geodude["moves"][0], geodude, koffing, field), (0, 0))
         self.assertEqual(scorer.choose(geodude, koffing, [0, 1], field)[:2], ("move", 1))
 
+    def test_gym_counts_the_foe_s_priority_and_its_lowest_roll(self):
+        # Bugsy's Scizor at 2 HP took four of the bot's Pokemon with Bullet
+        # Punch: its priority hits first whatever their Speed, and the
+        # Misdreavus that lived through it chose Confusion, resisted under
+        # Light Screen, which did 1, over Astonish. A knockout is counted on
+        # the lowest roll and only when the user lives through what comes
+        # before its move; among them the hardest.
+        scorer, mon, field, _ = self._picker()
+        scizor = mon("SCIZOR", 21, ["BULLET_PUNCH", "AERIAL_ACE"], "TECHNICIAN", "METAL_COAT", hp=3)
+        misdreavus = mon("MISDREAVUS", 18, ["CONFUSION", "ASTONISH"])
+        geodude = mon("GEODUDE", 22, ["ROCK_THROW", "BULLDOZE"])
+        self.assertEqual(scorer.choose(misdreavus, scizor, [0, 1], field)[:3], ("move", 1, "knocks it out"))
+        w = scorer.weigh(geodude, scizor, [0, 1], field)
+        self.assertGreater(w["ahead"][0], geodude["hp"])                  # Bullet Punch first takes it down
+        self.assertNotEqual(scorer.choose(geodude, scizor, [0, 1], field)[2], "knocks it out")
+        self.assertEqual(scorer.rank({3: geodude, 2: misdreavus}, scizor, field), [2, 3])
+
     def test_gym_gives_hp_back_where_it_wins_the_exchange(self):
         # A Potion from the bag when the Pokemon loses the exchange below half
         # its HP and the HP given, the foe's hit taken in the turn, wins it;

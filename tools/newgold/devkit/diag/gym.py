@@ -415,9 +415,10 @@ class Scorer:
         `foe`: each move's (HP it takes when it lands, its chance), its worth
         a turn (that HP, at most the foe's, by the chance, halved for a move
         that takes a turn more), the HP each of the foe's moves takes, the
-        most of them (threat), whether each move goes first, the foe's hits
-        the user lasts, the best move, the turns it needs, and whether it
-        wins: the foe down before the user falls."""
+        most of them (threat), the most the foe takes before each move acts
+        (ahead), whether each acts before the foe's hardest hit (first), the
+        foe's hits the user lasts, the best move, the turns it needs, and
+        whether it wins: the foe down before the user falls."""
         moves = {slot: user["moves"][slot] for slot in usable}
         hits = {slot: self.hit(move, user, foe, field, field["sides"][1]) for slot, move in moves.items()}
         slow = {slot: 0.5 if self.record(moves[slot])[0] in SLOW and hits[slot][0] < foe["hp"] else 1 for slot in usable}
@@ -426,13 +427,22 @@ class Scorer:
                    for m, pp in zip(foe["moves"], foe["pp"]) if m and pp}
         threat = max(threats.values(), default=0)
         mine, theirs = self.speed(user, field), self.speed(foe, field)
-        first = {slot: self.record(move)[5] > 0 or mine > theirs for slot, move in moves.items()}
+        # The most the foe can take before each move acts: its moves of a
+        # higher priority, and of the same when it is as fast or faster
+        # (Bullet Punch before a Pokemon faster than Scizor).
+        ahead = {slot: max((hp for m, hp in threats.items() if self.record(m)[5] > self.record(move)[5]
+                            or (self.record(m)[5] == self.record(move)[5] and theirs >= mine)), default=0)
+                 for slot, move in moves.items()}
+        # Whether each move acts before the foe's hardest hit, for the exchange.
+        strongest = self.record(max(threats, key=threats.get))[5] if threats else -8
+        first = {slot: self.record(move)[5] > strongest or (self.record(move)[5] == strongest and mine > theirs)
+                 for slot, move in moves.items()}
         lasts = math.ceil(user["hp"] / threat) if threat else 99     # the foe's hits it takes to fall
         best = max(usable, key=lambda s: (value[s], hits[s][1])) if usable else None
         needed = (math.ceil(foe["hp"] / (hits[best][0] * slow[best])) / hits[best][1]
                   if best is not None and value[best] else 99)
         return {"moves": moves, "hits": hits, "value": value, "threats": threats, "threat": threat,
-                "speed": (mine, theirs), "first": first, "lasts": lasts, "best": best, "needed": needed,
+                "speed": (mine, theirs), "ahead": ahead, "first": first, "lasts": lasts, "best": best, "needed": needed,
                 "wins": needed <= (lasts if first.get(best) else lasts - 1)}
 
     def choose(self, user, foe, usable, field, heals=None, last=False):
@@ -455,9 +465,11 @@ class Scorer:
         moves, hits, value, threats, threat, first, lasts, best, needed, wins = (
             w[k] for k in ("moves", "hits", "value", "threats", "threat", "first", "lasts", "best", "needed", "wins"))
         mine, theirs = w["speed"]
-        kills = [s for s in usable if hits[s][0] >= foe["hp"] and (first[s] or threat < user["hp"])]
+        # on the lowest roll (85 of the average's 92.5), and before the foe's
+        # hits that come first take the user down
+        kills = [s for s in usable if hits[s][0] * 0.85 / 0.925 >= foe["hp"] and w["ahead"][s] < user["hp"]]
         if kills:
-            slot = max(kills, key=lambda s: (hits[s][1], first[s]))
+            slot = max(kills, key=lambda s: (hits[s][1], first[s], hits[s][0]))
             return "move", slot, "knocks it out"
         if not wins and 2 * user["hp"] < user["maxHp"] and threat:
             lost = user["maxHp"] - user["hp"]
