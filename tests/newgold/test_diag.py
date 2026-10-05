@@ -350,6 +350,11 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(let_go("NOCTOWL", "CONFUSION", "PECK", "TACKLE", "ECHOED_VOICE", "AIR_SLASH"), "PECK")
         self.assertEqual(let_go("CYNDAQUIL", "TACKLE", "LEER", "SMOKESCREEN", "EMBER", "QUICK_ATTACK"), "SMOKESCREEN")
         self.assertEqual(let_go("QUILAVA", "TACKLE", "EMBER", "QUICK_ATTACK", "FLAME_WHEEL", "CUT"), "QUICK_ATTACK")
+        # Self-Destruct, Normal and 200, kept the place of the Geodude's Tackle
+        # at 25 on Route 35 and was never used: a move that faints its user
+        # weighs as a status move.
+        self.assertEqual(let_go("GRAVELER", "TACKLE", "ROCK_THROW", "BULLDOZE", "SMACK_DOWN", "SELF_DESTRUCT"),
+                         "SELF_DESTRUCT")
 
     def test_gym_reads_the_move_to_forget_from_the_battle_party_menu(self):
         # The menu a level-up opens to forget a move: its task (ov08_0221BE98

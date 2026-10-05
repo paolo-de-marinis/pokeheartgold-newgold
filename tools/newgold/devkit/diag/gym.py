@@ -196,10 +196,12 @@ class Scorer:
         return record[4] if len(record) >= 5 else None
 
     def strength(self, move, user):
-        """A move's power with its same-type bonus, 0 for a status move: how
-        forgets() ranks what a Pokemon knows, against no foe in particular."""
+        """A move's power with its same-type bonus, 0 for a status move or
+        one that faints its user (Self-Destruct, which the picker never
+        chooses): how forgets() ranks what a Pokemon knows, against no foe
+        in particular."""
         record = self.moves[move] if move < len(self.moves) else b""
-        if len(record) < 5 or record[3] == 0:
+        if len(record) < 5 or record[3] == 0 or self.record(move)[0] in SELF_KO:
             return 0
         return record[3] * (1.5 if record[4] in self.types(user) else 1)
 
