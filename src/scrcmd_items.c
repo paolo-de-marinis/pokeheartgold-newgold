@@ -6,8 +6,6 @@
 #include "field_system.h"
 #include "scrcmd.h"
 
-extern BOOL ItemIsTMOrHM(u16 item_id);
-
 BOOL ScrCmd_GiveItem(ScriptContext *ctx) {
     FieldSystem *sav_ptr = ctx->fieldSystem;
     u16 item_id = ScriptGetVar(ctx);
@@ -67,11 +65,14 @@ BOOL ScrCmd_GetItemQuantity(ScriptContext *ctx) {
     return FALSE;
 }
 
+// Whether an item ball's or a hidden item's find is a machine, whose message
+// names its move: ItemIsMachine, the machine table's, where retail's
+// ItemIsTMOrHM (asm/unk_0205BB1C.s, now unused) knew TM01 to HM08 alone.
 BOOL ScrCmd_ItemIsTMOrHM(ScriptContext *ctx) {
     u16 item_id = ScriptGetVar(ctx);
     u16 *ret_ptr = ScriptGetVarPointer(ctx);
 
-    *ret_ptr = ItemIsTMOrHM(item_id);
+    *ret_ptr = ItemIsMachine(item_id);
 
     return FALSE;
 }

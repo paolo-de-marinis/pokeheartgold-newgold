@@ -380,6 +380,47 @@ class MachineItemTextTests(unittest.TestCase):
                          tuple(machine_items.TYPE_DISC[t] for t in ("ELECTRIC", "ROCK", "FAIRY", "NORMAL")))
 
 
+FOUND = r"""
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#define NELEMS(a) (sizeof(a) / sizeof(*(a)))
+#include "constants/items.h"
+typedef struct { u16 item, result; } ScriptContext;
+static u16 ScriptGetVar(ScriptContext *ctx) { return ctx->item; }
+static u16 *ScriptGetVarPointer(ScriptContext *ctx) { return &ctx->result; }
+@NATIVE@
+static u16 found(u16 item) { ScriptContext ctx = { item, 2 }; ScrCmd_ItemIsTMOrHM(&ctx); return ctx.result; }
+int main(void) {
+    assert(found(ITEM_TM01) && found(ITEM_HM08) && found(ITEM_TM093) && found(ITEM_TM100) && found(ITEM_TM148));
+    assert(!found(ITEM_POTION) && !found(ITEM_TR00) && !found(ITEM_TM149) && !found(ITEM_EXPLORER_KIT));
+    puts("PASS: an item ball's TM93 to TM148 are found as machines, with their move named.");
+    return 0;
+}
+"""
+
+
+class FoundMachineTests(unittest.TestCase):
+    def test_an_item_ball_knows_every_machine(self):
+        item = (ROOT / "src/item.c").read_text()
+        native = [machine_code(item), function((ROOT / "src/scrcmd_items.c").read_text(), "ScrCmd_ItemIsTMOrHM")]
+        with tempfile.TemporaryDirectory(prefix="newgold-found-machine-") as temp:
+            c, exe = Path(temp) / "check.c", Path(temp) / "check"
+            c.write_text(FOUND.replace("@NATIVE@", "\n".join(native)))
+            build = subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
+                                   ["-std=c11", "-O1", "-g", "-fsanitize=address,undefined", "-iquote", str(ROOT / "include"),
+                                    str(c), "-o", str(exe)], capture_output=True, text=True)
+            self.assertEqual(build.returncode, 0, build.stderr)
+            run = subprocess.run([str(exe)], capture_output=True, text=True)
+            self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+            print(run.stdout.strip())
+
+
 class LegacyMachineTests(unittest.TestCase):
     """A save from before TM93 to TM148 holds hg-engine's machines; loading
     it makes each New Gold's machine with its move, or drops it."""
