@@ -4398,8 +4398,8 @@ BOOL GetBoxMonTMHMCompat(BoxPokemon *boxMon, u16 tmhm) {
     return GetTMHMCompatBySpeciesAndForm(species, form, tmhm);
 }
 
-// tmhm is a machine's place in hg-engine's numbering, 0 to NUM_MACHINES - 1,
-// which for TM01 to HM08 is the one HeartGold has always used.
+// tmhm is a machine's place (ItemToTMHMId), 0 to NUM_MACHINES - 1, which for
+// TM01 to HM08 is the one HeartGold has always used.
 BOOL GetTMHMCompatBySpeciesAndForm(u16 species, u32 form, u16 tmhm) {
     int word;
 

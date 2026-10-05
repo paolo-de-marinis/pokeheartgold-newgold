@@ -54,9 +54,10 @@ typedef struct BaseStats {
     /* 0x2D */ u8 padding_2D;
     /* 0x2E */ u16 abilitiesFull[2];
     /* 0x32 */ u16 hiddenAbilityFull;
-    // hg-engine numbers 340 machines, the first 100 of them HeartGold's TM01
-    // to HM08. tmhm_1 to tmhm_4 are bits 0 to 127 of that numbering, and
-    // these seven words are bits 128 to 351.
+    // A bit for each machine by its place (ItemToTMHMId): HeartGold's TM01 to
+    // HM08 are 0 to 99, New Gold's TM93 to TM148 100 to 155. tmhm_1 to tmhm_4
+    // are bits 0 to 127, and these seven words bits 128 to 351, which
+    // hg-engine's 340 machines needed; past 155 they are clear.
     /* 0x34 */ u32 tmhmMore[7];
 } BASE_STATS;
 
