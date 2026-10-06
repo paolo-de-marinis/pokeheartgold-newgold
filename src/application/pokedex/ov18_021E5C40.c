@@ -11,6 +11,7 @@
 #include "dex_mon_measures.h"
 #include "gf_gfx_loader.h"
 #include "pokedex_util.h"
+#include "pokemon.h"
 #include "sprite_system.h"
 #include "unk_02005D10.h"
 #include "unk_02091278.h"
@@ -1851,14 +1852,20 @@ void ov18_021E8254(PokedexAppData *pokedexApp) {
 // species of its own here, which the Dex records on its own
 // (Pokedex_RecordMonSeen), drawn and named as that species. An entry is a form
 // 0 (0x80), and seenFormSpecies says which species. The form the genders are
-// shown as is not listed again.
+// shown as is not listed again, nor is the female species of the eight that
+// keep their female as one (PicSpecies_FemaleForm) once the genders list the
+// female: that entry is drawn as her.
 static void PokedexApp_AppendSeenForms(PokedexAppData *pokedexApp) {
     const Pokedex *pokedex = pokedexApp->args->pokedex;
+    u16 female = SPECIES_NONE;
     u32 i;
 
+    if (pokedexApp->seenForms[0] == 2 || pokedexApp->seenForms[1] == 2) {
+        female = PicSpecies_FemaleForm(pokedexApp->curSpecies, MON_FEMALE);
+    }
     for (u16 species = DEX_FIRST_FORM; species <= NUM_SPECIES && pokedexApp->numSeenForms < (s8)NELEMS(pokedexApp->seenForms); ++species) {
         i = species - DEX_FIRST_FORM;
-        if (species != pokedexApp->seenFormSpecies[0] && SpeciesToDexSpecies(species) == pokedexApp->curSpecies
+        if (species != pokedexApp->seenFormSpecies[0] && species != female && SpeciesToDexSpecies(species) == pokedexApp->curSpecies
             && (((pokedex->formsSeen[i / 32] | pokedex->formsCaught[i / 32]) >> (i % 32)) & 1)) {
             pokedexApp->seenForms[pokedexApp->numSeenForms] = 0x80;
             pokedexApp->seenFormSpecies[pokedexApp->numSeenForms] = species;

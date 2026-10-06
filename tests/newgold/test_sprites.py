@@ -50,7 +50,7 @@ class SpriteTests(unittest.TestCase):
         pokemon = (ROOT / "src/pokemon.c").read_text()
         sprite = function(pokemon, "GetMonSpriteCharAndPlttNarcIdsEx")
         own_case = {numbers.get(name) for name in re.findall(r"case SPECIES_(\w+):", sprite[:sprite.index("default:")])}
-        mapping = re.search(r"^static u16 PicSpecies_FemaleForm\(.*?^\}", pokemon, re.M | re.S)
+        mapping = re.search(r"^u16 PicSpecies_FemaleForm\(.*?^\}", pokemon, re.M | re.S)
         female_form = {numbers[a]: numbers[b] for a, b in re.findall(
             r"case SPECIES_(\w+):\s*return SPECIES_(\w+);", mapping.group(0) if mapping else "")}
         bases = {numbers[form]: numbers[base] for form, base in re.findall(

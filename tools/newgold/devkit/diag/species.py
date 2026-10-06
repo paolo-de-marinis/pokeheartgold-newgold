@@ -723,7 +723,7 @@ def dex_pages(job):
 def _female_species():
     """PicSpecies_FemaleForm: the species whose female is a species of its own."""
     source = (ROOT / "src/pokemon.c").read_text()
-    body = source[source.index("static u16 PicSpecies_FemaleForm("):]
+    body = source[source.index("u16 PicSpecies_FemaleForm("):]
     body = body[:body.index("\n}\n")]
     numbers = savedit.species_numbers()
     return {numbers[a]: numbers[b] for a, b in re.findall(r"case SPECIES_(\w+):\s*return SPECIES_(\w+);", body)}

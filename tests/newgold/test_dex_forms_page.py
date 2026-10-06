@@ -68,7 +68,8 @@ typedef struct PokedexAppData {
 // seen first and a female second for the others.
 static int Pokedex_GetSeenFormNum(Pokedex *pokedex, int species) { (void)pokedex; (void)species; return 1; }
 static int Pokedex_GetSeenFormByIdx(Pokedex *pokedex, int species, int idx) { (void)pokedex; (void)species; (void)idx; return 0; }
-static int Pokedex_SpeciesGetLastSeenGender(Pokedex *pokedex, u16 species, u32 idx) { (void)pokedex; (void)species; return idx == 0 ? MON_MALE : MON_FEMALE; }
+static int sMaleOnly;
+static int Pokedex_SpeciesGetLastSeenGender(Pokedex *pokedex, u16 species, u32 idx) { (void)pokedex; (void)species; return idx == 0 ? MON_MALE : sMaleOnly ? -1 : MON_FEMALE; }
 static int sNamed;
 static String *ov18_021E590C(u16 species, int language, int heapId) { (void)species; (void)language; (void)heapId; return (String *)&sNamed; }
 static void BufferString(MessageFormat *f, u32 field, const String *s, int a3, int a4, int a5) { (void)f; (void)field; (void)s; (void)a3; (void)a4; (void)a5; sNamed++; }
@@ -148,6 +149,19 @@ int main(void) {
     assert(app.numSeenForms == 4);
     assert(app.seenFormSpecies[2] == SPECIES_MEOWTH_ALOLAN && app.seenFormSpecies[3] == SPECIES_MEOWTH_GALARIAN);
     assert(!strcmp(Text(ov18_021F09D8(&app, 2)), "Alolan Form") && !strcmp(Text(ov18_021F09D8(&app, 3)), "Galarian Form"));
+
+    // Pyroar keeps its female as a species of its own, seen as a female:
+    // the genders' Female entry is her (drawn as her, PicSpecies_FemaleForm),
+    // and she is not listed a second time.
+    Record(&dex, dex.formsSeen, SPECIES_PYROAR_FEMALE);
+    Open(&app, SPECIES_PYROAR);
+    assert(app.numSeenForms == 2 && app.seenForms[0] == 1 && app.seenForms[1] == 2);
+    assert(app.seenFormSpecies[0] == SPECIES_PYROAR && app.seenFormSpecies[1] == SPECIES_PYROAR);
+    // With no Female entry among the genders, she is listed as a form.
+    sMaleOnly = 1;
+    Open(&app, SPECIES_PYROAR);
+    assert(app.numSeenForms == 2 && app.seenForms[1] == 0x80 && app.seenFormSpecies[1] == SPECIES_PYROAR_FEMALE);
+    sMaleOnly = 0;
 
     // Paldean Tauros by its breed.
     Record(&dex, dex.formsSeen, SPECIES_TAUROS_COMBAT);
@@ -494,7 +508,9 @@ class DexFormsPageTests(unittest.TestCase):
                                         header, re.M))
         table = re.search(r"static const u16 sFormBaseSpecies\[.*?\n\};", dex, re.S).group(0)
         table += "\n" + function(dex, "SpeciesToDexSpecies")
-        native = "\n".join([function(page, "ov18_021E83D0"), function(page, "PokedexApp_AppendSeenForms"),
+        pokemon = (ROOT / "src/pokemon.c").read_text()
+        native = "\n".join([function(pokemon, "PicSpecies_FemaleForm"),
+                            function(page, "ov18_021E83D0"), function(page, "PokedexApp_AppendSeenForms"),
                             function(page, "PokedexApp_ShownSpecies"), function(page, "ov18_021E8254"),
                             label[label.index("#define FORM_NAMES_FIRST"):label.index("// The name of the FORMS page")],
                             function(label, "ov18_021F09D8")])

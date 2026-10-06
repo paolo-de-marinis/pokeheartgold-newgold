@@ -2367,8 +2367,9 @@ void GetBoxmonSpriteCharAndPlttNarcIds(PokepicTemplate *pokepicTemplate, BoxPoke
 // is empty (hg-engine's too, for Meowstic and Basculegion). What knows only
 // the national species and a gender -- the Dex, drawing the gender it saw a
 // female Meowstic as -- gets the female species' picture, palette and height.
-// A Pokemon is its female species already.
-static u16 PicSpecies_FemaleForm(u16 species, u8 gender) {
+// A Pokemon is its female species already. The Dex's FORMS page lists the
+// female species as the gender it is (PokedexApp_AppendSeenForms).
+u16 PicSpecies_FemaleForm(u16 species, u8 gender) {
     if (gender != MON_FEMALE) {
         return species;
     }
