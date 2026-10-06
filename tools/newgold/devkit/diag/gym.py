@@ -517,7 +517,10 @@ class Scorer:
             def turns(hp):      # whether the user wins from `hp` after the turn the HP took
                 return best is not None and self.taken(needed, threat, w["ahead"][best], first[best]) < hp
             after = [(slot, item, given, user["hp"] + given - threat) for slot, item, given in ways]
-            buys = [w for w in after if w[3] > 0 and (turns(w[3]) or (last and w[3] > user["hp"] - threat))]
+            # The last Pokemon heals to last longer: when the HP leaves it
+            # more than not healing would and lets it live through the next
+            # hit, to act -- not to heal again and again, never hitting back.
+            buys = [w for w in after if w[3] > 0 and (turns(w[3]) or (last and w[3] > max(threat, user["hp"] - threat)))]
             if buys:
                 slot, item, given, _ = min(buys, key=lambda w: (w[1] is not None, not turns(w[3]), w[2]))
                 if slot is not None:

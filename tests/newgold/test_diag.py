@@ -544,7 +544,22 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertFalse(w["wins"])
         self.assertEqual(scorer.choose(quilava, foe, [0], field, {potion: 3, super_potion: 1})[:2], ("item", super_potion))
         self.assertEqual(scorer.choose(quilava, foe, [0], field, {potion: 3})[0], "move")
-        self.assertEqual(scorer.choose(quilava, foe, [0], field, {potion: 3}, last=True)[:2], ("item", potion))
+        # The last Pokemon heals to last longer where the HP lets it live
+        # through the next hit (a Super Potion), not where it only treads
+        # water (a Potion's 20 against a hit of 20, the Quilava at 12).
+        tough = mon("PIDGEOTTO", 22, ["WING_ATTACK"], hp=60)
+        tough["speed"] = quilava["speed"] + 1
+        self.assertEqual(scorer.choose(quilava, tough, [0], field, {super_potion: 1}, last=True)[:2], ("item", super_potion))
+        self.assertEqual(scorer.choose(quilava, tough, [0], field, {super_potion: 1})[0], "move")
+        self.assertEqual(scorer.choose(quilava, foe, [0], field, {potion: 3}, last=True)[0], "move")
+        # Whitney's Wigglytuff took 40 to 55 of a Flaaffy's 66 HP each turn,
+        # the last Pokemon that counted: it spent ten Hyper Potions, one a
+        # turn, and never used Thunder. A heal that does not let the last one
+        # live through the next hit is not taken.
+        hyper = items["ITEM_HYPER_POTION"]
+        flaaffy = mon("FLAAFFY", 21, ["THUNDER", "THUNDER_WAVE", "THUNDER_SHOCK", "TAKE_DOWN"], hp=11)
+        wigglytuff = mon("WIGGLYTUFF", 29, ["HYPER_VOICE", "DAZZLING_GLEAM", "THUNDER_WAVE", "FLAMETHROWER"])
+        self.assertEqual(scorer.choose(flaaffy, wigglytuff, [0, 2, 3], field, {hyper: 5}, last=True)[0], "move")
         shuckle = mon("SHUCKLE", 20, ["ROCK_TOMB"])
         self.assertEqual(scorer.choose(quilava, shuckle, [0], field, {potion: 3, super_potion: 1})[0], "move")
         self.assertEqual(scorer.choose(dict(quilava, hp=50), foe, [0], field, {super_potion: 1})[0], "move")
