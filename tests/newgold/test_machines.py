@@ -379,6 +379,41 @@ class MachineItemTextTests(unittest.TestCase):
         self.assertEqual((disc("ITEM_TM093"), disc("ITEM_TM101"), disc("ITEM_TM146"), disc("ITEM_TM094")),
                          tuple(machine_items.TYPE_DISC[t] for t in ("ELECTRIC", "ROCK", "FAIRY", "NORMAL")))
 
+    def test_each_disc_has_its_type_s_retail_colours(self):
+        """Each type's disc is coloured as retail's TM01 to HM08 of that type
+        (Fairy has none): hg-engine's TM100 is Dragon Dance's disc, not Normal's."""
+        sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+        import machine_items
+        import savedit
+        icons = ROOT / "files/itemtool/itemdata/item_icon"
+
+        def nclr(member):
+            data = (icons / f"item_icon_{member}.NCLR").read_bytes()
+            at = data.index(b"TTLP")
+            at += 8 + struct.unpack_from("<I", data, at + 0x14)[0]
+            return [(c & 31, c >> 5 & 31, c >> 10 & 31) for c in struct.unpack_from("<16H", data, at)]
+
+        def png(name):      # an imported disc: its PNG's palette, as the build makes it 5-bit
+            data, at = (icons / f"{name}.png").read_bytes(), 8
+            while at < len(data):
+                size, kind = struct.unpack_from(">I4s", data, at)
+                if kind == b"PLTE":
+                    return [tuple(c >> 3 for c in data[at + 8 + i:at + 11 + i]) for i in range(0, 48, 3)]
+                at += 12 + size
+
+        made = dict(re.findall(r"ITEMICON_FROM_PNG,(\d+),\d+,(\w+)\)",
+                               (ROOT / "files/itemtool/itemdata/item_data.mk").read_text()))
+        names = {number: name for name, number in item_ids().items()}
+        rows = dict(re.findall(r"\[(ITEM_\w+)\] = \{ \w+, \w+, NARC_item_icon_item_icon_(\d+)_NCLR",
+                               (ROOT / "src/item.c").read_text()))
+        types, kind = savedit.type_names(), savedit.move_attr("MOVEATTR_TYPE")
+        retail = {}
+        for move, item in savedit.machines()[:100]:
+            retail.setdefault(types[kind[move]], []).append(nclr(rows[names[item]]))
+        for type_, member in machine_items.TYPE_DISC.items():
+            if type_ != "FAIRY":
+                self.assertIn(png(made[str(member)]), retail[type_], type_)
+
 
 FOUND = r"""
 #include <assert.h>

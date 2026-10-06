@@ -44,9 +44,12 @@ LINE, WIDEST, LINES = 39, 45, 3
 
 # The disc of each type: the icon member of hg-engine's first TM item whose
 # move had that type, as this tree had them before TM93 to TM148
-# (48ab75d65). Retail's own TM01 to HM08 draw from their rows in sItemNarcIds.
+# (48ab75d65), except Normal's: that was TM100's (1043), but hg-engine draws
+# its TM100 with Scarlet and Violet's disc, Dragon Dance's, so Normal takes
+# TM103's (1511, Substitute), whose palette is retail's Normal one.
+# Retail's own TM01 to HM08 draw from their rows in sItemNarcIds.
 TYPE_DISC = {
-    "NORMAL": 1043, "FIGHTING": 1529, "FLYING": 1037, "POISON": 1509, "GROUND": 1517, "ROCK": 1507,
+    "NORMAL": 1511, "FIGHTING": 1529, "FLYING": 1037, "POISON": 1509, "GROUND": 1517, "ROCK": 1507,
     "BUG": 943, "GHOST": 1533, "STEEL": 939, "FIRE": 1519, "WATER": 1525, "GRASS": 1527,
     "ELECTRIC": 1035, "PSYCHIC": 1039, "ICE": 1553, "DRAGON": 1535, "DARK": 941, "FAIRY": 1559,
 }
