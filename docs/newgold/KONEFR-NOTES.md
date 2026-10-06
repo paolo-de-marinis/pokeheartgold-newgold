@@ -197,7 +197,9 @@ con IV 100, e ogni volta in uno slot diverso.
 
 **Dove:** `data/Trainers.c:16`, `:11990` e `:12200`.
 
-**Nel port:** tenuto com'è.
+**Nel port:** tenuto com'è. Paolo l'ha notato anche giocando (5 ottobre): il Larvitar L10 fra
+Pokémon a L22, e la versione Bayleef senza Teddiursa. Sappiamo che stai ancora finendo gli
+allenatori, quindi non si cambia senza di lui (AUDIT, «the rival's Azalea teams»).
 
 ### 10. I nuotatori della Route 40
 **Domanda:** la Route 40 era in programma?
@@ -355,6 +357,17 @@ mosse solo per potenza e tipo e non usa mosse di stato né Pozioni, quindi un gi
 (#388); righe a `a477c662f`.
 
 **Nel port:** tenuto com'è.
+
+### 19. Pryce, Clair e la Lega
+**Domanda:** nessuna, è solo per saperlo.
+
+**Cosa:** dopo i tuoi Chuck e Jasmine a L43-48, Pryce, Clair e la Lega sono ancora ai livelli
+retail. Sappiamo che stai ancora finendo gli allenatori, e Paolo (4 ottobre) ha deciso che non è
+una domanda da farti.
+
+**Dove:** `data/Trainers.c` alla tua punta `a477c662f`.
+
+**Nel port:** tenuti come sono. Li finiranno a mano Paolo e Claude, con il toolkit, dopo il port.
 
 ---
 
@@ -544,7 +557,31 @@ due di questi tuoi.
 
 **Dove:** `data/Species.c` alla tua punta `a477c662f`; nel port 912d5cd58 e 24ef4532a.
 
-**Nel port:** tenuto così, con i tuoi tipi.
+**Nel port:** tenuto così, con i tuoi tipi. Dal quindicesimo giro la Sala ha anche 45 set dei
+Folletto delle generazioni dopo la quarta (Sylveon, Florges, Tinkaton, i quattro Tapu e altri,
+c2cdf2706): Meganium e Mismagius dividono l'ultimo tratto Folletto con 17 di questi.
+
+### 6. Trubbish e gli sprite delle specie nuove
+**Domanda:** il Trubbish affondato l'hai visto in una build del port di prima del 25 settembre?
+
+**Cosa:** è la tua nota della chiamata del 4 ottobre, «trubbish offset sprite (forse tutti
+nuovi?)». Nel tuo gioco Trubbish è giusto: il fronte sta 3 righe sopra la linea del terreno, in
+mezzo alla sua ombra piccola, come Pikachu, Poliwag e Metapod nel retail. Nel port stava 20 righe
+sotto solo prima di 6c562886d (25 settembre). Controllando tutte le specie e le forme aggiunte
+abbiamo trovato però 158 record di hg-engine messi male, che nel tuo gioco si vedono: i 120
+Pokémon e forme che usano il segnaposto (il fronte di Bulbasaur: Naclstack, Bramblin, gli Iron, i
+Pikachu col cappello, i Gigamax, le nuove mega) volano 21-22 righe sopra il terreno, perché il
+loro record è quello di Bulbasaur o zero su un'altezza 0; Tirtouga (18 righe), Iron Treads (14),
+Steenee e Revavroom (11), Clawitzer (9), Orthworm (8), Terapagos Teracristal (8), Arctovish (6),
+Eiscue (5) ed Enamorus Totem (4) stanno in aria; Tauros Combattivo sta 11 righe sopra Tauros, e
+le forme di Castform 8-9 righe sotto Castform.
+
+**Dove:** `data/SpriteOffsets.c` di hg-engine (`d0380a487`), non il tuo range.
+
+**Nel port:** corretto nell'importer (3b50ddc9e): un'immagine che un'altra specie disegna già sta
+come quella specie, i dieci da terra prendono la mediana dei fronti retail con la stessa ombra, e
+una forma sta come la sua base. Forse stanno a terra anche Elgyem, Beheeyem, Tympole, Cofagrigus,
+Pumpkaboo, Milcery, Varoom e Miraidon: sono da controllare sui giochi recenti.
 
 ---
 
@@ -586,6 +623,32 @@ decidere se usarle.
 **Nel port:** tenuto com'è: ci sono i record e niente le dà. Dall'undicesimo giro la tasca delle Bacche
 ha 100 posti, uno per ogni Bacca, Hyper comprese (7e3eb8e35, un nuovo formato del salvataggio che il
 gioco converte da solo); oggi si possono avere solo le 64 retail.
+
+### 4. Le MT dopo la 92
+**Domanda:** ti va la numerazione che ha scelto Paolo, diversa da quella della chiamata?
+
+**Cosa:** nel tuo gioco le macchine sono le 340 di hg-engine (le MT01-MN08 di HeartGold, una
+seconda MN07, MT00, le MT093-MT100, le MT100-MT229 di Scarlatto/Violetto e le DT00-DT99), ma si
+possono avere solo le 100 di HeartGold, e la tasca MT ne tiene 101. Nella chiamata del 4 ottobre
+avevi proposto la base della settima generazione con le mosse dopo in coda. Paolo poi ha deciso
+(4 ottobre): le MT01-MT92 e MN01-MN08 di HeartGold restano coi loro numeri, mosse e regali, così i
+salvataggi non hanno problemi; poi MT93-MT148: le MT della settima generazione che HeartGold non
+ha, con Wild Charge, Snarl, Nature Power, Dazzling Gleam e Confide sui loro numeri e Work Up,
+Psyshock e Venoshock nei buchi 94, 97 e 98, le altre in ordine; poi le 29 mosse dopo la settima
+generazione che sono MT in Scarlatto/Violetto, nel loro ordine. Niente DT e niente Tera Blast; Fly,
+Surf e Waterfall solo MN. Chi impara cosa segue la regola di oggi: le MachineMoves o le LevelMoves
+del tuo `a477c662f`.
+
+**Dove:** nel port 5059800bf (la lista), 4e65dc1ef (la tasca a 156 posti e la conversione dei
+salvataggi), 1f5b24ccb (il negozio).
+
+**Nel port:** fatto così. Le MT93-MT148 si comprano al 5° piano del Centro Commerciale di
+Goldenrod, sette in più ogni due medaglie, da 1500 a 10000; una MT si compra una volta sola («You
+already have this!»), e tutti i prezzi sono tornati quelli di HeartGold (71e467d2f; i tuoi sono
+quelli di Scarlatto/Violetto di hg-engine, vedi sotto). Le altre 184 macchine di hg-engine sono
+strumenti senza uso. Lo script che trova gli strumenti conosce le MT nuove (587ce1843), e 11 set
+della Sala Lotta hanno cambiato una mossa che solo le macchine di hg-engine insegnavano
+(c85f33c05).
 
 ---
 
@@ -631,8 +694,13 @@ gli EV del primo Pokémon con dei `give_egg` di specie finte 2000-2011. Il messa
 
 **Dove:** `armips/scr_seq/scr_seq_00850_newgold_vendor.s` e `src/field/script_commands.c`.
 
-**Nel port:** fuori scope (SCOPE.md:186-193). Le sue 41 righe di testo sono nel banco 550, ma non le
-legge niente.
+**Nel port:** fuori scope fino al 4 ottobre (SCOPE.md). Poi Paolo l'ha riportato per i giocatori,
+con un'interfaccia vera (844b55090, 69260918c, b308e4e1e): una signora nuova nel Centro Pokémon di
+Cherrygrove (la tua signora fuori tiene la sua frase retail) apre l'allenatore EV/IV, dove gli EV
+si mettono a mano o con i tuoi dodici preset coi tuoi nomi (banco 550, righe 52-65), 500$ per ogni
+decina iniziata che una statistica guadagna, e si fa l'Allenamento Pro con i Tappi di Bottiglia,
+che vende lei. La password e le Caramelle Rare a 1$ ci sono solo nella build di diagnostica, con
+le tue righe 25-48 del banco 550.
 
 ---
 
@@ -737,6 +805,9 @@ Alcremie usa `EVO_SPIN`, che non viene mai controllato. Il port ha dato loro met
 - Milcery si evolve nella Ice Path tenendo una di sette Bacche (c12e110f2).
 
 Pawniard, Bisharp, Gimmighoul e Milcery non sono ancora in nessuna tabella né squadra.
+
+Dal 4 ottobre anche: le MT dopo la 92, il negozio di Goldenrod e i prezzi di HeartGold (Strumenti
+e MT 4), e l'allenatore EV/IV al posto del tuo venditore (Script e flag 3).
 
 ---
 
@@ -846,6 +917,12 @@ L'elenco completo è in AUDIT-2026-09-23.md ("Differences from konefr's referenc
   oltre la fine (d27f4aff6). Dopo la riga di una mossa terreno si vedeva l'animazione di un'altra
   mossa (il «TODO: something weird» del motore, `subscript_0354_CREATE_TERRAIN_OVERLAY.s:55`); nel port
   ogni terreno ha ora un'animazione d'inizio sua, che il motore non ha (50d5ad0fa, 22a9c1a48, 3b6951d5a).
+- I fronti di 158 specie e forme aggiunte stanno nel posto sbagliato in battaglia: il segnaposto
+  (Bulbasaur) vola 21-22 righe, dieci specie da terra stanno in aria, alcune forme non stanno come
+  la loro base (`data/SpriteOffsets.c`; corretto nell'importer, 3b50ddc9e; Specie 6).
+- I prezzi degli strumenti sono quelli di Scarlatto/Violetto, e quelli delle MT seguono la MT con lo
+  stesso numero, non la mossa: Hyper Beam (MT15) 1600, Captivate (MT78) 32000. Nel port sono tornati
+  tutti quelli di HeartGold (71e467d2f, Paolo, 4 ottobre).
 - Queste cose sono di hg-engine e non sue, anche se i nostri record a volte gliele attribuiscono: i
   prezzi degli strumenti e le potenze di Natural Gift, `ALLOW_SAVE_CHANGES`, gli sprite segnaposto,
   le voci del Pokédex e le 33 Bacche Hyper (Strumenti 3).
