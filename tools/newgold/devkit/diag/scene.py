@@ -345,13 +345,15 @@ def field_layout():
 @savedit.tree_cache
 def bg_layout():
     """Where the field's BgConfig keeps a layer's tilemap buffer (bgN:X,Y),
-    from the tree's headers, and the sizes 32 tiles wide."""
-    names = ("FieldSystem, bgConfig", "BgConfig, bgs", "Background, tilemapBuffer", "Background, size")
+    from the tree's headers, the sizes 32 tiles wide, and whether the field
+    map runs (FieldMap_Exit frees the BgConfig and leaves the pointer)."""
+    names = ("FieldSystem, bgConfig", "BgConfig, bgs", "Background, tilemapBuffer", "Background, size",
+             "FieldSystem, runningFieldMap")
     values = savedit.compile_c(exprs=tuple(f"__builtin_offsetof({n})" for n in names)
                                + ("sizeof(Background)", "GF_BG_SCR_SIZE_256x256", "GF_BG_SCR_SIZE_256x512"),
                                headers=savedit.LAYOUT_HEADERS + ("field_system.h", "bg_window.h"))[0]
     out = {n.replace(", ", "."): v for n, v in zip(names, values)}
-    out["Background.sizeof"], out["32 wide"] = values[4], values[5:]
+    out["Background.sizeof"], out["32 wide"] = values[5], values[6:]
     return out
 
 
@@ -1672,14 +1674,18 @@ class Scene:
             layer, _, at = name[len("bg"):].partition(":")
             x, y = map(int, at.split(","))
             layout, word = bg_layout(), lambda a: struct.unpack_from("<I", ram, a - 0x02000000)[0]
+            # None (a failed expectation, with its shot) unless the field
+            # map runs and the layer is 32 wide: an app's screen is not the
+            # field's, whose BgConfig is freed then.
             field = word(self._field)
-            config = field and word(field + layout["FieldSystem.bgConfig"])
+            running = field and word(field + layout["FieldSystem.runningFieldMap"])
+            config = running and word(field + layout["FieldSystem.bgConfig"])
             if not config:
                 return None
             bg = config + layout["BgConfig.bgs"] + int(layer) * layout["Background.sizeof"]
             buffer = word(bg + layout["Background.tilemapBuffer"])
             if ram[bg + layout["Background.size"] - 0x02000000] not in layout["32 wide"]:
-                raise SystemExit(f"{name}: that layer is not 32 tiles wide, which bgN:X,Y reads")
+                return None
             return buffer and struct.unpack_from("<H", ram, buffer + 2 * (y * 32 + x) - 0x02000000)[0]
         if name == "front1.lift":
             return front_lift(self.core.shot(self.hooks).crop((0, 0, 256, 192)), self.value(ram, "battler1.species"))

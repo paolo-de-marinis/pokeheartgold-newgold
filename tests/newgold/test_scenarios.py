@@ -561,8 +561,12 @@ class ScenarioFileTests(unittest.TestCase):
         s = scene.Scene.__new__(scene.Scene)
         s._field = 0x02001000
         s.markers = None
+        self.assertIsNone(s.value(bytes(ram), "bg3:2,18"), "no field map running: an app's screen, the BgConfig freed")
+        struct.pack_into("<I", ram, field - 0x02000000 + layout["FieldSystem.runningFieldMap"], 1)
         self.assertEqual(s.value(bytes(ram), "bg3:2,18"), 0xA3E4)
         self.assertEqual(s.value(bytes(ram), "bg3:2,19"), 0)
+        ram[bg + layout["Background.size"]] = 0xFF
+        self.assertIsNone(s.value(bytes(ram), "bg3:2,18"), "a layer not 32 wide: a failed expectation, not an abort")
         self.assertTrue(scene.Scene.wanted("bg3:2,18", "0xA3E4")[0](0xA3E4))
 
 
