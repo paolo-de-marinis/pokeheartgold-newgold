@@ -1308,6 +1308,8 @@ Overlay OVY_80
     Object asm/overlay_80_022375D0.o
     Object src/frontier/battle_hall_types.o
     Object asm/overlay_80_0223792C.o
+    Object src/frontier/battle_hall_ivs.o
+    Object asm/overlay_80_02237980.o
     Object asm/overlay_80_02237A70.o
     Object asm/overlay_80_02238034.o
     Object asm/overlay_80_022384D8.o

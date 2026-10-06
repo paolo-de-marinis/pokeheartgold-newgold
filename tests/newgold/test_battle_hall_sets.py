@@ -193,10 +193,12 @@ int main(void) {
 
 def c_tables():
     """The Hall's tables as the C defines them, for the host: the files
-    without their includes, the header's count and range type before them."""
+    without their includes, the header's count and its range and IV row
+    types before them."""
     header = (ROOT / "include/frontier/battle_hall.h").read_text()
     out = re.search(r"#define BATTLE_HALL_SET_COUNT .*", header)[0] + "\n"
-    out += re.search(r"typedef struct BattleHallSetRange \{.*?\} BattleHallSetRange;", header, re.S)[0] + "\n"
+    for name in ("BattleHallSetRange", "BattleHallRankIVs"):
+        out += re.search(rf"typedef struct {name} \{{.*?\}} {name};", header, re.S)[0] + "\n"
     for path in TABLES:
         out += re.sub(r"(?m)^#include .*$", "", path.read_text())
     return out

@@ -12,19 +12,19 @@ const BattleHallSetRange gBattleHallStrengths[4] = {
     { 404, 522 },
 };
 
-// The IVs of each rank's opponents, in each row's second byte (ov80_0223796C;
-// ov80_022379C0 gives a rank its row). The Hall Matron's are 31.
-const u8 gBattleHallRankIVs[10][4] = {
-    { 0, 8,  0, 0 },
-    { 0, 10, 0, 0 },
-    { 0, 12, 0, 0 },
-    { 0, 14, 0, 0 },
-    { 0, 16, 0, 0 },
-    { 0, 18, 0, 0 },
-    { 0, 20, 0, 0 },
-    { 0, 22, 0, 0 },
-    { 0, 24, 0, 0 },
-    { 0, 26, 0, 0 },
+// The IVs of each rank's opponents (ov80_0223796C; ov80_022379C0 gives a
+// rank its row). The Hall Matron's are 31.
+const BattleHallRankIVs gBattleHallRankIVs[10] = {
+    { 0, 8,  { 0, 0 } },
+    { 0, 10, { 0, 0 } },
+    { 0, 12, { 0, 0 } },
+    { 0, 14, { 0, 0 } },
+    { 0, 16, { 0, 0 } },
+    { 0, 18, { 0, 0 } },
+    { 0, 20, { 0, 0 } },
+    { 0, 22, { 0, 0 } },
+    { 0, 24, { 0, 0 } },
+    { 0, 26, { 0, 0 } },
 };
 
 // The stretch of the sets each rank picks its opponents from: the first
