@@ -1,5 +1,5 @@
 {
-  "about": "The playthrough's way out of Ilex Forest, from Azalea's Pokemon Center after Bugsy: HM01 taught from the bag by machine:, as a player teaches it -- the start menu's BAG, the TMs & HMs tab, HM01, USE, the Quilava's panel (the Geodude, the Noctowl, the Misdreavus, the Flaaffy and the Togepi cannot learn it); it knows four, so yes to forgetting one, and on the summary screen gym.py's rule lets go of one for Cut: Quick Attack, the weaker of its two other Normal moves, the later on a tie (Tackle, Flame Wheel, Quick Attack, Ember, the moves it learned in play; until round 15 leg 08b's savedit --train gave it the game's level-22 set, and Cut took Smokescreen's place) -- then into the forest to the tree on the way north (16, 62), A, yes to Cut (FLAG_MAPTEMP_010, the tree's, set), and on through the forest's north to the gatehouse onto Route 34, where the game is saved (10,538 frames where the leg was written). The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "about": "The playthrough's way out of Ilex Forest, from Azalea's Pokemon Center after Bugsy: HM01 taught from the bag by machine:, as a player teaches it -- the start menu's BAG, the TMs & HMs tab, HM01, USE, the Quilava's panel (the Geodude, the Noctowl, the Misdreavus, the Flaaffy and the Togepi cannot learn it); it knows four, so yes to forgetting one, and on the summary screen gym.py's rule lets go of one for Cut, which one by the moves the run has given it (Quick Attack, the weaker of its two other Normal moves, where the leg was written: Tackle, Flame Wheel, Quick Attack, Ember; Leer for one under 19, the level of Flame Wheel; until round 15 leg 08b's savedit --train gave it the game's level-22 set, and Cut took Smokescreen's place) -- machine: is done only once the Pokemon knows Cut -- then into the forest to the tree on the way north (16, 62), A, yes to Cut (FLAG_MAPTEMP_010, the tree's, set), and on through the forest's north to the gatehouse onto Route 34, where the game is saved (10,538 frames where the leg was written). The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
   "from": "playthrough_08f_bugsy",
   "hold": {
     "gDiagBattleSeed": 1
@@ -17,8 +17,6 @@
     "machine:ITEM_HM01,1",
     {
       "expect": {
-        "party1.move2": "MOVE_CUT",
-        "party1.move1": "MOVE_FLAME_WHEEL",
         "bag:ITEM_HM01": 1
       }
     },
