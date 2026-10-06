@@ -95,6 +95,10 @@ extern unsigned long gDiagLastMessage[5];
 // row, archive, member, position. A script that names a row the bank has
 // not got shows up here, with the place to fix it.
 extern unsigned long gDiagLastScriptMessage[4];
+// The last message a field script put in its box, before its placeholders
+// are filled: the bank's member of the message archive shifted up 16, and the
+// row. A scenario expects a line by it (msg_0397_R39R0101 row 15: 397 << 16 | 15).
+extern unsigned long gDiagFieldMessage;
 
 // The four battlers as the battle sees them, refreshed every frame, and where
 // the player's side is in choosing: gDiagBattlePrompt is the selection

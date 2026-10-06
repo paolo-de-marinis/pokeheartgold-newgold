@@ -285,6 +285,9 @@ static void ovFieldMain_CreateMessageBox(FieldSystem *fieldSystem, MessageBox *m
 }
 
 static void ovFieldMain_ReadAndExpandMsgDataViaBuffer(MessageBox *messageBox, MsgData *messageData, u32 messageNum) {
+#ifdef NEWGOLD_DIAG
+    gDiagFieldMessage = (messageData->file_id << 16) | messageNum;
+#endif
     ReadMsgDataIntoString(messageData, messageNum, messageBox->buffer);
     StringExpandPlaceholders(messageBox->messageFormat, messageBox->message, messageBox->buffer);
 }

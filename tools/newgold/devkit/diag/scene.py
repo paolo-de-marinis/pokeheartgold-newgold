@@ -175,7 +175,8 @@ the lowest opaque row of a front with a Y offset of 0 on, 89, less that row
 as a shot shows it, the picture found by its PNG; so its a/1/8/0 Y offset;
 None where the picture is not there), music (the sequence the field's sound
 handle plays, -1 for none: a load the sound heap cannot hold leaves it empty
-and counts as no failed allocation), or any gDiag* global. A value is a
+and counts as no failed allocation), or any gDiag* global (gDiagFieldMessage,
+the line a field script has up, as bank << 16 | row). A value is a
 number, a constant's name (MAP_..., SPECIES_..., ITEM_..., MOVE_..., SEQ_...,
 TYPE_...), [low, high], or for
 a status the flags as markers.py names them ("BRN", "" for none).
