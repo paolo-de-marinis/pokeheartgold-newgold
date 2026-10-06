@@ -5,7 +5,7 @@
   "steps": ["field", "poke:sLCRNG_State=0xbb160215", "goto:MAP_AZALEA_POKEMART,4,6", "LEFT", "buy:ITEM_SUPER_POTION,10",
             {"expect": {"bag:ITEM_SUPER_POTION": 10}},
             "flee:40", "heal:MAP_AZALEA_POKECENTER_1F,8,13",
-            "swap:0,4", {"expect": {"party0.species": "SPECIES_MAREEP", "party1.species": "SPECIES_HOOTHOOT", "party4.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"]}},
+            "swap:0,4", {"expect": {"party0.species": ["SPECIES_MAREEP", "SPECIES_FLAAFFY"], "party1.species": "SPECIES_HOOTHOOT", "party4.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"]}},
             "shift:4", "pace:MAP_ILEX_FOREST,12,77,12,81,party0.species,SPECIES_FLAAFFY,50000",
             {"expect": {"party0.species": "SPECIES_FLAAFFY"}},
             "swap:0,1", {"expect": {"party0.species": "SPECIES_HOOTHOOT"}},
