@@ -1,10 +1,10 @@
 {
-  "about": "The playthrough trains the Hoothoot the rest of the way for Bugsy, from Azalea's Pokemon Center after leg 08d: swap: puts it first, and on Ilex Forest's floor inside the gatehouse (12, 77 to 12, 81) it fights alone now, its Air Slash twice as strong against the forest's bugs and grass, winning all a battle pays rather than half (relieved by the Quilava, 16 to 18 took 57,228 frames), until it has 20 and is a Noctowl (42,504 frames where the leg was written): with the Hoothoot at 18 Bugsy's Heracross still swept the team, faster than any of it and taking the Hoothoot in one Aerial Ace; with a Noctowl at 20 he fell at the first attempt in round 15's probe. flee:40 and heal: as before. Then swap: puts the Noctowl back third for him; the nurse, and the game's save. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "about": "The playthrough trains the Hoothoot the rest of the way for Bugsy, from Azalea's Pokemon Center after leg 08d: swap: puts it first, and on Ilex Forest's floor inside the gatehouse (12, 77 to 12, 81) it fights alone now, its Air Slash twice as strong against the forest's bugs and grass, winning all a battle pays rather than half (relieved by the Quilava, 16 to 18 took 57,228 frames), until it is a Noctowl (walked to the species: one that reached 20 in a battle it lost evolves at its next level) (42,504 frames where the leg was written): with the Hoothoot at 18 Bugsy's Heracross still swept the team, faster than any of it and taking the Hoothoot in one Aerial Ace; with a Noctowl at 20 he fell at the first attempt in round 15's probe. flee:40 and heal: as before. Then swap: puts the Noctowl back third for him; the nurse, and the game's save. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
   "from": "playthrough_08d_ilex_hoothoot",
   "hold": {"gDiagBattleSeed": 1},
   "steps": ["field", "poke:sLCRNG_State=0xbb160215", "flee:40", "heal:MAP_AZALEA_POKECENTER_1F,8,13",
             "swap:0,2", {"expect": {"party0.species": "SPECIES_HOOTHOOT", "party0.move1": "MOVE_AIR_SLASH"}},
-            "pace:MAP_ILEX_FOREST,12,77,12,81,party0.level,20,70000",
+            "pace:MAP_ILEX_FOREST,12,77,12,81,party0.species,SPECIES_NOCTOWL,70000",
             {"expect": {"party0.species": "SPECIES_NOCTOWL"}},
             "swap:0,2",
             {"expect": {"party0.species": "SPECIES_GEODUDE", "party1.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"], "party2.species": "SPECIES_NOCTOWL"}},
