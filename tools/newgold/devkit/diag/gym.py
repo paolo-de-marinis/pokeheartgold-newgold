@@ -453,6 +453,13 @@ class Scorer:
         best = max(usable, key=lambda s: (value[s], hits[s][1])) if usable else None
         needed = (math.ceil(foe["hp"] / (hits[best][0] * slow[best])) / hits[best][1]
                   if best is not None and value[best] else 99)
+        # A foe that gives itself half its HP back (Milk Drink, Recover, Roost)
+        # outlasts a user taking a quarter of it or less a turn, and takes
+        # about twice the turns from one taking under half: Whitney's Miltank
+        # drank its milk while a Misdreavus spent seven Hyper Potions "winning".
+        if any(self.record(m)[0] in RESTORES for m, pp in zip(foe["moves"], foe["pp"]) if m and pp) and needed < 99:
+            per_turn = value[best]
+            needed = 99 if per_turn * 4 <= foe["maxHp"] else needed * 2 if per_turn * 2 < foe["maxHp"] else needed
         return {"moves": moves, "hits": hits, "value": value, "threats": threats, "threat": threat,
                 "speed": (mine, theirs), "ahead": ahead, "first": first, "lasts": lasts, "best": best, "needed": needed,
                 "wins": best is not None and self.taken(needed, threat, ahead[best], first[best]) < user["hp"],

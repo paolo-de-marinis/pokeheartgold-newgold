@@ -447,6 +447,21 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(aimed_at(battlers((25, 50), (16, 0), (26, 50), (74, 40)), At, 2)[0], 74)
         self.assertEqual(aimed_at(battlers((25, 50), (16, 40), (0, 0), (0, 0)), At, 0)[0], 16)    # a single battle
 
+    def test_gym_does_not_count_on_outlasting_a_foe_that_heals_itself(self):
+        # Whitney's Miltank drank its milk while a Misdreavus, its Thunder a
+        # fifth of the Miltank's HP a turn, healed seven times to "win" the
+        # exchange. A foe with Milk Drink is not outlasted by a quarter of its
+        # HP a turn; without it, the same Miltank is.
+        scorer, mon, field, _ = self._picker()
+        misdreavus = mon("MISDREAVUS", 26, ["THUNDER", "CONFUSION"])
+        miltank = mon("MILTANK", 30, ["BODY_SLAM", "MILK_DRINK", "BULLDOZE", "ZEN_HEADBUTT"])
+        plain = mon("MILTANK", 30, ["BODY_SLAM", "TACKLE", "BULLDOZE", "ZEN_HEADBUTT"])
+        self.assertLess(scorer.weigh(misdreavus, plain, [0, 1], field)["needed"], 99)
+        self.assertEqual(scorer.weigh(misdreavus, miltank, [0, 1], field)["needed"], 99)
+        quilava = mon("QUILAVA", 30, ["FIRE_BLAST"])
+        w, plain_w = scorer.weigh(quilava, miltank, [0], field), scorer.weigh(quilava, plain, [0], field)
+        self.assertEqual(w["needed"], 2 * plain_w["needed"])
+
     def test_gym_counts_a_bench_that_cannot_fight_as_none(self):
         # Whitney's Miltank swept the playthrough's team, its last a Togepi
         # hatched at level 1 that fell to one hit: the bag's Hyper Potions,
