@@ -377,6 +377,11 @@ class DiagnosticsTests(unittest.TestCase):
         # weighs as a status move.
         self.assertEqual(let_go("GRAVELER", "TACKLE", "ROCK_THROW", "BULLDOZE", "SMACK_DOWN", "SELF_DESTRUCT"),
                          "SELF_DESTRUCT")
+        # TM25 taught to the playthrough's Flaaffy before Whitney let its
+        # Thunder Wave go, the later of its two moves that deal no damage,
+        # and kept Growl: a move the picker plays stays over one it never does.
+        self.assertEqual(let_go("FLAAFFY", "GROWL", "THUNDER_WAVE", "THUNDER_SHOCK", "TAKE_DOWN", "THUNDER"), "GROWL")
+        self.assertEqual(let_go("FLAAFFY", "THUNDER_WAVE", "GROWL", "THUNDER_SHOCK", "TAKE_DOWN", "THUNDER"), "GROWL")
 
     def test_gym_reads_the_move_to_forget_from_the_battle_party_menu(self):
         # The menu a level-up opens to forget a move: its task (ov08_0221BE98

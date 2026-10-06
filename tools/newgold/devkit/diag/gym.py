@@ -205,6 +205,16 @@ class Scorer:
             return 0
         return record[3] * (1.5 if record[4] in self.types(user) else 1)
 
+    def useful(self, move):
+        """Whether a move that deals no damage is one choose() plays: one
+        that gives HP back, puts the foe to sleep, paralyzes, burns or
+        poisons it, raises the user's attack or special attack, or puts up
+        a screen."""
+        name = self.record(move)[0]
+        return (name in RESTORES or name in ("STATUS_SLEEP", "STATUS_PARALYZE", "STATUS_BURN", "STATUS_BADLY_POISON",
+                                             "STATUS_POISON", "SET_REFLECT", "SET_LIGHT_SCREEN")
+                or bool({STAT_ATK, STAT_SPATK} & set(BOOSTS.get(name, ()))))
+
     def score(self, move, user, target):
         record = self.moves[move] if move < len(self.moves) else b""
         # effect (2 bytes), split, power, type: import_moves.py's RECORD.
@@ -623,7 +633,9 @@ def forgets(scorer, species, moves):
     level-up or a machine brings -- it lets go: the last in the order it
     keeps them, the strongest damaging move of each type first, strongest
     first, then its other damaging moves, then the moves that deal no
-    damage; on a tie the move known before, so 4 is the new one given up."""
+    damage, those the picker plays (Scorer.useful: Thunder Wave) before
+    those it never does (Growl); on a tie the move known before, so 4 is
+    the new one given up."""
     power = [scorer.strength(move, species) for move in moves]
     order = sorted(range(len(moves)), key=lambda i: -power[i])
     kinds, best = set(), []
@@ -631,7 +643,9 @@ def forgets(scorer, species, moves):
         if power[i] and scorer.kind(moves[i]) not in kinds:
             kinds.add(scorer.kind(moves[i]))
             best.append(i)
-    ranked = best + [i for i in order if power[i] and i not in best] + [i for i in range(len(moves)) if not power[i]]
+    status = [i for i in range(len(moves)) if not power[i]]
+    ranked = (best + [i for i in order if power[i] and i not in best]
+              + [i for i in status if scorer.useful(moves[i])] + [i for i in status if not scorer.useful(moves[i])])
     return ranked[-1]
 
 
