@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Run the native flashcart checks with host sanitizers, on a pretend flashcart.
+"""Run DSProt's flashcart checks with host sanitizers, on a pretend flashcart.
 
-ov01_021E662C is extracted from src/field/fieldmap.c, and DSProt's queue
-runner with its two ROM-read checks from lib/dsprot/src/dsprot_main.c. On
+DSProt's queue runner with its two ROM-read checks is extracted from
+lib/dsprot/src/dsprot_main.c. On
 the DS the queue holds obfuscated addresses of encrypted functions; here the
 obfuscation macro enrolls each function in a table and the runner calls
 through that table instead, which is the one change made to the extracted
@@ -10,9 +10,9 @@ code. The card status and the checks themselves are stand-ins that answer
 the way a flashcart does, so this checks what the game concludes from them,
 not the checks.
 
-The game itself no longer runs DSProt (src/field/fieldmap.c, FieldMap_Init
-says why): the library is kept, and checked here, as the decompilation of
-what retail ships.
+The game itself no longer runs DSProt, nor retail's own card check with
+its lag tasks (src/field/fieldmap.c, FieldMap_Init says why): the library is
+kept, and checked here, as the decompilation of what retail ships.
 """
 
 import os
@@ -61,9 +61,6 @@ static void callback(void) { callbacks++; }
 
 MAIN = r'''
 int main(void) {
-    // The field's own card check passes, so no lag tasks start.
-    assert(ov01_021E662C() == TRUE);
-
     // The flashcart is never detected and always passes as a genuine card,
     // which is what FieldSystem_Init, the field map, the Pokedex and the
     // save screen asked in retail before they punished.
@@ -74,19 +71,18 @@ int main(void) {
     // Nothing was read from the ROM to get there.
     assert(checksRun == 0);
 
-    puts("PASS: on a flashcart the card check passes and DSProt sees a genuine card.");
+    puts("PASS: on a flashcart DSProt sees a genuine card.");
 }
 '''
 
 
 class AntipiracyTests(unittest.TestCase):
     def test_native_flashcart_passes(self):
-        field = function((ROOT / "src/field/fieldmap.c").read_text(), "ov01_021E662C")
         dsprot = (ROOT / "lib/dsprot/src/dsprot_main.c").read_text()
         dsprot = dsprot[dsprot.index("static inline u32 dsprotMain"):dsprot.index("u32 DSProtInternal_DetectEmulator")]
         call = "((TaskFunc)(funcQueue[i] - ENC_VAL_1 - DSP_OBFS_OFFSET))()"
         self.assertEqual(dsprot.count(call), 1)
-        program = PREFIX.replace("@NATIVE@", field + "\n" + dsprot.replace(call, "CALL_QUEUED(funcQueue[i])")) + MAIN
+        program = PREFIX.replace("@NATIVE@", dsprot.replace(call, "CALL_QUEUED(funcQueue[i])")) + MAIN
         with tempfile.TemporaryDirectory(prefix="newgold-antipiracy-") as temp:
             c, exe = Path(temp) / "check.c", Path(temp) / "check"
             c.write_text(program)
@@ -106,6 +102,11 @@ class AntipiracyTests(unittest.TestCase):
         callers = sorted(str(path.relative_to(ROOT)) for folder in ("src", "asm") for path in (ROOT / folder).rglob("*")
                          if path.suffix in (".c", ".s") and pattern.search(path.read_text(errors="replace")))
         self.assertEqual(callers, [])
+        # Nor retail's card check, whose lag tasks only src/sin_vcount.c
+        # still defines.
+        lag = sorted(str(path.relative_to(ROOT)) for folder in ("src", "asm") for path in (ROOT / folder).rglob("*")
+                     if path.suffix in (".c", ".s") and "Task_AntipiracyMath" in path.read_text(errors="replace"))
+        self.assertEqual(lag, ["src/sin_vcount.c"])
 
 
 if __name__ == "__main__":

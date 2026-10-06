@@ -93,7 +93,6 @@ static void InitGraphicsAndManagers(FieldSystem *fieldSystem);
 static void FieldSystem_InitMapLoadManager(FieldSystem *fieldSystem);
 static void ov01_021E64A4(FieldSystem *fieldSystem);
 static void ov01_021E6580(FieldSystem *fieldSystem);
-static BOOL ov01_021E662C(void);
 static MapObjectsToPreload *FetchMapObjectsToPreload(enum HeapID heapID, u16 modelBank);
 static const int *MapObjectsToPreload_GetIDs(const MapObjectsToPreload *mapObjectsToPreload);
 static int MapObjectsToPreload_GetCount(const MapObjectsToPreload *mapObjectsToPreload);
@@ -210,10 +209,10 @@ BOOL FieldMap_Init(OverlayManager *man, int *state) {
             ret = TRUE;
             fieldSystem->runningFieldMap = TRUE;
         }
-        if (ov01_021E662C() == FALSE) {
-            SysTask_CreateOnMainQueue(Task_AntipiracyMath, NULL, 1000);
-            SysTask_CreateOnMainQueue(Task_AntipiracyMath, NULL, 1400);
-        }
+        // Retail asked the card's status register here for a genuine
+        // cartridge and started two lag tasks (src/sin_vcount.c) when the
+        // answer was wrong, as it is on a flashcart. New Gold runs on
+        // flashcarts, as hg-engine's APPLY_ANTIPIRACY makes it: no check.
         break;
     }
     (*state)++;
@@ -734,14 +733,6 @@ static void ov01_021E6580(FieldSystem *fieldSystem) {
     FieldTextureManager_LoadTexture(fieldSystem->unk4->textureManager, AreaDataManager_GetMapTexture(fieldSystem->areaDataManager));
     Gymmick_Init(fieldSystem);
     Main_SetVBlankIntrCB(FieldMap_VBlankCallback, fieldSystem);
-}
-
-// Retail asks the card's status register for a genuine cartridge and starts
-// two lag tasks when the answer is wrong, which it is on a flashcart. New
-// Gold runs on flashcarts, as hg-engine's APPLY_ANTIPIRACY makes it: the check
-// always passes.
-static BOOL ov01_021E662C(void) {
-    return TRUE;
 }
 
 static MapObjectsToPreload *FetchMapObjectsToPreload(enum HeapID heapID, u16 modelBank) {
