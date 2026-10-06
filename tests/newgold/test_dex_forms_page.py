@@ -370,6 +370,90 @@ int main(void) {
 }
 '''
 
+SIZE = r'''
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/species.h"
+#include "constants/pokemon.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32; typedef int16_t s16;
+typedef int BOOL;
+@DEFINES@
+typedef struct Pokedex {
+    u8 caughtLanguages[(NATIONAL_DEX_COUNT + 3) & ~3];
+} Pokedex;
+typedef struct { Pokedex *pokedex; } PokedexArgs;
+typedef struct ManagedSprite ManagedSprite;
+typedef struct { s16 *player_ypos, *player_scale, *mon_ypos, *mon_scale; } PokedexAppData_UnkSub18CC;
+typedef struct PokedexAppData {
+    PokedexArgs *args;
+    ManagedSprite *unk_0670[120];
+    u16 curSpecies;
+    u8 seenForms[0x20];
+    PokedexAppData_UnkSub18CC unk_18CC;
+    u16 seenFormSpecies[0x20];
+    int windows[16];
+} PokedexAppData;
+typedef struct MsgData MsgData;
+typedef struct String String;
+static u32 sIcon, sIcon2, sFront, sYPos, sScale, sLine;
+static void ov18_021F14FC(PokedexAppData *app, u16 species, int form, int spriteIdx) { (void)app; (void)spriteIdx; sIcon = species | form << 16; }
+static void ov18_021F1534(PokedexAppData *app, u16 species, int form, int spriteIdx) { (void)app; (void)spriteIdx; sIcon2 = species | form << 16; }
+static void ov18_021F3CA8(PokedexAppData *app, int idx, u8 *form, u8 *gender) { *form = app->seenForms[idx] & 0x80 ? app->seenForms[idx] ^ 0x80 : 0; *gender = MON_FEMALE; }
+static void ov18_021F69E8(PokedexAppData *app, u16 species, u8 form, u8 gender, int facing) { (void)app; (void)facing; assert(gender == MON_FEMALE); sFront = species | form << 16; }
+static void ov18_021F6AB0(PokedexAppData *app, s16 ypos, s16 scale) { (void)app; sYPos = ypos; sScale = scale; }
+static void ManagedSprite_SetAffineOverwriteMode(ManagedSprite *s, u8 mode) { (void)s; (void)mode; }
+static void ManagedSprite_SetAffineZRotation(ManagedSprite *s, u16 r) { (void)s; (void)r; }
+static void ManagedSprite_SetAffineTranslation(ManagedSprite *s, s16 x, s16 y) { (void)s; (void)x; (void)y; }
+#define MSGDATA_LOAD_LAZY 0
+#define NARC_msgdata_msg 0
+#define HEAP_ID_POKEDEX_APP 37
+static int GetDexHeightMsgBank(void) { return 814; }
+static MsgData *NewMsgDataFromNarc(int how, int narc, int bank, int heap) { (void)how; (void)narc; (void)heap; return (MsgData *)(intptr_t)bank; }
+static String *NewString_ReadMsgData(MsgData *msg, u32 line) { (void)msg; sLine = line; return (String *)0; }
+static void ov18_021F95FC(int *window, String *s, int x, int y, int a, u32 color, int align) { (void)window; (void)s; (void)x; (void)y; (void)a; (void)color; (void)align; }
+static void String_Delete(String *s) { (void)s; }
+static void DestroyMsgData(MsgData *m) { (void)m; }
+#define MAKE_TEXT_COLOR(a, b, c) 0
+@FORM_TABLE@
+@NATIVE@
+
+int main(void) {
+    static Pokedex dex;
+    static PokedexArgs args = { &dex };
+    static s16 ypos[NUM_SPECIES + 1], scale[NUM_SPECIES + 1];
+    static PokedexAppData app = { .args = &args, .curSpecies = SPECIES_RAICHU, .seenForms = { 2 },
+                                  .unk_18CC = { 0, 0, ypos, scale } };
+    ypos[SPECIES_RAICHU] = 17, scale[SPECIES_RAICHU] = 395;
+
+    // Raichu caught only as the Alolan form: the FORMS page's first entry,
+    // the icon and the front beside the trainer are the Alolan Raichu, placed
+    // and scaled by Raichu's row (a form's is empty), and the height its own.
+    dex.caughtLanguages[SPECIES_RAICHU] |= DEX_SEEN_AS_FORM_ONLY;
+    dex.caughtLanguages[SPECIES_RAICHU_ALOLAN - DEX_FIRST_FORM] |= DEX_FORM_SEEN_FIRST;
+    app.seenFormSpecies[0] = PokedexApp_ShownSpecies(&app, SPECIES_RAICHU);
+    ov18_021F4D64(&app);
+    ov18_021F4DDC(&app);
+    assert(sIcon == SPECIES_RAICHU_ALOLAN && sIcon2 == SPECIES_RAICHU_ALOLAN && sFront == SPECIES_RAICHU_ALOLAN);
+    assert(sYPos == 17 && sScale == 395);
+    ov18_021EEA84(&app, SPECIES_RAICHU, 2, 0, 0, 0, 0, 0);
+    assert(sLine == SPECIES_RAICHU_ALOLAN);
+    // Raichu itself seen: Raichu's.
+    dex.caughtLanguages[SPECIES_RAICHU] &= ~DEX_SEEN_AS_FORM_ONLY;
+    app.seenFormSpecies[0] = PokedexApp_ShownSpecies(&app, SPECIES_RAICHU);
+    ov18_021F4D64(&app);
+    ov18_021F4DDC(&app);
+    ov18_021EEA84(&app, SPECIES_RAICHU, 2, 0, 0, 0, 0, 0);
+    assert(sIcon == SPECIES_RAICHU && sFront == SPECIES_RAICHU && sLine == SPECIES_RAICHU);
+    // A retail form species keeps its form: Pichu's Spiky-eared, 2 in the Dex, is its icon's form 1.
+    app.curSpecies = app.seenFormSpecies[0] = SPECIES_PICHU, app.seenForms[0] = 0x82;
+    ov18_021F4D64(&app);
+    assert(sIcon == (SPECIES_PICHU | 1 << 16));
+    puts("PASS: the SIZE page draws and measures a species caught only as a form as that form.");
+    return 0;
+}
+'''
+
 REGIONS = {"ALOLAN": "Alolan Form", "GALARIAN": "Galarian Form", "HISUIAN": "Hisuian Form", "PALDEAN": "Paldean Form"}
 BREEDS = {"TAUROS_COMBAT": "Combat Breed", "TAUROS_BLAZE": "Blaze Breed", "TAUROS_AQUA": "Aqua Breed"}
 
@@ -470,6 +554,25 @@ class DexFormsPageTests(unittest.TestCase):
                             function(sources[1], "ov18_021F1598"), function(sources[2], "ov18_021F209C")])
         print(run(TOP.replace("@DEFINES@", defines).replace("@FORM_TABLE@", table)
                   .replace("@TYPES@", typed).replace("@NATIVE@", native)))
+
+    def test_the_size_page_shows_the_look_seen(self):
+        """ov18_021F4D64 and ov18_021F4DDC, the SIZE page's icon and the
+        front it draws beside the trainer, draw the FORMS page's first entry
+        (seenFormSpecies), the species PokedexApp_ShownSpecies gives, placed
+        and scaled by the species' own row of the Dex's tables, as retail
+        draws its forms; ov18_021EEA84, the height, reads that species' line
+        of the bank."""
+        page = PAGE.read_text()
+        dex = (ROOT / "src/pokedex.c").read_text()
+        header = (ROOT / "include/pokedex.h").read_text()
+        defines = "\n".join(re.findall(r"^#define (?:DEX_FIRST_FORM|DEX_SEEN_AS_FORM_ONLY|DEX_FORM_SEEN_FIRST)\b.*$", header, re.M))
+        table = re.search(r"static const u16 sFormBaseSpecies\[.*?\n\};", dex, re.S).group(0)
+        table += "\n" + function(dex, "SpeciesToDexSpecies")
+        size = (ROOT / "src/application/pokedex/ov18_021F4D64.c").read_text()
+        height = (ROOT / "src/application/pokedex/ov18_021EEA84.c").read_text()
+        native = "\n".join([function(page, "PokedexApp_ShownSpecies"), function(size, "ov18_021F4D64"),
+                            function(size, "ov18_021F4DDC"), function(height, "ov18_021EEA84")])
+        print(run(SIZE.replace("@DEFINES@", defines).replace("@FORM_TABLE@", table).replace("@NATIVE@", native)))
 
     def test_every_form_has_its_name(self):
         """Every form that is a species of its own here has a row of its own

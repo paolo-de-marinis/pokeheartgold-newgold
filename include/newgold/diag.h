@@ -196,6 +196,14 @@ extern unsigned long gDiagDexFormTypes;
 extern unsigned long gDiagDexAreaSpecies;
 extern unsigned long gDiagDexAreaPlaces;
 
+// The Pokedex's SIZE page: the species and form of the front it drew last
+// beside the trainer (ov18_021F4DDC) and of the icon it drew last
+// (ov18_021F4D64), species | form << 16: the species the Dex shows, as the
+// FORMS page's first entry. 0 until the first, and not cleared when the Dex
+// closes.
+extern unsigned long gDiagDexSizeShown;
+extern unsigned long gDiagDexSizeIcon;
+
 #endif // NEWGOLD_DIAG
 
 #endif // POKEHEARTGOLD_NEWGOLD_DIAG_H

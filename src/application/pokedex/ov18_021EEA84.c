@@ -6,8 +6,10 @@
 #include "dex_mon_measures.h"
 #include "msgdata.h"
 
-// An entry's height: the species' line of the height bank once the entry is
-// caught (state 2), the bank's first line, "???", before. The bank is opened
+// An entry's height: the line of the height bank of the species the Dex shows
+// for it (PokedexApp_ShownSpecies: the form a species caught only as its
+// forms was seen as first) once the entry is caught (state 2), the bank's
+// first line, "???", before. The bank is opened
 // lazily, for the one line: whole it is a line per species and form (34,516
 // bytes, retail's 11,860), and the search results page has about 20 KB of the
 // Dex heap left, as retail had.
@@ -16,7 +18,7 @@ void ov18_021EEA84(PokedexAppData *pokedexApp, u32 species, u32 state, int windo
     String *string;
 
     if (state == 2) {
-        string = NewString_ReadMsgData(msgData, species);
+        string = NewString_ReadMsgData(msgData, PokedexApp_ShownSpecies(pokedexApp, species));
     } else {
         string = NewString_ReadMsgData(msgData, 0);
     }

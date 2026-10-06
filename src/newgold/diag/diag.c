@@ -79,6 +79,8 @@ u32 gDiagDexFormShown;
 u32 gDiagDexFormTypes;
 u32 gDiagDexAreaSpecies;
 u32 gDiagDexAreaPlaces;
+u32 gDiagDexSizeShown;
+u32 gDiagDexSizeIcon;
 
 void Diag_BattleState(int state) {
     if ((u32)state == gDiagBattleState) {

@@ -1,0 +1,12 @@
+{
+  "about": "A species caught only as one of its forms is drawn as that form on the Dex's SIZE page (Paolo's decision of 2026-10-04: the form seen first is the look while only forms have been seen). From a scratch copy of Paolo's Falkner save, the Dex in its National mode (savedit marks Pikachu, which switches it on) and the player put by Union Cave's Route 33 mouth with a Master Ball, an Alolan Raichu is forced on the next step (gDiagForceBattleSpecies 1094) with the field's RNG pinned, and caught: the first Raichu the Dex has, so it is caught only as the Alolan form. The Dex opens on No. 0025 Pikachu; RIGHT moves to No. 0026, whose top screen draws the Alolan Raichu (gDiagDexShown, round 15). A opens its INFO page and the SIZE tab (the second, touched at 96,176) its SIZE page: the front beside the trainer (ov18_021F4DDC, gDiagDexSizeShown) and the icon on the weight check (ov18_021F4D64, gDiagDexSizeIcon) are the Alolan Raichu, the FORMS page's first entry. Both drew Raichu itself (26) before: a build with them reading curSpecies again fails here with 26.",
+  "save": "gyms/falkner.sav",
+  "edit": ["--flag", "FLAG_GOT_POKEDEX", "--dex", "PIKACHU", "--where", "99:27:92:0", "--bag", "MASTER_BALL:1"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "catch:new", "poke:gDiagForceBattleSpecies=1094", "RIGHT", "RIGHT", "fight",
+            "field", {"expect": {"lines": ["You encountered a wild Raichu!", "Gotcha! Raichu was caught!"], "caught:SPECIES_RAICHU": 1}},
+            "X", "wait:30", "A", "wait:200", "A", "wait:150", "RIGHT", "wait:40", "shot:grid_raichu",
+            {"expect": {"gDiagDexShown": "SPECIES_RAICHU_ALOLAN"}},
+            "A", "wait:200", "touch:96,176", "wait:200", "shot:size_alolan"],
+  "expect": {"gDiagDexSizeShown": "SPECIES_RAICHU_ALOLAN", "gDiagDexSizeIcon": "SPECIES_RAICHU_ALOLAN"}
+}
