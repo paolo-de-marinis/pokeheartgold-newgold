@@ -476,10 +476,12 @@ Reading what the debug ROM records, and playing it without looking.
   own has under N% of its HP left -- one try a battle, then it fights.
   `catch:SPECIES` (`new` for any, `none` to stop) has it catch that wild
   species while the Pokedex has it not caught and the bag has a ball: the
-  weakest damaging move while the wild one has more than half its HP, then
-  the bag's first ball, each of the battle bag's screens touched when the
-  bag's own state (BattleBag.state, found through its task) says it takes
-  input; `caught:SPECIES_...` is an expectation.
+  weakest damaging move while the wild one has more than half its HP and
+  its own Pokemon has half of its own, then the bag's first ball, each of
+  the battle bag's screens touched when the bag's own state (BattleBag.state,
+  found through its task) says it takes input; a wanted Pokemon is never run
+  from, and `catch:SPECIES,run` hunts it, running from every other wild
+  Pokemon; `caught:SPECIES_...` is an expectation.
   `pace:MAP,X1,Y1,X2,Y2,KEY,V` walks from one tile to the other and back,
   through what the grass sends, until the expectation KEY reads V or more
   (`party` 3, `party0.level` 10, `caught:SPECIES_...` 1): the way a leg

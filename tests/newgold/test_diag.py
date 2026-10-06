@@ -146,6 +146,17 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertFalse(runs(low, True, 40, wanted=True))
         self.assertTrue(runs(low, True, 40, wanted=False))
 
+    def test_gym_hunting_runs_from_all_but_the_wanted_pokemon(self):
+        # catch:SPECIES_MAREEP,run: everything else is run from at full HP,
+        # the Mareep never; a trainer's battle is not run from.
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        from gym import runs
+        high = ["you Hoothoot L10 34/34 | 1:Tackle 35"]
+        self.assertTrue(runs(high, True, 40, hunt=True, wanted=False))
+        self.assertFalse(runs(high, True, 40, hunt=True, wanted=True))
+        self.assertFalse(runs(high, False, 40, hunt=True, wanted=False))
+        self.assertFalse(runs(high, True, 40, hunt=False, wanted=False))   # no hunt: by the HP, as before
+
     def test_gym_tries_to_run_once_and_fights_when_it_cannot(self):
         # A wrapped Cyndaquil was told it could not get away 384 times, no
         # turn spent, until the walk ran out of frames. A trapped Pokemon is

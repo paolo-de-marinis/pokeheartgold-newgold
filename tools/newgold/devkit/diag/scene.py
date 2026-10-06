@@ -65,7 +65,9 @@ A step is one of
     catch:SPECIES|new|none      from now on the battles goto, field and fight play
                                 catch that wild species, or any, while the Pokedex has
                                 it not caught and the bag has a ball: gym.fight weakens
-                                it and throws them; none stops
+                                it and throws them; none stops. catch:SPECIES,run hunts
+                                it: every other wild Pokemon is run from, and that one
+                                never, as a player looking for one does
     heal:MAP,X,Y                where pace: heals: the tile before a Pokemon Center's
                                 nurse, UP and A there, when the party's first has under
                                 flee:'s share of its HP
@@ -724,6 +726,7 @@ class Scene:
         self.saved = None       # the flash an in-game save left (save), for the next leg
         self.flee = 0           # flee:N
         self.catch = None       # catch:, a species number or "new"
+        self.hunt = False       # catch:SPECIES,run
         self.healer = None      # heal:, (map, x, y)
         self.shift = None       # shift:, a party slot
         self.done = []          # the steps played before this one, for again:
@@ -859,7 +862,7 @@ class Scene:
                     started = core.frames
                     gym.fight(core, self.markers, hooks, self.say, -1, core.frames + 60000,
                               since=core.word(self._text_count), partner=self.partner_prompt(), flee=self.flee,
-                              catch=self.balls_for, shift=self.shift)
+                              catch=self.balls_for, shift=self.shift, hunt=self.hunt)
                     self._collect(core)
                     if self.in_battle():
                         break       # gym.py's player could not end it
@@ -944,12 +947,14 @@ class Scene:
             slot, _, turns = rest.partition(":")
             gym.fight(core, self.markers, hooks, self.say, int(slot) if slot else -1, core.frames + 60000,
                       turns=int(turns) if turns else None, since=core.word(self._text_count),
-                      partner=self.partner_prompt(), catch=self.balls_for, shift=self.shift)
+                      partner=self.partner_prompt(), catch=self.balls_for, shift=self.shift, hunt=self.hunt)
             self._collect(core)
         elif kind == "flee":
             self.flee = int(rest)
         elif kind == "catch":
-            self.catch = None if rest == "none" else rest if rest == "new" else self.number(rest)
+            wanted, _, run = rest.partition(",")
+            self.catch = None if wanted == "none" else wanted if wanted == "new" else self.number(wanted)
+            self.hunt = run == "run" and self.catch is not None
         elif kind == "again":
             count, key, least, *most = rest.split(",")
             steps = [st for st in self.done[-int(count):] if not isinstance(st, dict)]
@@ -1507,7 +1512,7 @@ class Scene:
                 before = len(self.lines)
                 gym.fight(core, self.markers, hooks, self.say, -1, core.frames + 60000,
                           since=core.word(self._text_count), partner=self.partner_prompt(), flee=self.flee,
-                          catch=self.balls_for, shift=self.shift)
+                          catch=self.balls_for, shift=self.shift, hunt=self.hunt)
                 self._collect(core)
                 if self.retry:
                     self.reseed(self.lines[before:])

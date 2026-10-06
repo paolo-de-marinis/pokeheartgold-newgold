@@ -641,13 +641,15 @@ def battler_hp(line):
     return int(re.search(r" (\d+)/\d+", line).group(1))
 
 
-def runs(view, wild, flee, wanted=False):
+def runs(view, wild, flee, hunt=False, wanted=False):
     """Whether the player runs this turn: a wild battle, and its Pokemon
-    (markers.battle's first line) under `flee` percent of its HP. Never
-    from one `catch` wants: a player throws a ball rather than run from the
-    Pokemon it came for."""
+    (markers.battle's first line) under `flee` percent of its HP; on a
+    hunt, from every wild Pokemon. Never from one `catch` wants: a player
+    throws a ball rather than run from the Pokemon it came for."""
     if wanted:
         return False
+    if hunt:
+        return bool(wild)
     hp = re.search(r" (\d+)/(\d+)", view[0]) if view else None
     return bool(wild and hp and int(hp.group(1)) * 100 < flee * int(hp.group(2)))
 
@@ -988,7 +990,7 @@ def quiet():
 
 
 def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=None, since=0, partner=None, flee=0,
-          catch=None, shift=None):
+          catch=None, shift=None, hunt=False):
     """Play the battle that is up until it is over or the core reaches
     `frames`, and return the last line it printed. `move` is a move slot,
     1 to 4, to use every turn; 0 the first with PP; -1 the hardest-hitting
@@ -1016,8 +1018,9 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
     wild one has more than MARGIN percent of its HP and more than half again
     the most that move has taken off it, then throws them, one a turn, from
     the bag: the battle keeps a copy of the bag, so the balls thrown are
-    counted here. Running, when `flee` says so, comes first, but never
-    from a wanted one.
+    counted here. Running, when `flee` says so, comes first. With `hunt`,
+    the player runs from every wild Pokemon `catch` does not want and never
+    from one it wants, as a player looking for one does.
 
     With `shift`, a party slot, a wild battle's first Pokemon out is
     relieved by that one at the first prompt: it fights, and the first,
@@ -1201,7 +1204,7 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                 say(f"[{core.frames}] party slot {shift} relieves slot {you[4]}")
                 relieve(core, markers, hold, shift)
                 shift = None
-            elif runs(view, wild, flee, wanted):
+            elif runs(view, wild, flee, hunt, wanted):
                 core.touch(*RUN, 6, hold)
             elif move < 0 and not is_wild() and (better := switch_to(ram)) is not None:
                 say(f"[{core.frames}] party slot {better} comes in for slot {you[4]}")
