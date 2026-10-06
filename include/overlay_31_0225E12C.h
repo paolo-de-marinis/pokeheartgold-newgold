@@ -1,0 +1,8 @@
+#ifndef POKEHEARTGOLD_OVERLAY_31_0225E12C_H
+#define POKEHEARTGOLD_OVERLAY_31_0225E12C_H
+
+#include "overlay_03.h"
+
+BOOL ov31_0225E12C(MartData *data, int index, int item);
+
+#endif // POKEHEARTGOLD_OVERLAY_31_0225E12C_H

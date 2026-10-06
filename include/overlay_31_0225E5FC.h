@@ -1,0 +1,8 @@
+#ifndef POKEHEARTGOLD_OVERLAY_31_0225E5FC_H
+#define POKEHEARTGOLD_OVERLAY_31_0225E5FC_H
+
+#include "overlay_31_0225D60C.h"
+
+void ov31_0225E5FC(MartBottomScreen *screen);
+
+#endif // POKEHEARTGOLD_OVERLAY_31_0225E5FC_H

@@ -84,3 +84,14 @@
 .public ov31_0225D60C
 .public ov31_0225D758
 .public ov31_0225DE24
+.public _0225EE40
+.public _0225EF40
+.public ov31_0225E12C
+.public ov31_0225E4BC
+.public ov31_0225E4EC
+.public ov31_0225E5FC
+.public ov31_0225EE88
+.public ov31_0225EED0
+.public ov31_0225EEEC
+.public ov31_0225EF08
+.public ov31_0225DD14
