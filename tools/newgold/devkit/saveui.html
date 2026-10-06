@@ -1659,7 +1659,7 @@ function renderMachines(pocket) {
   // The counts and the buttons are drawn again on a change; the list is not, so the keyboard's focus stays where it is.
   const head = () => {
     const used = S.data.machines.filter(m => count(m.item) > 0).length;
-    $("#tmhead").innerHTML = `<strong>${used} di ${pocket.slots} posti</strong> <span class="muted">${S.data.machines.length} macchine in tutto</span>
+    $("#tmhead").innerHTML = `<strong>${used} di ${S.save.info.pockets?.[pocket.name] ?? pocket.slots} posti</strong> <span class="muted">${S.data.machines.length} macchine in tutto</span>
       <span style="flex:1"></span>
       <button type="button" class="primary" id="tmsave" ${ch.size ? "" : "disabled"}>Salva modifiche (${ch.size})</button>
       <button type="button" id="tmdrop" ${ch.size ? "" : "disabled"}>Scarta</button>`;     // always there: the list does not move

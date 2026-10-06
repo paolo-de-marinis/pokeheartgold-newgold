@@ -774,6 +774,12 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(slots, len(table))
         out = self.edit("machines", {"changes": [{"item": row["item"], "quantity": 1} for row in table]})
         self.assertEqual(len(out["bag"]["TMsHMs"]), slots)
+        # The page counts a pocket's places as the save has them: an older save's TM pocket has 101.
+        page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
+        places = re.findall(r"di \$\{([^}]*)\} posti", page)
+        self.assertEqual(len(places), 2)
+        for place in places:
+            self.assertRegex(place, r"^S\.save\.info\.pockets\?\.\[\w+\.name\] \?\? \w+\.slots$")
 
     def test_files(self):
         self.edit("trainer", {"money": 1})
