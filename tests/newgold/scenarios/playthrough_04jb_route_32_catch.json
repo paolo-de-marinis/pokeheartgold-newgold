@@ -1,0 +1,41 @@
+{
+  "about": "The playthrough catches its Electric type for Falkner, from Violet City's Pokemon Center after leg 04j's training: Route 32's first grass again, the Hoothoot leading, and catch:SPECIES_MAREEP,run has pace: walk its two tiles hunting a Mareep -- a tenth of the night's grass (two 5% places, levels 11 and 12), catch rate 235, one of the bag's three Poke Balls -- running from every other wild Pokemon, as a player looking for one does, and never from a Mareep: the Hoothoot weakens it with its weakest damaging move and throws, at once when its own HP is under half. Falkner beat the four nine times running with the Hoothoot at 10, and an Electric type is a player's answer to his birds. flee:40 and heal: as in leg 04j. The nurse, and the game's save. It was leg 04j's second half until the chain on 5fec2af87 met no Mareep in the 60,000 frames it had; given 150,000 the walks met eight and caught none: the Mareep's Thunder Shock, twice as strong against the Hoothoot, took it under flee:40's share while its Peck, resisted, weakened the Mareep by 2 HP a turn, and gym.py ran from the Pokemon it came for, eight times (where the leg was written a Mareep came at level 11 on the Hoothoot's ninth walk and the first ball held, 26,892 frames). Played on 5fec2af87 with the hunt: a Doduo and a Poliwag first, both tried to run from at full HP (\"away\": the try failed both times and the Hoothoot fought), then a level-12 Mareep, which took the Hoothoot to 2 HP with one Thunder Shock -- one ball at once, and it held (16,864 frames). A catch luck decides is a leg of its own now, its field RNG pinned again where it starts. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_04j_route_32_training",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "heal:MAP_VIOLET_POKECENTER_1F,8,13",
+    "catch:SPECIES_MAREEP,run",
+    "pace:MAP_ROUTE_32,475,292,475,296,caught:SPECIES_MAREEP,1,150000",
+    "catch:none",
+    "goto:MAP_VIOLET_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_VIOLET_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "party": 5,
+    "badges": 0,
+    "party0.species": "SPECIES_HOOTHOOT",
+    "party1.species": "SPECIES_CYNDAQUIL",
+    "party2.species": "SPECIES_MISDREAVUS",
+    "party3.species": "SPECIES_GEODUDE",
+    "party4.species": "SPECIES_MAREEP",
+    "caught:SPECIES_MAREEP": 1,
+    "lines": [
+      "away",
+      "You encountered a wild Mareep!",
+      "used one Poké Ball!",
+      "Gotcha! Mareep was caught!"
+    ],
+    "music": "SEQ_GS_POKESEN"
+  }
+}
