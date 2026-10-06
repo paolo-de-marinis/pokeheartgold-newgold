@@ -641,19 +641,25 @@ def battler_hp(line):
     return int(re.search(r" (\d+)/\d+", line).group(1))
 
 
-def runs(view, wild, flee):
+def runs(view, wild, flee, wanted=False):
     """Whether the player runs this turn: a wild battle, and its Pokemon
-    (markers.battle's first line) under `flee` percent of its HP."""
+    (markers.battle's first line) under `flee` percent of its HP. Never
+    from one `catch` wants: a player throws a ball rather than run from the
+    Pokemon it came for."""
+    if wanted:
+        return False
     hp = re.search(r" (\d+)/(\d+)", view[0]) if view else None
     return bool(wild and hp and int(hp.group(1)) * 100 < flee * int(hp.group(2)))
 
 
-def throws_now(hp, max_hp, hit, damaging):
+def throws_now(hp, max_hp, hit, damaging, own_hp=1, own_max=1):
     """Whether a wild Pokemon to be caught gets a ball this turn rather than
     the player's weakest damaging move: at MARGIN percent of its HP or
     under, within half again the most a move has taken off it (a critical
-    hit, a high roll), or with no damaging move left to weaken it."""
-    return hp * 100 <= MARGIN * max_hp or 2 * hp <= 3 * hit or not damaging
+    hit, a high roll), with no damaging move left to weaken it, or with the
+    player's own Pokemon (own_hp of own_max) under half its HP, which would
+    not live through the weakening."""
+    return hp * 100 <= MARGIN * max_hp or 2 * hp <= 3 * hit or not damaging or 2 * own_hp < own_max
 
 
 def may_run(wild, line):
@@ -1010,7 +1016,8 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
     wild one has more than MARGIN percent of its HP and more than half again
     the most that move has taken off it, then throws them, one a turn, from
     the bag: the battle keeps a copy of the bag, so the balls thrown are
-    counted here. Running, when `flee` says so, comes first.
+    counted here. Running, when `flee` says so, comes first, but never
+    from a wanted one.
 
     With `shift`, a party slot, a wild battle's first Pokemon out is
     relieved by that one at the first prompt: it fights, and the first,
@@ -1194,12 +1201,12 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
                 say(f"[{core.frames}] party slot {shift} relieves slot {you[4]}")
                 relieve(core, markers, hold, shift)
                 shift = None
-            elif runs(view, wild, flee):
+            elif runs(view, wild, flee, wanted):
                 core.touch(*RUN, 6, hold)
             elif move < 0 and not is_wild() and (better := switch_to(ram)) is not None:
                 say(f"[{core.frames}] party slot {better} comes in for slot {you[4]}")
                 relieve(core, markers, hold, better)
-            elif wanted and throws_now(foe[1], foe[2], hit, damaging):
+            elif wanted and throws_now(foe[1], foe[2], hit, damaging, you[1], you[2]):
                 say(f"[{core.frames}] ball {thrown + 1} of {catch(foe[0])} thrown")
                 if throw(core, markers, hold):
                     thrown += 1

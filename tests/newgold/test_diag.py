@@ -137,6 +137,15 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertTrue(runs(high, True, 100))
         self.assertTrue(runs(["you Raichu Alolan L30 12/80 | 1:Thunderbolt 15"], True, 40))
 
+    def test_gym_never_runs_from_the_wanted_pokemon(self):
+        # Leg 04j's Hoothoot met eight Mareep and ran from every one: their
+        # Thunder Shock took it under flee:40's share while it weakened them.
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        from gym import runs
+        low = ["you Hoothoot L10 7/34 | 1:Tackle 35"]
+        self.assertFalse(runs(low, True, 40, wanted=True))
+        self.assertTrue(runs(low, True, 40, wanted=False))
+
     def test_gym_tries_to_run_once_and_fights_when_it_cannot(self):
         # A wrapped Cyndaquil was told it could not get away 384 times, no
         # turn spent, until the walk ran out of frames. A trapped Pokemon is
@@ -164,6 +173,8 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertTrue(throws_now(15, 20, 10, True))      # one more hit could take it
         self.assertFalse(throws_now(16, 20, 10, True))
         self.assertTrue(throws_now(20, 20, 0, False))      # nothing damaging: a ball at once
+        self.assertTrue(throws_now(38, 38, 0, True, 4, 35))   # its own would not live through the weakening
+        self.assertFalse(throws_now(38, 38, 0, True, 22, 35))
 
     def test_gym_finds_the_battle_bag_by_its_task(self):
         # The bag's screen is read from its own state, through the task that
