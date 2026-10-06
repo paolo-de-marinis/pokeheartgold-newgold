@@ -1769,24 +1769,34 @@ class Scene:
         shown = struct.unpack_from(BATTLER, ram, self.markers.address("gDiagBattlers") - 0x02000000
                                    + battler * struct.calcsize(BATTLER))
         species, hp, max_hp = shown[:3]
+        if not species:         # no one in that place: zeros match anywhere
+            return None
         pattern = re.escape(struct.pack("<H", species)) + b".{%d}" % (layout["hp"] - 2) + re.escape(struct.pack("<iI", hp, max_hp))
         found = [m.start() for m in re.finditer(pattern, ram, re.S) if m.start() % 4 == 0]
         return 0x02000000 + found[0] if len(found) == 1 else None
 
     def partner_prompt(self):
         """For gym.fight: where the player's second Pokemon is in choosing, in
-        a double battle -- BattleContext.unk_0[2], the context found once
-        through battle_mon -- or None."""
-        context = {}
+        a double battle -- BattleContext.unk_0[2] -- or None. The context is
+        found through battle_mon by the first battler it finds, and until one
+        is found, looked for again every 30 frames: battler 0 alone, found once,
+        could miss (a Rattata at 1/19 matched no BattleMon, or two) and the
+        second Pokemon never chose for the rest of the fight."""
+        context = {"next": 0}
 
         def read():
             second = self.markers.address("gDiagBattlers") + 2 * struct.calcsize(BATTLER)
             if not self.core.word(second, 2) or not self.core.word(second + 2, 2):    # none, or fainted
                 return None
-            if "at" not in context:
-                mon = self.battle_mon(0)
-                context["at"] = mon and mon - battle_layout()["mons"]
-            return self.core.word(context["at"] + battle_layout()["select"] + 2, 1) if context["at"] else None
+            if "at" not in context and self.core.frames >= context["next"]:
+                context["next"] = self.core.frames + 30
+                layout = battle_layout()
+                for battler in range(4):
+                    mon = self.battle_mon(battler)
+                    if mon:
+                        context["at"] = mon - layout["mons"] - battler * layout["size"]
+                        break
+            return self.core.word(context["at"] + battle_layout()["select"] + 2, 1) if "at" in context else None
         return read
 
     def failures(self, ram):

@@ -232,6 +232,31 @@ class ScenarioFileTests(unittest.TestCase):
             s.run("field")
         self.assertEqual([kwargs.get("flee") for kwargs in asked], [40])
 
+    def test_the_partner_prompt_is_looked_for_again_and_by_any_battler(self):
+        # partner_prompt found the battle's context once, through battler 0
+        # alone: a Rattata at 1/19 leading a double matched no BattleMon, and
+        # gym.fight never chose for the second Pokemon (once 60,000 frames).
+        layout = scene.battle_layout()
+        context = 0x02200000
+
+        class Core:
+            frames = 0
+
+            def word(self, address, size=4):
+                return 5 if address == context + layout["select"] + 2 else 1    # 1: the second's species and HP
+
+        s = scene.Scene.__new__(scene.Scene)
+        s.core = Core()
+        s.markers = type("Markers", (), {"address": lambda self, name: 0x02100000})()
+        found = {}
+        s.battle_mon = lambda battler: found.get(battler)
+        read = s.partner_prompt()
+        self.assertIsNone(read())
+        found[1] = context + layout["mons"] + layout["size"]       # the foe's, battler 0's never
+        self.assertIsNone(read())                                   # looked for again 30 frames on
+        s.core.frames = 30
+        self.assertEqual(read(), 5)
+
     def test_catch_wants_a_species_the_dex_lacks_while_a_ball_is_left(self):
         # catch: tells gym.fight how many balls to spend on a wild Pokemon:
         # the bag's, for the species asked (or any, catch:new) that the Dex
