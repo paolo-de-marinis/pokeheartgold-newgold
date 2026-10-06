@@ -158,9 +158,13 @@ scr_seq_R43R0201_003:
 	FacePlayer
 	GoToIfSet FLAG_GOT_TM36_FROM_ROUTE_43_GUARD, _0208
 	NPCMsg msg_0403_R43R0201_00004
+	HasItem ITEM_TM36, 1, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TM36Held
 	GoToIfNoItemSpace ITEM_TM36, 1, _0213
 	CallStd std_obtain_item_verbose
 	WaitButton
+_TM36Given:
 	SetFlag FLAG_GOT_TM36_FROM_ROUTE_43_GUARD
 _0208:
 	NPCMsg msg_0403_R43R0201_00006
@@ -168,6 +172,10 @@ _0208:
 	CloseMsg
 	ReleaseAll
 	End
+
+_TM36Held:
+	NPCMsg msg_0403_R43R0201_00007
+	GoTo _TM36Given
 
 _0213:
 	CallStd std_bag_is_full

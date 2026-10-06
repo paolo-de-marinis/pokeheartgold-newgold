@@ -1,0 +1,57 @@
+{
+  "about": "Route 39's farmhouse, the woman whose Miltank the player fed (FLAG_UNK_0AA), with TM83 held already, as one bought at Goldenrod's 5F: route29-official.sav put in the house with TM83 in the bag. Her thanks (msg_0397_R39R0101 row 8, 397 << 16 | 8), then, where the bag's room check alone said it was full and the gift waited for ever, row 15 'Oh, ya already got one o' these!' while TM83 stays one and her flag is still clear; at the next A the gift counts as given -- FLAG_GOT_TM83_FROM_MOOMOO_FARM_WOMAN set -- and she goes on to her after-gift line, row 10 (Natural Gift). Talked to again (the marker cleared first, so the line read is this talk's), she says row 10 at once: no thanks, no offer. Before the check: row 11, 'I reckon yer Bag's full.', the flag clear, and her thanks and offer again at the next talk.",
+  "save": "route29-official.sav",
+  "edit": [
+    "--tm",
+    "83",
+    "--flag",
+    "FLAG_UNK_0AA",
+    "--where",
+    "214:6:9:0"
+  ],
+  "steps": [
+    "field",
+    "goto:MAP_ROUTE_39_MOOMOO_FARM_HOUSE,9,5",
+    "A",
+    "wait:300",
+    {
+      "expect": {
+        "gDiagFieldMessage": 26017800
+      }
+    },
+    "A",
+    "wait:300",
+    "A",
+    "wait:300",
+    {
+      "expect": {
+        "gDiagFieldMessage": 26017807,
+        "flag:FLAG_GOT_TM83_FROM_MOOMOO_FARM_WOMAN": 0,
+        "bag:ITEM_TM83": 1
+      }
+    },
+    "A",
+    "wait:300",
+    {
+      "expect": {
+        "gDiagFieldMessage": 26017802,
+        "flag:FLAG_GOT_TM83_FROM_MOOMOO_FARM_WOMAN": 1
+      }
+    },
+    "field",
+    "poke:gDiagFieldMessage=0",
+    "A",
+    "wait:300",
+    {
+      "expect": {
+        "gDiagFieldMessage": 26017802
+      }
+    },
+    "field"
+  ],
+  "expect": {
+    "map": "MAP_ROUTE_39_MOOMOO_FARM_HOUSE",
+    "flag:FLAG_GOT_TM83_FROM_MOOMOO_FARM_WOMAN": 1,
+    "bag:ITEM_TM83": 1
+  }
+}

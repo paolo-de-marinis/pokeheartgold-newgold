@@ -14,8 +14,12 @@ scr_seq_T29R0101_000:
 	LockAll
 	FacePlayer
 	NPCMsg msg_0627_T29R0101_00000
+	HasItem ITEM_TM10, 1, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TM10Held
 	GoToIfNoItemSpace ITEM_TM10, 1, _006B
 	CallStd std_give_item_verbose
+_TM10Given:
 	SetFlag FLAG_GOT_TM10_FROM_LAKE_OF_RAGE_MAN
 	NPCMsg msg_0627_T29R0101_00002
 	WaitButton
@@ -24,6 +28,10 @@ scr_seq_T29R0101_000:
 	WaitMovement
 	ReleaseAll
 	End
+
+_TM10Held:
+	NPCMsg msg_0627_T29R0101_00005
+	GoTo _TM10Given
 
 _005A:
 	PlaySE SEQ_SE_DP_SELECT

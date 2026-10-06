@@ -61,4 +61,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">{ALN_CENTER}NO THANKS</language>
 	</row>
+	<row id="msg_0397_R39R0101_00015" index="15">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Oh, ya already got one o’ these!\r</language>
+	</row>
 </body>

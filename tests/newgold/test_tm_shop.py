@@ -19,6 +19,7 @@ from pathlib import Path
 
 from test_level_cap import ROOT, function
 from test_machines import machine_code
+from test_ev_iv_trainer import rows, width
 
 # (badges, price, TMs) for each step.
 STEPS = [
@@ -387,6 +388,62 @@ class PrizeCounterTests(unittest.TestCase):
                 held = re.search(r"Compare VAR_SPECIAL_RESULT, 1\n\tGoToIfEq (\w+)", block).group(1)
                 said = re.search(rf"\n{held}:\n\tNPCMsg (\w+)", source).group(1)
                 self.assertEqual(rows[said], "You already have this!\\r", tm)
+
+
+class GiftTests(unittest.TestCase):
+    # Paid for, not given: their refusals are the shops' own (PrizeCounterTests,
+    # the mart's). They count only as other ways to get a TM.
+    SHOPS = {"scr_seq_0804_T07R0501.s", "scr_seq_0910_T25SP0101.s", "scr_seq_0906_T25R1101.s",
+             "scr_seq_0904_T25R1006.s", "scr_seq_0076_D32.s"}
+    # A gift as the scripts hand one over, up to where the giver goes on.
+    GIVE = re.compile(r"\tGoToIfNoItemSpace (ITEM_TM\d+), 1, \w+\n\tCallStd std_\w+_item_verbose\n(?:\tWaitButton\n)?"
+                      r"|\tGiveItemNoCheck (ITEM_TM\d+), 1\n"
+                      r"|\tSetVar VAR_SPECIAL_x8004, (\d+)\n\tSetVar VAR_SPECIAL_x8005, 1\n\tCallStd std_\w+_item_verbose\n"
+                      r"|\tHasSpaceForItem (ITEM_TM\d+), 1, VAR_SPECIAL_RESULT\n")
+
+    def test_a_gift_tm_held_already_counts_as_given(self):
+        """Paolo's decision of 2026-10-07: a giver whose TM the player can
+        have already -- bought, won, found in an item ball, given by someone
+        else -- asks the bag first (HasItem), and for one held says so, from
+        a row of its own bank, and goes on as after handing it over: its flag
+        set, its after-gift lines. The bag takes one of each TM, so the room
+        check alone said the bag was full and the gift waited forever."""
+        folder = ROOT / "files/fielddata/script/scr_seq"
+        names = {int(n): name for name, n in re.findall(r"#define (ITEM_TM\d+)\s+(\d+)", (ROOT / "include/constants/items.h").read_text())}
+        sources, gifts = {}, []
+        for path in sorted(folder.glob("*.s")):
+            source = path.read_text()
+            found = [(m.group(1), path.name) for m in re.finditer(r"(?:GoToIfNoItemSpace|GiveItemNoCheck|HasSpaceForItem) (ITEM_TM\d+)", source)]
+            # An item's number: x8004 before a give or a shop's sale, x8008 an item ball's.
+            item = "x8008" if path.name == "scr_seq_0141.s" else "x8004"
+            found += [(names[int(n)], path.name) for n in re.findall(rf"SetVar VAR_SPECIAL_{item}, (\d+)\n", source) if int(n) in names]
+            for tm, where in found:
+                sources.setdefault(tm, set()).add(where)
+            if path.name not in self.SHOPS:
+                gifts += [(path.name, source, m) for m in self.GIVE.finditer(source)]
+        for where in ("src/scrcmd_mart.c", "src/data/fieldmap/hidden_items.h"):
+            for tm in re.findall(r"\bITEM_TM\d+\b", (ROOT / where).read_text()):
+                sources.setdefault(tm, set()).add(where)
+        checked = set()
+        for script, source, give in gifts:
+            tm = give.group(1) or give.group(2) or give.group(4) or names.get(int(give.group(3)))
+            if tm is None or not sources[tm] - {script}:
+                continue
+            checked.add((script, tm))
+            block = source[:give.start()]
+            block = block[block.rindex(":\n"):]
+            held = re.search(rf"\tHasItem {tm}, 1, VAR_SPECIAL_RESULT\n\tCompare VAR_SPECIAL_RESULT, 1\n\tGoToIfEq (\w+)\n$", block)
+            self.assertIsNotNone(held, f"{script}: {tm}, held already, is not asked for first")
+            said, given = re.search(rf"\n{held.group(1)}:\n\tNPCMsg (\w+)\n\tGoTo (\w+)\n", source).groups()
+            self.assertEqual(source[give.end():].partition("\n")[0], f"{given}:", f"{script}: {tm} held goes on elsewhere")
+            bank = re.search(r'#include "msgdata/msg/(msg_\w+)\.h"', source).group(1)
+            line = rows(f"{bank}.gmm")[int(said[-5:])]
+            self.assertIn("already", line, script)
+            for part in re.split(r"\\[rnf]", line):
+                self.assertLessEqual(width(part, 0), 216, f"{said} {part!r}")    # the box's 27 tiles
+        for named in (("scr_seq_0250_R39R0101.s", "ITEM_TM83"), ("scr_seq_0833_T11R0501.s", "ITEM_TM29"),
+                      ("scr_seq_0230_R31.s", "ITEM_TM44")):
+            self.assertIn(named, checked)
 
 
 if __name__ == "__main__":

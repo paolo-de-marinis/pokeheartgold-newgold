@@ -36,4 +36,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">A Pokémon statue...\nIt looks very distinguished.</language>
 	</row>
+	<row id="msg_0056_D15R0103_00009" index="9">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Oh? You already have it, I see.\r</language>
+	</row>
 </body>

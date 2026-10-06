@@ -21,4 +21,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Did you see the shrine that pays homage\nto the protector?\rThis protector watches over the forest\nfrom across time.\rI think that it must be a\nGrass-type Pokémon.</language>
 	</row>
+	<row id="msg_0386_R34R0201_00005" index="5">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Oh, honey. You already have it!\r</language>
+	</row>
 </body>

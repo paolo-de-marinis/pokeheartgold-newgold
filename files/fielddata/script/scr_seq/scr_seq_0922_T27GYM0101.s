@@ -125,14 +125,22 @@ scr_seq_T27GYM0101_001:
 	GoTo _019B
 
 _019B:
+	HasItem ITEM_TM30, 1, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TM30Held
 	GoToIfNoItemSpace ITEM_TM30, 1, _01CF
 	CallStd std_give_item_verbose
+_TM30Given:
 	SetFlag FLAG_GOT_TM30_FROM_MORTY
 	NPCMsg msg_0614_T27GYM0101_00005
 	WaitButton
 	CloseMsg
 	ReleaseAll
 	End
+
+_TM30Held:
+	NPCMsg msg_0614_T27GYM0101_00012
+	GoTo _TM30Given
 
 _01CF:
 	CallStd std_bag_is_full

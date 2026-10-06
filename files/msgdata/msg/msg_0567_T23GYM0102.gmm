@@ -29,4 +29,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Bugsy: Bug-type Pokémon are deep.\nThere are many mysteries to explore.\rStudy your top choices thoroughly.</language>
 	</row>
+	<row id="msg_0567_T23GYM0102_00007" index="7">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Bugsy: Oh, you already have it!\r</language>
+	</row>
 </body>

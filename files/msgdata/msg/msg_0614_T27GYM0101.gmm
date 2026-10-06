@@ -49,4 +49,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Ecruteak City Pokémon Gym\rLeader: Morty\nCertified Trainer!\f{STRVAR_1 3, 0, 0}</language>
 	</row>
+	<row id="msg_0614_T27GYM0101_00012" index="12">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Morty: ...You already have it, I see.\r</language>
+	</row>
 </body>

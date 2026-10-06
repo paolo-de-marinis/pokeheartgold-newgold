@@ -129,14 +129,22 @@ _01A0:
 	SetFlag FLAG_UNK_998
 	NPCMsg msg_0582_T25GYM0101_00005
 _01C4:
+	HasItem ITEM_TM45, 1, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TM45Held
 	GoToIfNoItemSpace ITEM_TM45, 1, _01F8
 	CallStd std_give_item_verbose
+_TM45Given:
 	NPCMsg msg_0582_T25GYM0101_00007
 	WaitButton
 	CloseMsg
 	SetFlag FLAG_GOT_TM45_FROM_WHITNEY
 	ReleaseAll
 	End
+
+_TM45Held:
+	NPCMsg msg_0582_T25GYM0101_00014
+	GoTo _TM45Given
 
 _01F8:
 	CallStd std_bag_is_full

@@ -17,8 +17,12 @@ scr_seq_R34R0201_000:
 	GoToIfSet FLAG_GOT_TM12_FROM_ILEX_FOREST_GATE_WOMAN, _0055
 	NPCMsg msg_0386_R34R0201_00000
 	WaitABPress
+	HasItem ITEM_TM12, 1, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TM12Held
 	GoToIfNoItemSpace ITEM_TM12, 1, _0060
 	CallStd std_give_item_verbose
+_TM12Given:
 	SetFlag FLAG_GOT_TM12_FROM_ILEX_FOREST_GATE_WOMAN
 	GoTo _0055
 
@@ -28,6 +32,10 @@ _0055:
 	CloseMsg
 	ReleaseAll
 	End
+
+_TM12Held:
+	NPCMsg msg_0386_R34R0201_00005
+	GoTo _TM12Given
 
 _0060:
 	CallStd std_bag_is_full

@@ -151,8 +151,12 @@ _01F8:
 	FollowingPokemonMovement 48
 	NPCMsg msg_0129_D44R0102_00000
 	NPCMsg msg_0129_D44R0102_00001
+	HasItem ITEM_TM59, 1, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TM59Held
 	GoToIfNoItemSpace ITEM_TM59, 1, _02A7
 	CallStd std_give_item_verbose
+_TM59Given:
 	SetFlag FLAG_GOT_TM59_FROM_CLAIR
 	NPCMsg msg_0129_D44R0102_00003
 _0236:
@@ -181,6 +185,10 @@ _0297:
 	SetVar VAR_UNK_40C4, 2
 	ReleaseAll
 	End
+
+_TM59Held:
+	NPCMsg msg_0129_D44R0102_00034
+	GoTo _TM59Given
 
 _02A7:
 	NPCMsg msg_0129_D44R0102_00004

@@ -173,17 +173,25 @@ scr_seq_T25R1005_006:
 
 _01E3:
 	NPCMsg msg_0596_T25R1005_00001
+	HasItem ITEM_TM27, 1, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TM27Held
 	SetVar VAR_SPECIAL_x8004, 354
 	SetVar VAR_SPECIAL_x8005, 1
 	CallStd std_obtain_item_verbose
+_TM27Given:
 	CloseMsg
 	GoTo _0219
 
 _01FE:
 	NPCMsg msg_0596_T25R1005_00004
+	HasItem ITEM_TM21, 1, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TM21Held
 	SetVar VAR_SPECIAL_x8004, 348
 	SetVar VAR_SPECIAL_x8005, 1
 	CallStd std_obtain_item_verbose
+_TM21Given:
 	CloseMsg
 	GoTo _0219
 
@@ -194,4 +202,12 @@ _0219:
 	CloseMsg
 	ReleaseAll
 	End
+
+_TM27Held:
+	NPCMsg msg_0596_T25R1005_00020
+	GoTo _TM27Given
+
+_TM21Held:
+	NPCMsg msg_0596_T25R1005_00020
+	GoTo _TM21Given
 	.balign 4, 0

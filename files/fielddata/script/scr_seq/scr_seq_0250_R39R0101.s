@@ -111,8 +111,12 @@ _0158:
 	GoToIfSet FLAG_GOT_TM83_FROM_MOOMOO_FARM_WOMAN, _0197
 	NPCMsg msg_0397_R39R0101_00008
 	WaitABPress
+	HasItem ITEM_TM83, 1, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TM83Held
 	GoToIfNoItemSpace ITEM_TM83, 1, _01A2
 	CallStd std_give_item_verbose
+_TM83Given:
 	SetFlag FLAG_GOT_TM83_FROM_MOOMOO_FARM_WOMAN
 	GoTo _0197
 
@@ -122,6 +126,10 @@ _0197:
 	CloseMsg
 	ReleaseAll
 	End
+
+_TM83Held:
+	NPCMsg msg_0397_R39R0101_00015
+	GoTo _TM83Given
 
 _01A2:
 	NPCMsg msg_0397_R39R0101_00011

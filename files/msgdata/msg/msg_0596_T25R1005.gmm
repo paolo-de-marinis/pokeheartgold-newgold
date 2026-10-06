@@ -82,4 +82,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Modify Your Pokémon\n5F TM Corner</language>
 	</row>
+	<row id="msg_0596_T25R1005_00020" index="20">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Oh, you already have this TM.\r</language>
+	</row>
 </body>

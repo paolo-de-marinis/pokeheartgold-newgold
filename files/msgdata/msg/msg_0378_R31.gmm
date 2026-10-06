@@ -64,4 +64,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Huh? What is it?\nIs that a Pokémon Egg?\fI’ve never seen one.\r...Zzz...</language>
 	</row>
+	<row id="msg_0378_R31_00016" index="16">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">...Huh? You already have one?\r</language>
+	</row>
 </body>

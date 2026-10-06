@@ -21,4 +21,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">I am meditating...</language>
 	</row>
+	<row id="msg_0627_T29R0101_00005" index="5">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">...Ah. You already hold this power.\r</language>
+	</row>
 </body>

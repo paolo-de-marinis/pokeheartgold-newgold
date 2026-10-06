@@ -116,8 +116,12 @@ _0195:
 	GoToIfNe _01AD
 	ScrCmd_606
 _01AD:
+	HasItem ITEM_TM44, 1, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TM44Held
 	GoToIfNoItemSpace ITEM_TM44, 1, _01FC
 	CallStd std_give_item_verbose
+_TM44Given:
 	Compare VAR_LOAN_SPEAROW, 2
 	GoToIfNe _01EB
 	SetVar VAR_LOAN_SPEAROW, 3
@@ -131,6 +135,10 @@ _01F1:
 	CloseMsg
 	ReleaseAll
 	End
+
+_TM44Held:
+	NPCMsg msg_0378_R31_00016
+	GoTo _TM44Given
 
 _01FC:
 	CallStd std_bag_is_full

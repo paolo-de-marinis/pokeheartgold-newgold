@@ -57,4 +57,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Goldenrod City Pokémon Gym\rLeader: Whitney\nCertified Trainer!\f{STRVAR_1 3, 0, 0}</language>
 	</row>
+	<row id="msg_0582_T25GYM0101_00014" index="14">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Whitney: Oh! You already have it!\r</language>
+	</row>
 </body>

@@ -88,14 +88,22 @@ scr_seq_T23GYM0102_001:
 	AddSpecialGameStat SCORE_EVENT_BADGE_GET
 	NPCMsg msg_0567_T23GYM0102_00003
 _0136:
+	HasItem ITEM_TM89, 1, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TM89Held
 	GoToIfNoItemSpace ITEM_TM89, 1, _016A
 	CallStd std_give_item_verbose
+_TM89Given:
 	SetFlag FLAG_GOT_TM89_FROM_BUGSY
 	NPCMsg msg_0567_T23GYM0102_00005
 	WaitButton
 	CloseMsg
 	ReleaseAll
 	End
+
+_TM89Held:
+	NPCMsg msg_0567_T23GYM0102_00007
+	GoTo _TM89Given
 
 _016A:
 	CallStd std_bag_is_full

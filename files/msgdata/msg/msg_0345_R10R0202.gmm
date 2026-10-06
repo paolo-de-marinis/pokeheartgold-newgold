@@ -80,4 +80,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Use electricity wisely\nfor a bright and pleasant life.\f           Kanto Power Plant</language>
 	</row>
+	<row id="msg_0345_R10R0202_00020" index="20">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Manager: Oh? You already have it?\r</language>
+	</row>
 </body>

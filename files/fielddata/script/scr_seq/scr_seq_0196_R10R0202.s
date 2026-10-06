@@ -53,7 +53,11 @@ _0071:
 	WaitMovement
 	SetFlag FLAG_RESTORED_POWER
 	NPCMsg msg_0345_R10R0202_00016
+	HasItem ITEM_TM57, 1, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TM57Held
 	GiveItemNoCheck ITEM_TM57, 1
+_TM57Given:
 	NPCMsg msg_0345_R10R0202_00017
 	WaitButton
 	CloseMsg
@@ -64,6 +68,10 @@ _0071:
 	SetVar VAR_UNK_40FF, 1
 	ReleaseAll
 	End
+
+_TM57Held:
+	NPCMsg msg_0345_R10R0202_00020
+	GoTo _TM57Given
 
 _00F5:
 	CallStd std_bag_is_full
