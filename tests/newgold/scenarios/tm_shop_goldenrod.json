@@ -1,5 +1,5 @@
 {
-  "about": "Goldenrod's TM floor, from the save the playthrough's Goldenrod leg made (the Zephyr and Hive badges, TM70 from Elder Li) given 20000 to spend: up the Department Store's stairs to 5F and to its TM clerk across the counter (23, 7). TM70, in the bag, is refused (\"You already have this!\", the money unchanged), and its row, the list's first, shows \"Owned\" in place of its price (gDiagMartOwnedRows, a bit a row). On page 3 of 4 -- HeartGold's twelve and the first step's seven, nineteen at two badges -- TM094 (Work Up) is bought with no quantity to choose (\"OK, 1. That'll be 1500\", yes): the money down by 1500, TM094 in the bag and its row, the page's first, shown \"Owned\"; again, refused. The next page, with no TM in the bag, shows no row owned; its second place, where with four badges TM095 (Snarl, the second step's first) would stand, is empty: A there buys nothing, and TM095 is not in the bag (with four badges, savedit --badges 4, the same presses buy TM095 for 2000: the check is not empty).",
+  "about": "Goldenrod's TM floor, from the save the playthrough's Goldenrod leg made (the Zephyr and Hive badges, TM70 from Elder Li) given 20000 to spend: up the Department Store's stairs to 5F and to its TM clerk across the counter (23, 7). TM70, in the bag, is refused (\"You already have this!\", the money unchanged), and its row, the list's first, shows \"Owned\" in place of its price (gDiagMartOwnedRows, a bit a row). On page 3 of 4 -- HeartGold's twelve and the first step's seven, nineteen at two badges -- TM094 (Work Up) is bought with no quantity to choose (\"TM094? Certainly. That'll be $1500.\", the TM named, gDiagMartConfirmLine 51; yes): the money down by 1500, TM094 in the bag and its row, the page's first, shown \"Owned\"; again, refused. The next page, with no TM in the bag, shows no row owned; its second place, where with four badges TM095 (Snarl, the second step's first) would stand, is empty: A there buys nothing, and TM095 is not in the bag (with four badges, savedit --badges 4, the same presses buy TM095 for 2000: the check is not empty).",
   "from": "playthrough_10_goldenrod",
   "edit": [
     "--money",
@@ -43,7 +43,8 @@
       "expect": {
         "money": 18500,
         "bag:ITEM_TM094": 1,
-        "gDiagMartOwnedRows": 1
+        "gDiagMartOwnedRows": 1,
+        "gDiagMartConfirmLine": 51
       }
     },
     "A",

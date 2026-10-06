@@ -208,6 +208,11 @@ extern unsigned long gDiagDexSizeIcon;
 // bit 0 the top row. 0 for a page with none, and not cleared when the mart
 // closes.
 extern unsigned long gDiagMartOwnedRows;
+// The line a mart printed last to confirm a purchase (ov31_0225E5FC), its
+// msg_0435 row: 14 "OK, 3. That'll be $900.", 51 a TM named, "TM094?
+// Certainly. That'll be $1500."; the counters' "Would you like" is not
+// counted. 0 until the first, and not cleared when the mart closes.
+extern unsigned long gDiagMartConfirmLine;
 
 #endif // NEWGOLD_DIAG
 

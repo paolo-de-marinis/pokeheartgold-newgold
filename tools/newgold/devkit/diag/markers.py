@@ -220,8 +220,8 @@ class Markers:
                          f", forms page {shown & 0xFFFF} form {shown >> 16} types {w('gDiagDexFormTypes'):#06x}"
                          f", area page {w('gDiagDexAreaSpecies')} in {w('gDiagDexAreaPlaces')} places"
                          f", size page {size & 0xFFFF} form {size >> 16} icon {w('gDiagDexSizeIcon') & 0xFFFF}")
-        if w("gDiagMartOwnedRows"):
-            parts.append(f"mart list rows owned {w('gDiagMartOwnedRows'):#04x}")
+        if w("gDiagMartOwnedRows") or w("gDiagMartConfirmLine"):
+            parts.append(f"mart list rows owned {w('gDiagMartOwnedRows'):#04x}, confirm line {w('gDiagMartConfirmLine')}")
         # Each check names its roll just before it takes it, so between frames
         # none is waiting: one that is was named by a check that took no roll,
         # and a forced switch would answer the battle's next roll in its place.

@@ -280,6 +280,92 @@ class OwnedRowTests(unittest.TestCase):
                          ["0 owned", "1 price", "2 price", "3 owned", "4 price", "5 price"])
 
 
+CONFIRM = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32; typedef int16_t s16; typedef int32_t s32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#define NULL ((void *)0)
+#include "constants/items.h"
+#include "msgdata/msg/msg_0435.h"
+enum { MART_TYPE_NORMAL, MART_TYPE_1, MART_TYPE_SEAL, MART_TYPE_3, MART_TYPE_4 };
+enum { PRINTING_MODE_LEFT_ALIGN };
+enum { GF_BG_LYR_SUB_0 = 4 };
+#define HEAP_ID_FIELD1 4
+#define NELEMS(a) (sizeof(a) / sizeof(*(a)))
+typedef struct { int unused; } Window;
+typedef struct String String;
+typedef struct MessageFormat MessageFormat;
+typedef struct { u8 martType; u16 item; s16 quantity; int cost; } MartData;
+typedef struct { void *bgConfig; MartData *mart; Window confirmWindow; MessageFormat *msgFormat; void *msgData;
+                 void *options; int confirmPrinterId; String *string; } MartBottomScreen;
+@MACHINES@
+static void FillWindowPixelBuffer(Window *w, u8 fill) { }
+static String *NewString_ReadMsgData(void *msgData, u32 row) { printf("line %u", row); return NULL; }
+static void String_Delete(String *s) { }
+static void StringExpandPlaceholders(MessageFormat *f, String *dest, String *src) { }
+static void ov31_0225E4BC(int martType, MessageFormat *f, u16 item, u32 slot) { printf("name %u in %u, ", item, slot); }
+static void ov31_0225E51C(int martType, MessageFormat *f, u16 item, u32 slot) { printf("article %u in %u, ", item, slot); }
+static void BufferIntegerAsString(MessageFormat *f, u32 idx, s32 num, u32 digits, int mode, BOOL charset) {
+    printf("%d in %u, ", num, idx);
+}
+static u32 Options_GetFrame(void *o) { return 0; }
+static u8 Options_GetTextFrameDelay(void *o) { return 0; }
+static void LoadUserFrameGfx2(void *bg, int layer, u16 tile, u8 pal, u8 frame, int heap) { }
+static void DrawFrameAndWindow2(Window *w, BOOL b, u16 tile, u8 pal) { }
+static u8 AddTextPrinterParameterized(Window *w, int font, String *s, u32 x, u32 y, u32 speed, void *cb) { return 0; }
+@NATIVE@
+int main(void) {
+    static MartData mart;
+    static MartBottomScreen screen = { NULL, &mart };
+    mart.martType = MART_TYPE_NORMAL;
+    mart.item = ITEM_TM094; mart.quantity = 1; mart.cost = 1500;
+    ov31_0225E5FC(&screen); puts("");
+    mart.item = ITEM_POTION; mart.quantity = 3; mart.cost = 300;
+    ov31_0225E5FC(&screen); puts("");
+    return 0;
+}
+"""
+
+
+class ConfirmLineTests(unittest.TestCase):
+    def test_a_tm_s_confirm_line_names_it(self):
+        """A TM is sold one at a time, with no quantity to choose, so the
+        mart's "OK, 1. That'll be $1500." said nothing a player had chosen;
+        the line names the TM instead, as "How many would you like?" names
+        an item: ov31_0225E5FC run on the host for TM094 and three Potions."""
+        shop = (ROOT / "src/overlay_03/shop_menu.c").read_text()
+        native = function(shop, "Mart_SellsOneAtATime") + "\n"
+        native += function((ROOT / "src/overlay_31_0225E5FC.c").read_text(), "ov31_0225E5FC")
+        bank = (ROOT / "files/msgdata/msg/msg_0435.gmm").read_text()
+        rows = dict(re.findall(r'<row id="(\w+)".*?<language name="English">(.*?)</language>', bank, re.S))
+        header = "".join(f"#define {name} {int(name[-5:])}\n" for name in rows)
+        with tempfile.TemporaryDirectory(prefix="newgold-tm-confirm-") as temp:
+            (Path(temp) / "msgdata/msg").mkdir(parents=True)
+            (Path(temp) / "msgdata/msg/msg_0435.h").write_text(header)
+            c, exe = Path(temp) / "check.c", Path(temp) / "check"
+            machines = machine_code((ROOT / "src/item.c").read_text())
+            c.write_text(CONFIRM.replace("@NATIVE@", native).replace("@MACHINES@", machines))
+            build = subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
+                                   ["-std=c11", "-O1", "-g", "-w", "-fsanitize=address,undefined", "-iquote", temp,
+                                    "-iquote", str(ROOT / "include"), str(c), "-o", str(exe)],
+                                   capture_output=True, text=True)
+            self.assertEqual(build.returncode, 0, build.stderr)
+            run = subprocess.run([str(exe)], capture_output=True, text=True,
+                                 env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
+            self.assertEqual(run.returncode, 0, run.stderr)
+        ids = {name: int(value) for name, value in
+               re.findall(r"#define (ITEM_\w+)\s+(\d+)\b", (ROOT / "include/constants/items.h").read_text())}
+        tm, potion = run.stdout.splitlines()
+        self.assertEqual(tm, f"name {ids['ITEM_TM094']} in 0, 1500 in 1, line 51")
+        self.assertEqual(potion, "3 in 0, 900 in 1, line 14")
+        self.assertEqual(rows["msg_0435_00051"], "{STRVAR_1 8, 0, 0}? Certainly.\\nThat’ll be ${STRVAR_1 55, 1, 0}.")
+        self.assertIn("{STRVAR_1 8, 0, 0}? Certainly.", rows["msg_0435_00012"])
+
+
 class PrizeCounterTests(unittest.TestCase):
     def test_a_prize_tm_held_is_said_so(self):
         """The Game Corners' prize counters (Goldenrod's six TMs, Celadon's
