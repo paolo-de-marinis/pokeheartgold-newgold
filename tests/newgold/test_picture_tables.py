@@ -238,6 +238,26 @@ class PictureTableTests(unittest.TestCase):
         self.assertEqual({name: offset(name) for name in grounded if not -12 <= offset(name) <= 3}, {})
         self.assertEqual({offset(f"CASTFORM_{form}") for form in ("SUNNY", "RAINY", "SNOWY")}, {offset("CASTFORM")})
 
+    def test_records_never_placed_take_their_picture_s_shadow(self):
+        """The reference never placed the records of 46 added species with
+        pictures of their own: each kept a medium shadow nobody chose. Each
+        is sized by its picture now, as retail's are by size: Wishiwashi,
+        Dreepy and Sinistea small, Kingambit, Obstagoon and Vivillon large,
+        Vivillon's patterns and Flabebe's flowers as their species."""
+        member = read_narc((ROOT / "files/a/1/8/0").read_bytes())[0][0]
+        names = import_sprite_offsets.port_species()
+        number = {name[len("SPECIES_"):]: n for n, name in enumerate(names)}
+        shadow = lambda name: member[(number[name] + 1) * import_sprite_offsets.RECORD - 1]  # noqa: E731
+        for name, size in (("WISHIWASHI", 1), ("DREEPY", 1), ("SINISTEA", 1), ("FLABEBE_BLUE_FLOWER", 1),
+                           ("KINGAMBIT", 3), ("OBSTAGOON", 3), ("VIVILLON", 3), ("VIVILLON_FANCY", 3),
+                           ("GOURGEIST", 2)):
+            self.assertEqual(shadow(name), size, name)
+        # The cuts give retail's own sizes for most of its fronts with a shadow.
+        agree = [shadow(names[n][len("SPECIES_"):]) == import_sprite_offsets.shadow_size(
+                 import_sprite_offsets.front_picture(n)) for n in range(1, import_sprite_offsets.RETAIL)
+                 if shadow(names[n][len("SPECIES_"):])]
+        self.assertGreater(sum(agree) / len(agree), 0.7)
+
     def test_every_picture_record_reader_reads_its_species(self):
         """a/1/8/0 member 0 now has a record for every species; the six
         functions that read it by species all take that record."""

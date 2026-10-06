@@ -47,6 +47,12 @@ the last the shadow (the record's last two bytes) goes with it:
   stands, and a Sunny Castform, given Castform's record for a picture drawn
   lower in its frame, sat 8 rows under where Castform floats.
 
+A species with a picture of its own whose record was never placed, and not
+a form taking its base's, has the medium shadow nobody chose for it. Its
+shadow is sized by its picture instead (shadow_size): retail sized its
+shadows by hand, and the opaque pixels of a front's first frame give retail's
+size for 71% of its 492 fronts with a shadow, and one a size off but for 7.
+
     import_sprite_offsets.py [--reference PATH] [--write]
 """
 import argparse
@@ -66,12 +72,16 @@ RETAIL = 494  # species 0..493
 HEIGHTS = ROOT / "files/poketool/pokegra/height.narc"
 FIRST_ADDED = 508   # Lillipup: the first species past pret's pictures and heights
 Y_OFFSET = 86       # SpriteFrameData.spriteYOffset, a signed byte
+FRAME = 80          # a picture's frames are 80 pixels square, side by side
 # (Y offset, shadow X offset, shadow size) of a species the reference never
 # placed: Bulbasaur's, or nothing over a medium shadow.
 UNPLACED = {(-1, 0, 2), (0, 0, 2)}
 # Retail's grounded fronts (offset 3 or less) by shadow size, small, medium
 # and large: the median offset of each.
 GROUND = {1: 2, 2: 0, 3: -1}
+# Opaque pixels of a front's first frame from which its shadow is medium and
+# large: the cuts that give retail's own sizes best (see shadow_size).
+SHADOW_AREA = (1236, 2185)
 GROUNDED = {"SPECIES_TIRTOUGA", "SPECIES_CLAWITZER", "SPECIES_STEENEE", "SPECIES_EISCUE", "SPECIES_ARCTOVISH",
             "SPECIES_REVAVROOM", "SPECIES_ORTHWORM", "SPECIES_IRON_TREADS", "SPECIES_ENAMORUS_THERIAN",
             "SPECIES_TERAPAGOS_TERASTAL"}
@@ -142,6 +152,14 @@ def front_picture(number):
             return tuple(png_rows(path.read_bytes())[2])
 
 
+def shadow_size(picture):
+    """The shadow a front picture is sized for, small 1, medium 2 or large 3,
+    by the opaque pixels of its first frame (the left half of each row, two
+    pixels a byte) against SHADOW_AREA."""
+    area = sum(1 for row in picture[:FRAME] for byte in row[:FRAME // 2] for pixel in (byte >> 4, byte & 15) if pixel)
+    return 1 + (area >= SHADOW_AREA[0]) + (area >= SHADOW_AREA[1])
+
+
 def records(reference):
     theirs = reference_records(reference)
     fronts = reference_front_heights(reference)
@@ -165,13 +183,18 @@ def records(reference):
             if owner != number:
                 record[Y_OFFSET:] = out[owner][Y_OFFSET:]
             elif name in GROUNDED:
-                struct.pack_into("<b", record, Y_OFFSET, GROUND[tail[2]])
+                if tail in UNPLACED:
+                    record[-1] = shadow_size(picture)
+                struct.pack_into("<b", record, Y_OFFSET, GROUND[record[-1]])
             elif base and (tail in UNPLACED or record[Y_OFFSET:] == theirs[base][Y_OFFSET:]):
                 if number_of[base] > number:
                     raise ValueError(f"{name}: its base {base} comes after it")
                 record[Y_OFFSET:] = out[number_of[base]][Y_OFFSET:]
-            elif ours and fronts.get(name, -1) >= 0:
-                struct.pack_into("<b", record, Y_OFFSET, tail[0] + ours[0] - fronts[name])
+            else:
+                if tail in UNPLACED and picture:
+                    record[-1] = shadow_size(picture)
+                if ours and fronts.get(name, -1) >= 0:
+                    struct.pack_into("<b", record, Y_OFFSET, tail[0] + ours[0] - fronts[name])
             record = bytes(record)
         out.append(record)
     return out
