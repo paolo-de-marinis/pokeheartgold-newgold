@@ -2993,8 +2993,9 @@ def set_form_record(save, form, seen, caught):
     """A form seen and caught, as the game records one (Pokedex_RecordMonSeen):
     caught counts as seen, and the base species is seen as well (set_dex),
     and caught when the form is; a base seen for the first time this way is
-    shown as the form until it is seen itself (_shown_first_as). The record
-    is there from LAYOUT_BEFORE_TM_POCKET on."""
+    shown as the form until it is seen itself (_shown_first_as), and a form
+    un-seen hands that look to another form still seen. The record is there
+    from LAYOUT_BEFORE_TM_POCKET on."""
     if not save.has_form_record:
         raise ValueError("a save in an older layout has no record of the forms: the game adds it when it loads the save")
     if form not in dex_forms():
@@ -3010,6 +3011,16 @@ def set_form_record(save, form, seen, caught):
         set_dex(save, [base], True, caught or bool(_dex_bit(block, DEX_CAUGHT, base)))
     if first:
         _shown_first_as(block, form)
+    if not seen and block[DEX_LOOKS + form - DEX_FIRST_FORM] & DEX_FORM_SEEN_FIRST:
+        # The look goes with the form. A base seen only as forms is shown as
+        # another form still seen, as if that one had been seen first, or,
+        # with none, as itself.
+        block[DEX_LOOKS + form - DEX_FIRST_FORM] &= ~DEX_FORM_SEEN_FIRST
+        if block[DEX_LOOKS + base] & DEX_SEEN_AS_FORM_ONLY:
+            block[DEX_LOOKS + base] &= ~DEX_SEEN_AS_FORM_ONLY
+            other = next((f for f, b in dex_forms().items() if b == base and _form_bit(block, DEX_FORMS_SEEN, f)), None)
+            if other is not None:
+                _shown_first_as(block, other)
 
 
 def _shown_first_as(block, form):

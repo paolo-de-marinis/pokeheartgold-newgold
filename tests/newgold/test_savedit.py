@@ -1077,8 +1077,9 @@ class SaveditLibraryTests(unittest.TestCase):
         records it: a species first seen as one of its forms is marked
         (DEX_SEEN_AS_FORM_ONLY) and the form too (DEX_FORM_SEEN_FIRST); a form
         seen after the species, or after another form, marks nothing; the
-        species seen itself (--dex) loses its mark, and a species cleared
-        from the Dex takes its forms' marks with it."""
+        species seen itself (--dex) loses its mark, a form un-seen hands it
+        to a form still seen, and a species cleared from the Dex takes its
+        forms' marks with it."""
         save = self.open()
         n = sv.species_numbers()
         block = save.block("SAVE_POKEDEX")
@@ -1097,6 +1098,15 @@ class SaveditLibraryTests(unittest.TestCase):
         sv.set_form_record(save, n["MEOWTH_ALOLAN"], seen=True, caught=False)
         sv.set_form_record(save, n["MEOWTH_GALARIAN"], seen=True, caught=True)
         self.assertTrue(shown(n["MEOWTH"]) and first(n["MEOWTH_ALOLAN"]) and not first(n["MEOWTH_GALARIAN"]))
+        # The form seen first un-seen: the look goes to a form still seen, or,
+        # with none, the species is shown as itself.
+        sv.set_form_record(save, n["MEOWTH_ALOLAN"], seen=False, caught=False)
+        self.assertTrue(shown(n["MEOWTH"]) and first(n["MEOWTH_GALARIAN"]) and not first(n["MEOWTH_ALOLAN"]))
+        sv.set_form_record(save, n["MEOWTH_GALARIAN"], seen=False, caught=False)
+        self.assertFalse(shown(n["MEOWTH"]) or first(n["MEOWTH_GALARIAN"]))
+        sv.set_form_record(save, n["SLOWPOKE_GALARIAN"], seen=False, caught=False)   # seen as itself: kept so
+        self.assertFalse(shown(n["SLOWPOKE"]) or first(n["SLOWPOKE_GALARIAN"]))
+        sv.set_form_record(save, n["MEOWTH_ALOLAN"], seen=True, caught=False)
         sv.set_dex(save, [n["MEOWTH"], n["SLOWPOKE"]], False, False)
         self.assertFalse(shown(n["MEOWTH"]) or first(n["MEOWTH_ALOLAN"]) or first(n["SLOWPOKE_GALARIAN"]))
         # The languages' bits are left as they were.
