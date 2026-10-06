@@ -39,15 +39,23 @@
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
           "level": 22,
-          "species": "SPECIES_BAYLEEF",
+          "species": "SPECIES_LARVITAR",
           "capsule": 0
         },
         {
-          "difficulty": 0,
+          "difficulty": 100,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 10,
-          "species": "SPECIES_LARVITAR",
+          "level": 22,
+          "species": "SPECIES_TEDDIURSA",
+          "capsule": 0
+        },
+        {
+          "difficulty": 100,
+          "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+          "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
+          "level": 22,
+          "species": "SPECIES_BAYLEEF",
           "capsule": 0
         }
       ],
@@ -13480,10 +13488,10 @@
           "capsule": 0
         },
         {
-          "difficulty": 0,
+          "difficulty": 100,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 10,
+          "level": 22,
           "species": "SPECIES_LARVITAR",
           "capsule": 0
         },
@@ -13752,10 +13760,10 @@
           "capsule": 0
         },
         {
-          "difficulty": 0,
+          "difficulty": 100,
           "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
           "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_OFF",
-          "level": 10,
+          "level": 22,
           "species": "SPECIES_LARVITAR",
           "capsule": 0
         },

@@ -103,6 +103,35 @@ FIRST_SILVER = {495: 265, 496: 2, 497: 3}
 NO_PARTNER = {389}
 
 
+# Silver at Azalea's west gate (e0bf78b7a), the team by the player's starter
+# (scr_seq_0866_T23.s): #1 with Bayleef, #266 with Quilava, #269 with
+# Croconaw. Every one of them is at L22 and difficulty 100 but a Larvitar at
+# L10 and difficulty 0, in another slot in each team, and the Teddiursa
+# beside Quilava and Croconaw is missing beside Bayleef. Paolo, 2026-10-07:
+# plainly slips. The Larvitar takes the level and difficulty of the rest of
+# its team, and #1 is #269 with its own starter: the Teddiursa added, in
+# #269's order, which opens as #1 does and keeps the starter last as #266
+# and every retail rival do. KONEFR-NOTES.md, Allenatori 9.
+AZALEA_SILVER, AZALEA_CROCONAW = (1, 266, 269), 269
+
+
+def azalea_silver(party, croconaw):
+    """An Azalea Silver's party with konefr's slips put right, or None when
+    his data no longer has them; croconaw is #269's party as he wrote it."""
+    larvitar = [(m["level"], m["difficulty"]) for m in party if m["species"] == "SPECIES_LARVITAR"]
+    rest = {(m["level"], m["difficulty"]) for m in party if m["species"] != "SPECIES_LARVITAR"}
+    if larvitar != [(10, 0)] or rest != {(22, 100)}:
+        return None
+    own = {m["species"]: m for m in party}
+    if "SPECIES_TEDDIURSA" not in own:
+        starter = [m for m in party if m["species"] not in {c["species"] for c in croconaw}]
+        if len(starter) != 1 or {c["species"] for c in croconaw} - set(own) != {"SPECIES_TEDDIURSA", croconaw[-1]["species"]}:
+            return None
+        own[croconaw[-1]["species"]] = starter[0]
+        party = [own.get(c["species"], c) for c in croconaw]
+    return [dict(m, level=22, difficulty=100) if m["species"] == "SPECIES_LARVITAR" else m for m in party]
+
+
 def battle_type(index, block):
     """A trainer's .battleType, with konefr's no-partner slips corrected."""
     name = re.search(r"\.battleType\s*=\s*(\w+)", block).group(1)
@@ -346,6 +375,12 @@ def main():
                     wanted.update(items=his["items"], party=his["party"])
                 else:
                     stale.append(f"{index}: not the retail first Silver any more (FIRST_SILVER)")
+            if index in AZALEA_SILVER:
+                fixed = azalea_silver(wanted["party"], translate(table[AZALEA_CROCONAW], flags, types)["party"])
+                if fixed is not None:
+                    wanted["party"] = fixed
+                elif wanted["party"][0]["species"] != "SPECIES_GASTLY":     # retail's team, at d0380a487
+                    stale.append(f"{index}: no Larvitar at 10 among 22s any more (AZALEA_SILVER)")
             wanted["double"] = DOUBLE[battle_type(index, block)]
             # Stale once he writes the no-partner double himself. The retail
             # single battle at d0380a487, before his data, is not his change;

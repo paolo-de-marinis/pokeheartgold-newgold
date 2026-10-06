@@ -301,6 +301,22 @@ class TrainerTests(unittest.TestCase):
             self.assertEqual((self.trainers[boy]["class"], self.trainers[boy]["name"]),
                              ("TRAINERCLASS_PASSERBY", "{TRNAME}Boy"), boy)
 
+    def test_silver_at_azalea_has_no_larvitar_at_10_and_a_teddiursa_beside_each_starter(self):
+        """Azalea's west gate fights #266, #269 or #1 by the player's starter
+        (scr_seq_0866_T23.s). konefr's e0bf78b7a put each at L22 and
+        difficulty 100 but for a Larvitar at L10 and 0, and gave Bayleef's no
+        Teddiursa; both slips are put right (Paolo, 2026-10-07), Bayleef's
+        team being Croconaw's with its own starter."""
+        script = (ROOT / "files/fielddata/script/scr_seq/scr_seq_0866_T23.s").read_text()
+        self.assertEqual(re.findall(r"TrainerBattle (TRAINER_\w+)", script),
+                         ["TRAINER_RIVAL_SILVER_7", "TRAINER_RIVAL_SILVER_10", "TRAINER_RIVAL_SILVER"])
+        teams = {index: [m["species"][len("SPECIES_"):] for m in self.trainers[index]["party"]] for index in (1, 266, 269)}
+        self.assertEqual(teams, {1: ["MISDREAVUS", "ZUBAT", "LARVITAR", "TEDDIURSA", "BAYLEEF"],
+                                 266: ["MISDREAVUS", "LARVITAR", "TEDDIURSA", "ZUBAT", "QUILAVA"],
+                                 269: ["MISDREAVUS", "ZUBAT", "LARVITAR", "TEDDIURSA", "CROCONAW"]})
+        for index in teams:
+            self.assertEqual({(m["level"], m["difficulty"]) for m in self.trainers[index]["party"]}, {(22, 100)}, index)
+
     def test_no_pokemon_under_the_moves_flag_is_left_without_moves(self):
         """konefr left 20 party entries without .moves under the moves flag;
         his build writes MOVE_NONE over all four slots and they can only
@@ -610,10 +626,13 @@ class TrainerTests(unittest.TestCase):
         raw = {name: int(value, 16) for name, value in re.findall(
             r"#define (TRAINER_POKEMON_ABILITY_\w+)\s+0x([0-9A-Fa-f]+)", header)}
         blocks = re.split(r"\n\s*\[(\d+)\] = \{", source)
+        blocks = {int(blocks[i]): blocks[i + 1].split(".text = {", 1)[0] for i in range(1, len(blocks), 2)}
+        # Silver's Bayleef team is his Croconaw team with its own starter,
+        # slot for slot (import_trainers.AZALEA_SILVER).
+        blocks[1] = blocks[import_trainers.AZALEA_CROCONAW]
         c = override_constants()
         ours, theirs, expected, where = [], [], [], []
-        for index, block in ((int(blocks[i]), blocks[i + 1].split(".text = {", 1)[0])
-                             for i in range(1, len(blocks), 2)):
+        for index, block in blocks.items():
             members = re.findall(r"\{[^{}]*\.abilitySlot[^{}]*(?:\{[^{}]*\}[^{}]*)*\}", block)
             party = self.trainers[index]["party"]
             self.assertEqual(len(members), len(party), index)
