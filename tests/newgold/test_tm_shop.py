@@ -182,7 +182,7 @@ class OneTMAtATimeTests(unittest.TestCase):
     def test_a_tm_is_sold_once(self):
         source = (ROOT / "src/overlay_03/shop_menu.c").read_text()
         native = "\n".join(function(source, name) for name in
-                           ("Mart_SellsOneAtATime", "ov03_02257814", "ov03_02257CA0", "ov03_02257874"))
+                           ("Mart_SellsOneAtATime", "Mart_HasAlready", "ov03_02257814", "ov03_02257CA0", "ov03_02257874"))
         with tempfile.TemporaryDirectory(prefix="newgold-tm-once-") as temp:
             c, exe = Path(temp) / "check.c", Path(temp) / "check"
             machines = machine_code((ROOT / "src/item.c").read_text())
@@ -205,6 +205,79 @@ class OneTMAtATimeTests(unittest.TestCase):
             [ids["ITEM_POTION"], 5, 2, 1, 1, 0],    # TASK_MART_5, "How many?"
             [ids["ITEM_TM094"], 14, 10, 1, 0, 1],   # too dear: "You don't have enough money."
         ])
+
+
+LIST = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32; typedef int16_t s16; typedef int32_t s32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#define NULL ((void *)0)
+#include "constants/items.h"
+enum { MART_TYPE_NORMAL, MART_TYPE_1, MART_TYPE_SEAL, MART_TYPE_3, MART_TYPE_4 };
+#define HEAP_ID_FIELD2 11
+#define NELEMS(a) (sizeof(a) / sizeof(*(a)))
+typedef struct { int unused; } Window;
+typedef struct String String;
+typedef struct { void *inventory; u16 *unk268; u8 unk270; u8 unk271; u8 martType; } MartData;
+typedef struct { MartData *mart; Window rows[6]; void *msgFormat; void *msgData; void *itemNames; } MartBottomScreen;
+static u16 sHeld[2];
+@MACHINES@
+static u16 Bag_GetQuantity(void *bag, u16 item, int heap) { return item == sHeld[0] || item == sHeld[1]; }
+static void FillWindowPixelBuffer(Window *w, u8 fill) { }
+static void ScheduleWindowCopyToVram(Window *w) { }
+static String *NewString_ReadMsgData(void *msgData, u32 row) { return NULL; }
+static void String_Delete(String *s) { }
+static void ov31_0225DE00(MartBottomScreen *screen, Window *window, String *string, int row) { }
+static BOOL ov31_0225E12C(MartData *data, int index, int item) { return TRUE; }
+static u32 ov03_02258120(MartData *data, u16 item) { return 1500; }
+static void ov31_0225E0E4(MartBottomScreen *screen, int count) { }
+static MartBottomScreen sScreen;
+static void ov31_0225DE24(void *fmt, void *msgData, Window *window, u32 price, int martType) {
+    printf("%d price\n", (int)(window - sScreen.rows));
+}
+static void MartList_PrintOwned(void *msgData, Window *window) {
+    printf("%d owned\n", (int)(window - sScreen.rows));
+}
+@NATIVE@
+int main(void) {
+    static u16 items[] = { ITEM_TM70, ITEM_TM17, ITEM_POTION, ITEM_TM094, ITEM_HM01, ITEM_TM54 };
+    static MartData mart = { NULL, items, NELEMS(items), 0, MART_TYPE_NORMAL };
+    sScreen.mart = &mart;
+    sHeld[0] = ITEM_TM70;
+    sHeld[1] = ITEM_TM094;
+    ov31_0225DD14(&sScreen);
+    return 0;
+}
+"""
+
+
+class OwnedRowTests(unittest.TestCase):
+    def test_a_tm_in_the_bag_shows_owned_on_the_list(self):
+        """Paolo (2026-10-04): a TM the player has is not sold again, as from
+        the fifth generation; the list's row says it is owned in place of its
+        price. TM70 and TM094 in the bag, TM17 and TM54 not, a Potion: the
+        painter, ov31_0225DD14, run on the host."""
+        shop = (ROOT / "src/overlay_03/shop_menu.c").read_text()
+        native = "\n".join(function(shop, name) for name in ("Mart_SellsOneAtATime", "Mart_HasAlready"))
+        native += "\n" + function((ROOT / "src/overlay_31_0225DD14.c").read_text(), "ov31_0225DD14")
+        with tempfile.TemporaryDirectory(prefix="newgold-tm-owned-") as temp:
+            c, exe = Path(temp) / "check.c", Path(temp) / "check"
+            machines = machine_code((ROOT / "src/item.c").read_text())
+            c.write_text(LIST.replace("@NATIVE@", native).replace("@MACHINES@", machines))
+            build = subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
+                                   ["-std=c11", "-O1", "-g", "-w", "-fsanitize=address,undefined",
+                                    "-iquote", str(ROOT / "include"), str(c), "-o", str(exe)],
+                                   capture_output=True, text=True)
+            self.assertEqual(build.returncode, 0, build.stderr)
+            run = subprocess.run([str(exe)], capture_output=True, text=True,
+                                 env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
+            self.assertEqual(run.returncode, 0, run.stderr)
+        self.assertEqual(run.stdout.split("\n")[:-1],
+                         ["0 owned", "1 price", "2 price", "3 owned", "4 price", "5 price"])
 
 
 class PrizeCounterTests(unittest.TestCase):

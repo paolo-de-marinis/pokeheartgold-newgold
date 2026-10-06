@@ -103,6 +103,8 @@ BOOL Task_Mart(TaskManager *taskManager);
 int ov03_02257814(MartData *data, u32 unkAmount);
 int ov03_02257978(MartData *data, int itemID);
 u32 ov03_02258120(MartData *data, u16 itemID);
+BOOL Mart_SellsOneAtATime(MartData *data, u16 item);
+BOOL Mart_HasAlready(MartData *data, u16 item);
 void ov03_022581BC(MartData *data);
 void ov03_02258910(FieldSystem *fieldSystem);
 void ov03_02258CFC(TaskManager *taskManager, enum PokeathlonData data);

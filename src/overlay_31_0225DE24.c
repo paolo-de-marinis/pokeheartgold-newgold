@@ -22,3 +22,11 @@ void ov31_0225DE24(MessageFormat *msgFmt, MsgData *msgData, Window *window, u32 
     AddTextPrinterParameterizedWithColor(window, 0, string, 36, 16, TEXT_SPEED_NOTRANSFER, MAKE_TEXT_COLOR(1, 2, 0), NULL);
     String_Delete(string);
 }
+
+// In place of the price, for what the player has already of what the mart
+// sells one at a time, a TM in the bag (Mart_HasAlready): "Owned".
+void MartList_PrintOwned(MsgData *msgData, Window *window) {
+    String *string = NewString_ReadMsgData(msgData, msg_0435_00050);
+    AddTextPrinterParameterizedWithColor(window, 0, string, 36, 16, TEXT_SPEED_NOTRANSFER, MAKE_TEXT_COLOR(1, 2, 0), NULL);
+    String_Delete(string);
+}

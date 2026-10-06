@@ -19,7 +19,8 @@ appends 41 for his developer vendor and EV presets: the EV/IV trainer reads
 his presets' names as its sets, and in a diagnostics build his vendor's lines.
 
 After hg-engine's rows come the port's own, PORT_ROWS: the summary's star for
-a Hyper trained IV (302) and the EV/IV trainer's party menu line (300).
+a Hyper trained IV (302), the EV/IV trainer's party menu line (300) and the
+mart list's "Owned" for a TM in the bag (435).
 
 Usage: import_interface_text.py [--revision REV]   (default: the engine)
 """
@@ -33,6 +34,7 @@ BANKS = (10, 24, 40, 203, 300, 302, 435)
 PORT_ROWS = {
     300: ["Train which Pokémon?"],      # PARTY_MENU_CONTEXT_TRAIN_MON's line
     302: ["{STRVAR_1 52, 0, 0}★"],      # a Hyper trained IV, PrintStatValue
+    435: ["Owned"],                     # a TM in the bag on a mart's list, MartList_PrintOwned
 }
 # Banks only New Gold writes, and how many rows retail has where it does not.
 RETAIL_WHERE_ABSENT = {550: 25}

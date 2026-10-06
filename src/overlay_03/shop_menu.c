@@ -722,8 +722,15 @@ static u32 ov03_022577F4(MartData *data, u32 martType) {
 // have since the fifth generation: no quantity to choose, and one already in
 // the bag is not sold again. The Pokeathlon's card shop has the line for that,
 // "You already have this!", which ov31_0225E95C prints for a 3 here.
-static BOOL Mart_SellsOneAtATime(MartData *data) {
-    return data->martType == MART_TYPE_NORMAL && ItemIsTM(data->item);
+BOOL Mart_SellsOneAtATime(MartData *data, u16 item) {
+    return data->martType == MART_TYPE_NORMAL && ItemIsTM(item);
+}
+
+// Whether the player has already what the mart sells one at a time: a TM in
+// the bag, which is not sold again, and which the list shows as owned
+// (ov31_0225DD14) in place of its price.
+BOOL Mart_HasAlready(MartData *data, u16 item) {
+    return Mart_SellsOneAtATime(data, item) && Bag_GetQuantity(data->inventory, item, HEAP_ID_FIELD2) != 0;
 }
 
 int ov03_02257814(MartData *data, u32 unkAmount) {
@@ -733,7 +740,7 @@ int ov03_02257814(MartData *data, u32 unkAmount) {
         }
     } else if (data->martType == MART_TYPE_4 && PokeathlonSave_GetUnkB78_AtIndex(data->pokeathlonSave, data->item - 505)) {
         return 3;
-    } else if (Mart_SellsOneAtATime(data) && Bag_GetQuantity(data->inventory, data->item, HEAP_ID_FIELD2) != 0) {
+    } else if (Mart_HasAlready(data, data->item)) {
         return 3;
     }
 
@@ -758,7 +765,7 @@ static u8 ov03_02257874(MartData *data, u16 itemID) {
     if (data->unk288 > 99) {
         data->unk288 = 99;
     }
-    if (data->martType == MART_TYPE_1 || data->martType == MART_TYPE_3 || data->martType == MART_TYPE_4 || Mart_SellsOneAtATime(data)) {
+    if (data->martType == MART_TYPE_1 || data->martType == MART_TYPE_3 || data->martType == MART_TYPE_4 || Mart_SellsOneAtATime(data, data->item)) {
         return ov03_02257CA0(data);
     }
     ov03_022582C0(data, 1);
@@ -885,11 +892,11 @@ static u8 ov03_02257B4C(MartData *data, u32 arg1) {
 
 static u8 ov03_02257CA0(MartData *data) {
     int quantity;
-    if (data->martType == MART_TYPE_NORMAL && !Mart_SellsOneAtATime(data)) {
+    if (data->martType == MART_TYPE_NORMAL && !Mart_SellsOneAtATime(data, data->item)) {
         quantity = Bag_HasSpaceForItem(data->inventory, data->item, data->quantity, HEAP_ID_FIELD2);
     } else if (data->martType == MART_TYPE_1) {
         quantity = 0;
-    } else if (data->martType == MART_TYPE_3 || data->martType == MART_TYPE_4 || Mart_SellsOneAtATime(data)) {
+    } else if (data->martType == MART_TYPE_3 || data->martType == MART_TYPE_4 || Mart_SellsOneAtATime(data, data->item)) {
         if (data->item >= ITEM_RED_APRICORN && data->item <= ITEM_BLK_APRICORN) {
             if (ApricornBox_CountApricorn(data->apricornBox, data->item - ITEM_RED_APRICORN) == 99) {
                 data->unk298 = 12;

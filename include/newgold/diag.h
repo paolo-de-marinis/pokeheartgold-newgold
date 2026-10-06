@@ -203,6 +203,11 @@ extern unsigned long gDiagDexAreaPlaces;
 // closes.
 extern unsigned long gDiagDexSizeShown;
 extern unsigned long gDiagDexSizeIcon;
+// The mart's list as ov31_0225DD14 painted it last: a bit for each of the
+// page's six rows that shows "Owned" in place of a price (a TM in the bag),
+// bit 0 the top row. 0 for a page with none, and not cleared when the mart
+// closes.
+extern unsigned long gDiagMartOwnedRows;
 
 #endif // NEWGOLD_DIAG
 

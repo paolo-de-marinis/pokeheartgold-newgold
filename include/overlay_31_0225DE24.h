@@ -6,5 +6,6 @@
 #include "bg_window.h"
 
 void ov31_0225DE24(MessageFormat *msgFmt, MsgData *msgData, Window *window, u32 price, int martType);
+void MartList_PrintOwned(MsgData *msgData, Window *window);
 
 #endif // POKEHEARTGOLD_OVERLAY_31_0225DE24_H
