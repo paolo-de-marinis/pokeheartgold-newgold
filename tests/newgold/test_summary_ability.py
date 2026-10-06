@@ -24,6 +24,7 @@ PREFIX = r'''
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include "constants/balls.h"
 #include "constants/items.h"
 #include "constants/pokemon.h"
 #include "constants/ribbon.h"
@@ -214,7 +215,16 @@ int main(void) {
     sub_0208981C(&summary, (Pokemon *)monData, &summary.mon);
     assert(summary.mon.isEgg && summary.mon.ability == 319 && summary.mon.showGender);
 
-    puts("PASS: 512 summary record/stat-page ability cases, form byte, neighbours and egg load.");
+    // The summary has ball icons as far as the Sport Ball; a Park Ball is
+    // drawn as a Poke Ball rather than from a palette and past the table.
+    monData[MON_DATA_POKEBALL] = BALL_SPORT;
+    sub_0208981C(&summary, (Pokemon *)monData, &summary.mon);
+    assert(summary.mon.pokeball == BALL_SPORT);
+    monData[MON_DATA_POKEBALL] = BALL_PARK;
+    sub_0208981C(&summary, (Pokemon *)monData, &summary.mon);
+    assert(summary.mon.pokeball == BALL_POKE);
+
+    puts("PASS: 512 summary record/stat-page ability cases, form byte, neighbours, egg load and the ball shown.");
 }
 '''
 

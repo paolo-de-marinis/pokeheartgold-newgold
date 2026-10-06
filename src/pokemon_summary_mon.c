@@ -1,3 +1,4 @@
+#include "constants/balls.h"
 #include "constants/ribbon.h"
 
 #include "msgdata/msg/msg_0302.h"
@@ -85,7 +86,13 @@ void sub_0208981C(PokemonSummaryAppPrefix *summary, Pokemon *mon, PokemonSummary
         summaryMon->showGender = TRUE;
     }
     summaryMon->gender = GetMonGender(mon);
-    summaryMon->pokeball = (u8)GetMonData(mon, MON_DATA_POKEBALL, NULL);
+    // The ball drawn beside the name (sub_0208B48C): its icon is a/1/6/2's
+    // member ball + 24 and its palette 49 + _02104C68[ball], both as far as
+    // the Sport Ball. A ball past it, a Park Ball traded from another game,
+    // would take a palette for its tiles and a byte past the table for its
+    // colours; it is drawn as a Poke Ball.
+    u32 ball = GetMonData(mon, MON_DATA_POKEBALL, NULL);
+    summaryMon->pokeball = ball > BALL_SPORT ? BALL_POKE : ball;
     summaryMon->type1 = GetMonData(mon, MON_DATA_TYPE_1, NULL);
     summaryMon->type2 = GetMonData(mon, MON_DATA_TYPE_2, NULL);
     summaryMon->otID = GetMonData(mon, MON_DATA_OT_ID, NULL);
