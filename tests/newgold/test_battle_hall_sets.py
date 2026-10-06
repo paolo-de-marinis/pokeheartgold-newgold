@@ -249,6 +249,23 @@ int main(void) {
 '''
 
 
+# The Hall Matron's battles (mode 1) for a species not among the sets, with
+# the first three strengths grown so the strongest is the last 72 sets alone:
+# each pick's set, for many searches.
+FALLBACK = r'''
+int main(void) {
+    for (int seed = 1; seed <= 200; seed++) {
+        u16 sets[16] = {0};
+        sSeed = seed;
+        ov80_02237448(2, 0, 0, 0, SPECIES_NONE, sets, 1);
+        printf("%d %d\n", sets[0], sets[1]);
+    }
+    return 0;
+}
+'''
+GROWN = "{ { 1, 100 }, { 101, 200 }, { 201, 450 }, { 451, BATTLE_HALL_SET_COUNT } }"
+
+
 def fairy_picks():
     """Each rank's Fairy-type picks, a species for every start."""
     picks = [[] for _ in range(10)]
@@ -289,6 +306,17 @@ class BattleHallSetTests(unittest.TestCase):
         joined = [strengths[0]] * 2 + [(strengths[0][0], strengths[1][1])] * 3 + \
             [(strengths[1][0], strengths[2][1])] * 3 + [(strengths[2][0], strengths[3][1])] * 2
         self.assertEqual(ranges("gBattleHallRankStretches"), joined)
+
+    def test_a_species_not_in_the_sets_fights_the_strongest(self):
+        # The fallback was BATTLE_HALL_SET_COUNT - 101, a set that lies in the
+        # strongest strength only while that strength has 101 sets or more:
+        # grown first strengths would move it, and a species the sets lack,
+        # into the third.
+        program_text = re.sub(r"(gBattleHallStrengths\[4\] = )\{.*?\};", lambda m: m[1] + GROWN + ";",
+                              program(FALLBACK), count=1, flags=re.S)
+        picks = [int(s) for s in run(program_text, "newgold-hall-fallback-").split()]
+        self.assertTrue(picks)
+        self.assertTrue(all(451 <= s <= len(hall_sets()) for s in picks), sorted(set(picks))[:5])
 
     def test_every_fairy_rank_fields_the_newer_fairy_pokemon(self):
         # Paolo (2026-10-02): the Hall's Fairy rank fields the Fairy Pokemon

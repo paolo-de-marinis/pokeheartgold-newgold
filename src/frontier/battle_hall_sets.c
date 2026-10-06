@@ -55,7 +55,9 @@ void ov80_02237448(u8 count, u8 type, u8 rank, u8 battleNo, u16 species, u16 *se
             }
         }
         if (idx == BATTLE_HALL_SET_COUNT) {
-            pos = BATTLE_HALL_SET_COUNT - 101;
+            // A species the sets lack fights the strongest: the last set's
+            // place, which is the strongest strength's whatever its size.
+            pos = BATTLE_HALL_SET_COUNT - 1;
         }
         for (i = 0; i < 4; i++) {
             if (pos < gBattleHallStrengths[i].last) {
