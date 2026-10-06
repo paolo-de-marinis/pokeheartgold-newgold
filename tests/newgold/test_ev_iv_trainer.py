@@ -156,6 +156,102 @@ int main(void) {
 """
 
 
+HOLD = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef int8_t s8;
+typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#define NUM_STATS 6
+enum { PAD_BUTTON_A = 1, PAD_BUTTON_B = 2, PAD_BUTTON_X = 4, PAD_BUTTON_Y = 8, PAD_BUTTON_L = 16, PAD_BUTTON_R = 32,
+       PAD_BUTTON_START = 64, PAD_BUTTON_SELECT = 128, PAD_KEY_UP = 256, PAD_KEY_DOWN = 512, PAD_KEY_LEFT = 1024,
+       PAD_KEY_RIGHT = 2048, SEQ_SE_DP_SELECT = 0 };
+@ENUMS@
+typedef struct { int state; u8 page, row; s8 held, pressed; u8 heldFrames; BOOL topChanged; } EvIvTrainer;
+static struct { int newKeys, newAndRepeatedKeys; } gSystem;
+static BOOL newTouch, touching;
+static int steps, topDraws;
+static BOOL System_GetTouchNewCoords(u32 *x, u32 *y) { *x = *y = 0; return newTouch; }
+static BOOL System_GetTouchHeldCoords(u32 *x, u32 *y) { *x = *y = 0; return touching; }
+static int Trainer_Touched(EvIvTrainer *app, u32 x, u32 y) { (void)app; (void)x; (void)y; return HIT_UP; }
+static void Trainer_Act(EvIvTrainer *app, int hit, int step) { assert(hit == HIT_UP); steps += step; app->topChanged = TRUE; }
+static void Trainer_Back(EvIvTrainer *app) { (void)app; assert(0); }
+static void Trainer_DrawTop(EvIvTrainer *app) { topDraws++; app->topChanged = FALSE; }
+static void Trainer_DrawBottom(EvIvTrainer *app) { (void)app; }
+static void PlaySE(int se) { (void)se; }
+@APP@
+int main(void) {
+    EvIvTrainer app = { STATE_INPUT, PAGE_EV, 0, HIT_NONE, HIT_NONE, 0, FALSE };
+    newTouch = touching = TRUE;         // the up arrow touched: one step
+    Trainer_HandleInput(&app);
+    newTouch = FALSE;                   // then held for 60 frames: after 16, one step a frame
+    for (int frame = 1; frame <= 60; frame++) {
+        Trainer_HandleInput(&app);
+        assert(steps == 1 + (frame >= 16 ? frame - 15 : 0));
+    }
+    assert(topDraws == 0);              // the top screen waits while the arrow is held
+    touching = FALSE;
+    Trainer_HandleInput(&app);
+    assert(steps == 46 && topDraws == 1 && app.held == HIT_NONE);
+    return 0;
+}
+"""
+
+BALL = r"""
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include "constants/balls.h"
+typedef uint8_t u8;
+#define MON_DATA_POKEBALL 0
+#define NARC_a_1_6_2 0
+#define GF_PAL_LOCATION_MAIN_BG 0
+#define GF_PAL_SLOT_10_OFFSET 0
+#define FALSE 0
+typedef struct { void *ballRaw, *ball; int heapID; } EvIvTrainer;
+// The summary's table runs to the Sport Ball: a read past it is caught (ASan).
+const u8 _02104C68[BALL_SPORT + 1] = { [BALL_POKE] = 7, [BALL_SPORT] = 3 };
+static int caught, member, palette;
+static int GetMonData(void *mon, int attr, void *dest) { (void)mon; (void)attr; (void)dest; return caught; }
+static void *GfGfxLoader_GetCharData(int narc, int which, int compressed, void **out, int heap) {
+    (void)narc; (void)compressed; (void)heap; member = which; *out = NULL; return NULL;
+}
+static void GfGfxLoader_GXLoadPal(int narc, int which, int where, int offset, int size, int heap) {
+    (void)narc; (void)where; (void)offset; (void)size; (void)heap; palette = which;
+}
+static void Ball(EvIvTrainer *app, void *mon) {
+    @BALL@
+}
+static void Check(int ball, int wantMember, int wantPalette) {
+    EvIvTrainer app = { 0 };
+    caught = ball;
+    Ball(&app, NULL);
+    assert(member == wantMember && palette == wantPalette);
+}
+int main(void) {
+    Check(BALL_NONE, 25, 49 + _02104C68[BALL_NONE]);
+    Check(BALL_POKE, BALL_POKE + 24, 49 + 7);
+    Check(BALL_SPORT, BALL_SPORT + 24, 49 + 3);
+    Check(BALL_PARK, BALL_POKE + 24, 49 + 7);       // past the Sport Ball: a Poke Ball's icon
+    Check(BALL_SPORT + 40, BALL_POKE + 24, 49 + 7);
+    return 0;
+}
+"""
+
+
+def run_c(source, *flags):
+    with tempfile.TemporaryDirectory(prefix="newgold-trainer-") as directory:
+        path = Path(directory)
+        (path / "check.c").write_text(source)
+        subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+            "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-O1", *flags,
+            "-iquote", str(ROOT / "include"), str(path / "check.c"), "-o", str(path / "check")], check=True)
+        subprocess.run([str(path / "check")], cwd=directory, check=True)
+
+
 class RulesTests(unittest.TestCase):
     def test_the_rules(self):
         rules = read("src/ev_iv_trainer_rules.c")
@@ -176,13 +272,27 @@ class RulesTests(unittest.TestCase):
         Hyper Training's bits)."""
         app = read("src/ev_iv_trainer_app.c")
         body = "\n".join(function(app, name) for name in ("Trainer_ShownEvs", "Trainer_UpdatePreview"))
-        with tempfile.TemporaryDirectory(prefix="newgold-trainer-") as directory:
-            path = Path(directory)
-            (path / "check.c").write_text(PREVIEW.replace("@APP@", body))
-            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
-                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-O2",
-                "-iquote", str(ROOT / "include"), str(path / "check.c"), "-o", str(path / "check")], check=True)
-            subprocess.run([str(path / "check")], cwd=directory, check=True)
+        run_c(PREVIEW.replace("@APP@", body))
+
+    def test_a_held_arrow_runs_and_the_top_waits(self):
+        """A held arrow, after 16 frames, steps every frame (Speed 52 to 68
+        in a second, 5fec2af87), and the top screen is redrawn once it is
+        let go, not while it is held."""
+        app = read("src/ev_iv_trainer_app.c")
+        enums = "\n".join(re.search(rf"enum {name} \{{.*?\}};", app, re.S).group(0)
+                          for name in ("TrainerPage", "TrainerState", "TrainerHitbox"))
+        body = "\n".join(re.findall(r"^#define HOLD_\w+ .*$", app, re.M)) + "\n" + function(app, "Trainer_HandleInput")
+        run_c(HOLD.replace("@ENUMS@", enums).replace("@APP@", body))
+
+    def test_the_ball_beside_the_name(self):
+        """The ball it was caught in, as the summary draws it: member ball +
+        24 of a/1/6/2 (25 with none) and the summary's palette for it; past
+        the Sport Ball, where the summary's icons end, a Poke Ball's
+        (e4c336181)."""
+        app = read("src/ev_iv_trainer_app.c")
+        start = app.index("        int ball = GetMonData(app->mon, MON_DATA_POKEBALL, NULL);")
+        block = app[start:app.index("\n    }\n", start)].replace("app->mon", "mon")
+        run_c(BALL.replace("@BALL@", block), "-fsanitize=address,undefined", "-fno-sanitize-recover=all")
 
     def test_the_app_writes_only_what_was_confirmed(self):
         """The Pokemon is written in one place, after the YES, and the money
