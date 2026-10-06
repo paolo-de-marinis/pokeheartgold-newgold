@@ -555,6 +555,13 @@ class Scorer:
         w = self.weigh(mon, foe, [i for i in range(4) if mon["moves"][i] and mon["pp"][i]], field)
         return w["wins"], w["dealt"], -w["needed"], w["lasts"]
 
+    def hopeless(self, team, foe, field):
+        """Whether none of `team`, the Pokemon left on the bench, would take
+        a tenth of the foe's HP before falling (an egg hatched at level 1
+        against Whitney's Miltank): the one out is the last that counts, and
+        heals as the last does."""
+        return all(mon is None or self.standing(mon, foe, field)[1] < 0.1 for mon in team)
+
     def rocks(self, mon, field):
         """What Stealth Rock on the player's side takes off a Pokemon coming
         in: an eighth of its HP by the Rock type's chart against it."""
@@ -1088,9 +1095,11 @@ def fight(core, markers, hold, say, move=-1, frames=40000, scorer=None, turns=No
             team = bench(ram, markers, scorer) if others else []
         except SystemExit:
             team = []
+        left = [team[slot] for slot in others if slot < len(team)]
         return scorer.choose(user, foe, usable, field, found["heals"] if battler == 0 and not is_wild() else None,
-                             not others, [(slot, team[slot]["hp"], team[slot]["maxHp"]) for slot in others
-                                          if slot < len(team) and team[slot]])
+                             not others or scorer.hopeless(left, foe, field),
+                             [(slot, team[slot]["hp"], team[slot]["maxHp"]) for slot in others
+                              if slot < len(team) and team[slot]])
 
     def facing(ram):
         """(the battle's four battlers, the field, the foe the player's first

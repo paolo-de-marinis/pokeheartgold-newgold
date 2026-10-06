@@ -447,6 +447,20 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(aimed_at(battlers((25, 50), (16, 0), (26, 50), (74, 40)), At, 2)[0], 74)
         self.assertEqual(aimed_at(battlers((25, 50), (16, 40), (0, 0), (0, 0)), At, 0)[0], 16)    # a single battle
 
+    def test_gym_counts_a_bench_that_cannot_fight_as_none(self):
+        # Whitney's Miltank swept the playthrough's team, its last a Togepi
+        # hatched at level 1 that fell to one hit: the bag's Hyper Potions,
+        # which the last Pokemon spends to last longer, were never used, the
+        # Noctowl before it not being the last. A bench that would not take a
+        # tenth of the foe's HP before falling is none.
+        scorer, mon, field, _ = self._picker()
+        miltank = mon("MILTANK", 30, ["BODY_SLAM", "MILK_DRINK", "BULLDOZE", "ZEN_HEADBUTT"])
+        togepi = mon("TOGEPI", 1, ["GROWL", "POUND"])
+        quilava = mon("QUILAVA", 28, ["FIRE_BLAST", "FLAME_WHEEL"])
+        self.assertTrue(scorer.hopeless([togepi], miltank, field))
+        self.assertTrue(scorer.hopeless([togepi, None], miltank, field))
+        self.assertFalse(scorer.hopeless([togepi, quilava], miltank, field))
+
     def _picker(self):
         """A Scorer and a battler maker for the picker's tests: stats as the
         game computes them at a level (IVs 15, no EVs, a neutral nature)."""
