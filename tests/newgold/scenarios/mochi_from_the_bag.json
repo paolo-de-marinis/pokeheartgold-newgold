@@ -1,0 +1,10 @@
+{
+  "about": "The Mochi used from the bag, as the ninth generation's are (Pokemon Central, Mochi: 10 EVs to one stat): route29-official.sav's Chikorita, no EVs, given two Health Mochi and a Swift Mochi (savedit --item). use: opens the bag's Items pocket, picks the Health Mochi, USE, the Chikorita's panel: \"CHIKORITA's base HP rose!\", one Mochi spent; then the Swift Mochi, \"base Speed rose!\". The Chikorita ends with 10 HP EVs and 10 Speed EVs, the other four still 0, one Health Mochi left and no Swift Mochi. Before the Mochi had a party use, use: fails (the bag offers nothing to do).",
+  "save": "route29-official.sav",
+  "edit": ["--item", "HEALTH_MOCHI:2,SWIFT_MOCHI:1"],
+  "steps": ["field", "use:ITEM_HEALTH_MOCHI,0",
+            {"expect": {"party0.ev0": 10, "party0.ev3": 0, "bag:ITEM_HEALTH_MOCHI": 1}},
+            "use:ITEM_SWIFT_MOCHI,0"],
+  "expect": {"party0.ev0": 10, "party0.ev1": 0, "party0.ev2": 0, "party0.ev3": 10, "party0.ev4": 0, "party0.ev5": 0,
+             "bag:ITEM_HEALTH_MOCHI": 1, "bag:ITEM_SWIFT_MOCHI": 0}
+}
