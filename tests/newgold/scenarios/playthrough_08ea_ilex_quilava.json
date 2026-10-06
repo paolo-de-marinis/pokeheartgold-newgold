@@ -1,0 +1,13 @@
+{
+  "about": "The playthrough trains the Quilava for Bugsy, from Azalea's Pokemon Center after leg 08e: swap: puts it first, and on Ilex Forest's floor inside the gatehouse (12, 77 to 12, 81) it fights alone, its Fire twice as strong against the forest's bugs and grass, until it has 22, the cap since Proton -- walked to the level, not for frames: how far it has come is the run's. Bugsy's Scizor (Technician Bullet Punch, a Metal Coat) is the one the Quilava is kept for, its Fire four times as strong against him: where the legs were written it was at the cap by leg 08c and Bugsy fell at the first attempt; in round 16's chain it came to Bugsy at 19 and his Scizor swept the team seven times running (111,188 frames). A Cyndaquil is a Quilava from 16, so the line is expected. flee:40 runs once it is low and heal: takes it to Azalea's nurse between two walks. Then swap: puts the Geodude back first for his Ledian; the nurse, and the game's save. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_08e_ilex_noctowl",
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "flee:40", "heal:MAP_AZALEA_POKECENTER_1F,8,13",
+            "swap:0,1", {"expect": {"party0.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"], "party1.species": "SPECIES_GEODUDE"}},
+            "pace:MAP_ILEX_FOREST,12,77,12,81,party0.level,22,80000",
+            "swap:0,1",
+            {"expect": {"party0.species": ["SPECIES_GEODUDE", "SPECIES_GRAVELER"], "party1.species": "SPECIES_QUILAVA", "party2.species": "SPECIES_NOCTOWL"}},
+            "goto:MAP_AZALEA_POKECENTER_1F,8,13", "UP", "A", "field", "save"],
+  "expect": {"map": "MAP_AZALEA_POKECENTER_1F", "x": 8, "y": 13, "badges": 1, "party": 6, "music": "SEQ_GS_POKESEN",
+             "party1.level": 22, "bag:ITEM_SUPER_POTION": 10}
+}
