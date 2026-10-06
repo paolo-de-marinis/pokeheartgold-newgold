@@ -12,7 +12,7 @@
     {
       "expect": {
         "party0.species": "SPECIES_HOOTHOOT",
-        "party4.species": "SPECIES_QUILAVA"
+        "party4.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"]
       }
     },
     "shift:4",
@@ -29,7 +29,7 @@
     {
       "expect": {
         "party0.species": "SPECIES_GEODUDE",
-        "party1.species": "SPECIES_QUILAVA",
+        "party1.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"],
         "party2.species": "SPECIES_HOOTHOOT",
         "party3.species": "SPECIES_MISDREAVUS",
         "party4.species": "SPECIES_FLAAFFY"

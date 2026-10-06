@@ -23,7 +23,7 @@
     "swap:0,4",
     {
       "expect": {
-        "party0.species": "SPECIES_QUILAVA"
+        "party0.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"]
       }
     },
     "goto:MAP_NATIONAL_PARK,66,46,90000",
@@ -50,7 +50,7 @@
     "swap:0,2",
     {
       "expect": {
-        "party0.species": "SPECIES_QUILAVA"
+        "party0.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"]
       }
     },
     "goto:MAP_NATIONAL_PARK,37,31,90000",

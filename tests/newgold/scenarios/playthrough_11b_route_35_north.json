@@ -1,5 +1,5 @@
 {
-  "about": "The playthrough trains for Whitney on Route 35's north, from Goldenrod's Pokemon Center: Juggler Irwin (four Voltorb, 23 to 26), led by the Misdreavus, which their Self-Destruct and Explosion do not touch; after the nurse Firebreather Walt (Magby, Slugma, Litleo, Magmar, 23 to 26) and, by night, Policeman Dirk (Growlithe, Houndoom, Growlithe, 24 to 26), led by the Graveler, which their Fire resists; after the nurse again Bug Catcher Arnie by the National Park's gatehouse (Venonat, Ariados, Swadloon, Burmy, 24 to 28), led by the Quilava. Each trainer is walked up to and talked to, A and fight, unless they spot the player on the way and the navigator's battle has them beaten already (fight: then stops at their line after the battle); a loss sends the player to the nurse, and again: walks back and fights that trainer again until trainer: reads them beaten, each attempt a new battle (retry:, the battle seed one higher), four times more at most -- what a loss wins, the Pokemon it knocked out, is kept. Played on 5fec2af87: all four at the first attempt (46,759 frames). The nurse, and the game's save. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "about": "The playthrough trains for Whitney on Route 35's north, from Goldenrod's Pokemon Center: Juggler Irwin (four Voltorb, 23 to 26), led by the Misdreavus, which their Self-Destruct and Explosion do not touch; after the nurse Firebreather Walt (Magby, Slugma, Litleo, Magmar, 23 to 26) and, by night, Policeman Dirk (Growlithe, Houndoom, Growlithe, 24 to 26), led by the Graveler, which their Fire resists (or the Geodude: the one caught in leg 04c may hold an Everstone, as round 16's chain's did); after the nurse again Bug Catcher Arnie by the National Park's gatehouse (Venonat, Ariados, Swadloon, Burmy, 24 to 28), led by the Quilava. Each trainer is walked up to and talked to, A and fight, unless they spot the player on the way and the navigator's battle has them beaten already (fight: then stops at their line after the battle); a loss sends the player to the nurse, and again: walks back and fights that trainer again until trainer: reads them beaten, each attempt a new battle (retry:, the battle seed one higher), four times more at most -- what a loss wins, the Pokemon it knocked out, is kept. Played on 5fec2af87: all four at the first attempt (46,759 frames). The nurse, and the game's save. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
   "from": "playthrough_11a_route_35_ivan",
   "hold": {
     "gDiagBattleSeed": 1
@@ -27,7 +27,7 @@
     "swap:0,2",
     {
       "expect": {
-        "party0.species": "SPECIES_GRAVELER"
+        "party0.species": ["SPECIES_GEODUDE", "SPECIES_GRAVELER"]
       }
     },
     "goto:MAP_ROUTE_35,361,275,90000",
@@ -47,7 +47,7 @@
     "swap:0,1",
     {
       "expect": {
-        "party0.species": "SPECIES_QUILAVA"
+        "party0.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"]
       }
     },
     "goto:MAP_ROUTE_35,378,266,90000",

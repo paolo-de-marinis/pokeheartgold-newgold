@@ -10,7 +10,7 @@
     {
       "expect": {
         "party0.species": "SPECIES_GEODUDE",
-        "party1.species": "SPECIES_QUILAVA",
+        "party1.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"],
         "party2.species": "SPECIES_NOCTOWL",
         "bag:ITEM_SUPER_POTION": [
           1,

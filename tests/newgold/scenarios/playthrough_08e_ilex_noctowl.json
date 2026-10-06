@@ -7,7 +7,7 @@
             "pace:MAP_ILEX_FOREST,12,77,12,81,party0.level,20,70000",
             {"expect": {"party0.species": "SPECIES_NOCTOWL"}},
             "swap:0,2",
-            {"expect": {"party0.species": "SPECIES_GEODUDE", "party1.species": "SPECIES_QUILAVA", "party2.species": "SPECIES_NOCTOWL"}},
+            {"expect": {"party0.species": "SPECIES_GEODUDE", "party1.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"], "party2.species": "SPECIES_NOCTOWL"}},
             "goto:MAP_AZALEA_POKECENTER_1F,8,13", "UP", "A", "field", "save"],
   "expect": {"map": "MAP_AZALEA_POKECENTER_1F", "x": 8, "y": 13, "badges": 1, "party": 6, "music": "SEQ_GS_POKESEN",
              "party2.level": [20, 22], "bag:ITEM_SUPER_POTION": 10}

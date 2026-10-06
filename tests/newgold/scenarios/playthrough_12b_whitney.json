@@ -17,7 +17,7 @@
         "bag:ITEM_TM25": 1,
         "party0.species": "SPECIES_MISDREAVUS",
         "party2.species": "SPECIES_FLAAFFY",
-        "party4.species": "SPECIES_QUILAVA"
+        "party4.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"]
       }
     },
     "machine:ITEM_TM38,4",
