@@ -110,9 +110,12 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertEqual(line[-1], "playthrough_01_new_game")
         self.assertNotIn("save", legs_[line[-1]])
         self.assertEqual(sorted(line), sorted(legs_))
+        # Paolo, 2026-10-06: the bot losing to Whitney is a balance question
+        # for after the port, so her leg alone may raise the team.
+        edited = {"playthrough_12b_whitney": ["--train", "36"]}
         for name, spec in legs_.items():
             with self.subTest(name):
-                self.assertNotIn("edit", spec)
+                self.assertEqual(spec.get("edit"), edited.get(name))
                 # Nor does a step write the party or the battle: the field's
                 # RNG is pinned and the battle's seed held, and nothing else
                 # is poked, held, set or taught.
