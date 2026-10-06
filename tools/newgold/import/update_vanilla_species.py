@@ -30,9 +30,14 @@ LAST_VANILLA = 493
 # reference keeps at the same numbers (its SPECIES_496 to SPECIES_507). Their
 # types are taken from there: HeartGold's own left Rotom's appliance forms
 # Electric and Ghost, where the games from the fifth generation on and the
-# reference make them Electric and Fire, Water, Ice, Flying and Grass. The
-# rest of these records is HeartGold's, which matches the reference but for
-# the machines (Deoxys's forms and Wormadam's cloaks), left as they are.
+# reference make them Electric and Fire, Water, Ice, Flying and Grass. So are
+# their TM01 to HM08, by the rule every other record's follow (the machines
+# past HM08 are import_machines.py's): HeartGold's own left Deoxys's three
+# forms without TM79 Dark Pulse, which base Deoxys and the reference give
+# them, the Sandy Cloak without Giga Drain, Solar Beam and Stealth Rock and
+# the Trash Cloak without Dig, Giga Drain and Solar Beam, all of which the
+# eighth generation's cloaks learn by machine (Pokemon Central, Wormadam).
+# The rest of these records is HeartGold's, which matches the reference.
 ALTERNATE_FORMS = range(496, 508)
 
 
@@ -73,9 +78,14 @@ def pending(reference):
 
     for index in ALTERNATE_FORMS:
         record = records[index]
-        types = [import_species.native(name) for name in import_species.pair(blocks[str(index)], "types")]
-        if record["types"] != types:
-            updates.append((index, {**record, "types": types}, ["types"]))
+        learned = learnsets.get(str(index), set())
+        wanted = {**record,
+                  "types": [import_species.native(name) for name in import_species.pair(blocks[str(index)], "types")],
+                  "tms": sorted(tms[move] for move in learned if move in tms),
+                  "hms": sorted(hms[move] for move in learned if move in hms)}
+        differing = [key for key in record if record[key] != wanted[key]]
+        if differing:
+            updates.append((index, wanted, differing))
     return personal, updates, skipped
 
 

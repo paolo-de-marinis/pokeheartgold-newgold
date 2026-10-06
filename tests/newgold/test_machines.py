@@ -88,6 +88,21 @@ class MachineDataTests(unittest.TestCase):
         sandy = next(row for row in self.rows if row["species"] == "WORMADAM_SANDY")
         self.assertIn(123, sandy["machines"])
 
+    def test_the_alternate_forms_take_the_reference_s_machines(self):
+        """HeartGold's own records for the forms after the bad egg left
+        Deoxys's three forms without TM79 Dark Pulse, which base Deoxys and
+        the reference give them, the Sandy Cloak without TM19 Giga Drain,
+        TM22 Solar Beam and TM76 Stealth Rock, and the Trash Cloak without
+        TM19, TM22 and TM28 Dig: the eighth generation's cloaks learn all of
+        them by machine (Pokemon Central, Wormadam)."""
+        tms = lambda name: next(row for row in self.rows if row["species"] == name)["tms"]  # noqa: E731
+        for name in ("DEOXYS", "DEOXYS_ATK", "DEOXYS_DEF", "DEOXYS_SPD"):
+            self.assertIn(79, tms(name), name)
+        for tm in (19, 22, 76):
+            self.assertIn(tm, tms("WORMADAM_SANDY"), tm)
+        for tm in (19, 22, 28, 76):
+            self.assertIn(tm, tms("WORMADAM_TRASH"), tm)
+
     def test_plant_cloak_wormadam_has_only_its_own_machines(self):
         """The reference gives Plant Cloak Wormadam the other two cloaks'
         machines (wotbl.REFERENCE_DEFECTS says why): no TM26 Earthquake, TM74
