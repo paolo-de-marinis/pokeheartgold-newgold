@@ -1133,6 +1133,24 @@ class SaveditLibraryTests(unittest.TestCase):
                          [b & 0x3F for b in self.open().block("SAVE_POKEDEX")[sv.DEX_LOOKS:sv.DEX_LOOKS + sv.NATIONAL_DEX_COUNT]])
         self.assert_only(save, ["SAVE_POKEDEX"])
 
+    def test_a_form_s_gender_is_recorded_on_its_species(self):
+        """Pokedex_RecordMonSeen records the gender a form is seen in on its
+        species: Pyroar's female, a species of her own, seen first makes
+        Pyroar seen as a female; seen after a male Pyroar, Pyroar's second
+        gender. The Dex's FORMS page lists the genders so."""
+        save = self.open()
+        n = sv.species_numbers()
+        block = save.block("SAVE_POKEDEX")
+        genders = lambda s: tuple(sv._dex_bit(block, at, s) for at in  # noqa: E731
+                                  (sv.DEX_GENDERS, sv.DEX_GENDERS + sv.DEX_SEEN - sv.DEX_CAUGHT))
+        sv.set_dex(save, [n["PYROAR"], n["MEOWSTIC"]], False, False)
+        sv.set_form_record(save, n["PYROAR_FEMALE"], seen=True, caught=False)
+        self.assertEqual(genders(n["PYROAR"]), (1, 1))
+        sv.mark_dex(save, ["MEOWSTIC"])
+        self.assertEqual(genders(n["MEOWSTIC"]), (0, 0))
+        sv.set_form_record(save, n["MEOWSTIC_FEMALE"], seen=True, caught=True)
+        self.assertEqual(genders(n["MEOWSTIC"]), (0, 1))
+
     def test_a_save_from_before_the_dex_recorded_the_forms(self):
         """The layout before the Dex's record of the forms: the Dex block
         that much shorter, every block after it earlier, the footers with the

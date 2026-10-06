@@ -3019,6 +3019,9 @@ def set_form_record(save, form, seen, caught):
         set_dex(save, [base], True, caught or bool(_dex_bit(block, DEX_CAUGHT, base)))
     if first:
         _shown_first_as(block, form)
+        _set_seen_genders(block, base, form)
+    elif seen:
+        _add_form_gender(block, base, form)
     if not seen and block[DEX_LOOKS + form - DEX_FIRST_FORM] & DEX_FORM_SEEN_FIRST:
         # The look goes with the form. A base seen only as forms is shown as
         # another form still seen, as if that one had been seen first, or,
@@ -3041,19 +3044,34 @@ def _shown_first_as(block, form):
 
 
 
-def _set_seen_genders(block, species):
+def _set_seen_genders(block, species, seen_as=None):
     """The genders Pokedex_SetMonSeenFlag records the first time a species is
     seen -- seenGenders[0] the one seen first, seenGenders[1] the other --
-    here every gender the species can be. The Dex draws the gender recorded
-    first, and the male sprite of a species that is only ever female is an
-    empty member of the sprite archive: an assertion, and no picture."""
-    ratio = GENDER_RATIO(personal_records()[personal_row(species, 0)]["genderRatio"])
+    here every gender the species can be, or the form it is seen as first
+    (seen_as) can be: Pokedex_RecordMonSeen records a form's gender on its
+    base. The Dex draws the gender recorded first, and the male sprite of a
+    species that is only ever female is an empty member of the sprite
+    archive: an assertion, and no picture."""
+    ratio = GENDER_RATIO(personal_records()[personal_row(seen_as or species, 0)]["genderRatio"])
     first, second = {MON_RATIO_FEMALE: (1, 1), MON_RATIO_MALE: (0, 0), MON_RATIO_UNKNOWN: (0, 0)}.get(ratio, (0, 1))
     bit = 1 << ((species - 1) & 7)
     # seenGenders[1] follows [0], each as long as the seen flags.
     for at, female in ((DEX_GENDERS, first), (DEX_GENDERS + DEX_SEEN - DEX_CAUGHT, second)):
         at += (species - 1) >> 3
         block[at] = block[at] | bit if female else block[at] & ~bit
+
+
+def _add_form_gender(block, species, form):
+    """A form of a species seen already, as Pokedex_RecordMonSeen records it
+    on the species: a form of one gender the species was not seen in first
+    is its second (the female of the species that keep her as a species of
+    their own, PicSpecies_FemaleForm)."""
+    ratio = GENDER_RATIO(personal_records()[personal_row(form, 0)]["genderRatio"])
+    female = {MON_RATIO_FEMALE: 1, MON_RATIO_MALE: 0}.get(ratio)
+    bit, at = 1 << ((species - 1) & 7), (species - 1) >> 3
+    if female is not None and bool(block[DEX_GENDERS + at] & bit) != female:
+        second = DEX_GENDERS + DEX_SEEN - DEX_CAUGHT + at
+        block[second] = block[second] | bit if female else block[second] & ~bit
 
 
 def _set_seen_form(block, species):
