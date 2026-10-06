@@ -220,7 +220,7 @@ class ScenarioFileTests(unittest.TestCase):
         asked = []
         s = scene.Scene.__new__(scene.Scene)
         s.core, s.hooks, s.say, s.markers, s.flee, s._text_count = Core(), [], print, None, 40, 0
-        s.catch, s.shift = None, None
+        s.catch, s.shift, s.hunt = None, None, False
         battles = iter([True, True])
         s.in_battle = lambda: next(battles, False)
         s.movable, s.textbox, s.partner_prompt, s._collect = (lambda: True), (lambda: False), (lambda: None), (lambda core: None)
