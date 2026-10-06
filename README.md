@@ -12,18 +12,18 @@ the unmodified upstream base, not the modified ROMs.
 
 <!-- LEDGER:SUMMARY:START -->
 ```
-Overall                                                                    98%
-  done, seen running   ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  14%
-  done, never played   ████████████████████████████████░░░░░░░░░░░░░░░░░░  63%
-  partial              ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   3%
+Overall                                                                    96%
+  done, seen running   ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  11%
+  done, never played   ████████████████████████████████░░░░░░░░░░░░░░░░░░  65%
+  partial              ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   6%
   still to do          ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
-  deferred / no scope  ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  19%
+  deferred / no scope  ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%
 
 Implementation         ██████████████████████████████████████████████████  99%
-Verified in play       █████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  18%
-Audit rows closed      ████████████████████████████████████████████████░░  96%
+Verified in play       ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  15%
+Audit rows closed      ████████████████████████████████████████████████░░  95%
 
-Audit: 30 of 697 rows in docs/newgold/AUDIT-*.md still open.
+Audit: 38 of 754 rows in docs/newgold/AUDIT-*.md still open.
 The port is finished when none is, or each is closed with a reason.
 Overall and Implementation: done 1, partial a half, deferred rows
 out of the denominator. Verified in play: of the rows that are done,
@@ -38,7 +38,7 @@ Moves       ██████████████████████�
 Abilities   ██████████████████████████████████████████████████   319 /  319
 Items       ██████████████████████████████████████████████████  2685 / 2685
 Trainers    ██████████████████████████████████████████████████   738 /  738
-Tests       176 files
+Tests       183 files
 ROM         165.0 MB of 268.4 MB   (2G card, 61% used)
 ```
 <!-- LEDGER:COUNTS:END -->
