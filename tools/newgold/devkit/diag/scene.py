@@ -149,6 +149,9 @@ start menu's settings as Options holds them: text speed 2 fast, battle
 scene 1 off, battle style 1 set), flag:FLAG_..., var:VAR_..., trainer:TRAINER_...
 (1 once that trainer is beaten, TrainerFlagCheck),
 caught:SPECIES_... (1 once the Pokedex has it caught),
+bgN:X,Y (the entry at tile X, Y of the field's layer N, 3 the message box's,
+as the BgConfig's tilemap buffer holds it for the screen: tile number and
+palette << 12, 0 for nothing there -- a window's frame drawn or not),
 battlerN.species|hp|maxHp|level|partySlot|status|item|moveK|ppK|form|movePos
 (gDiagBattlers; N counts the player's side even, K is a move slot, 0 to
 3; form is the battle's, which a species keeps through Castform's weather
@@ -230,6 +233,7 @@ def readable(step_or_key, key=False):
                 or re.fullmatch(r"trainer:TRAINER_\w+", step_or_key) is not None
                 or re.fullmatch(r"caught:SPECIES_\w+", step_or_key) is not None
                 or re.fullmatch(r"bag:ITEM_\w+", step_or_key) is not None
+                or re.fullmatch(r"bg[0-7]:\d+,\d+", step_or_key) is not None
                 or re.fullmatch(rf"battler[0-3]\.({'|'.join(BATTLER_FIELDS)}|types)", step_or_key) is not None
                 or re.fullmatch(rf"party[0-5]\.({'|'.join(PARTY_FIELDS)})", step_or_key) is not None
                 or re.fullmatch(rf"options\.({'|'.join(OPTION_FIELDS)})", step_or_key) is not None)
@@ -335,6 +339,19 @@ def field_layout():
     out = {n.replace(", ", "."): v for n, v in zip(names, values)}
     out["LocalMapObject.size"] = values[-1]
     out["FieldSystem.textbox_open"] = savedit.set_bit(textbox)
+    return out
+
+
+@savedit.tree_cache
+def bg_layout():
+    """Where the field's BgConfig keeps a layer's tilemap buffer (bgN:X,Y),
+    from the tree's headers, and the sizes 32 tiles wide."""
+    names = ("FieldSystem, bgConfig", "BgConfig, bgs", "Background, tilemapBuffer", "Background, size")
+    values = savedit.compile_c(exprs=tuple(f"__builtin_offsetof({n})" for n in names)
+                               + ("sizeof(Background)", "GF_BG_SCR_SIZE_256x256", "GF_BG_SCR_SIZE_256x512"),
+                               headers=savedit.LAYOUT_HEADERS + ("field_system.h", "bg_window.h"))[0]
+    out = {n.replace(", ", "."): v for n, v in zip(names, values)}
+    out["Background.sizeof"], out["32 wide"] = values[4], values[5:]
     return out
 
 
@@ -1651,6 +1668,19 @@ class Scene:
                 mon, layout = self.battle_mon(int(battler)), battle_layout()
                 return None if mon is None else [ram[mon - 0x02000000 + layout[t]] for t in ("type1", "type2")]
             return shown[BATTLER_FIELDS.index(field)]
+        if name.startswith("bg") and ":" in name:
+            layer, _, at = name[len("bg"):].partition(":")
+            x, y = map(int, at.split(","))
+            layout, word = bg_layout(), lambda a: struct.unpack_from("<I", ram, a - 0x02000000)[0]
+            field = word(self._field)
+            config = field and word(field + layout["FieldSystem.bgConfig"])
+            if not config:
+                return None
+            bg = config + layout["BgConfig.bgs"] + int(layer) * layout["Background.sizeof"]
+            buffer = word(bg + layout["Background.tilemapBuffer"])
+            if ram[bg + layout["Background.size"] - 0x02000000] not in layout["32 wide"]:
+                raise SystemExit(f"{name}: that layer is not 32 tiles wide, which bgN:X,Y reads")
+            return buffer and struct.unpack_from("<H", ram, buffer + 2 * (y * 32 + x) - 0x02000000)[0]
         if name == "front1.lift":
             return front_lift(self.core.shot(self.hooks).crop((0, 0, 256, 192)), self.value(ram, "battler1.species"))
         raise SystemExit(f"a scenario asks for {name!r}, which scene.py cannot read")

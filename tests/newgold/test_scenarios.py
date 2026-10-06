@@ -543,6 +543,28 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertEqual(layout["battleStyle"], (0, 1, 0x40))
         self.assertEqual(layout["battleScene"], (0, 1, 0x80))
 
+    def test_a_layer_s_tile_is_read_from_the_field_s_bg_config(self):
+        # bgN:X,Y: the entry the field's BgConfig holds for layer N, row by
+        # row 32 tiles wide, found from sFieldSysPtr; a window's frame drawn
+        # there or not (ev_iv_trainer_shop_window).
+        self.assertTrue(scene.readable("bg3:2,18", key=True))
+        for key in ("bg3:2", "bg8:2,18", "bg3"):
+            self.assertFalse(scene.readable(key, key=True), key)
+        layout, ram = scene.bg_layout(), bytearray(0x400000)
+        field, config, buffer = 0x02100000, 0x02200000, 0x02300000
+        struct.pack_into("<I", ram, 0x1000, field)
+        struct.pack_into("<I", ram, field - 0x02000000 + layout["FieldSystem.bgConfig"], config)
+        bg = config - 0x02000000 + layout["BgConfig.bgs"] + 3 * layout["Background.sizeof"]
+        struct.pack_into("<I", ram, bg + layout["Background.tilemapBuffer"], buffer)
+        ram[bg + layout["Background.size"]] = layout["32 wide"][0]
+        struct.pack_into("<H", ram, buffer - 0x02000000 + 2 * (18 * 32 + 2), 0xA3E4)
+        s = scene.Scene.__new__(scene.Scene)
+        s._field = 0x02001000
+        s.markers = None
+        self.assertEqual(s.value(bytes(ram), "bg3:2,18"), 0xA3E4)
+        self.assertEqual(s.value(bytes(ram), "bg3:2,19"), 0)
+        self.assertTrue(scene.Scene.wanted("bg3:2,18", "0xA3E4")[0](0xA3E4))
+
 
 class ChainTests(unittest.TestCase):
     """A leg starts from the save the leg before it left in the chain's
