@@ -67,7 +67,8 @@ BOOL ScrCmd_GetItemQuantity(ScriptContext *ctx) {
 
 // Whether an item ball's or a hidden item's find is a machine, whose message
 // names its move: ItemIsMachine, the machine table's, where retail's
-// ItemIsTMOrHM (asm/unk_0205BB1C.s, now unused) knew TM01 to HM08 alone.
+// ItemIsTMOrHM (asm/unk_0205BB1C.s, removed once unused) knew TM01 to HM08
+// alone.
 BOOL ScrCmd_ItemIsTMOrHM(ScriptContext *ctx) {
     u16 item_id = ScriptGetVar(ctx);
     u16 *ret_ptr = ScriptGetVarPointer(ctx);

@@ -7,7 +7,6 @@
 .public TaskManager_GetFieldSystem
 .public TaskManager_GetEnvironment
 .public CountDigits
-.public ItemIsTMOrHM
 .public GetOakJohtoDexRating
 .public GetOakNationalDexRating
 .public Save_GetPartyLead

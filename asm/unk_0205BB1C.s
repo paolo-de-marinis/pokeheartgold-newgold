@@ -92,23 +92,6 @@ _0205BBB0: .word 0x00989680
 _0205BBB4: .word 0x05F5E100
 	thumb_func_end CountDigits
 
-	thumb_func_start ItemIsTMOrHM
-ItemIsTMOrHM: ; 0x0205BBB8
-	mov r1, #0x52
-	lsl r1, r1, #2
-	cmp r0, r1
-	blo _0205BBCA
-	add r1, #0x63
-	cmp r0, r1
-	bhi _0205BBCA
-	mov r0, #1
-	bx lr
-_0205BBCA:
-	mov r0, #0
-	bx lr
-	.balign 4, 0
-	thumb_func_end ItemIsTMOrHM
-
 	thumb_func_start GetOakJohtoDexRating
 GetOakJohtoDexRating: ; 0x0205BBD0
 	ldr r3, _0205BC74 ; =SEQ_ME_HYOUKA1
