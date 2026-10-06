@@ -1,0 +1,84 @@
+{
+  "about": "Silver at Azalea's west gate with Bayleef, the team a player who took Totodile meets (scr_seq_0866_T23.s, GetStarterChoice; TRAINER_RIVAL_SILVER, #1): konefr's e0bf78b7a left it four, a Larvitar at L10 among three at L22 and no Teddiursa, where the Quilava and Croconaw teams have one; both slips are put right in the importer (import_trainers.AZALEA_SILVER, Paolo 2026-10-07), the five at L22, Croconaw's team with Bayleef. A scratch copy of Paolo's Bugsy save, Totodile its starter and the gate's coord event armed (VAR_UNK_4075 1, as Proton's defeat leaves it), put a step east of the event's column facing west: LEFT walks onto it, the rival comes and the battle starts. Each foe is left at 1 HP (set:) and knocked out in one turn, and every one sent out in its place, one a turn, is checked at L22; Larvitar and Teddiursa are among the five, and their defeat sets the variable to 2. With konefr's team as he wrote it the Larvitar is out at L10 and no Teddiursa comes.",
+  "save": "gyms/bugsy.sav",
+  "edit": [
+    "--var",
+    "VAR_UNK_4075=1",
+    "--var",
+    "VAR_PLAYER_STARTER=158",
+    "--where",
+    "74:396:464:2"
+  ],
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "LEFT",
+    "fight:1:0",
+    {
+      "expect": {
+        "battler1.species": "SPECIES_MISDREAVUS",
+        "battler1.level": 22
+      }
+    },
+    "set:1,hp,1",
+    "fight:1:1",
+    {
+      "expect": {
+        "once_lines": [
+          "sent out"
+        ],
+        "battler1.level": 22
+      }
+    },
+    "set:1,hp,1",
+    "fight:1:1",
+    {
+      "expect": {
+        "once_lines": [
+          "sent out"
+        ],
+        "battler1.level": 22
+      }
+    },
+    "set:1,hp,1",
+    "fight:1:1",
+    {
+      "expect": {
+        "once_lines": [
+          "sent out"
+        ],
+        "battler1.level": 22
+      }
+    },
+    "set:1,hp,1",
+    "fight:1:1",
+    {
+      "expect": {
+        "once_lines": [
+          "sent out"
+        ],
+        "battler1.level": 22
+      }
+    },
+    "set:1,hp,1",
+    "fight:1",
+    {
+      "expect": {
+        "lines": [
+          "sent out Teddiursa!",
+          "You defeated"
+        ]
+      }
+    },
+    "field"
+  ],
+  "expect": {
+    "lines": [
+      "sent out Larvitar!",
+      "You defeated"
+    ],
+    "var:VAR_UNK_4075": 2
+  }
+}
