@@ -1,0 +1,102 @@
+{
+  "about": "Goldenrod's TM floor with four badges, from Route 29's save put at 5F's TM clerk's counter (195, 21, 7, savedit --where) with 20000 to spend, TM70 (--tm) and the first four badges (--badges); the text set fast through OPTIONS, as the playthrough sets it, then the presses of tm_shop_goldenrod.json, which is a chain leg the default suite leaves out. TM70, held, is refused (the money unchanged); on page 3 of 5 TM094 (Work Up, the first step's, two badges) is bought with no quantity to choose for 1500, and refused when bought again; the next page's second place, empty at two badges, now holds TM095 (Snarl, the second step's first), bought for 2000: the money 16500 and TM095 in the bag. With two badges that purchase does not happen and this fails.",
+  "save": "route29-official.sav",
+  "edit": [
+    "--where",
+    "195:21:7:3",
+    "--badges",
+    "4",
+    "--money",
+    "20000",
+    "--tm",
+    "70"
+  ],
+  "steps": [
+    "field",
+    "touch:122,116",
+    "wait:90",
+    "RIGHT",
+    "DOWN*6",
+    "LEFT",
+    "A",
+    "wait:120",
+    "B",
+    "wait:60",
+    "field",
+    {
+      "expect": {
+        "options.textSpeed": 2
+      }
+    },
+    "RIGHT",
+    "A",
+    "wait:60",
+    "A",
+    "wait:90",
+    "A",
+    "wait:90",
+    "A",
+    "wait:30",
+    {
+      "expect": {
+        "money": 20000,
+        "bag:ITEM_TM70": 1
+      }
+    },
+    "RIGHT",
+    "RIGHT",
+    "RIGHT",
+    "LEFT",
+    "wait:30",
+    "A",
+    "wait:90",
+    "A",
+    "wait:60",
+    "A",
+    "wait:60",
+    {
+      "expect": {
+        "money": 18500,
+        "bag:ITEM_TM094": 1
+      }
+    },
+    "A",
+    "wait:90",
+    "A",
+    "wait:30",
+    {
+      "expect": {
+        "money": 18500,
+        "bag:ITEM_TM094": 1
+      }
+    },
+    "RIGHT",
+    "RIGHT",
+    "wait:30",
+    "A",
+    "wait:90",
+    "A",
+    "wait:60",
+    "A",
+    "wait:60",
+    {
+      "expect": {
+        "money": 16500,
+        "bag:ITEM_TM095": 1
+      }
+    },
+    "B",
+    "wait:60",
+    "B",
+    "wait:60",
+    "field"
+  ],
+  "expect": {
+    "map": "MAP_GOLDENROD_DEPARTMENT_STORE_5F",
+    "money": 16500,
+    "bag:ITEM_TM094": 1,
+    "bag:ITEM_TM095": 1,
+    "bag:ITEM_TM104": 0,
+    "bag:ITEM_TM70": 1
+  }
+}
