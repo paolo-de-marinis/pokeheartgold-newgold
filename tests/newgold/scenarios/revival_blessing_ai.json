@@ -4,7 +4,7 @@
   "edit": ["--party", "RAICHU:13,LANTURN:13,TYPHLOSION:13,MACHAMP:13,TOGEKISS:13,UMBREON:13",
            "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
   "hold": {"gDiagBattleSeed": 1},
-  "steps": ["field", "A", "fight:4:1",
+  "steps": ["fight:4:1",
             "teach:1,0,MOVE_REVIVAL_BLESSING", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
             "fight:1:1"],
   "expect": {"lines": ["The opposing Hoothoot fainted!", "Leader Falkner sent out Farfetch’d!",

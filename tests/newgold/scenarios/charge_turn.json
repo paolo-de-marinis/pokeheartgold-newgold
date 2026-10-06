@@ -4,7 +4,7 @@
   "edit": ["--party", "RAICHU:13,LANTURN:13,TYPHLOSION:13,MACHAMP:13,TOGEKISS:13,UMBREON:13",
            "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
   "hold": {"gDiagBattleSeed": 1},
-  "steps": ["field", "A", "fight:1:0", "set:0,ability,ABILITY_INSOMNIA",
+  "steps": ["fight:1:0", "set:0,ability,ABILITY_INSOMNIA",
             "teach:0,0,MOVE_FLY,15", "fight:1:1",
             {"expect": {"lines": ["Raichu used Fly!", "Raichu flew up high!", "Raichu used Fly!"]}},
             "teach:0,0,MOVE_FREEZE_SHOCK,5", "fight:1:1",

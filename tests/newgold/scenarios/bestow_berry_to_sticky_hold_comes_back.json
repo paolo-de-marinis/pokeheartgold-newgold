@@ -4,7 +4,7 @@
   "edit": ["--party", "SNORLAX:13:::CHERI_BERRY,RAICHU:13,LANTURN:13,TYPHLOSION:13,MACHAMP:13,TOGEKISS:13",
            "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
   "hold": {"gDiagBattleSeed": 1, "gDiagForceDamageRoll": 1, "gDiagForceEffect": 2},
-  "steps": ["field", "A", "fight:1:0",
+  "steps": ["fight:1:0",
             "set:1,item,ITEM_NONE", "set:1,ability,ABILITY_STICKY_HOLD",
             "teach:0,0,MOVE_BESTOW", "teach:0,1,MOVE_TACKLE",
             "fight:1:1",

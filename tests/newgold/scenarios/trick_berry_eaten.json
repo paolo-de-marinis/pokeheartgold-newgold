@@ -4,7 +4,7 @@
   "edit": ["--party", "SNORLAX:13:::ORAN_BERRY,RAICHU:13,LANTURN:13,TYPHLOSION:13,MACHAMP:13,TOGEKISS:13",
            "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
   "hold": {"gDiagBattleSeed": 1, "gDiagForceDamageRoll": 1},
-  "steps": ["field", "A", "fight:1:0",
+  "steps": ["fight:1:0",
             "teach:0,0,MOVE_TRICK", "set:1,item,ITEM_SILK_SCARF", "set:1,hp,5",
             "fight:1:1", "fight", "field"],
   "expect": {"lines": ["Snorlax used Trick!", "Oran Berry", "You defeated Leader Falkner!"],

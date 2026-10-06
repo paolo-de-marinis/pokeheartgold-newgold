@@ -3,7 +3,7 @@
   "save": "route29-official.sav",
   "edit": ["--party", "PIKACHU:20,STARAVIA:20", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
   "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1, "gDiagForceCritical": 2},
-  "steps": ["field", "A", "fight:1:0", "set:1,item,ITEM_EJECT_PACK",
+  "steps": ["fight:1:0", "set:1,item,ITEM_EJECT_PACK",
             "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
             "teach:0,0,MOVE_LEECH_SEED", "teach:0,1,MOVE_BATON_PASS", "teach:0,2,0,0", "teach:0,3,0,0",
             "fight:1:1",

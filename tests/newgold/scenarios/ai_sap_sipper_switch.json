@@ -3,7 +3,7 @@
   "save": "gyms/whitney.sav",
   "edit": ["--party", "BRELOOM:30::ABSORB"],
   "hold": {"gDiagBattleSeed": 1},
-  "steps": ["field", "A", "fight:1:0",
+  "steps": ["fight:1:0",
             "teach:1,0,MOVE_BODY_SLAM", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0", "fight:1:4"],
   "expect": {"lines": ["Leader Whitney sent out Furret!", "withdrew", "Leader Whitney sent out Farigiraf!"],
              "no_lines": ["The opposing Furret fainted!"]}

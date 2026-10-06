@@ -3,7 +3,7 @@
   "save": "route29-official.sav",
   "edit": ["--party", "ORTHWORM:13", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
   "hold": {"gDiagBattleSeed": 1},
-  "steps": ["field", "A", "fight:1:0",
+  "steps": ["fight:1:0",
             "teach:1,0,MOVE_SAND_ATTACK", "teach:1,1,MOVE_LEER", "teach:1,2,0,0", "teach:1,3,0,0",
             "teach:0,0,MOVE_SPLASH", "fight:1:4"],
   "expect": {"lines": ["The opposing Hoothoot used Leer!", "The opposing Hoothoot used Leer!", "The opposing Hoothoot used Leer!"],

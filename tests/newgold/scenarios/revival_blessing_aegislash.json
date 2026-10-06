@@ -3,7 +3,7 @@
   "save": "gyms/bugsy.sav",
   "edit": ["--party", "PAWMOT:20::THUNDER_SHOCK,AEGISLASH:10::SHADOW_SNEAK", "--where", "180:3:8:0"],
   "hold": {"gDiagBattleSeed": 1},
-  "steps": ["field", "A", "fight:1:0", "fight:1:1",
+  "steps": ["fight:1:0", "fight:1:1",
             "teach:0,0,MOVE_REVIVAL_BLESSING", "fight:1:1",
             {"expect": {"battler2.species": "SPECIES_AEGISLASH"}},
             "fight:1:1"],

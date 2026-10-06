@@ -3,7 +3,7 @@
   "save": "gyms/bugsy.sav",
   "edit": ["--party", "PAWMOT:30,BAXCALIBUR:30", "--where", "180:3:8:0"],
   "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
-  "steps": ["field", "A", "fight:1:0",
+  "steps": ["fight:1:0",
             "teach:0,0,MOVE_TAKE_HEART", "teach:2,0,MOVE_PROTECT", "fight:1:1"],
   "expect": {"lines": ["Baxcalibur used Protect!", "Pawmot used Take Heart!", "Sp. Atk rose!", "Sp. Def rose!"],
              "once_lines": ["Baxcalibur protected itself!"]}

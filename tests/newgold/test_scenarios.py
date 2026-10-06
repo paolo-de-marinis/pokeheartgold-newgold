@@ -141,6 +141,19 @@ class ScenarioFileTests(unittest.TestCase):
                     self.assertIn(pin, steps)
                     self.assertLess(steps.index("field"), steps.index(pin))
 
+    def test_a_trainer_battle_at_the_start_is_started_by_fight(self):
+        # A trainer who spots the player as the field comes up starts his
+        # battle with no press (Violet Gym's Bird Keeper, the player put at
+        # (13, 15) facing west: 3 frames after the player may move), and field
+        # plays it to its end: a scenario that went on with A and fight:N:T
+        # found it over (trainer_thief_item_comes_back on the TM work's
+        # build), and whether he looks the player's way can hang on the
+        # frames. fight presses A until a battle is up, whoever starts it.
+        for path in sorted(SCENARIOS.glob("*.json")):
+            steps = json.loads(path.read_text())["steps"]
+            with self.subTest(path.name):
+                self.assertFalse(steps[:2] == ["field", "A"] and str(steps[2:3]).startswith("['fight"), steps[:3])
+
     def test_new_lines_start_where_the_check_before_ended(self):
         # A later phase's lines are not matched by an earlier phase's alike:
         # a Power Herb turn that said its attack message after the charge

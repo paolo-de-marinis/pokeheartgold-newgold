@@ -3,7 +3,7 @@
   "save": "route29-official.sav",
   "edit": ["--party", "SNORLAX:13", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
   "hold": {"gDiagBattleSeed": 1},
-  "steps": ["field", "A", "fight:1:0",
+  "steps": ["fight:1:0",
             "set:0,ability,ABILITY_KLUTZ", "set:0,item,ITEM_LEFTOVERS", "set:1,item,ITEM_NONE",
             "teach:0,0,MOVE_BESTOW", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
             "fight:1:1"],

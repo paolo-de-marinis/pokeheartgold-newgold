@@ -3,7 +3,7 @@
   "save": "gyms/bugsy.sav",
   "edit": ["--party", "SENTRET:3,RATTATA:7::PROTECT+QUICK_ATTACK", "--where", "180:3:8:0"],
   "hold": {"gDiagBattleSeed": 1},
-  "steps": ["field", "A", "fight:1:0", "set:0,status,PSN", "set:0,hp,1", "fight:1:1",
+  "steps": ["fight:1:0", "set:0,status,PSN", "set:0,hp,1", "fight:1:1",
             {"expect": {"battler0.hp": 0}},
             "set:2,item,ITEM_FOCUS_SASH", "set:1,hp,1", "set:3,hp,1", "fight:2"],
   "expect": {"lines": ["Sentret fainted!", "Rattata grew to Lv. 8!", "Rattata grew to Lv. 9!"]}

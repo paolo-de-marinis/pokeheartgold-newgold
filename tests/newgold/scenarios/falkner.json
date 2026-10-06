@@ -4,7 +4,7 @@
   "edit": ["--party", "RAICHU:13,LANTURN:13,TYPHLOSION:13,MACHAMP:13,TOGEKISS:13,UMBREON:13",
            "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
   "hold": {"gDiagBattleSeed": 1, "gDiagForceDamageRoll": 1},
-  "steps": ["field", "A", "fight", "field"],
+  "steps": ["fight", "field"],
   "expect": {"lines": ["You are challenged by Leader Falkner!", "Leader Falkner sent out Hoothoot!",
                        "Leader Falkner sent out Delibird!", "The opposing Delibird hung on using its Focus Sash!",
                        "The opposing Delibird fainted!", "Leader Falkner sent out Murkrow!", "You defeated Leader Falkner!"],

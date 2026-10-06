@@ -3,7 +3,7 @@
   "save": "gyms/bugsy.sav",
   "edit": ["--party", "SLOWBRO:40::PROTECT+TRICK_ROOM,RATTATA:5::PROTECT", "--where", "180:3:8:0"],
   "hold": {"gDiagBattleSeed": 1},
-  "steps": ["field", "A", "fight:1:0",
+  "steps": ["fight:1:0",
             "set:2,item,ITEM_ROOM_SERVICE", "set:2,status,PSN", "set:2,hp,1",
             "fight:1:1", "fight:2:1"],
   "expect": {"lines": ["Rattata was hurt by its poisoning!", "Rattata fainted!", "Slowbro used Trick Room!",

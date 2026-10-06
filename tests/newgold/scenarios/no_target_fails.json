@@ -3,7 +3,7 @@
   "save": "route29-official.sav",
   "edit": ["--party", "SHUCKLE:13", "--flag", "FLAG_UNK_076", "--where", "135:15:5:0"],
   "hold": {"gDiagBattleSeed": 1},
-  "steps": ["field", "A", "fight:1:0",
+  "steps": ["fight:1:0",
             "teach:1,0,MOVE_EXPLOSION", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
             "teach:0,0,MOVE_TACKLE", "set:0,speed,1", "fight:1:1"],
   "expect": {"lines": ["The opposing Hoothoot used Explosion!", "Shuckle used Tackle!", "But it failed!"],

@@ -3,7 +3,7 @@
   "save": "gyms/bugsy.sav",
   "edit": ["--party", "SENTRET:3,PIKACHU:50::PROTECT", "--where", "180:3:8:0"],
   "hold": {"gDiagBattleSeed": 1},
-  "steps": ["field", "A", "fight:1:0",
+  "steps": ["fight:1:0",
             "set:0,status,PSN", "set:0,hp,1",
             "fight:1:1",
             {"expect": {"lines": ["Sentret fainted!"], "battler0.hp": 0}},
