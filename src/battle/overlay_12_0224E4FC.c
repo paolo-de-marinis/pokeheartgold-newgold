@@ -7650,15 +7650,19 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         // (Pokemon Central, Furore: "Bulbo, Vulneropolizza e Muschioluce si
         // attivano prima di Furore"; Showdown's gen-9 items in
         // onDamagingHit, both abilities in onAfterMoveSecondary), and a Berry
-        // that restores HP after them (Furore: Baccaenigma, Baccacedro). A
-        // Pokemon holds one item, so a holder of one of the five has a single
-        // hit answered after CheckItemEffectOnHit (ov12_0224CC88), any
-        // other here.
+        // that restores HP after them (Furore: Baccaenigma, Baccacedro). So
+        // do an Air Balloon, a Rocky Helmet, a Jaboca or Rowap Berry
+        // (onDamagingHit too) and a Sticky Barb (onHit), where Pokemon
+        // Central is silent. A Pokemon holds one item, so a holder of one of
+        // these has a single hit answered after CheckItemEffectOnHit
+        // (ov12_0224CC88), any other here.
         int item = GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget);
 
         if (ctx->multiHitCountTemp == 0
-            && ((item >= HOLD_EFFECT_BOOST_SPECIAL_ATTACK_ON_WATER_HIT && item <= HOLD_EFFECT_BOOST_ATK_ON_ICE_HIT)
-                || item == HOLD_EFFECT_BOOST_SPECIAL_DEFENSE_ON_WATER_HIT || item == HOLD_EFFECT_BOOST_ATK_AND_SPATK_ON_SE)) {
+            && ((item >= HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT && item <= HOLD_EFFECT_BOOST_ATK_ON_ICE_HIT)
+                || item == HOLD_EFFECT_BOOST_SPECIAL_DEFENSE_ON_WATER_HIT || item == HOLD_EFFECT_BOOST_ATK_AND_SPATK_ON_SE
+                || item == HOLD_EFFECT_RECOIL_PHYSICAL || item == HOLD_EFFECT_RECOIL_SPECIAL
+                || item == HOLD_EFFECT_DAMAGE_ON_CONTACT || item == HOLD_EFFECT_DMG_USER_CONTACT_XFR)) {
             ctx->selfTurnData[ctx->battlerIdTarget].answerAfterItem = TRUE;
             break;
         }

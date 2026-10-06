@@ -1,0 +1,16 @@
+{
+  "about": "A Rocky Helmet and an Air Balloon act on a hit before Berserk answers it, as Absorb Bulb does (berserk_after_the_absorb_bulb.json): Showdown's gen-9 items have both in onDamagingHit and Berserk in onAfterMoveSecondary, where Pokemon Central's Furore is silent. A level-10 Pikachu is given Tackle in the running battle (teach:) against a forced wild level-5 Chansey that knows only Splash, given Berserk and a Rocky Helmet and set to 21 of its 40 HP (set:): the Tackle takes it to half or below, and the Helmet hurting Pikachu comes before \"The wild Chansey's Berserk raised its Sp. Atk!\" (before, after it). Then given an Air Balloon and set to 21 again, the next Tackle pops the balloon before Berserk answers. The damage roll is forced to the bottom of the range; the field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_TACKLE", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,MOVE_SPLASH", "teach:1,2,MOVE_SPLASH", "teach:1,3,MOVE_SPLASH",
+            "set:1,ability,ABILITY_BERSERK", "set:1,item,ITEM_ROCKY_HELMET", "set:1,hp,21", "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Tackle!", "Rocky Helmet!",
+                                  "The wild Chansey’s Berserk raised its Sp. Atk!", "The wild Chansey used Splash!"]}},
+            "set:1,item,ITEM_AIR_BALLOON", "set:1,hp,21", "fight:1:1"],
+  "expect": {"new_lines": ["Pikachu used Tackle!", "Air Balloon popped!",
+                           "The wild Chansey’s Berserk raised its Sp. Atk!", "The wild Chansey used Splash!"],
+             "battler1.item": 0}
+}

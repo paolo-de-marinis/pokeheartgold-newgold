@@ -368,7 +368,9 @@ class ParentalBondTests(unittest.TestCase):
         # Absorb Bulb, Weakness Policy and Luminous Moss act before Berserk
         # (Pokemon Central, Furore), Cell Battery and Snowball with them, and
         # Anger Shell waits for them as Berserk does (Showdown's gen-9 items in
-        # onDamagingHit, the abilities in onAfterMoveSecondary): a holder of
+        # onDamagingHit, the abilities in onAfterMoveSecondary), as for an Air
+        # Balloon, a Rocky Helmet, a Jaboca or Rowap Berry (onDamagingHit) and
+        # a Sticky Barb (onHit), where Pokemon Central is silent: a holder of
         # one has a single hit answered by the step after
         # CheckItemEffectOnHit, before the thaw and the other held items; a
         # Sitrus Berry's holder, as before, where CheckAbilityEffectOnHit asks,
@@ -376,14 +378,17 @@ class ParentalBondTests(unittest.TestCase):
         on_hit = function(OVERLAY.read_text(), "CheckAbilityEffectOnHit")
         case = on_hit[on_hit.index("case ABILITY_ANGER_SHELL:\n    case ABILITY_BERSERK: {"):on_hit.index("case ABILITY_COLOR_CHANGE:")]
         self.assertIn("if (ctx->multiHitCountTemp == 0\n"
-                      "            && ((item >= HOLD_EFFECT_BOOST_SPECIAL_ATTACK_ON_WATER_HIT && item <= HOLD_EFFECT_BOOST_ATK_ON_ICE_HIT)\n"
-                      "                || item == HOLD_EFFECT_BOOST_SPECIAL_DEFENSE_ON_WATER_HIT || item == HOLD_EFFECT_BOOST_ATK_AND_SPATK_ON_SE)) {\n"
+                      "            && ((item >= HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT && item <= HOLD_EFFECT_BOOST_ATK_ON_ICE_HIT)\n"
+                      "                || item == HOLD_EFFECT_BOOST_SPECIAL_DEFENSE_ON_WATER_HIT || item == HOLD_EFFECT_BOOST_ATK_AND_SPATK_ON_SE\n"
+                      "                || item == HOLD_EFFECT_RECOIL_PHYSICAL || item == HOLD_EFFECT_RECOIL_SPECIAL\n"
+                      "                || item == HOLD_EFFECT_DAMAGE_ON_CONTACT || item == HOLD_EFFECT_DMG_USER_CONTACT_XFR)) {\n"
                       "            ctx->selfTurnData[ctx->battlerIdTarget].answerAfterItem = TRUE;\n"
                       "            break;", case)
         items = (ROOT / "include/constants/items.h").read_text()
         numbers = [int(re.search(rf"#define {name}\s+(\d+)", items).group(1)) for name in (
-            "HOLD_EFFECT_BOOST_SPECIAL_ATTACK_ON_WATER_HIT", "HOLD_EFFECT_BOOST_ATK_ON_ELECTRIC_HIT", "HOLD_EFFECT_BOOST_ATK_ON_ICE_HIT")]
-        self.assertEqual(numbers, list(range(numbers[0], numbers[0] + 3)))
+            "HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT", "HOLD_EFFECT_BOOST_SPECIAL_ATTACK_ON_WATER_HIT",
+            "HOLD_EFFECT_BOOST_ATK_ON_ELECTRIC_HIT", "HOLD_EFFECT_BOOST_ATK_ON_ICE_HIT")]
+        self.assertEqual(numbers, list(range(numbers[0], numbers[0] + 4)))
         steps = function(CONTROLLER.read_text(), "ov12_0224CC88")
         item = steps.index("CheckItemEffectOnHit(battleSystem, ctx, &script)")
         after = steps.index("if (ctx->battlerIdTarget != BATTLER_NONE && ctx->selfTurnData[ctx->battlerIdTarget].answerAfterItem\n"
