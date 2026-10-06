@@ -118,6 +118,8 @@ ATE = {"PIXILATE": "FAIRY", "AERILATE": "FLYING", "REFRIGERATE": "ICE", "GALVANI
 STATUS_IMMUNE = {SLEEP: ("INSOMNIA", "VITAL_SPIRIT", "SWEET_VEIL"), PARALYSIS: ("LIMBER",),
                  BURN: ("WATER_VEIL", "WATER_BUBBLE", "THERMAL_EXCHANGE"), POISONED: ("IMMUNITY", "PASTEL_VEIL")}
 TYPE_IMMUNE = {PARALYSIS: ("ELECTRIC",), BURN: ("FIRE",), POISONED: ("POISON", "STEEL")}
+# The berries that cure one status as it comes (a Lum Berry, STATUS_RESTORE, any).
+CURED_BY = {SLEEP: "SLP_RESTORE", PARALYSIS: "PRZ_RESTORE", BURN: "BRN_RESTORE", POISONED: "PSN_RESTORE"}
 # Move effects by their names in constants/move_effects.h: what costs the
 # user itself, what deals nothing a player can count on, the fixed damage,
 # the strikes of a multi-strike move (2 to 5 averaging 3.1), the moves that
@@ -628,6 +630,8 @@ class Scorer:
         ability, types = self.ability(foe), foe["types"]
         if ability in ("COMATOSE", "PURIFYING_SALT") or ability in STATUS_IMMUNE.get(status, ()):
             return None
+        if self.held(foe) in ("STATUS_RESTORE", CURED_BY.get(status)):
+            return None     # a Lum Berry, or the berry for that status, takes it off at once
         if move in self._powders and (self._type["GRASS"] in types or ability == "OVERCOAT"):
             return None
         if any(self.chart.get((kind, t), 1) == 0 for t in types) and kind == self._type["ELECTRIC"]:

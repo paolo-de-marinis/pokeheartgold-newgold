@@ -605,6 +605,22 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(scorer.choose(mareep, mon("SANDSHREW", 24, ["SCRATCH"]), [0, 1], field)[:2], ("move", 1))
         self.assertEqual(scorer.choose(mareep, dict(foe, hp=5), [0, 1], field)[:2], ("move", 1))
 
+    def test_gym_spends_no_status_move_on_a_foe_whose_berry_cures_it(self):
+        # Whitney's Miltank holds a Lum Berry: a Flaaffy at 30 used Thunder
+        # Wave on it, the berry cured it at once, and the Miltank's Bulldoze
+        # took the Flaaffy while its Thunder waited. A Lum Berry or the berry
+        # for that status (Cheri for paralysis) makes the move a lost turn;
+        # another berry does not.
+        scorer, mon, field, _ = self._picker()
+        flaaffy = mon("FLAAFFY", 30, ["THUNDER_WAVE", "THUNDER_SHOCK"])
+        miltank = mon("MILTANK", 30, ["BODY_SLAM", "MILK_DRINK", "BULLDOZE", "ZEN_HEADBUTT"])
+        self.assertEqual(scorer.choose(flaaffy, miltank, [0, 1], field)[:3], ("move", 0, "paralyzes it"))
+        for berry in ("LUM_BERRY", "CHERI_BERRY"):
+            self.assertEqual(scorer.choose(flaaffy, mon("MILTANK", 30, ["BODY_SLAM", "MILK_DRINK", "BULLDOZE", "ZEN_HEADBUTT"],
+                                                        item=berry), [0, 1], field)[:2], ("move", 1), berry)
+        self.assertEqual(scorer.choose(flaaffy, mon("MILTANK", 30, ["BODY_SLAM", "MILK_DRINK", "BULLDOZE", "ZEN_HEADBUTT"],
+                                                    item="CHESTO_BERRY"), [0, 1], field)[:3], ("move", 0, "paralyzes it"))
+
     def test_gym_brings_in_the_pokemon_that_wins(self):
         # A player brings in the Pokemon that wins the exchange, the hit it
         # takes coming in counted, when the one out loses it: the round-15

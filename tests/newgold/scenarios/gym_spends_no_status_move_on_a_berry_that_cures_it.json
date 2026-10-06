@@ -1,0 +1,8 @@
+{
+  "about": "gym.py's player spends no status move on a foe whose held berry cures it at once (Scorer.status_pays): the battle of gym_uses_a_status_move_where_it_pays.json -- Bugsy's Ledian, faster, against a level-15 Mareep knowing Thunder Wave and Thunder Shock, where the Mareep paralyzes it first -- with the Ledian given a Lum Berry before the first turn (set:). Thunder Wave would be cured by the berry the moment it lands, a lost turn: Whitney's Miltank, holding one, took a Flaaffy that paralyzed it in the playthrough. The Mareep uses Thunder Shock from the first turn; its Static paralyzes the Ledian later, and the berry cures it, as it would have cured the Thunder Wave. The battle's seed is fixed.",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "MAREEP:15::THUNDER_WAVE+THUNDER_SHOCK"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "goto:MAP_AZALEA_GYM,9,5", "A", "fight::0", "set:1,item,ITEM_LUM_BERRY", "fight::2"],
+  "expect": {"lines": ["Mareep used Thunder Shock!", "Lum Berry cured its paralysis"], "no_lines": ["Mareep used Thunder Wave!"]}
+}
