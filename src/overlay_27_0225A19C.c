@@ -1,7 +1,6 @@
 #include "global.h"
 
 #include "bg_window.h"
-#include "dsprot.h"
 #include "font.h"
 #include "heap.h"
 #include "message_format.h"
@@ -11,8 +10,6 @@
 #include "sys_task.h"
 #include "systask_environment.h"
 #include "unk_0200A090.h"
-
-FS_EXTERN_OVERLAY(ds_protect);
 
 // Overlay 27's state, the field's own bottom screen (the touch menu), from
 // HEAP_ID_8. Only what the teardown reads is named; the assembly reaches the
@@ -42,19 +39,12 @@ typedef struct FieldBottomScreen {
 
 void ov27_0225BEB0(void *a0);
 void ov27_0225BC34(FieldBottomScreen *screen);
-void ov27_0225C238(void);
-void ov27_0225C248(void);
-void ov27_0225C24C(void);
 void ov27_0225A19C(BgConfig *bgConfig, SysTask *task);
 
 void ov27_0225A19C(BgConfig *bgConfig, SysTask *task) {
     FieldBottomScreen *screen = SysTask_GetData(task);
     int i;
 
-    FS_LoadOverlay(MI_PROCESSOR_ARM9, FS_OVERLAY_ID(ds_protect));
-    if (DSProt_DetectFlashcart(ov27_0225C238)) {
-        Heap_AllocAtEnd(HEAP_ID_3, 1000);
-    }
     ov27_0225BEB0(screen->unk520);
     DestroyMsgData(screen->msgData);
     MessageFormat_Delete(screen->msgFormat);
@@ -66,9 +56,6 @@ void ov27_0225A19C(BgConfig *bgConfig, SysTask *task) {
     }
     for (i = 0; i < 4; i++) {
         Destroy2DGfxResObjMan(screen->resMan[i]);
-    }
-    if (!DSProt_DetectNotEmulator(ov27_0225C248)) {
-        Heap_AllocAtEnd(HEAP_ID_3, 1000);
     }
     SpriteList_Delete(screen->spriteList);
     for (i = 0; i < 8; i++) {
@@ -82,8 +69,4 @@ void ov27_0225A19C(BgConfig *bgConfig, SysTask *task) {
     FreeBgTilemapBuffer(bgConfig, GF_BG_LYR_SUB_1);
     FreeBgTilemapBuffer(bgConfig, GF_BG_LYR_SUB_0);
     Heap_Destroy(HEAP_ID_8);
-    if (!DSProt_DetectNotDummy(ov27_0225C24C)) {
-        Heap_AllocAtEnd(HEAP_ID_3, 1000);
-    }
-    FS_UnloadOverlay(MI_PROCESSOR_ARM9, FS_OVERLAY_ID(ds_protect));
 }

@@ -4009,29 +4009,6 @@ _0225C236:
 	pop {r4, pc}
 	thumb_func_end ov27_0225C1EC
 
-	thumb_func_start ov27_0225C238
-ov27_0225C238: ; 0x0225C238
-	ldr r3, _0225C244 ; =Heap_AllocAtEnd
-	mov r1, #0xfa
-	mov r0, #3
-	lsl r1, r1, #2
-	bx r3
-	nop
-_0225C244: .word Heap_AllocAtEnd
-	thumb_func_end ov27_0225C238
-
-	thumb_func_start ov27_0225C248
-ov27_0225C248: ; 0x0225C248
-	bx lr
-	.balign 4, 0
-	thumb_func_end ov27_0225C248
-
-	thumb_func_start ov27_0225C24C
-ov27_0225C24C: ; 0x0225C24C
-	bx lr
-	.balign 4, 0
-	thumb_func_end ov27_0225C24C
-
 	thumb_func_start ov27_0225C250
 ov27_0225C250: ; 0x0225C250
 	push {r3, r4, r5, r6, r7, lr}

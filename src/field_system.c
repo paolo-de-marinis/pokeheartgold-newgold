@@ -313,11 +313,6 @@ SaveData *FieldSystem_GetSaveData(FieldSystem *fieldSystem) {
     return fieldSystem->saveData;
 }
 
-void Task_AntipiracyRandom() {
-    LCRandom();
-    LCRandom();
-}
-
 void Field_SetEnvironmentSoundState_None_Unk2() {
     sFieldSysPtr->environmentSoundState = ENVIRONMENT_SOUND_NONE_UNK2;
 }

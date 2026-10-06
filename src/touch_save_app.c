@@ -8,7 +8,6 @@
 #include "msgdata/msg/msg_0040.h"
 
 #include "bg_window.h"
-#include "dsprot.h"
 #include "field_system.h"
 #include "font.h"
 #include "gf_gfx_loader.h"
@@ -22,8 +21,6 @@
 #include "text.h"
 #include "unk_02005D10.h"
 #include "yes_no_prompt.h"
-
-FS_EXTERN_OVERLAY(ds_protect);
 
 enum TouchSaveApp_State {
     TOUCHSAVEAPP_STATE_DISPLAY_SAVE_INFORMATION,
@@ -95,9 +92,6 @@ static BOOL TouchSaveApp_SaveSucceeded(TouchSaveAppData *data);
 static BOOL TouchSaveApp_CloseApp(TouchSaveAppData *data);
 static BOOL TouchSaveApp_ShouldPrintAlternateSavingMessage(TouchSaveAppData *data);
 static void TouchSaveApp_SetMenuInputState(MenuInputStateMgr *stateMgr, MenuInputState state);
-static void ov30_0225DC08(void);
-static void ov30_0225DC18(void);
-static void ov30_0225DC28(void);
 
 static const BgTemplate ov30_0225DC64 = {
     .x = 0,
@@ -215,20 +209,10 @@ SysTask *ov30_0225D520(BgConfig *bgConfig, void *a1, FieldSystem *fieldSystem, v
 void ov30_0225D64C(BgConfig *bgConfig, SysTask *task) {
     TouchSaveAppData *data = SysTask_GetData(task);
 
-    FS_LoadOverlay(MI_PROCESSOR_ARM9, FS_OVERLAY_ID(ds_protect));
-
-    if (!DSProt_DetectNotFlashcart(ov30_0225DC28)) {
-        Heap_AllocAtEnd(HEAP_ID_3, 1000);
-    }
-
     ov01_021F434C(data->unk40);
     ov01_021F43D0(data->unk40);
 
     TextFlags_SetCanTouchSpeedUpPrint(FALSE);
-
-    if (DSProt_DetectEmulator(ov30_0225DC08)) {
-        Heap_AllocAtEnd(HEAP_ID_3, 1000);
-    }
 
     TouchSaveApp_DestroyWindow(data);
     TouchSaveApp_DestroyText(data);
@@ -240,12 +224,6 @@ void ov30_0225D64C(BgConfig *bgConfig, SysTask *task) {
     FreeBgTilemapBuffer(bgConfig, GF_BG_LYR_SUB_0);
 
     Heap_Destroy(HEAP_ID_8);
-
-    if (DSProt_DetectDummy(ov30_0225DC18)) {
-        Heap_AllocAtEnd(HEAP_ID_3, 1000);
-    }
-
-    FS_UnloadOverlay(MI_PROCESSOR_ARM9, FS_OVERLAY_ID(ds_protect));
 }
 
 BOOL ov30_0225D6FC(void *a0) {
@@ -499,15 +477,4 @@ static BOOL TouchSaveApp_ShouldPrintAlternateSavingMessage(TouchSaveAppData *dat
 
 static void TouchSaveApp_SetMenuInputState(MenuInputStateMgr *stateMgr, MenuInputState state) {
     MenuInputStateMgr_SetState(stateMgr, state);
-}
-
-static void ov30_0225DC08(void) {
-    Heap_AllocAtEnd(HEAP_ID_3, 1000);
-}
-
-static void ov30_0225DC18(void) {
-    Heap_AllocAtEnd(HEAP_ID_3, 1000);
-}
-
-static void ov30_0225DC28(void) {
 }

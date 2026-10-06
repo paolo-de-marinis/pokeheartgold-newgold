@@ -9,10 +9,15 @@ through that table instead, which is the one change made to the extracted
 code. The card status and the checks themselves are stand-ins that answer
 the way a flashcart does, so this checks what the game concludes from them,
 not the checks.
+
+The game itself no longer runs DSProt (src/field/fieldmap.c, FieldMap_Init
+says why): the library is kept, and checked here, as the decompilation of
+what retail ships.
 """
 
 import os
 from pathlib import Path
+import re
 import shlex
 import subprocess
 import tempfile
@@ -61,7 +66,7 @@ int main(void) {
 
     // The flashcart is never detected and always passes as a genuine card,
     // which is what FieldSystem_Init, the field map, the Pokedex and the
-    // save screen ask before they punish.
+    // save screen asked in retail before they punished.
     assert(DSProtInternal_DetectFlashcart(callback) == FALSE);
     assert(callbacks == 0);
     assert(DSProtInternal_DetectNotFlashcart(callback) == TRUE);
@@ -90,6 +95,17 @@ class AntipiracyTests(unittest.TestCase):
             result = subprocess.run([str(exe)], capture_output=True, text=True, env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0", "UBSAN_OPTIONS": "halt_on_error=1"})
             self.assertEqual(result.returncode, 0, result.stderr)
             print(result.stdout.strip())
+
+    def test_the_game_never_runs_dsprot(self):
+        # DSProt decrypts each check into place and writes its key and return
+        # address into its own literal pools; melonDS's JIT then compiles a
+        # Thumb literal load of the overlays loaded later at those addresses
+        # to the word turned by sixteen bits, and a wild battle's screen
+        # effect faulted. Nothing in the game loads the overlay or calls it.
+        pattern = re.compile(r"FS_OVERLAY_ID\(ds_protect\)|\bDSProt_Detect|\bRunEncrypted_")
+        callers = sorted(str(path.relative_to(ROOT)) for folder in ("src", "asm") for path in (ROOT / folder).rglob("*")
+                         if path.suffix in (".c", ".s") and pattern.search(path.read_text(errors="replace")))
+        self.assertEqual(callers, [])
 
 
 if __name__ == "__main__":
