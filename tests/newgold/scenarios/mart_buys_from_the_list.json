@@ -1,5 +1,5 @@
 {
-  "about": "scene.py's buy: buys from a mart as a player does: Violet City's, the player put across the counter from its clerk (savedit --where 157:4:6:2, facing him; no badge: the list is Poke Ball, Potion, Antidote, Parlyz Heal, src/scrcmd_mart.c's first tier). buy: talks to him, A on BUY, and on the mart's screen (Task_Mart's MartData) walks the cursor to the item -- two to a row: Parlyz Heal is the second row's right -- raises the quantity, says yes and leaves through his farewell. The bag holds one Potion and no Parlyz Heal to begin with (savedit --bag); it ends with four and two, and the player stands where it was.",
+  "about": "scene.py's buy: buys from a mart as a player does: Violet City's, the player put across the counter from its clerk (savedit --where 157:4:6:2, facing him; no badge: the list is src/scrcmd_mart.c's first tier, Potion, Antidote and Parlyz Heal -- its Poke Ball waits for flag 0x9A, which this save lacks). buy: talks to him, A on BUY, and on the mart's screen (Task_Mart's MartData) walks the cursor to the item -- two to a row: Parlyz Heal is the second row's right -- raises the quantity, says yes and leaves through his farewell. The bag holds one Potion and no Parlyz Heal to begin with (savedit --bag); it ends with four and two. Then 99 Antidotes are asked for, more than the 1,700 left buys: buy: takes as many as the money allows (MartData's unk288), seventeen, and the money is spent to the last; the player stands where it was.",
   "save": "gyms/falkner.sav",
   "edit": [
     "--bag",
@@ -10,13 +10,16 @@
   "steps": [
     "field",
     "buy:ITEM_POTION,3",
-    "buy:ITEM_PARLYZ_HEAL,2"
+    "buy:ITEM_PARLYZ_HEAL,2",
+    "buy:ITEM_ANTIDOTE,99"
   ],
   "expect": {
     "bag:ITEM_POTION": 4,
     "bag:ITEM_PARLYZ_HEAL": 2,
     "map": "MAP_VIOLET_POKEMART",
     "x": 4,
-    "y": 6
+    "y": 6,
+    "bag:ITEM_ANTIDOTE": 17,
+    "money": 0
   }
 }

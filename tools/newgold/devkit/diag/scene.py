@@ -428,11 +428,12 @@ def app_layout():
 def mart_layout():
     """What buy: reads of a mart's MartData (include/overlay_03.h): its
     state (Task_Mart's), the list of what it sells and how many, the page's
-    first and the cursor on it, and the quantity being bought."""
-    names = ("state", "unk268", "unk270", "unk271", "unk290", "quantity")
+    first and the cursor on it, the quantity being bought and the most the
+    money and the bag allow (unk288, ov03_02257874's)."""
+    names = ("state", "unk268", "unk270", "unk271", "unk290", "quantity", "unk288")
     values = savedit.compile_c(exprs=tuple(f"__builtin_offsetof(MartData, {n})" for n in names),
                                headers=savedit.LAYOUT_HEADERS + ("overlay_03.h",))[0]
-    return dict(zip(("state", "items", "count", "page", "cursor", "quantity"), values))
+    return dict(zip(("state", "items", "count", "page", "cursor", "quantity", "most"), values))
 
 
 # Task_Mart's states that buy: answers (src/overlay_03/shop_menu.c): the list,
@@ -1338,40 +1339,48 @@ class Scene:
         the clerk's lines and on BUY, the menu's first choice; on the mart's
         own screen (Task_Mart, the field's task, its MartData read for its
         state) the cursor walked to the item in the list (paged six at a
-        time, two to a row), A, the quantity raised to COUNT, A, yes; then
-        B out of the list and through the clerk's farewell. Done when the
-        player can move again; a refusal (no money, no room) fails it."""
+        time, two to a row), A, the quantity raised to COUNT or to the most
+        the money allows, A, yes; then B out of the list and through the
+        clerk's farewell. Done when the player can move again; a refusal
+        (not one affordable, no room) or an item the mart does not sell
+        leaves the mart the same way and fails the step, the next steps
+        starting from the field."""
         core, hooks, end = self.core, self.hooks, self.core.frames + frames
         layout, mart, task_mart = app_layout(), mart_layout(), self.markers.address("Task_Mart") & ~1
-        bought = False
+        bought, refused, got = False, None, 0
         while core.frames < end:
             task = self._chain("FieldSystem.taskman")
             data = (core.word(task + layout["TaskManager.env"])
                     if task and core.word(task + layout["TaskManager.func"]) & ~1 == task_mart else 0)
             if not data:
-                if bought and self.movable():
-                    self.say(f"[{core.frames}] buy: {count} of item {item}")
+                if (bought or refused) and self.movable():
+                    if refused:
+                        return [refused]
+                    self.say(f"[{core.frames}] buy: {got} of item {item}" + (f" (the money allowed {got} of {count})"
+                                                                               if got < count else ""))
                     return None
-                core.press("B" if bought else "A", 6, hooks)    # the clerk's lines; BUY
+                core.press("B" if bought or refused else "A", 6, hooks)    # the clerk's lines; BUY
                 core.step(20, hooks)
                 continue
             state = core.word(data + mart["state"], 1)
-            if state == MART_REFUSED:
-                return [f"buy: the mart refused item {item} (money or room)"]
-            if state == MART_LIST and bought:
+            if state == MART_REFUSED and not refused:
+                refused = f"buy: the mart refused item {item} (money or room)"
+            if state == MART_LIST and (bought or refused):
                 key = "B"
             elif state == MART_LIST:
                 listed = [core.word(core.word(data + mart["items"]) + 2 * k, 2) for k in range(core.word(data + mart["count"], 1))]
-                if item not in listed:
-                    return [f"buy: this mart does not sell item {item}"]
-                key = mart_key(listed.index(item), core.word(data + mart["page"], 1), core.word(data + mart["cursor"]))
+                if item in listed:
+                    key = mart_key(listed.index(item), core.word(data + mart["page"], 1), core.word(data + mart["cursor"]))
+                else:
+                    key, refused = "B", f"buy: this mart does not sell item {item}"
             elif state == MART_QUANTITY:
-                have = core.word(data + mart["quantity"], 2)
-                key = "UP" if have < count else "DOWN" if have > count else "A"
+                have, most = core.word(data + mart["quantity"], 2), core.word(data + mart["most"], 2)
+                got = min(count, most)
+                key = "UP" if have < got else "DOWN" if have > got else "A"
             elif state == MART_CONFIRM:
                 key = "A"
-            elif state == MART_BOUGHT:
-                key, bought = "A", True
+            elif state in (MART_BOUGHT, MART_REFUSED):
+                key, bought = "A", bought or state == MART_BOUGHT
             else:
                 core.step(4, hooks)
                 continue
