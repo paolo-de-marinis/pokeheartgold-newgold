@@ -549,9 +549,12 @@ Reading what the debug ROM records, and playing it without looking.
   The whole chain from a new game plays once a round, after the landing's
   push, in the background: `tools/newgold/chain.sh DIR`, run in a tree at
   the commit landed (`. ~/hgss-build/env.sh && tools/newgold/devkit/capped
-  -m 4G tools/newgold/chain.sh DIR &`), builds its diagnostics ROM, plays
-  the legs one after another on a copy of it in `DIR/run`, and stops at the
-  first that fails; `DIR/chain.log` has a line for each leg -- its exit
+  -m 4G tools/newgold/chain.sh DIR &`), builds both HeartGold ROMs (the
+  plain one is what a leg's savedit edit, 12b's `--train`, measures the save
+  by), plays the legs one after another, in the order their `from` links
+  draw, on a copy of the diagnostics ROM in `DIR/run`, and stops at the
+  first that fails (`chain.sh DIR LEG` resumes at LEG, from the save DIR
+  keeps of the leg before); `DIR/chain.log` has a line for each leg -- its exit
   code, its time, its report's first line with its frames. Each leg that
   passes leaves its save and report in DIR, `NAME.sav` and `NAME.txt`, the
   report's last line naming the commit it was played on: DIR is the cache

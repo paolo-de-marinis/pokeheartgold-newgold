@@ -744,13 +744,21 @@ class ChainTests(unittest.TestCase):
             with self.assertRaisesRegex(AssertionError, "nowhere is not a directory"):
                 play(legs_[1])(self)
 
-    def test_chain_sh_takes_the_legs_in_the_chain_s_order(self):
-        # tools/newgold/chain.sh plays the legs as the C locale sorts their
-        # names, which Python's sort is: that has to be the line "from" draws.
-        legs_ = sorted(SCENARIOS.glob("playthrough_*.json"))
-        self.assertNotIn("from", json.loads(legs_[0].read_text()))
-        for before, after in zip(legs_, legs_[1:]):
-            self.assertEqual(json.loads(after.read_text()).get("from"), before.stem)
+    def test_chain_sh_takes_the_legs_in_the_chain_s_order_on_both_builds(self):
+        # tools/newgold/chain.sh plays the legs in the line their "from"
+        # links draw, read by its Python from the tree (it took them as the C
+        # locale sorts their names), and builds the plain ROM beside the
+        # diagnostics one: leg 12b's savedit --train measures the save's
+        # blocks from build/heartgold.us, which a fresh tree has not got.
+        script = (ROOT / "tools/newgold/chain.sh").read_text()
+        code = script.split("<<'PY'\n", 1)[1].split("\nPY\n", 1)[0]
+        order = subprocess.run([sys.executable, "-c", code], cwd=ROOT, capture_output=True, text=True,
+                               check=True).stdout.split()
+        self.assertNotIn("from", json.loads((SCENARIOS / f"{order[0]}.json").read_text()))
+        for before, after in zip(order, order[1:]):
+            self.assertEqual(json.loads((SCENARIOS / f"{after}.json").read_text()).get("from"), before)
+        self.assertEqual(sorted(order), sorted(path.stem for path in SCENARIOS.glob("playthrough_*.json")))
+        self.assertIn("for build in build/heartgold.us build/heartgold.us.diag; do", script)
 
     def test_three_play_at_once_and_a_chains_legs_in_order(self):
         self.assertEqual(self.most_at_once({}), WORKERS)
