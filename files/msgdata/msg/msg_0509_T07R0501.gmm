@@ -144,4 +144,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">PORYGON{CURSOR_X 90}9,999 Coins</language>
 	</row>
+	<row id="msg_0509_T07R0501_00036" index="36">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">You already have this!\r</language>
+	</row>
 </body>

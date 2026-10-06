@@ -499,6 +499,10 @@ _0985:
 	End
 
 _0990:
+	// A TM is held once: one that does not fit is one already held.
+	ItemIsTMOrHM VAR_SPECIAL_x8004, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TMAlreadyHeld
 	NPCMsg msg_0509_T07R0501_00014
 	CloseMsg
 _0995:
@@ -580,5 +584,11 @@ scr_seq_T07R0501_000:
 
 scr_seq_T07R0501_001:
 	SimpleNPCMsg msg_0509_T07R0501_00001
+	End
+
+_TMAlreadyHeld:
+	NPCMsg msg_0509_T07R0501_00036
+	CloseMsg
+	GoTo _0995
 	End
 	.balign 4, 0

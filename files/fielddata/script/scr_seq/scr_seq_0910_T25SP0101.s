@@ -619,6 +619,10 @@ _0B43:
 	End
 
 _0B45:
+	// A TM is held once: one that does not fit is one already held.
+	ItemIsTMOrHM VAR_SPECIAL_x8004, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TMAlreadyHeld
 	NPCMsg msg_0603_T25SP0101_00005
 	CloseMsg
 _0B4A:
@@ -702,5 +706,11 @@ _0C26:
 	TouchscreenMenuShow
 	ScriptOverlayCmd 3, 1
 	ReleaseAll
+	End
+
+_TMAlreadyHeld:
+	NPCMsg msg_0603_T25SP0101_00042
+	CloseMsg
+	GoTo _0B4A
 	End
 	.balign 4, 0

@@ -207,5 +207,28 @@ class OneTMAtATimeTests(unittest.TestCase):
         ])
 
 
+class PrizeCounterTests(unittest.TestCase):
+    def test_a_prize_tm_held_is_said_so(self):
+        """The Game Corners' prize counters (Goldenrod's six TMs, Celadon's
+        six): a TM held already does not fit the bag, which takes one of
+        each, and the clerk says it is held, as the mart does, not that the
+        bag is full."""
+        folder = ROOT / "files/fielddata/script/scr_seq"
+        for script, bank in (("scr_seq_0910_T25SP0101.s", "msg_0603_T25SP0101"),
+                             ("scr_seq_0804_T07R0501.s", "msg_0509_T07R0501")):
+            source = (folder / script).read_text()
+            rows = dict(re.findall(r'<row id="(\w+)".*?<language name="English">(.*?)</language>',
+                                   (ROOT / f"files/msgdata/msg/{bank}.gmm").read_text(), re.S))
+            refusals = re.findall(r"GoToIfNoItemSpace (ITEM_TM\d+), 1, (\w+)", source)
+            self.assertEqual(len(refusals), 6, script)
+            for tm, label in refusals:
+                block = source[source.index(f"\n{label}:\n"):]
+                block = block[:block.index("NPCMsg")]
+                self.assertIn("ItemIsTMOrHM VAR_SPECIAL_x8004, VAR_SPECIAL_RESULT", block, tm)
+                held = re.search(r"Compare VAR_SPECIAL_RESULT, 1\n\tGoToIfEq (\w+)", block).group(1)
+                said = re.search(rf"\n{held}:\n\tNPCMsg (\w+)", source).group(1)
+                self.assertEqual(rows[said], "You already have this!\\r", tm)
+
+
 if __name__ == "__main__":
     unittest.main()
