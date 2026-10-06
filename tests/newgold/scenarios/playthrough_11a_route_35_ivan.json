@@ -1,0 +1,54 @@
+{
+  "about": "The playthrough trains for Whitney on Route 35, from Goldenrod's Pokemon Center: Picnicker Brooke (Pikachu, Dedenne, Flaaffy, 24 to 26), led by the Geodude, whose Ground type her Electric moves do not touch, then, after the nurse, Camper Ivan (Diglett, Golbat, Sandslash, Dugtrio, 22 to 26), led by the Noctowl, which his Ground moves do not touch. Each trainer is walked up to and talked to, A and fight, unless they spot the player on the way and the navigator's battle has them beaten already (fight: then stops at their line after the battle); a loss sends the player to the nurse, and again: walks back and fights that trainer again until trainer: reads them beaten, each attempt a new battle (retry:, the battle seed one higher), four times more at most -- what a loss wins, the Pokemon it knocked out, is kept. Played on 5fec2af87: both at the first attempt, the Geodude a Graveler at 25 (29,517 frames). The nurse, and the game's save. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_11_route_35",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "retry:on",
+    "swap:0,4",
+    {
+      "expect": {
+        "party0.species": "SPECIES_GEODUDE"
+      }
+    },
+    "goto:MAP_ROUTE_35,367,287,90000",
+    "A",
+    "fight",
+    "field",
+    "again:4,trainer:TRAINER_PICNICKER_BROOKE,1,4",
+    "goto:MAP_GOLDENROD_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "swap:0,2",
+    {
+      "expect": {
+        "party0.species": "SPECIES_NOCTOWL"
+      }
+    },
+    "goto:MAP_ROUTE_35,361,286,90000",
+    "A",
+    "fight",
+    "field",
+    "again:4,trainer:TRAINER_CAMPER_IVAN,1,4",
+    "goto:MAP_GOLDENROD_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_GOLDENROD_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "badges": 2,
+    "party": 6,
+    "music": "SEQ_GS_POKESEN",
+    "trainer:TRAINER_PICNICKER_BROOKE": 1,
+    "trainer:TRAINER_CAMPER_IVAN": 1
+  }
+}

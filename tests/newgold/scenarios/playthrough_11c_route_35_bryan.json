@@ -1,0 +1,38 @@
+{
+  "about": "The playthrough trains for Whitney on Route 35, from Goldenrod's Pokemon Center: Bird Keeper Bryan (Pidgey, Noctowl, Fletchinder, Pidgeotto, 23 to 26), who stands by the gatehouse but behind the ledges along the route's east (they jump west only): the navigator walks round by the route's north and down its east side to him. The Flaaffy leads, an Electric type against his birds; the Graveler, at the cap, relieves it. Each trainer is walked up to and talked to, A and fight, unless they spot the player on the way and the navigator's battle has them beaten already (fight: then stops at their line after the battle); a loss sends the player to the nurse, and again: walks back and fights that trainer again until trainer: reads them beaten, each attempt a new battle (retry:, the battle seed one higher), four times more at most -- what a loss wins, the Pokemon it knocked out, is kept. Played on 5fec2af87: at the first attempt (21,099 frames). The nurse at the end, and the game's save. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_11b_route_35_north",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "retry:on",
+    "swap:0,4",
+    {
+      "expect": {
+        "party0.species": "SPECIES_FLAAFFY"
+      }
+    },
+    "goto:MAP_ROUTE_35,367,313,90000",
+    "A",
+    "fight",
+    "field",
+    "again:4,trainer:TRAINER_BIRD_KEEPER_GS_BRYAN,1,4",
+    "goto:MAP_GOLDENROD_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_GOLDENROD_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "badges": 2,
+    "party": 6,
+    "music": "SEQ_GS_POKESEN",
+    "trainer:TRAINER_BIRD_KEEPER_GS_BRYAN": 1
+  }
+}

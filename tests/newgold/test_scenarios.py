@@ -26,7 +26,7 @@ plays two, as a round's agent, allowed two emulators, must), started when the
 first scenario test runs, for every scenario the run selected: a chain's
 legs in one worker, leg before leg, so each finds the save of the one
 before, and the others take the single scenarios meanwhile -- the chain,
-a new game to Goldenrod's Radio Card in 25 legs, plays for about two hours
+a new game to Whitney's Plain Badge in 38 legs, plays for about four hours
 and a half alone.
 """
 import json
@@ -95,7 +95,7 @@ class ScenarioFileTests(unittest.TestCase):
 
     def test_the_playthrough_is_one_chain_from_a_new_game_with_its_own_team(self):
         # Every leg follows the one before it, from the new game to
-        # Goldenrod's Radio Card, one line with no branch; the party is the one the
+        # Whitney's Plain Badge, one line with no branch; the party is the one the
         # bot caught and trained: no leg edits the save (--party, --level,
         # --teach, --train, the last of them gone from leg 08b's Bugsy in
         # round 15) -- the bot trains in play, learns by gym.py's rule and
@@ -103,7 +103,7 @@ class ScenarioFileTests(unittest.TestCase):
         # teach:, a poke: or hold: of anything but the pinned RNG and battle
         # seed).
         legs_ = {path.stem: json.loads(path.read_text()) for path in SCENARIOS.glob("playthrough_*.json")}
-        line, leg = [], "playthrough_10_goldenrod"
+        line, leg = [], "playthrough_12b_whitney"
         while leg:
             line.append(leg)
             leg = legs_[leg].get("from")

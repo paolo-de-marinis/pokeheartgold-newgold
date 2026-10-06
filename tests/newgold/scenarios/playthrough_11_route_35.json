@@ -1,0 +1,45 @@
+{
+  "about": "The playthrough trains for Whitney on Route 35, north of Goldenrod, from Goldenrod's Pokemon Center through the gatehouse (it opens onto the route's west, 358, 316): Picnicker Kim by the gatehouse (Vulpix, Skiploom, Growlithe, 23 to 25), then Camper Elliot (Sandslash, Diggersby, Azumarill, 23 to 25) in the route's middle. swap: puts the Flaaffy, the team's lowest at 15, in the lead. Each trainer is walked up to and talked to, A and fight, unless they spot the player on the way and the navigator's battle has them beaten already (fight: then stops at their line after the battle); a loss sends the player to the nurse, and again: walks back and fights that trainer again until trainer: reads them beaten, each attempt a new battle (retry:, the battle seed one higher), four times more at most -- what a loss wins, the Pokemon it knocked out, is kept. Who leads is chosen so that the battles' experience, divided among the Pokemon that fought, goes to the team's lower levels: gym.py's player relieves a lead that loses its exchange with one that wins it, and both share what the battle pays (where the Geodude led every battle, it reached the cap, 30, on Route 35's north and the rest stayed at 18 to 25, and Whitney swept them eight times running). Played on 5fec2af87: Kim at the first attempt, Elliot at the third, the Flaaffy 15 to 21, the Noctowl 21 to 24, the Quilava 22 to 24 (65,051 frames). The nurse, and the game's save; Whitney's five are 28 to 30, the cap the Hive Badge set; trainers pay half again what wild Pokemon do. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_10_goldenrod",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "retry:on",
+    "swap:0,4",
+    {
+      "expect": {
+        "party0.species": "SPECIES_FLAAFFY",
+        "party4.species": "SPECIES_GEODUDE"
+      }
+    },
+    "goto:MAP_ROUTE_35,356,307,90000",
+    "A",
+    "fight",
+    "field",
+    "again:4,trainer:TRAINER_PICNICKER_KIM,1,4",
+    "goto:MAP_ROUTE_35,368,287,90000",
+    "A",
+    "fight",
+    "field",
+    "again:4,trainer:TRAINER_CAMPER_ELLIOT,1,4",
+    "goto:MAP_GOLDENROD_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_GOLDENROD_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "badges": 2,
+    "party": 6,
+    "music": "SEQ_GS_POKESEN",
+    "trainer:TRAINER_PICNICKER_KIM": 1,
+    "trainer:TRAINER_CAMPER_ELLIOT": 1
+  }
+}

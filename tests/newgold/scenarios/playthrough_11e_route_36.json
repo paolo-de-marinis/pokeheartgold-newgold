@@ -1,0 +1,54 @@
+{
+  "about": "The playthrough trains for Whitney on Route 36's west, between the National Park's east gate and the Sudowoodo, from Goldenrod's Pokemon Center: Psychic Mark (Kadabra, Girafarig, Meowstic, Kadabra, 26 to 28), led by the Misdreavus, whose Ghost moves hit his Psychic types twice as hard, and School Kid Alan (Tangela, Yanma, Budew, Quagsire, 26 to 28), led by the Quilava. Every way there and back goes through the park, by its east gate (73, 39) and its south gate (40, 84), named in the steps: the navigator's own plan from Route 35 to Route 36 goes through the gap between them it cannot cross (leg 11d's about), and a walk planned so stayed 57,000 frames in Route 35's grass. Each trainer is walked up to and talked to, A and fight, unless they spot the player on the way and the navigator's battle has them beaten already (fight: then stops at their line after the battle); a loss sends the player to the nurse, and again: walks back and fights that trainer again until trainer: reads them beaten, each attempt a new battle (retry:, the battle seed one higher), four times more at most -- what a loss wins, the Pokemon it knocked out, is kept. Played on 5fec2af87: both at the first attempt, the Quilava to 28 (39,833 frames). The nurse, and the game's save. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_11d_national_park",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "retry:on",
+    "swap:0,4",
+    {
+      "expect": {
+        "party0.species": "SPECIES_MISDREAVUS"
+      }
+    },
+    "goto:MAP_NATIONAL_PARK,73,39",
+    "goto:MAP_ROUTE_36,380,244,90000",
+    "A",
+    "fight",
+    "field",
+    "again:5,trainer:TRAINER_PSYCHIC_M_MARK,1,4",
+    "swap:0,4",
+    {
+      "expect": {
+        "party0.species": "SPECIES_QUILAVA"
+      }
+    },
+    "goto:MAP_NATIONAL_PARK,73,39",
+    "goto:MAP_ROUTE_36,401,248,90000",
+    "A",
+    "fight",
+    "field",
+    "again:5,trainer:TRAINER_SCHOOL_KID_M_ALAN,1,4",
+    "goto:MAP_NATIONAL_PARK,73,39",
+    "goto:MAP_NATIONAL_PARK,40,84",
+    "goto:MAP_GOLDENROD_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_GOLDENROD_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "badges": 2,
+    "party": 6,
+    "music": "SEQ_GS_POKESEN",
+    "trainer:TRAINER_PSYCHIC_M_MARK": 1,
+    "trainer:TRAINER_SCHOOL_KID_M_ALAN": 1
+  }
+}

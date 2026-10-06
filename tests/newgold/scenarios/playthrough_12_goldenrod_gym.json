@@ -1,0 +1,49 @@
+{
+  "about": "The playthrough's Goldenrod Gym, its Beauties, from Goldenrod's Pokemon Center: through the gym's walkways and arches by the navigator, which keeps to the floor's heights (the BDHC's) and its side walls, to Beauty Victoria (Furret, Aipom, Tauros, Sentret, 22 to 24) and Beauty Samantha (Persian, Wigglytuff, 25), each walked up to and talked to if they have not spotted the player on the way. swap: puts the Misdreavus in the lead, a Ghost their Normal moves pass through, so that it wins what they pay (with the Flaaffy leading here instead, the team's lowest, it went from 21 to 23 and the Misdreavus from 23 to 24 only, and Whitney beat that team sixteen times running). Each trainer is walked up to and talked to, A and fight, unless they spot the player on the way and the navigator's battle has them beaten already (fight: then stops at their line after the battle); a loss sends the player to the nurse, and again: walks back and fights that trainer again until trainer: reads them beaten, each attempt a new battle (retry:, the battle seed one higher), four times more at most -- what a loss wins, the Pokemon it knocked out, is kept. Whitney, the leg after next's, would mark them beaten on her own defeat: they are fought for what they pay. Played on 5fec2af87: both at the first attempt, the Misdreavus from 23 to 24 (20,614 frames). The nurse, and the game's save. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_11e_route_36",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "retry:on",
+    "swap:0,4",
+    {
+      "expect": {
+        "party0.species": "SPECIES_MISDREAVUS"
+      }
+    },
+    "goto:MAP_GOLDENROD_GYM,6,11,40000",
+    "A",
+    "fight",
+    "field",
+    "again:4,trainer:TRAINER_BEAUTY_VICTORIA,1,4",
+    {
+      "expect": {
+        "music": "SEQ_GS_GYM"
+      }
+    },
+    "goto:MAP_GOLDENROD_GYM,24,18,40000",
+    "A",
+    "fight",
+    "field",
+    "again:4,trainer:TRAINER_BEAUTY_SAMANTHA,1,4",
+    "goto:MAP_GOLDENROD_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_GOLDENROD_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "badges": 2,
+    "party": 6,
+    "music": "SEQ_GS_POKESEN",
+    "trainer:TRAINER_BEAUTY_VICTORIA": 1,
+    "trainer:TRAINER_BEAUTY_SAMANTHA": 1
+  }
+}

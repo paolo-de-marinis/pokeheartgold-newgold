@@ -1,0 +1,80 @@
+{
+  "about": "The playthrough trains for Whitney in the National Park, north of Route 35, from Goldenrod's Pokemon Center: Pokefan Beverly (Meowth, Skitty, Granbull, 24 to 27), led by the Misdreavus, which her Normal moves do not touch; School Kid Jack (Gloom, Foongus, Voltorb, 24 to 26), led by the Quilava; back to the nurse by the park's south gate; Pokefan William (Pikachu, Emolga, Raichu, 24 to 27), led by the Flaaffy; Lass Krise (Gloom, Cubone, Lotad, Furret, 25 to 27), led by the Quilava; and the nurse again by the south gate. The way out goes by the south gate named (goto: the park's (40, 84)): from the park's east the navigator plans through the gap between Route 36 and Route 35's north field, where the game has walls its data does not show, and learns them one plan at a time, with the grass's battles in between (a walk back to the nurse took 14,740 frames and 11 plans that way). Each trainer is walked up to and talked to, A and fight, unless they spot the player on the way and the navigator's battle has them beaten already (fight: then stops at their line after the battle); a loss sends the player to the nurse, and again: walks back and fights that trainer again until trainer: reads them beaten, each attempt a new battle (retry:, the battle seed one higher), four times more at most -- what a loss wins, the Pokemon it knocked out, is kept. Played on 5fec2af87: all four at the first attempt, the Quilava 25 to 27 (61,302 frames). The game's save. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_11c_route_35_bryan",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    "retry:on",
+    "swap:0,2",
+    {
+      "expect": {
+        "party0.species": "SPECIES_MISDREAVUS"
+      }
+    },
+    "goto:MAP_NATIONAL_PARK,52,55,90000",
+    "A",
+    "fight",
+    "field",
+    "again:4,trainer:TRAINER_POKEFAN_BEVERLY,1,4",
+    "swap:0,4",
+    {
+      "expect": {
+        "party0.species": "SPECIES_QUILAVA"
+      }
+    },
+    "goto:MAP_NATIONAL_PARK,66,46,90000",
+    "A",
+    "fight",
+    "field",
+    "again:4,trainer:TRAINER_SCHOOL_KID_M_JACK,1,4",
+    "goto:MAP_NATIONAL_PARK,40,84",
+    "goto:MAP_GOLDENROD_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "swap:0,2",
+    {
+      "expect": {
+        "party0.species": "SPECIES_FLAAFFY"
+      }
+    },
+    "goto:MAP_NATIONAL_PARK,50,24,90000",
+    "A",
+    "fight",
+    "field",
+    "again:4,trainer:TRAINER_POKEFAN_M_WILLIAM,1,4",
+    "swap:0,2",
+    {
+      "expect": {
+        "party0.species": "SPECIES_QUILAVA"
+      }
+    },
+    "goto:MAP_NATIONAL_PARK,37,31,90000",
+    "A",
+    "fight",
+    "field",
+    "again:4,trainer:TRAINER_LASS_KRISE,1,4",
+    "goto:MAP_NATIONAL_PARK,40,84",
+    "goto:MAP_GOLDENROD_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_GOLDENROD_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "badges": 2,
+    "party": 6,
+    "music": "SEQ_GS_POKESEN",
+    "trainer:TRAINER_POKEFAN_BEVERLY": 1,
+    "trainer:TRAINER_SCHOOL_KID_M_JACK": 1,
+    "trainer:TRAINER_POKEFAN_M_WILLIAM": 1,
+    "trainer:TRAINER_LASS_KRISE": 1
+  }
+}

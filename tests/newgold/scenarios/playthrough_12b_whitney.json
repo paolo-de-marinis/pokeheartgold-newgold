@@ -1,0 +1,79 @@
+{
+  "about": "The playthrough's Whitney, from Goldenrod's Pokemon Center: her five are Furret and Ambipom at 28, Wigglytuff 29, Farigiraf and Miltank 30, the cap the Hive Badge set, with Sitrus and Lum Berries, a Silk Scarf, a Twisted Spoon and two Super Potions -- konefr's, and her Miltank's Milk Drink, Bulldoze and Zen Headbutt and her Farigiraf's Psychic swept the team at 22 to 30 every time where the leg was drafted. So first the Department Store's fifth floor, its TM clerk across the counter (21, 7, special mart 7), where the bot buys TM38 Fire Blast and TM25 Thunder (5,500 each, HeartGold's prices; buy:, one at a time), and teaches them from the bag (machine:, gym.py's rule letting a move go): Fire Blast to the Quilava, Thunder to the Flaaffy and, the TM not spent, to the Misdreavus, whose Psychic and Ghost moves did nothing to her Normal types or little to her Farigiraf; then the second floor, where the bot buys Hyper Potions with what the money allows, ten at most (buy:). Then to her at the top of her gym, A and fight; a loss sends the player to the nurse and again: walks back and fights her again, each attempt a new battle (the battle seed one higher), twenty times at most, with what the bag has left -- what a loss wins is kept, and her five pay more than any trainer before her: the Quilava, the Noctowl and the Misdreavus came to the cap, 30, in the attempts. Played on 5fec2af87 from leg 12a's save, the eleven attempts before were lost, Fire Blast taking her Farigiraf in most and the Miltank falling in some, and the twelfth won (231,958 frames, 32 minutes, the playthrough's longest leg: a bot that wins her more often needs better play than gym.py's -- the Flaaffy at 21 and the Togepi hatched at 1 are two places that cannot fight, and the Graveler, at the cap, comes in on her Furret's Brick Break and her Miltank's Bulldoze). Beaten, she cries and gives nothing (VAR_UNK_410A 1); the badge waits for the walk south onto (13, 11), the coord event where her Lass comes up (FLAG_UNK_0B7), and back to Whitney, who then gives the Plain Badge (VAR_UNK_410A 2) and TM45 (FLAG_GOT_TM45_FROM_WHITNEY), as whitney.py walks it. The nurse, and the game's save. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "from": "playthrough_12a_goldenrod_gym_lasses",
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "goto:MAP_GOLDENROD_DEPARTMENT_STORE_5F,21,7",
+    "RIGHT",
+    "buy:ITEM_TM38,1",
+    "buy:ITEM_TM25,1",
+    {
+      "expect": {
+        "bag:ITEM_TM38": 1,
+        "bag:ITEM_TM25": 1,
+        "party0.species": "SPECIES_MISDREAVUS",
+        "party2.species": "SPECIES_FLAAFFY",
+        "party4.species": "SPECIES_QUILAVA"
+      }
+    },
+    "machine:ITEM_TM38,4",
+    "machine:ITEM_TM25,2",
+    "machine:ITEM_TM25,0",
+    "goto:MAP_GOLDENROD_DEPARTMENT_STORE_2F,21,7",
+    "RIGHT",
+    "buy:ITEM_HYPER_POTION,10",
+    "flee:40",
+    "goto:MAP_GOLDENROD_GYM,13,4,40000",
+    "A",
+    "fight",
+    "field",
+    "again:4,var:VAR_UNK_410A,1,20",
+    {
+      "expect": {
+        "var:VAR_UNK_410A": 1,
+        "badges": 2,
+        "music": "SEQ_GS_GYM"
+      }
+    },
+    "goto:MAP_GOLDENROD_GYM,13,11",
+    "field",
+    {
+      "expect": {
+        "flag:FLAG_UNK_0B7": 1
+      }
+    },
+    "goto:MAP_GOLDENROD_GYM,13,4",
+    "A",
+    "field",
+    {
+      "expect": {
+        "badges": 3,
+        "var:VAR_UNK_410A": 2,
+        "flag:FLAG_GOT_TM45_FROM_WHITNEY": 1,
+        "bag:ITEM_TM45": 1
+      }
+    },
+    "goto:MAP_GOLDENROD_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_GOLDENROD_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "badges": 3,
+    "party": 6,
+    "music": "SEQ_GS_POKESEN",
+    "lines": [
+      "You are challenged by Leader Whitney!",
+      "Quilava used Fire Blast!",
+      "You defeated Leader Whitney!"
+    ]
+  }
+}
