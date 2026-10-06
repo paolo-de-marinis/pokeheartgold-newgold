@@ -493,6 +493,23 @@ class ScenarioFileTests(unittest.TestCase):
                             cursor = after
                     self.assertEqual((key, page + cursor), ("A", index), (count, index, start))
 
+    def test_fight_stops_waiting_at_a_beaten_trainer(self):
+        # fight: after A beside a trainer the bot has beaten: his line after
+        # the battle comes at every press, the field free between two. Route
+        # 35's leg waited 300 presses, 12,000 frames, twice. It gives up
+        # after the second such talk now; a speech before a battle, the
+        # field never free, is waited through; nobody there, five looks.
+        def looks(frees):
+            idle = talks = 0
+            for presses, free in enumerate(frees):
+                idle, talks, done = scene.waiting(free, idle, talks, presses)
+                if done:
+                    return presses
+            return None
+        self.assertEqual(looks([False, True, False, True, False, True]), 3)
+        self.assertIsNone(looks([False] * 40))
+        self.assertEqual(looks([True] * 8), 4)
+
     def test_retry_gives_the_battle_after_a_loss_a_new_seed(self):
         # retry:on -- after a loss on a goto, the held seed one higher; a win
         # leaves it, and a seed not held is not made one.

@@ -227,6 +227,17 @@ STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", 
          "machine", "answers", "buy")
 
 
+def waiting(free, idle, talks, presses):
+    """fight:'s wait for a battle, one look at the field after `presses`
+    presses of A: (idle, talks, whether it gives up). It gives up with the
+    field free -- no script, no text box -- five looks running, after two
+    talks that ended with the field free and no battle (a beaten trainer's
+    line after the battle, again at every press), or after 300 presses."""
+    talks += bool(free and idle == 0 and presses)
+    idle = idle + 1 if free else 0
+    return idle, talks, idle > 4 or talks >= 2 or presses >= 300
+
+
 def readable(step_or_key, key=False):
     """Whether scene.py knows a step (or, with key, an expectation's key)
     without running anything: a scenario's typo is found by the fast test."""
@@ -930,15 +941,18 @@ class Scene:
             return self.buy(self.number(item), int(count))
         elif kind == "fight":
             import gym
-            idle = presses = 0
+            idle = presses = talks = 0
             while self.markers.read(core.ram(), "gDiagBattleState") != BATTLE_MAIN:
                 # The field free, press after press, with no text box: nobody
                 # is there to fight -- one who spotted the player on a goto
                 # has been fought on it. The first press talks to whoever
                 # the player faces; four more with the field still free and
-                # the step gives up, rather than 300 presses later.
-                idle = idle + 1 if self.movable() and not self.textbox() else 0
-                if idle > 4 or presses == 300:
+                # the step gives up, rather than 300 presses later. A beaten
+                # trainer answers every press with his line after the battle,
+                # the field free between two: two such talks ended with no
+                # battle, and the step gives up too.
+                idle, talks, done = waiting(self.movable() and not self.textbox(), idle, talks, presses)
+                if done:
                     self.say(f"[{core.frames}] no battle came up")
                     return None
                 core.press("A", 6, hooks)
