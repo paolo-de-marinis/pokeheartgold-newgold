@@ -4427,8 +4427,11 @@ def main():
         print(f"party slot {slot}: Hyper trained {'+'.join(n for n in order if n in names) or 'nothing'}")
 
     if args.tm:
-        machines = [int(n) for n in args.tm.split(",")]
-        add_machines(save, machines)
+        try:
+            machines = [int(n) for n in args.tm.split(",")]
+            add_machines(save, machines)
+        except ValueError as e:
+            raise SystemExit(f"--tm: {e}")
         save.write()
         print(f"bag: TM{', TM'.join(f'{n:02d}' for n in machines)}")
 

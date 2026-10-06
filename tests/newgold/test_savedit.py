@@ -287,6 +287,11 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(shown(), [items[n] for n in ("ITEM_TM75", "ITEM_TM094", "ITEM_TM126")])
         with self.assertRaises(ValueError):
             sv.set_item(save, items["ITEM_TM098"], 1)    # Venoshock: no machine of hg-engine's taught it
+        # The command line says so in a line, as its other refusals, not with a traceback.
+        run = subprocess.run([sys.executable, str(ROOT / "tools/newgold/devkit/savedit.py"), str(path), "--tm", "98"],
+                             capture_output=True, text=True)
+        self.assertEqual((run.returncode, run.stderr.splitlines()[-1:]), (1, [run.stderr.strip()]), run.stderr)
+        self.assertTrue(run.stderr.startswith("--tm: TM098:"), run.stderr)
 
     def test_a_tm_by_its_number(self):
         """--tm: TM93 is the TM093 item and TM148 the TM148 one; past HM08 a
