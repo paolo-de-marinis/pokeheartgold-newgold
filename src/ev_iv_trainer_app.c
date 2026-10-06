@@ -379,7 +379,8 @@ static const u8 *Trainer_ShownEvs(EvIvTrainer *app) {
 
 static void Trainer_UpdatePreview(EvIvTrainer *app) {
     const u8 *evs = Trainer_ShownEvs(app);
-    u16 flags = (u16)(app->trained | app->newTrained);
+    // The copy's other bits stay: a Mint's nature is in this field too.
+    u16 flags = (u16)(GetMonData(app->mon, MON_DATA_UNUSED_114, NULL) | app->newTrained);
     int stat;
 
     CopyPokemonToPokemon(app->mon, app->preview);

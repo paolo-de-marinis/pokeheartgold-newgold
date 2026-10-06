@@ -98,6 +98,64 @@ def header():
     return "\n".join(keep)
 
 
+PREVIEW = r"""
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include "constants/pokemon.h"
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define MINT 0x3E       // pokemon.c's MON_MINT_NATURE_MASK
+enum { PAGE_EVS, PAGE_SETS };
+typedef struct { u16 flags; u8 evs[NUM_STATS]; u16 stats[NUM_STATS]; } Pokemon;
+static const struct { u8 evs[NUM_STATS]; } sEvIvTrainerSets[1];
+typedef struct {
+    Pokemon *mon, *preview;
+    u8 page, set, setCount, newEvs[NUM_STATS];
+    u16 newStats[NUM_STATS];
+    u32 trained, newTrained;
+    BOOL topChanged;
+} EvIvTrainer;
+
+static void CopyPokemonToPokemon(Pokemon *src, Pokemon *dest) { *dest = *src; }
+static u32 GetMonData(Pokemon *mon, int attr, void *dest) {
+    (void)dest;
+    if (attr == MON_DATA_UNUSED_114) return mon->flags;
+    return mon->stats[attr == MON_DATA_MAX_HP ? STAT_HP : attr - MON_DATA_ATK + 1];
+}
+static void SetMonData(Pokemon *mon, int attr, const void *value) {
+    if (attr == MON_DATA_UNUSED_114) mon->flags = *(const u16 *)value;
+    else mon->evs[attr - MON_DATA_HP_EV] = *(const u8 *)value;
+}
+// A Mint for Adamant raises Attack and lowers Sp. Atk; a trained stat adds 5.
+static void CalcMonStats(Pokemon *mon) {
+    for (int stat = 0; stat < NUM_STATS; stat++) {
+        int value = 100 + mon->evs[stat] / 4;
+        if (mon->flags & MINT) value += stat == STAT_ATK ? 10 : stat == STAT_SPATK ? -10 : 0;
+        if (mon->flags & MON_HYPER_TRAINED_BIT(stat)) value += 5;
+        mon->stats[stat] = value;
+    }
+}
+@APP@
+int main(void) {
+    Pokemon mon = { .flags = MINT | MON_HYPER_TRAINED_BIT(STAT_DEF) }, preview;
+    EvIvTrainer app = { &mon, &preview, PAGE_EVS };
+    CalcMonStats(&mon);
+    app.trained = mon.flags & MON_HYPER_TRAINED_ALL;
+    Trainer_UpdatePreview(&app);
+    for (int stat = 0; stat < NUM_STATS; stat++) assert(app.newStats[stat] == mon.stats[stat]);
+    app.newTrained = MON_HYPER_TRAINED_BIT(STAT_ATK);
+    Trainer_UpdatePreview(&app);
+    assert(app.newStats[STAT_ATK] == mon.stats[STAT_ATK] + 5 && app.newStats[STAT_SPATK] == mon.stats[STAT_SPATK]);
+    assert(mon.flags == (MINT | MON_HYPER_TRAINED_BIT(STAT_DEF)));
+    return 0;
+}
+"""
+
+
 class RulesTests(unittest.TestCase):
     def test_the_rules(self):
         rules = read("src/ev_iv_trainer_rules.c")
@@ -109,6 +167,20 @@ class RulesTests(unittest.TestCase):
             (path / "check.c").write_text(source)
             subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
                 "-std=c99", "-Wall", "-Wextra", "-Werror", "-Wno-unused-function", "-O2",
+                "-iquote", str(ROOT / "include"), str(path / "check.c"), "-o", str(path / "check")], check=True)
+            subprocess.run([str(path / "check")], cwd=directory, check=True)
+
+    def test_the_preview_keeps_a_mint(self):
+        """The top screen's projected stats are the Pokemon's own while
+        nothing changes, a Mint's nature included (it shares the field with
+        Hyper Training's bits)."""
+        app = read("src/ev_iv_trainer_app.c")
+        body = "\n".join(function(app, name) for name in ("Trainer_ShownEvs", "Trainer_UpdatePreview"))
+        with tempfile.TemporaryDirectory(prefix="newgold-trainer-") as directory:
+            path = Path(directory)
+            (path / "check.c").write_text(PREVIEW.replace("@APP@", body))
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=c99", "-Wall", "-Werror", "-Wno-unused-function", "-O2",
                 "-iquote", str(ROOT / "include"), str(path / "check.c"), "-o", str(path / "check")], check=True)
             subprocess.run([str(path / "check")], cwd=directory, check=True)
 
