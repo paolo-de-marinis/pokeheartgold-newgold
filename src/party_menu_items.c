@@ -215,9 +215,10 @@ static PartyMenuItemType ItemId_GetPartyUseType(u16 itemId) {
 
 static void PartyMenu_GetItemUseMessage(PartyMenu *partyMenu, u16 itemId, int param) {
     String *string;
+    PartyMenuItemType type = ItemId_GetPartyUseType(itemId);
 
     BufferBoxMonNickname(partyMenu->msgFormat, 0, Mon_GetBoxMon(Party_GetMonByIndex(partyMenu->args->party, partyMenu->partyMonIndex)));
-    switch (ItemId_GetPartyUseType(itemId)) {
+    switch (type) {
     case PARTY_MENU_ITEM_TYPE_PSN_HEAL:
         string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00066);
         StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
@@ -258,75 +259,26 @@ static void PartyMenu_GetItemUseMessage(PartyMenu *partyMenu, u16 itemId, int pa
         StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
         String_Delete(string);
         break;
+    // The six stats' types are in the stats' order, STAT_HP to STAT_SPDEF.
     case PARTY_MENU_ITEM_TYPE_HP_EV_UP:
-        string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00076);
-        BufferStatName(partyMenu->msgFormat, 1, STAT_HP);
-        StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
-        String_Delete(string);
-        break;
     case PARTY_MENU_ITEM_TYPE_ATK_EV_UP:
-        string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00076);
-        BufferStatName(partyMenu->msgFormat, 1, STAT_ATK);
-        StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
-        String_Delete(string);
-        break;
     case PARTY_MENU_ITEM_TYPE_DEF_EV_UP:
-        string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00076);
-        BufferStatName(partyMenu->msgFormat, 1, STAT_DEF);
-        StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
-        String_Delete(string);
-        break;
     case PARTY_MENU_ITEM_TYPE_SPEED_EV_UP:
-        string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00076);
-        BufferStatName(partyMenu->msgFormat, 1, STAT_SPEED);
-        StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
-        String_Delete(string);
-        break;
     case PARTY_MENU_ITEM_TYPE_SPATK_EV_UP:
-        string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00076);
-        BufferStatName(partyMenu->msgFormat, 1, STAT_SPATK);
-        StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
-        String_Delete(string);
-        break;
     case PARTY_MENU_ITEM_TYPE_SPDEF_EV_UP:
         string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00076);
-        BufferStatName(partyMenu->msgFormat, 1, STAT_SPDEF);
+        BufferStatName(partyMenu->msgFormat, 1, STAT_HP + type - PARTY_MENU_ITEM_TYPE_HP_EV_UP);
         StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
         String_Delete(string);
         break;
     case PARTY_MENU_ITEM_TYPE_HP_EV_DOWN:
-        string = NewString_ReadMsgData(partyMenu->msgData, param + msg_0300_00104);
-        BufferStatName(partyMenu->msgFormat, 1, STAT_HP);
-        StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
-        String_Delete(string);
-        break;
     case PARTY_MENU_ITEM_TYPE_ATK_EV_DOWN:
-        string = NewString_ReadMsgData(partyMenu->msgData, param + msg_0300_00104);
-        BufferStatName(partyMenu->msgFormat, 1, STAT_ATK);
-        StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
-        String_Delete(string);
-        break;
     case PARTY_MENU_ITEM_TYPE_DEF_EV_DOWN:
-        string = NewString_ReadMsgData(partyMenu->msgData, param + msg_0300_00104);
-        BufferStatName(partyMenu->msgFormat, 1, STAT_DEF);
-        StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
-        String_Delete(string);
-        break;
     case PARTY_MENU_ITEM_TYPE_SPEED_EV_DOWN:
-        string = NewString_ReadMsgData(partyMenu->msgData, param + msg_0300_00104);
-        BufferStatName(partyMenu->msgFormat, 1, STAT_SPEED);
-        StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
-        String_Delete(string);
-        break;
     case PARTY_MENU_ITEM_TYPE_SPATK_EV_DOWN:
-        string = NewString_ReadMsgData(partyMenu->msgData, param + msg_0300_00104);
-        BufferStatName(partyMenu->msgFormat, 1, STAT_SPATK);
-        StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
-        String_Delete(string);
-        break;
     case PARTY_MENU_ITEM_TYPE_SPDEF_EV_DOWN:
         string = NewString_ReadMsgData(partyMenu->msgData, param + msg_0300_00104);
-        BufferStatName(partyMenu->msgFormat, 1, STAT_SPDEF);
+        BufferStatName(partyMenu->msgFormat, 1, STAT_HP + type - PARTY_MENU_ITEM_TYPE_HP_EV_DOWN);
         StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
         String_Delete(string);
         break;
