@@ -131,15 +131,25 @@ class ScenarioFileTests(unittest.TestCase):
         # Continue seeds with the VBlank count, and that count moves with the
         # core, its JIT and the loading before Continue (rolls_forced_high.json's
         # about): a scenario that forces one sets sLCRNG_State after the field
-        # comes up, or the HP it expects is luck.
+        # comes up, or the HP it expects is luck. And it sets it again before
+        # each one it forces: pinned once, the RNG drifts with the frames the
+        # steps before take, and one changed by the data moves the rolls
+        # (dex_forms_galarian_slowpoke.json's Slowpoke came out the other
+        # gender on the TM work's build). A switch is never held for it.
+        pin = "poke:sLCRNG_State=0xbb160215"
         for path in sorted(SCENARIOS.glob("*.json")):
             spec = json.loads(path.read_text())
-            steps = [s for s in spec["steps"] if isinstance(s, str)]
-            if any("gDiagForceBattleSpecies" in s for s in steps) or "gDiagForceBattleSpecies" in spec.get("hold", {}):
-                with self.subTest(path.name):
-                    pin = "poke:sLCRNG_State=0xbb160215"
-                    self.assertIn(pin, steps)
-                    self.assertLess(steps.index("field"), steps.index(pin))
+            steps = spec["steps"]
+            with self.subTest(path.name):
+                self.assertNotIn("gDiagForceBattleSpecies", spec.get("hold", {}))
+                for at, step in enumerate(steps):
+                    if re.fullmatch(r"poke:gDiagForceBattleSpecies=(?!0$)\w+", str(step)):
+                        pokes = []
+                        while at and str(steps[at - 1]).startswith("poke:"):
+                            at -= 1
+                            pokes.append(steps[at])
+                        self.assertIn(pin, pokes, step)
+                        self.assertIn("field", steps[:at])
 
     def test_a_trainer_battle_at_the_start_is_started_by_fight(self):
         # A trainer who spots the player as the field comes up starts his

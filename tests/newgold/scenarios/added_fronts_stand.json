@@ -7,10 +7,10 @@
             "poke:gDiagForceBattleSpecies=791", "LEFT", "fight:0:0",
             {"expect": {"battler1.species": "SPECIES_STEENEE", "front1.lift": 0}},
             "fight", "field",
-            "poke:gDiagForceBattleSpecies=954", "RIGHT", "fight:0:0",
+            "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=954", "RIGHT", "fight:0:0",
             {"expect": {"battler1.species": "SPECIES_NACLSTACK", "front1.lift": -1}},
             "fight", "field",
-            "poke:gDiagForceBattleSpecies=521", "LEFT", "fight:0:0",
+            "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=521", "LEFT", "fight:0:0",
             {"expect": {"battler1.species": "SPECIES_TRUBBISH", "front1.lift": 3}},
             "fight", "field"],
   "expect": {"lines": ["Steenee", "Naclstack", "Trubbish"]}

@@ -4,6 +4,6 @@
   "edit": ["--party", "CATERPIE:6"],
   "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1},
   "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
-            "teach:0,0,MOVE_GUILLOTINE", "fight:1", "field", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0"],
+            "teach:0,0,MOVE_GUILLOTINE", "fight:1", "field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0"],
   "expect": {"lines": ["The wild Chansey fainted!", "Go! Metapod!"], "battler0.species": "SPECIES_METAPOD"}
 }

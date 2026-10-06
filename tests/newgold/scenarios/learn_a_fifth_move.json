@@ -7,7 +7,7 @@
             {"expect": {"lines": ["Cyndaquil wants to learn the move Quick Attack.", "Cyndaquil forgot Smokescreen.",
                                   "Cyndaquil learned Quick Attack!"],
                         "party0.level": 13, "party0.move2": "MOVE_QUICK_ATTACK", "party0.move3": "MOVE_EMBER"}},
-            "swap:1,0", "poke:gDiagForceBattleSpecies=19", "RIGHT", "fight", "field"],
+            "swap:1,0", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=19", "RIGHT", "fight", "field"],
   "expect": {"new_lines": ["Hoothoot wants to learn the move Reflect.", "Should this Pok", "Hoothoot did not learn Reflect."],
              "party0.species": "SPECIES_HOOTHOOT", "party0.level": 12, "party0.move3": "MOVE_CONFUSION",
              "party1.move2": "MOVE_QUICK_ATTACK"}
