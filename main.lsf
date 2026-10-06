@@ -953,6 +953,8 @@ Overlay OVY_27
 {
     After bug_contest
     Object asm/overlay_27.o
+    Object src/overlay_27_0225A19C.o
+    Object asm/overlay_27_0225A2C8.o
 }
 Overlay OVY_28
 {
