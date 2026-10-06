@@ -404,19 +404,9 @@ static void InheritMoves(Pokemon *egg, BoxPokemon *father, BoxPokemon *mother) {
             break;
         }
     }
-    for (moveSlot = 0; moveSlot < MAX_MON_MOVES; moveSlot++) {
-        if (search->dad_moves[moveSlot] != MOVE_NONE) {
-            for (j = 0; j < NUM_TMHMS; j++) {
-                if (search->dad_moves[moveSlot] == TMHMGetMove(j + ITEM_TM01)) {
-                    if (GetTMHMCompatBySpeciesAndForm(egg_species, egg_form, j)) {
-                        if (TryAppendMonMove(egg, search->dad_moves[moveSlot]) == MOVE_APPEND_FULL) {
-                            DeleteMonFirstMoveAndAppend(egg, search->dad_moves[moveSlot]);
-                        }
-                    }
-                }
-            }
-        }
-    }
+    // The father's machine moves are not passed on: the rule of the
+    // generations before the sixth, gone from it on (Bulbapedia, Pokemon
+    // breeding).
     for (moveSlot = 0; moveSlot < MAX_MON_MOVES; moveSlot++) {
         if (search->dad_moves[moveSlot] == MOVE_NONE) {
             break;

@@ -186,5 +186,88 @@ class EggMoveSharingTests(unittest.TestCase):
             subprocess.run([str(path / "test")], check=True)
 
 
+INHERIT = r"""
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include "constants/daycare.h"
+#include "constants/items.h"
+#include "constants/moves.h"
+#include "constants/pokemon.h"
+#include "constants/species.h"
+
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+#define NULL ((void *)0)
+#define HEAP_ID_FIELD1 0
+#define LEVEL_UP_LEARNSET_SIZE 34
+#define MOVE_APPEND_FULL 0xFFFFu
+typedef struct { u32 species, moves[MAX_MON_MOVES]; } BoxPokemon;
+typedef BoxPokemon Pokemon;
+
+static void *Heap_Alloc(int heap, u32 size) { (void)heap; return malloc(size); }
+static void Heap_Free(void *p) { free(p); }
+static void MI_CpuClearFast(void *p, u32 size) { memset(p, 0, size); }
+static u32 GetBoxMonData(BoxPokemon *mon, int field, void *unused) {
+    (void)unused;
+    if (field == MON_DATA_SPECIES) return mon->species;
+    if (field == MON_DATA_FORM) return 0;
+    assert(field >= MON_DATA_MOVE1 && field < MON_DATA_MOVE1 + MAX_MON_MOVES);
+    return mon->moves[field - MON_DATA_MOVE1];
+}
+static u32 GetMonData(Pokemon *mon, int field, void *unused) { return GetBoxMonData(mon, field, unused); }
+static u32 TryAppendMonMove(Pokemon *mon, u16 move) {
+    for (int i = 0; i < MAX_MON_MOVES; i++) {
+        if (mon->moves[i] == MOVE_NONE) { mon->moves[i] = move; return move; }
+    }
+    return MOVE_APPEND_FULL;
+}
+static void DeleteMonFirstMoveAndAppend(Pokemon *mon, u16 move) {
+    memmove(mon->moves, mon->moves + 1, sizeof(mon->moves[0]) * (MAX_MON_MOVES - 1));
+    mon->moves[MAX_MON_MOVES - 1] = move;
+}
+// The baby learns Tackle by level-up and Growl as an egg move; every machine
+// is Thunderbolt's, and the baby can be taught it.
+static u16 Species_LoadLearnsetTable(u16 species, u16 form, u16 *dest) { (void)species; (void)form; dest[0] = MOVE_TACKLE; return 1; }
+static u8 LoadEggMoves(u16 species, u16 *dest) { (void)species; dest[0] = MOVE_GROWL; dest[1] = 0xFFFF; return 1; }
+__attribute__((unused)) static u16 TMHMGetMove(u16 item) { (void)item; return MOVE_THUNDERBOLT; }
+__attribute__((unused)) static int GetTMHMCompatBySpeciesAndForm(u16 species, u16 form, u8 machine) { (void)species; (void)form; (void)machine; return 1; }
+
+@FUNCTIONS@
+
+int main(void) {
+    Pokemon egg = { SPECIES_PICHU, { 0 } };
+    BoxPokemon father = { SPECIES_PIKACHU, { MOVE_THUNDERBOLT, MOVE_GROWL, MOVE_TACKLE, 0 } };
+    BoxPokemon mother = { SPECIES_PIKACHU, { MOVE_TACKLE, 0, 0, 0 } };
+    InheritMoves(&egg, &father, &mother);
+    // The father's egg move, then the level-up move both parents know; not
+    // the father's machine move.
+    assert(egg.moves[0] == MOVE_GROWL && egg.moves[1] == MOVE_TACKLE && egg.moves[2] == MOVE_NONE);
+    return 0;
+}
+"""
+
+
+class InheritMovesTests(unittest.TestCase):
+    """InheritMoves, the real C on the host: the moves an egg starts with."""
+
+    def test_the_father_passes_no_machine_move(self):
+        """From the sixth generation on an egg does not inherit the father's
+        TM moves (Bulbapedia, Pokemon breeding)."""
+        source = (ROOT / "src/get_egg.c").read_text()
+        search = re.search(r"^struct EggMoveSearch \{.*?^\};", source, re.M | re.S).group(0)
+        functions = search + "\n\n" + static_function(source, "InheritMoves")
+        with tempfile.TemporaryDirectory(prefix="newgold-inherit-") as directory:
+            path = Path(directory)
+            (path / "test.c").write_text(INHERIT.replace("@FUNCTIONS@", functions))
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=gnu99", "-Wall", "-Wextra", "-Werror", "-iquote", str(ROOT / "include"),
+                str(path / "test.c"), "-o", str(path / "test"),
+            ], check=True)
+            subprocess.run([str(path / "test")], check=True)
+
+
 if __name__ == "__main__":
     unittest.main()
