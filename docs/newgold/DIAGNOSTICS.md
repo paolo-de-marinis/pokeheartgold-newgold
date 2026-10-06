@@ -235,18 +235,15 @@ with the JIT off and again with it on. Where they differ is emulation:
   and 178 on 0.9.3 with the JIT off, 235 and 266 with it on; the walk
   from New Bark to Route 29 107 and 132 with the JIT off, 196 on 0.9.3
   with it on. The landed tree, three runs at a time, came within 7% of them.
-- With the JIT on, melonDS DS starts no wild battle at all: on the lab
-  branch, in every scenario with one (the forced Geodudes, the Sentret on
-  the walk to Route 29, the Rattata on the walk to Cherrygrove), the
-  encounter's screen effect
-  (`sub_020551B8`, called from `Task_WildEncounter`'s first state) never
-  says it is done, `gDiagWildStage` stays at 1 and the run waits until its
-  frames are spent. The trainer battles play (Falkner, the double from
-  `gyms/bugsy.sav`). It is the JIT's doing, not the encounter's: the same
-  Sentret, rolled from the same RNG state with the JIT off, is met and
-  beaten. On the landed tree `rolls_forced_high` still stops at wild stage
-  1. melonDS 0.9.3's JIT plays wild battles. core.py says so on stderr when
-  `NEWGOLD_JIT=1` meets melonDS DS.
+- With the JIT on, melonDS DS started no wild battle until the game
+  stopped running DSProt (`FieldMap_Init` in src/field/fieldmap.c says
+  why): the encounter's screen effect (`sub_020551B8`, called from
+  `Task_WildEncounter`'s first state) read a table address the JIT had
+  compiled from a literal DSProt writes, rotated by sixteen bits, took a
+  data abort, and `gDiagWildStage` stayed at 1. A melonDS savestate of such
+  a run reads with frozen.py: undefined mode, the effect's addresses on the
+  stack. Wild battles play with the JIT now, and
+  `tests/newgold/scenarios/wild_battle_jit.json` (`"jit": true`) keeps it so.
 - Either core's JIT also boots faster, and so moves the Continue's seed
   (on the landed tree 0xbb160241 on melonDS DS, 0xbb160230 on 0.9.3) and
   every wild Pokemon after it. Scenarios run with the JIT off.

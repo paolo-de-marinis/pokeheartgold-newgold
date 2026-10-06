@@ -30,8 +30,8 @@ one instance): melonDS DS 1.3.1 (MELONDSDS, melonDS 1.x as Paolo's melonDS
 is, unpacked under ~/hgss-build/deps/melondsds; the default) and melonDS
 0.9.3 (MELONDS, Arch's libretro-melonds, the harness's first). Each boots the ROM directly on
 its built-in BIOS and firmware, draws in software, runs without its JIT
-(NEWGOLD_JIT=1 turns it on: faster, but on melonDS DS no wild battle ever
-starts) and keeps the console's clock at CLOCK; main RAM
+(NEWGOLD_JIT=1 turns it on, Core(jit=True) for one instance: faster, and
+what a phone's melonDS runs) and keeps the console's clock at CLOCK; main RAM
 is the core's memory 2 on both, from 0x02000000. melonDS 0.9.3 reads the
 save file itself and never writes it back, so a game saved on it is saved
 nowhere; melonDS DS is handed it and gives it back as memory, and core.py
@@ -55,7 +55,7 @@ from pathlib import Path
 
 # The two cores the harness knows. NEWGOLD_CORE names the one a run uses (a
 # path; Core(core=...) overrides it for one instance); NEWGOLD_JIT=1 turns
-# either core's JIT recompiler on, off by default.
+# either core's JIT recompiler on, off by default (Core(jit=...) for one).
 MELONDS = Path("/usr/lib/libretro/melonds_libretro.so")      # melonDS 0.9.3, Arch's libretro-melonds
 MELONDSDS = Path.home() / "hgss-build/deps/melondsds/melondsds_libretro.so"   # melonDS DS 1.3.1
 CORE = Path(os.environ.get("NEWGOLD_CORE") or MELONDSDS)
@@ -178,7 +178,7 @@ class Variable(ctypes.Structure):
 
 
 class Core:
-    def __init__(self, rom, save=None, record=None, core=None):
+    def __init__(self, rom, save=None, record=None, core=None, jit=None):
         self.dir = tempfile.mkdtemp(prefix="newgold-core-")
         self._dir = ctypes.c_char_p(self.dir.encode())
         self.save_file = Path(self.dir) / (Path(rom).stem + ".sav")
@@ -195,10 +195,7 @@ class Core:
         self.name = f"{info.library_name.decode()} {info.library_version.decode()}"
         self.ds = info.library_name == b"melonDS DS"
         self.options = ds_options() if self.ds else dict(OPTIONS)
-        self.options[b"melonds_jit_enable"] = b"enabled" if JIT else b"disabled"
-        if JIT and self.ds:
-            print("core.py: with melonDS DS's JIT no wild battle starts (the encounter's screen effect "
-                  "never ends); scenarios run with NEWGOLD_JIT off", file=sys.stderr)
+        self.options[b"melonds_jit_enable"] = b"enabled" if (JIT if jit is None else jit) else b"disabled"
         self._callbacks = [ENV(self._env), VIDEO(self._video), AUDIO(self._sample),
                            AUDIO_BATCH(self._samples), POLL(lambda: None), STATE(self._input)]
         env, video, audio, batch, poll, state = self._callbacks

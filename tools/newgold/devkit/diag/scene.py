@@ -166,7 +166,9 @@ number, a constant's name (MAP_..., SPECIES_..., ITEM_..., MOVE_..., SEQ_...,
 TYPE_...), [low, high], or for
 a status the flags as markers.py names them ("BRN", "" for none).
 "asserts" and "alloc_failures" are 0 unless the file says otherwise. A step
-may also be {"expect": {...}}, checked when the run gets there.
+may also be {"expect": {...}}, checked when the run gets there. "jit": true
+plays the scenario with melonDS's JIT recompiler on (core.py), as a phone's
+melonDS plays it; the others as NEWGOLD_JIT says (off by default).
 
 The ROM is the NEWGOLD_DIAG=1 HeartGold build, run by core.py at the pinned
 clock; the heaps are its gDiagHeapLowWater, read by markers.py. melonDS
@@ -648,12 +650,12 @@ class Scene:
     """A core running a save, with the switches it holds and every line the
     battle has printed since it started."""
 
-    def __init__(self, save, rom=ROM, elf=DIAG_ELF, out=None, say=None, record=None):
+    def __init__(self, save, rom=ROM, elf=DIAG_ELF, out=None, say=None, record=None, jit=None):
         self.markers = Markers(elf)
         self.elf = Path(elf)
         self.out = Path(out) if out else None
         self.say = say or (lambda line: None)
-        self.core = Core(rom, save=save, record=record)
+        self.core = Core(rom, save=save, record=record, jit=jit)
         self.holds = {}
         self.hold("gDiagIgnoreCommunicationError", 1)
         self.lines, self._count, self._checked = [], 0, 0
@@ -1801,7 +1803,7 @@ def play_scenario(path, spec, save, rom, elf, out, record):
             return False, [f"FAIL {Path(path).name}: savedit.py {' '.join(spec['edit'])}: "
                            + (edit.stderr.strip().splitlines() or ["failed"])[-1]], None
     log, wrong, started = [], [], time.time()
-    scene = Scene(copy, rom, elf, out, say=log.append, record=record)
+    scene = Scene(copy, rom, elf, out, say=log.append, record=record, jit=spec.get("jit"))
     for name, value in spec.get("hold", {}).items():
         scene.hold(name, Scene.number(value))
     for index, step in enumerate(spec["steps"]):

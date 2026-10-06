@@ -80,7 +80,8 @@ class ScenarioFileTests(unittest.TestCase):
         for path in sorted(SCENARIOS.glob("*.json")):
             with self.subTest(path.name):
                 spec = json.loads(path.read_text())
-                self.assertLessEqual(set(spec), {"about", "save", "from", "edit", "hold", "steps", "expect"})
+                self.assertLessEqual(set(spec), {"about", "save", "from", "edit", "hold", "steps", "expect", "jit"})
+                self.assertIs(spec.get("jit", True), True)
                 self.assertTrue(spec.get("about") and spec.get("steps"))
                 # a save, the leg before, or neither: a new game (which has nothing to edit)
                 self.assertFalse("save" in spec and "from" in spec)
