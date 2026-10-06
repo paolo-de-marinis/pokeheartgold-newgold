@@ -85,6 +85,11 @@ A step is one of
                                 the bag, as a player teaches one: with four moves known,
                                 the one gym.py's rule lets go is forgotten on the
                                 summary screen (the rule keeping all four fails it)
+    use:ITEM,SLOT               one ITEM used on party slot SLOT (0 the first) from the
+                                bag, as a player gives a Pokemon a Potion or an HP Up:
+                                the pocket that holds it, the item, USE, the Pokemon,
+                                A through the line it prints, and out; failed when the
+                                item is not spent (it would have no effect)
     buy:ITEM,COUNT              COUNT of ITEM bought from the mart clerk the player
                                 faces (across the counter): A through the clerk's lines
                                 and on BUY, the item found in the mart's list, the
@@ -224,7 +229,7 @@ CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/
              "TYPE_": "include/constants/pokemon.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
          "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace", "swap", "shift", "again", "retry",
-         "machine", "answers", "buy")
+         "machine", "answers", "buy", "use")
 
 
 def waiting(free, idle, talks, presses):
@@ -309,8 +314,10 @@ def machine_layout():
              "__builtin_offsetof(BagView, itemId)", "__builtin_offsetof(BagView, pockets)", "sizeof(BagViewPocket)",
              "__builtin_offsetof(BagViewPocket, slots)", "__builtin_offsetof(BagViewPocket, pocketId)",
              "__builtin_offsetof(BagViewPocket, count)", "POCKET_TMHMS", "__builtin_offsetof(PokemonSummaryAppPrefix, unk7BD)",
-             "PARTY_MENU_STATE_USE_TMHM", "PARTY_MENU_STATE_WAIT_TEXT_PRINTER", "PARTY_MENU_STATE_YES_NO_HANDLE_INPUT")
-    keys = ("view", "pocket", "item", "pockets", "entry", "slots", "id", "count", "tms", "cursor", "pick", "text", "yesno")
+             "PARTY_MENU_STATE_USE_TMHM", "PARTY_MENU_STATE_WAIT_TEXT_PRINTER", "PARTY_MENU_STATE_YES_NO_HANDLE_INPUT",
+             "PARTY_MENU_STATE_USE_ITEM_SELECT_MON", "PARTY_MENU_STATE_ITEM_USE_CB")
+    keys = ("view", "pocket", "item", "pockets", "entry", "slots", "id", "count", "tms", "cursor", "pick", "text", "yesno",
+            "choose", "using")
     return dict(zip(keys, savedit.compile_c(exprs=names, headers=savedit.LAYOUT_HEADERS + (
         "bag_app_state.h", "pokemon_summary_app.h", "party_menu.h"))[0]))
 
@@ -939,6 +946,9 @@ class Scene:
         elif kind == "buy":
             item, count = rest.split(",")
             return self.buy(self.number(item), int(count))
+        elif kind == "use":
+            item, slot = rest.split(",")
+            return self.use(self.number(item), int(slot))
         elif kind == "fight":
             import gym
             idle = presses = talks = 0
@@ -1316,6 +1326,79 @@ class Scene:
             core.press("B", 6, hooks)
             core.step(20, hooks)
         return [f"machine: slot {slot} did not learn move {move} in {frames} frames"]
+
+    def use(self, item, slot, frames=12000):
+        """use:ITEM,SLOT -- the start menu's BAG; in the bag the pocket that
+        holds ITEM, touched until the bag shows it (BagView.unk64), the item
+        on its page, until the bag has it picked (BagView.itemId), and USE;
+        in the party menu, slot SLOT's panel, A through the line the item
+        prints, then B out of the party menu (it stays on "Use on which
+        Pokemon?" while the bag has more), the bag and the start menu. Done
+        when one is spent and the player can move; back in the bag with none
+        spent ("It won't have any effect.") is a failure.
+        ponytail: the item on its pocket's first page only, as machine:."""
+        import party
+        core, hooks, layout, bag = self.core, self.hooks, app_layout(), machine_layout()
+        had = party.bag(core.ram(), self.elf, item)
+        if not had or slot >= len(self.mons()):
+            return [f"use: no item {item} in the bag, or no party slot {slot}"]
+        end = core.frames + frames
+        wrong = self.start_menu("START_MENU_ACTION_BAG", end)
+        if wrong:
+            return wrong
+        core.press("A", 6, hooks)
+        touched = False
+        while core.frames < end:
+            name, manager = self.app()
+            state = manager and core.word(manager + layout["OverlayManager.proc_state"])
+            data = manager and core.word(manager + layout["OverlayManager.data"])
+            spent = party.bag(core.ram(), self.elf, item) < had
+            if name is None:
+                if spent and self.movable():
+                    self.say(f"[{core.frames}] use: item {item} on slot {slot}")
+                    return None
+                if spent:
+                    core.press("B", 6, hooks)       # the start menu, back from the bag
+                core.step(10, hooks)
+            elif name == "Bag_Main" and (spent or touched):
+                if not spent:
+                    break                           # back in the bag with nothing spent
+                core.press("B", 6, hooks)
+                core.step(20, hooks)
+            elif name == "Bag_Main" and data and state:
+                view = core.word(data + bag["view"])
+                pockets = [view + bag["pockets"] + i * bag["entry"] for i in range(8)]
+                shown = [[core.word(core.word(at + bag["slots"]) + 4 * k, 2) for k in range(core.word(at + bag["count"], 1))]
+                         for at in pockets]
+                tab = next((i for i, items in enumerate(shown) if item in items), None)
+                if tab is None:
+                    return [f"use: item {item} is in no pocket the bag shows"]
+                if core.word(view + bag["pocket"], 1) != tab:
+                    core.touch(*TABS[tab], 6, hooks)
+                elif core.word(view + bag["item"], 2) != item:
+                    if item not in shown[tab][:len(CELLS)]:
+                        return [f"use: item {item} is not on its pocket's first page: {shown[tab]}"]
+                    core.touch(*CELLS[shown[tab].index(item)], 6, hooks)
+                else:
+                    core.touch(*BAG_USE, 6, hooks)
+                core.step(20, hooks)
+            elif name == "PartyMenuApp_Main":
+                if spent and state == bag["choose"]:
+                    core.press("B", 6, hooks)       # "Use on which Pokemon?" again: out
+                elif state == bag["choose"] and not touched:
+                    core.touch(*PANELS[slot], 6, hooks)
+                    touched = True
+                elif state in (bag["using"], bag["text"]):
+                    core.press("A", 6, hooks)       # the line the item prints
+                core.step(20, hooks)
+            else:
+                core.step(10, hooks)
+        for _ in range(40):     # out of the menus, so the steps after can walk
+            if self.movable():
+                break
+            core.press("B", 6, hooks)
+            core.step(20, hooks)
+        return [f"use: item {item} was not spent on slot {slot} in {frames} frames"]
 
     def asking(self):
         """Whether the script the field runs waits on a yes/no: a context of

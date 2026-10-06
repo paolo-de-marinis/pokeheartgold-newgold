@@ -500,7 +500,10 @@ Reading what the debug ROM records, and playing it without looking.
   quiz. `buy:ITEM,COUNT` buys from the mart clerk the player faces, across
   the counter: A on BUY, then on the mart's screen (Task_Mart's MartData)
   the cursor walked to the item, the quantity, yes, and out -- Super
-  Potions before a gym, as a player buys them. `shift:SLOT` has a wild battle's first
+  Potions before a gym, as a player buys them. `use:ITEM,SLOT` gives a
+  party slot an item from the bag -- its pocket, the item, USE, the slot's
+  panel, A through the line it prints, and out -- a Potion, a vitamin or a
+  Mochi, and fails when none is spent. `shift:SLOT` has a wild battle's first
   Pokemon relieved by that party slot at the first prompt: the slot fights
   and the first, out at the start, shares the experience -- how a catch too
   weak to win its own battles is trained. `again:K,KEY,V` plays the K
