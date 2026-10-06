@@ -197,5 +197,27 @@ class TextTests(unittest.TestCase):
                 self.assertLessEqual(width(line, 0), 170, f"msg_0829 row {row} {line!r}")
 
 
+class ShopTests(unittest.TestCase):
+    def test_a_mart_opens_with_the_script_s_box_let_go(self):
+        """The mart clears the rows of the box (MartData_InitCamera), so a
+        script lets its box go first, HoldMsg or CloseMsg, as every retail
+        mart does (std_mart_intro's callers, the Pokeathlon Dome's): a box
+        still held open is printed into after the mart without its frame
+        (the EV/IV trainer's 'Come back anytime!', 5fec2af87)."""
+        marts = ("MartBuy", "SpecialMartBuy", "MartSell", "DecorationMart", "SealMart", "ScrCmd_771", "ScrCmd_772")
+        for path in sorted((ROOT / "files/fielddata/script/scr_seq").glob("*.s")):
+            before = None     # the last box command since the label
+            for number, line in enumerate(path.read_text().splitlines(), 1):
+                if re.match(r"\w+:", line):
+                    before = None
+                command = re.match(r"\s+(\w+)", line)
+                if not command:
+                    continue
+                if "Msg" in command.group(1):
+                    before = command.group(1)
+                elif command.group(1) in marts:
+                    self.assertIn(before, (None, "HoldMsg", "CloseMsg"), f"{path.name}:{number}")
+
+
 if __name__ == "__main__":
     unittest.main()

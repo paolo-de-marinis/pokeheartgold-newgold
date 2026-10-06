@@ -91,6 +91,7 @@ _EvIvTrain:
 _EvIvCaps:
 	NPCMsg msg_0552_T21PC0101_00010
 	WaitButton
+	HoldMsg ; let go, as std_mart_intro's callers do: the mart clears it, her next line opens a framed one
 	SpecialMartBuy 30 ; the Bottle Caps, scrcmd_mart.c
 	GoTo _EvIvBye
 	End

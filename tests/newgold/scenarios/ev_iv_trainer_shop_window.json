@@ -1,0 +1,18 @@
+{
+  "about": "Cherrygrove's EV/IV trainer, her box after her Bottle Cap shop (Paolo's phone, 5fec2af87): route29-official.sav given 30000 buys a Bottle Cap from her (Buy Bottle Caps, A to her line, the mart: Bottle Cap, x1, YES, then B out of it) and her 'Come back anytime!' comes in a box with its frame -- the BG3 tilemap's top-left corner and top edge over the box (1,18 and 2,18: FRAME_BASE_TILE 0x3E2 + 1 and + 2, palette 10, as DialogBox_LoadFrame draws them) and its bottom edge (2,23); with her box still held open into the mart the mart had cleared those rows and her line came in a bare box, 0 there. Then her again and CANCEL: the same box, framed. The black right of x 184 is the room's edge (column 16 a wall, the void after it), there before she speaks.",
+  "save": "route29-official.sav",
+  "edit": ["--money", "30000", "--where", "69:12:15:0"],
+  "steps": ["field", "goto:MAP_CHERRYGROVE_POKECENTER_1F,12,12",
+            "A", "wait:250", "A", "wait:250", "A", "wait:250", "A", "wait:250",
+            "DOWN", "A", "wait:250",
+            "A", "wait:150", "A", "wait:150", "A", "wait:150", "A", "wait:150", "A", "wait:150",
+            "B", "wait:150", "B", "wait:150", "B", "wait:250",
+            {"expect": {"money": 10000, "bag:ITEM_BOTTLE_CAP": 1,
+                        "bg3:1,18": "0xA3E3", "bg3:2,18": "0xA3E4", "bg3:2,23": "0xA3F0"}},
+            "B", "wait:150", "field",
+            "A", "wait:250", "A", "wait:250", "A", "wait:250", "A", "wait:250",
+            "DOWN", "DOWN", "A", "wait:250",
+            {"expect": {"bg3:1,18": "0xA3E3", "bg3:2,18": "0xA3E4", "bg3:2,23": "0xA3F0"}},
+            "A", "wait:100", "field"],
+  "expect": {"money": 10000, "bag:ITEM_BOTTLE_CAP": 1}
+}
