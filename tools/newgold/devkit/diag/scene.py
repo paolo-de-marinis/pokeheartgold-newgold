@@ -1366,7 +1366,7 @@ class Scene:
         starting from the field."""
         core, hooks, end = self.core, self.hooks, self.core.frames + frames
         layout, mart, task_mart = app_layout(), mart_layout(), self.markers.address("Task_Mart") & ~1
-        bought, refused, got = False, None, 0
+        bought, refused, got = False, None, 1     # a TM is sold one at a time, with no quantity
         while core.frames < end:
             task = self._chain("FieldSystem.taskman")
             data = (core.word(task + layout["TaskManager.env"])
