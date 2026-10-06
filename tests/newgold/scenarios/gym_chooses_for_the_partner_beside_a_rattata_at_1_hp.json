@@ -1,0 +1,10 @@
+{
+  "about": "gym.py's player chooses for the player's second Pokemon in a double whatever battle_mon makes of the first: Twins Amy & Mimi in the Azalea Gym against a scratch copy of Paolo's Bugsy save with a level-5 Rattata leading and a level-50 Pikachu, the Rattata left at 1 HP (set:). scene.py's partner_prompt found the battle's context once, through battler 0 alone, and kept a None: with this Rattata it found none, and gym.fight never chose for the Pikachu, the fight stuck (once 60,000 frames, r15-terrain). Now any battler gives the context, looked for again until one does; the Pikachu acts in the first two turns and the Twins are beaten.",
+  "save": "gyms/bugsy.sav",
+  "edit": ["--party", "RATTATA:5,PIKACHU:50", "--where", "180:3:8:0"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["fight:1:0", "set:0,hp,1", "fight:0:2",
+            {"expect": {"new_lines": ["Pikachu used"]}},
+            "fight", "field"],
+  "expect": {"lines": ["Pikachu used", "You defeated"]}
+}
