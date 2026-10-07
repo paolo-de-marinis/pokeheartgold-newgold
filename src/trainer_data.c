@@ -310,6 +310,16 @@ static u16 TrMon_SeedSpecies(u16 species) {
     return species;
 }
 
+// hg-engine's shiny lock (TRAINER_DATA_TYPE_SHINY_LOCK, enemy_party.c at
+// d0380a487): an entry with TRPOKE_SHINY is shiny through its OT ID, so its
+// personality -- nature, gender, the ability bit -- stays the one the entry
+// gives. hg-engine draws OT IDs until one is shiny; the personality is one
+// itself, its four halves cancelling out, and CreateMon takes it as given.
+// Every other entry is made never shiny, as retail's are.
+static int TrMon_OtIdType(int overrideParam) {
+    return (overrideParam & TRPOKE_SHINY) ? OT_ID_PRESET : OT_ID_RANDOM_NO_SHINY;
+}
+
 void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID heapID) {
     TRPOKE *data; // sp74
     int i;
@@ -373,7 +383,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             // Difficulty is a number between 0 and 250 which directly corresponds
             // to the (uniform) IV spread of the generated Pokemon.
             iv = (u8)((monSpecies[i].difficulty * 31) / 255);
-            CreateMon(mon, species, monSpecies[i].level, iv, TRUE, (s32)personality, OT_ID_RANDOM_NO_SHINY, 0);
+            CreateMon(mon, species, monSpecies[i].level, iv, TRUE, (s32)personality, TrMon_OtIdType(monSpecies[i].genderAbilityOverride), (s32)personality);
 
             // If you were treating the trainer type as a bitfield, you'd put the
             // checks for held item and moves here. You'd also treat the trpoke
@@ -407,7 +417,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             }
             personality = (personality << 8) + pidGender;
             iv = (u8)((monSpeciesMoves[i].difficulty * 31) / 255);
-            CreateMon(mon, species, monSpeciesMoves[i].level, iv, TRUE, (s32)personality, OT_ID_RANDOM_NO_SHINY, 0);
+            CreateMon(mon, species, monSpeciesMoves[i].level, iv, TRUE, (s32)personality, TrMon_OtIdType(monSpeciesMoves[i].genderAbilityOverride), (s32)personality);
             for (j = 0; j < MAX_MON_MOVES; j++) {
                 MonSetMoveInSlot(mon, TrMon_UsableMove(monSpeciesMoves[i].moves[j]), (u8)j);
             }
@@ -435,7 +445,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             }
             personality = (personality << 8) + pidGender;
             iv = (u8)((monSpeciesItem[i].difficulty * 31) / 255);
-            CreateMon(mon, species, monSpeciesItem[i].level, iv, TRUE, (s32)personality, OT_ID_RANDOM_NO_SHINY, 0);
+            CreateMon(mon, species, monSpeciesItem[i].level, iv, TRUE, (s32)personality, TrMon_OtIdType(monSpeciesItem[i].genderAbilityOverride), (s32)personality);
             SetMonData(mon, MON_DATA_HELD_ITEM, &monSpeciesItem[i].item);
             SetTrMonCapsule(monSpeciesItem[i].capsule, mon, heapID);
             SetMonData(mon, MON_DATA_FORM, &form);
@@ -461,7 +471,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
             }
             personality = (personality << 8) + pidGender;
             iv = (u8)((monSpeciesItemMoves[i].difficulty * 31) / 255);
-            CreateMon(mon, species, monSpeciesItemMoves[i].level, iv, TRUE, (s32)personality, OT_ID_RANDOM_NO_SHINY, 0);
+            CreateMon(mon, species, monSpeciesItemMoves[i].level, iv, TRUE, (s32)personality, TrMon_OtIdType(monSpeciesItemMoves[i].genderAbilityOverride), (s32)personality);
             SetMonData(mon, MON_DATA_HELD_ITEM, &monSpeciesItemMoves[i].item);
             for (j = 0; j < MAX_MON_MOVES; j++) {
                 MonSetMoveInSlot(mon, TrMon_UsableMove(monSpeciesItemMoves[i].moves[j]), (u8)j);
@@ -482,7 +492,7 @@ void CreateNPCTrainerParty(BattleSetup *enemies, int partyIndex, enum HeapID hea
 
 void TrMon_OverridePidGender(int species, int form, int overrideParam, u32 *pid) {
     int genderOverride = overrideParam & 0xF;
-    int abilityOverride = (overrideParam & 0xF0) >> 4;
+    int abilityOverride = (overrideParam & ~TRPOKE_SHINY & 0xF0) >> 4;
     if (overrideParam != 0) {
         if (genderOverride != 0) {
             *pid = GetMonBaseStat_HandleAlternateForm(species, form, BASE_GENDER_RATIO);
@@ -521,7 +531,7 @@ void TrMon_ApplyAbilitySlot(Pokemon *mon, int species, int form, int overridePar
     u32 ability = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_1);
     u32 other = ABILITY_NONE;
 
-    switch ((overrideParam & 0xF0) >> 4) {
+    switch ((overrideParam & ~TRPOKE_SHINY & 0xF0) >> 4) {
     case TRPOKE_ABILITY_OVERRIDE_SECOND:
     case TRPOKE_ABILITY_OVERRIDE_SECOND_BY_NAME:
         other = GetMonBaseStat_HandleAlternateForm(species, form, BASE_ABILITY_2);

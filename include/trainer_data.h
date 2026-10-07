@@ -44,9 +44,10 @@ typedef struct TrainerMonSpecies {
     // Bits 0-3: 0: No override
     //           1: Force male
     //           2: Force female
-    // Bits 4-7: 0: No override
+    // Bits 4-6: 0: No override
     //           1: Force ability 1
     //           2: Force ability 2
+    // Bit 7:    TRPOKE_SHINY
     u8 genderAbilityOverride;
     u16 level;
 

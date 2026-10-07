@@ -235,6 +235,52 @@ def override_constants():
     return {name: int(value) for name, value in re.findall(r"#define (TRPOKE_\w+_OVERRIDE_\w+)\s+(\d+)", text)}
 
 
+def shiny_bit():
+    text = (ROOT / "include/constants/trainers.h").read_text()
+    return 1 << int(re.search(r"#define TRPOKE_SHINY \(1 << (\d+)\)", text)[1])
+
+
+# The real TrMon_OtIdType, and the real SHINY_CHECK out of src/pokemon.c, run
+# on the host: for each override byte and personality, the OT ID type
+# CreateNPCTrainerParty hands CreateMon, and whether the Pokemon is shiny
+# with the OT ID that follows from it -- the personality itself under
+# OT_ID_PRESET, which CreateBoxMon keeps as given.
+SHINY_FIXTURE = r"""
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/pokemon.h"
+#include "constants/trainers.h"
+typedef uint32_t u32;
+@SHINY_CHECK@
+@FUNCTION@
+int main(void) {
+    unsigned byte, personality;
+    while (scanf("%u %u", &byte, &personality) == 2) {
+        int type = TrMon_OtIdType(byte);
+        printf("%d %d\n", type, type == OT_ID_PRESET && SHINY_CHECK(personality, personality));
+    }
+    return 0;
+}
+"""
+
+
+def run_shiny(lines):
+    """[(OT ID type, shiny)] for each `BYTE PERSONALITY` line."""
+    pokemon = (ROOT / "src/pokemon.c").read_text()
+    check = re.search(r"#define SHINY_CHECK\(otid, pid\).*?< 8u\)", pokemon, re.S)[0]
+    program = (SHINY_FIXTURE.replace("@SHINY_CHECK@", check)
+               .replace("@FUNCTION@", function((ROOT / "src/trainer_data.c").read_text(), "TrMon_OtIdType")))
+    with tempfile.TemporaryDirectory(prefix="newgold-trshiny-") as directory:
+        path = Path(directory)
+        (path / "test.c").write_text(program)
+        subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+            "-std=c99", "-Wall", "-Werror", "-iquote", str(ROOT / "include"),
+            str(path / "test.c"), "-o", str(path / "test")], check=True)
+        output = subprocess.run([str(path / "test")], input="\n".join(lines) + "\n",
+                                capture_output=True, text=True, check=True).stdout
+    return [tuple(map(int, line.split())) for line in output.splitlines()]
+
+
 class TrainerTests(unittest.TestCase):
     def setUp(self):
         self.trainers = json.loads(TRAINERS.read_text())["trainers"]
@@ -601,6 +647,67 @@ class TrainerTests(unittest.TestCase):
             byte = gender | c["TRPOKE_ABILITY_OVERRIDE_" + slot] << 4
             lines += ["t 137", f"m 0.5 11 {second} {hidden} {byte}"]
         self.assertEqual(run_parties(lines), [(pid, ability) for *_, pid, ability in cases])
+
+    def test_the_shiny_bit_leaves_the_personality_and_the_ability_alone(self):
+        """TRPOKE_SHINY is the override byte's top bit, past every ability
+        nibble's value: with it set, each gender and ability nibble gives the
+        modifier and the ability it gives without it. Read as part of the
+        ability nibble, SECOND would no longer set the personality's low bit
+        and none would write its ability."""
+        c, shiny = override_constants(), shiny_bit()
+        nibbles = [value for name, value in c.items() if name.startswith("TRPOKE_ABILITY_OVERRIDE_")]
+        self.assertLess(max(nibbles) << 4, shiny)
+        plain, lit = [], []
+        for gender in (value for name, value in c.items() if name.startswith("TRPOKE_GENDER_OVERRIDE_")):
+            for nibble in nibbles:
+                byte = gender | nibble << 4
+                plain += ["t 137", f"m 0.5 11 22 33 {byte}"]
+                lit += ["t 137", f"m 0.5 11 22 33 {byte | shiny}"]
+        self.assertEqual(run_parties(lit), run_parties(plain))
+
+    def test_a_shiny_locked_entry_is_shiny_and_no_other_is(self):
+        """hg-engine's shinyLock 1 makes a trainer's Pokemon shiny through its
+        OT ID (enemy_party.c at d0380a487). Here the entry's TRPOKE_SHINY
+        makes CreateNPCTrainerParty hand CreateMon OT_ID_PRESET and the
+        personality as the OT ID, which is shiny whatever the personality;
+        without it, OT_ID_RANDOM_NO_SHINY, retail's never-shiny draw. Each of
+        the four kinds of party entry asks for it, from its own byte."""
+        shiny = shiny_bit()
+        personalities = [0, 1, 0x0088, 0xFFFFFF88, 0x12345678, 0xDEADBEEF, 0x7FFF0001]
+        lines = [f"{byte} {p}" for byte in (0, 0x20, shiny, shiny | 0x20 | 2) for p in personalities]
+        results = run_shiny(lines)
+        types = dict(re.findall(r"#define (OT_ID_\w+)\s+(\d+)", (ROOT / "include/constants/pokemon.h").read_text()))
+        preset, never = int(types["OT_ID_PRESET"]), int(types["OT_ID_RANDOM_NO_SHINY"])
+        expected = [(never, 0)] * (2 * len(personalities)) + [(preset, 1)] * (2 * len(personalities))
+        self.assertEqual(results, expected)
+        party = function((ROOT / "src/trainer_data.c").read_text(), "CreateNPCTrainerParty")
+        calls = re.findall(r"CreateMon\(mon, species, (\w+)\[i\]\.level, iv, TRUE, \(s32\)personality, "
+                           r"TrMon_OtIdType\((\w+)\[i\]\.genderAbilityOverride\), \(s32\)personality\);", party)
+        self.assertEqual([a for a, b in calls if a == b],
+                         ["monSpecies", "monSpeciesMoves", "monSpeciesItem", "monSpeciesItemMoves"])
+        self.assertNotIn("OT_ID_RANDOM_NO_SHINY", party)
+        # CreateBoxMon draws an OT ID for type 2 and keeps the one given for type 1.
+        self.assertRegex(function((ROOT / "src/pokemon.c").read_text(), "CreateBoxMon"),
+                         rf"(?s)if \(otIdType == {never}\) \{{.*?\}} else if \(otIdType != {preset}\) \{{\s*fixedOtId = 0;")
+
+    def test_trainers_json_s_shiny_reaches_the_override_byte(self):
+        """A party entry's "shiny": true is TRPOKE_SHINY in its override
+        byte, as the build's template writes trpoke.narc; false or no key,
+        nothing."""
+        jsonproc = ROOT / "tools/jsonproc/jsonproc"
+        if not jsonproc.exists():
+            self.skipTest("tools/jsonproc is not built (make tools)")
+        entry = {"difficulty": 0, "genderOverride": "TRPOKE_GENDER_OVERRIDE_OFF",
+                 "abilityOverride": "TRPOKE_ABILITY_OVERRIDE_SECOND", "level": 5, "species": "SPECIES_ZUBAT", "capsule": 0}
+        party = [entry, dict(entry, shiny=True), dict(entry, shiny=False)]
+        with tempfile.TemporaryDirectory(prefix="newgold-trpoke-") as directory:
+            path = Path(directory)
+            (path / "t.json").write_text(json.dumps({"trainers": [{"party": party}]}))
+            subprocess.run([str(jsonproc), str(path / "t.json"), str(ROOT / "files/poketool/trainer/trpoke.json.txt"),
+                            str(path / "t.s")], check=True, capture_output=True)
+            bytes_ = re.findall(r"^\t\.byte (TRPOKE_.*)$", (path / "t.s").read_text(), re.M)
+        plain = "TRPOKE_GENDER_OVERRIDE_OFF | (TRPOKE_ABILITY_OVERRIDE_SECOND << 4)"
+        self.assertEqual(bytes_, [plain, plain + " | TRPOKE_SHINY", plain])
 
     def test_falkner_s_team_is_female_as_konefr_s_is(self):
         """konefr's hidden slot is the FEMALE gender nibble to the personality

@@ -13,7 +13,7 @@
 gTrainerPoke_{{ i }}:
 ## for poke in trainer.party
 	.byte {{ poke.difficulty }}
-	.byte {{ poke.genderOverride }} | ({{ poke.abilityOverride }} << 4)
+	.byte {{ poke.genderOverride }} | ({{ poke.abilityOverride }} << 4){% if existsIn(poke, "shiny") %}{% if poke.shiny %} | TRPOKE_SHINY{% endif %}{% endif %}
 	.short {{ poke.level }}
 	.short {{ poke.species }}{% if existsIn(poke, "form") %} | ({{ poke.form }} << TRPOKE_FORM_SHIFT){% endif %}{% if existsIn(poke, "item") %}
 	.short {{ poke.item }}{% endif %}{% if existsIn(poke, "moves") %}{% for move in poke.moves %}

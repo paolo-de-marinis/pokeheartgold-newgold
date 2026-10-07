@@ -743,8 +743,9 @@
 
 #define LAST_TRAINER_INDEX 740
 
-// Pokemon gender and ability override flags. The byte is gender | ability << 4.
-// TrMon_OverridePidGender acts on the personality with the whole byte, as
+// Pokemon gender and ability override flags. The byte is gender | ability << 4,
+// and TRPOKE_SHINY in its top bit, which the ability nibble's values never reach.
+// TrMon_OverridePidGender acts on the personality with the rest of the byte, as
 // retail did; TrMon_ApplyAbilitySlot then writes the ability outright, as
 // hg-engine does, so the ability does not depend on the personality: OFF and
 // FIRST give the first ability, SECOND the second, HIDDEN the hidden one.
@@ -758,6 +759,10 @@
 // Neither of these two touches the personality.
 #define TRPOKE_ABILITY_OVERRIDE_HIDDEN         3
 #define TRPOKE_ABILITY_OVERRIDE_SECOND_BY_NAME 4
+
+// The Pokemon is shiny: hg-engine's shinyLock 1, under its trainer's
+// TRAINER_DATA_TYPE_SHINY_LOCK. trainers.json's "shiny": true.
+#define TRPOKE_SHINY (1 << 7)
 
 // What a trainer's doubleBattle field says. Two is HeartGold's own double
 // battle, where a second trainer walks up and the player brings a partner.
