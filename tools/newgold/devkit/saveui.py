@@ -666,7 +666,7 @@ class Library:
             except (KeyError, TypeError) as e:
                 raise Refused(f"richiesta incompleta: {e}")
             except (ValueError, SystemExit) as e:
-                raise Refused(str(e))
+                raise Refused(italian(str(e)))
             data = save.image()
             changed = data != path.read_bytes()
             if changed:
@@ -874,6 +874,8 @@ class Library:
     def op_party_remove(self, save, a):
         slot = number(a["slot"], 0, sv.PARTY_SIZE - 1, "posto")
         last_one(save)
+        if not any(sv.can_battle(raw) for i, raw in enumerate(sv.party_raw(save)) if i != slot):
+            raise Refused(italian("the party would have no Pokemon able to battle"))
         sv.remove_party_mon(save, slot)
 
     def op_party_swap(self, save, a):
@@ -930,9 +932,9 @@ class Library:
         try:
             sv.move_mon(save, src, dst)
         except ValueError as e:
-            if "able to battle" in str(e) or "left empty" in str(e):
-                raise Refused("in squadra deve restare almeno un Pokémon che possa lottare (non un uovo e non esausto)")
-            raise Refused(str(e))
+            if "left empty" in str(e):
+                raise Refused(italian("the party would have no Pokemon able to battle"))
+            raise
 
     def op_item(self, save, a):
         """One item's count in the bag; `pocket`, the pocket the page shows,
@@ -1276,6 +1278,38 @@ def storable(fields):
                       "è l'uovo, una forma che il gioco tiene come specie base più forma, o una forma che "
                       "esiste solo in lotta")
     return fields
+
+
+# savedit's refusals, in the page's Italian; one not here is shown as it is.
+ITALIAN = [
+    (r"the party has no slot (\d+)", r"la squadra non ha il posto \1"),
+    (r"no such party slot", "la squadra non ha quel posto"),
+    (r"a party holds (\d+)", r"la squadra è piena: ha già \1 Pokémon"),
+    (r"the party cannot be left empty", "la squadra non può restare vuota"),
+    (r"the party would have no Pokemon able to battle",
+     "in squadra deve restare almeno un Pokémon che possa lottare (non un uovo e non esausto)"),
+    (r"a Pokemon holding Mail does not go in a box",
+     "un Pokémon che tiene una Lettera non va nel box (il PC non lo accetta): togli prima la Lettera"),
+    (r"box (\d+) slot (\d+) is taken", r"box \1, posto \2: è occupato"),
+    (r"box (\d+) slot (\d+) is empty", r"box \1, posto \2: è vuoto"),
+    (r"that slot holds nothing that can be taken", "in quel posto non c'è un Pokémon da prendere"),
+    (r"the boxes are 1 to (\d+), their slots 1 to (\d+)", r"i box vanno da 1 a \1, i posti da 1 a \2"),
+    (r"there is no Pokemon here to change, or its checksum is wrong",
+     "qui non c'è un Pokémon da modificare, o non si legge (checksum errato)"),
+    (r"a level is 1 to (\d+)", r"il livello va da 1 a \1"),
+    (r"there is no species (\d+)", r"non c'è la specie \1"),
+    (r"item (\d+) goes in no pocket", "questo strumento non va in nessuna tasca"),
+    (r"the \w+ pocket is full", "la tasca è piena: togline uno prima"),
+    (r"(.+): 0 to (\d+)$", r"\1: da 0 a \2"),
+    (r"there is no story step (.+)", r"non c'è il passo della storia \1"),
+]
+
+
+def italian(message):
+    for pattern, said in ITALIAN:
+        if re.fullmatch(pattern, message):
+            return re.sub(pattern, said, message)
+    return message
 
 
 def created(save, a, party):

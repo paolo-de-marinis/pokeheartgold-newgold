@@ -394,6 +394,29 @@ class SaveUiTests(unittest.TestCase):
         self.assertIn("sei", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "party_add",
                                                         "args": {"species": 1, "level": 5}}))
 
+    def test_where_a_pokemon_may_go(self):
+        """The PC's rules hold for the buttons as for dragging: a Mail
+        holder does not go in a box, and the party keeps one Pokémon that
+        can battle. savedit's refusals arrive in Italian."""
+        items = {row["const"]: row["id"] for row in sv.item_table().values()}
+        refused = lambda op, args: self.refused("/api/edit", {"f": "gyms/test.sav", "op": op, "args": args})  # noqa: E731
+        out = self.edit("party_edit", {"slot": 0, "item": items["ITEM_GRASS_MAIL"]})
+        self.assertEqual(out["party"][0]["item"], items["ITEM_GRASS_MAIL"], "a party Pokémon may hold one")
+        self.assertIn("togli prima la Lettera", refused("deposit", {"slot": 0, "box": 0}))
+        self.assertIn("togli prima la Lettera", refused("move", {"from": {"kind": "party", "slot": 0},
+                                                                 "to": {"kind": "box", "box": 0, "slot": 0}}))
+        # Five fainted: the sixth is the last that can battle, by the buttons as by dragging.
+        save = sv.Save(self.save)
+        for slot in range(1, 6):
+            sv.set_party_mon(save, slot, sv.with_hp(sv.party_raw(save)[slot], 0))
+        self.save.write_bytes(save.image())
+        self.edit("party_edit", {"slot": 0, "item": 0})
+        for op, args in (("party_remove", {"slot": 0}), ("deposit", {"slot": 0, "box": 0}),
+                         ("move", {"from": {"kind": "party", "slot": 0}, "to": {"kind": "box", "box": 0, "slot": 0}})):
+            self.assertIn("possa lottare", refused(op, args), op)
+        self.edit("party_remove", {"slot": 5})
+        self.assertIn("non c'è un Pokémon da prendere", refused("withdraw", {"box": 0, "slot": 0}))
+
     def test_a_player_with_no_name_gives_none(self):
         """A save sealed from RAM at the title screen has a name of zeroes,
         no EOS: a Pokemon made then would carry it as its trainer's."""

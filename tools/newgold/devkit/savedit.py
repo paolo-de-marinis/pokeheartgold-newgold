@@ -321,7 +321,7 @@ def _layout():
         # Apricorn juice records.
         "PARTY_COUNT_AT": f"{offset}(PartyCore, curCount)", "PARTY_AT": f"{offset}(PartyCore, mons)",
         "PARTY_EXTRA": f"{offset}(Party, extra)", "PERFORMANCE_MAX": "sizeof(PartyExtraSub)",
-        "MAIL_AT": f"{offset}(PartyPokemon, mail)",
+        "MAIL_AT": f"{offset}(PartyPokemon, mail)", "FIRST_MAIL": "FIRST_MAIL_IDX", "LAST_MAIL": "LAST_MAIL_IDX",
         # Mail_Init's values, and the ball a Pokemon made here comes in.
         "PLAYER_GENDER_MALE": "PLAYER_GENDER_MALE", "PLAYER_GENDER_FEMALE": "PLAYER_GENDER_FEMALE", "MAIL_NONE": "MAIL_NONE", "MAILMSG_BANK_NONE": "MAILMSG_BANK_NONE",
         "MAILMSG_FIELDS_MAX": "MAILMSG_FIELDS_MAX", "EC_WORD_NULL": "EC_WORD_NULL", "ITEM_POKE_BALL": "ITEM_POKE_BALL",
@@ -2783,13 +2783,25 @@ def set_box_mon(save, box, slot, raw):
     save.block("SAVE_PCSTORAGE")[at:at + BOX_MON] = raw[:BOX_MON]
 
 
+def holds_mail(raw):
+    """ItemIdIsMail on the Pokemon's held item: the PC takes no Pokemon
+    holding a Mail, whose letter only a party Pokemon keeps."""
+    mon = open_mon(raw)
+    return bool(mon and mon["ok"] and FIRST_MAIL <= struct.unpack_from("<H", mon["blocks"][0], 2)[0] <= LAST_MAIL)
+
+
 def deposit(save, slot, box, box_slot):
-    """A party Pokemon into an empty box slot, as its BoxPokemon."""
+    """A party Pokemon into an empty box slot, as its BoxPokemon -- as the
+    PC does it: never one holding a Mail, never the last that can battle."""
     raw = party_raw(save)
     if not 0 <= slot < len(raw):
         raise ValueError(f"the party has no slot {slot + 1}")
     if len(raw) == 1:
         raise ValueError("the party cannot be left empty")
+    if holds_mail(raw[slot]):
+        raise ValueError("a Pokemon holding Mail does not go in a box")
+    if not any(can_battle(other) for i, other in enumerate(raw) if i != slot):
+        raise ValueError("the party would have no Pokemon able to battle")
     if open_mon(box_raw(save, box, box_slot)) is not None:
         raise ValueError(f"box {box + 1} slot {box_slot + 1} is taken")
     set_box_mon(save, box, box_slot, raw[slot])
@@ -2858,6 +2870,8 @@ def move_mon(save, src, dst):
         set_box_mon(save, dst[1], dst[2], one)
     elif src[0] == "party":
         held = box_of(dst)
+        if holds_mail(party[src[1]]):
+            raise ValueError("a Pokemon holding Mail does not go in a box")
         if open_mon(held) is None:
             if count == 1:
                 raise ValueError("the party cannot be left empty")
@@ -2874,6 +2888,8 @@ def move_mon(save, src, dst):
             add_party_mon(save, party_from_box(raw))
             set_box_mon(save, src[1], src[2], EMPTY_BOX_MON)
         else:
+            if holds_mail(party[dst[1]]):
+                raise ValueError("a Pokemon holding Mail does not go in a box")
             set_party_mon(save, dst[1], party_from_box(raw))
             set_box_mon(save, src[1], src[2], party[dst[1]])
     if not any(can_battle(raw) for raw in party_raw(save)):
