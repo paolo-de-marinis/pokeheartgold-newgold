@@ -150,9 +150,10 @@ is a value read out of main RAM by name, through the ELF's symbols and the
 offsets the tree's own headers give: map, x, y, party (the count),
 partyN.species|item|level|exp|hp|maxHp|moveK (the party as its save block
 holds it, slot N from 0, move K from 0, once the field is up: what a battle
-gave back), partyN.atk|def|speed|spatk|spdef (its stats), partyN.evK|ivK
-(its EVs and IVs, K in the record's order: HP, Attack, Defense, Speed,
-Sp. Atk, Sp. Def), partyN.hyper (its Hyper trained stats, a mask, bit 0 HP),
+gave back), partyN.moves (its four: a MOVE_... expected is one of them, in
+whichever slot gym.py's rule put it), partyN.atk|def|speed|spatk|spdef (its
+stats), partyN.evK|ivK (its EVs and IVs, K in the record's order: HP,
+Attack, Defense, Speed, Sp. Atk, Sp. Def), partyN.hyper (its Hyper trained stats, a mask, bit 0 HP),
 bag:ITEM_... (how many the bag holds), badges, money, bp (the Battle Points,
 in the Frontier's static, which the game loads from the save), running_shoes (1 once the
 player has them: PlayerSaveData's, which no flag says),
@@ -224,7 +225,7 @@ BATTLE_MAIN = STATES.index("BATTLE_MAIN")
 BATTLER_FIELDS = ("species", "hp", "maxHp", "level", "partySlot", "status", "item",
                   *(f"move{k}" for k in range(4)), *(f"pp{k}" for k in range(4)), "form", "movePos")
 # party.mons' keys, the fields a scenario may name.
-PARTY_FIELDS = ("species", "item", "level", "exp", "hp", "maxHp", *(f"move{k}" for k in range(4)),
+PARTY_FIELDS = ("species", "item", "level", "exp", "hp", "maxHp", *(f"move{k}" for k in range(4)), "moves",
                 "atk", "def", "speed", "spatk", "spdef", *(f"ev{k}" for k in range(6)), *(f"iv{k}" for k in range(6)), "hyper")
 # The Options bitfields (include/options.h), the settings a scenario may name.
 OPTION_FIELDS = ("textSpeed", "soundMethod", "battleStyle", "battleScene", "buttonMode", "frame")
@@ -1868,7 +1869,7 @@ class Scene:
                 return None
             if field[:2] in ("ev", "iv") and field[2:].isdigit():
                 return mons[int(slot)][field[:2] + "s"][int(field[2:])]
-            return mons[int(slot)]["moves"][int(field[4:])] if field.startswith("move") else mons[int(slot)][field]
+            return mons[int(slot)]["moves"][int(field[4:])] if field[4:].isdigit() else mons[int(slot)][field]
         if name.startswith("caught:"):
             return self.caught(ram, self.number(name[len("caught:"):]))
         if name.startswith(("flag:", "var:", "trainer:")):
@@ -1926,9 +1927,9 @@ class Scene:
         if isinstance(expected, list):
             low, high = (Scene.number(e) for e in expected)
             return (lambda v: v is not None and low <= v <= high), f"within [{low}, {high}]"
-        if name.endswith(".types"):
+        if name.endswith((".types", ".moves")):
             number = Scene.number(expected)
-            return (lambda v: v is not None and number in v), f"a type {expected}"
+            return (lambda v: v is not None and number in v), f"{'a type' if name.endswith('.types') else 'a move'} {expected}"
         if isinstance(expected, str) and name.endswith(".status"):
             names = sorted(expected.split())
             return (lambda v: sorted(n for mask, n in STATUS if v & mask) == names), f"status {expected or 'none'}"

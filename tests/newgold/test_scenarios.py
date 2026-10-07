@@ -61,9 +61,9 @@ class ScenarioFileTests(unittest.TestCase):
     def test_a_scenario_can_read_the_party_and_the_bag(self):
         # After the battle, on the field: what the party holds and what the
         # bag has, as the battle's end left them.
-        for key in ("party0.item", "party5.species", "bag:ITEM_ORAN_BERRY", "money"):
+        for key in ("party0.item", "party5.species", "bag:ITEM_ORAN_BERRY", "money", "party0.moves"):
             self.assertTrue(scene.readable(key, key=True), key)
-        for key in ("party6.item", "party0.moves", "bag:ORAN_BERRY"):
+        for key in ("party6.item", "party0.movez", "bag:ORAN_BERRY"):
             self.assertFalse(scene.readable(key, key=True), key)
 
     def test_a_scenario_can_read_what_the_ev_iv_trainer_changes(self):
@@ -604,6 +604,10 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertTrue(scene.Scene.wanted("battler1.status", "")[0](0))
         self.assertTrue(scene.Scene.wanted("map", "MAP_ROUTE_29")[0](33))
         self.assertTrue(scene.Scene.wanted("music", "SEQ_GS_R_1_29")[0](1028))
+        # A move the Pokemon knows, in whichever slot a level-up put it.
+        air_slash = scene.Scene.number("MOVE_AIR_SLASH")
+        self.assertTrue(scene.Scene.wanted("party2.moves", "MOVE_AIR_SLASH")[0]([93, 115, 432, air_slash]))
+        self.assertFalse(scene.Scene.wanted("party2.moves", "MOVE_AIR_SLASH")[0]([93, 64, 33, 497]))
         # The keys a battle scenario reads beyond the battlers' HP: a move's
         # PP, and the party's items once the battle has given them back.
         for key in ("battler0.pp0", "battler3.move3", "party0.item", "party5.species", "party1.move3", "running_shoes",
