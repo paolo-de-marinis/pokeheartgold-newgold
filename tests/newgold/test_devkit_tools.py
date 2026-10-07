@@ -255,6 +255,22 @@ class FrontLiftTests(unittest.TestCase):
         top.paste(frame.convert("RGB"), (152, 89 - 3 - lowest), mask)
         self.assertEqual(scene.front_lift(top, 521), 3)
 
+    def test_a_shiny_front_in_the_colours_of_its_back_s_png(self):
+        """The archive builds a species' shiny palette from its back's PNG
+        (pokegra.mk's -05.NCLR): a shiny foe is found in those colours."""
+        sys.path.insert(0, str(DEVKIT / "diag"))
+        import scene
+        from PIL import Image
+        folder = ROOT / "files/poketool/pokegra/pokegra/0521/male"
+        frame = Image.open(folder / "front.png").crop((0, 0, 80, 80))
+        frame.putpalette(Image.open(folder / "back.png").getpalette())
+        lowest = max(y for y in range(80) if any(frame.getpixel((x, y)) for x in range(80)))
+        mask = Image.frombytes("L", (80, 80), bytes(255 if i else 0 for i in frame.tobytes()))
+        top = Image.new("RGB", (256, 192), (200, 200, 200))
+        top.paste(frame.convert("RGB"), (152, 89 - 3 - lowest), mask)
+        self.assertEqual(scene.front_lift(top, 521, shiny=True), 3)
+        self.assertIsNone(scene.front_lift(top, 521))
+
 
 class ConvertChatgptTests(unittest.TestCase):
     """convert_chatgpt.py on pictures drawn here: magenta backgrounds, a

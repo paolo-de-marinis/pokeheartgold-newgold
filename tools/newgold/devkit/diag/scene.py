@@ -175,7 +175,8 @@ personality and OT ID pass SHINY_CHECK, as the battle's own shiny bit is
 set from them: the sparkle and the shiny palette), front1.lift (how many rows over the
 ground line the wild foe's front stands on the screen: the line ov12 stands
 the lowest opaque row of a front with a Y offset of 0 on, 89, less that row
-as a shot shows it, the picture found by its PNG; so its a/1/8/0 Y offset;
+as a shot shows it, the picture found by its PNG, in the shiny colours its
+back's PNG carries for a shiny foe; so its a/1/8/0 Y offset;
 None where the picture is not there), music (the sequence the field's sound
 handle plays, -1 for none: a load the sound heap cannot hold leaves it empty
 and counts as no failed allocation), or any gDiag* global (gDiagFieldMessage,
@@ -1915,7 +1916,8 @@ class Scene:
                 return None
             return buffer and struct.unpack_from("<H", ram, buffer + 2 * (y * 32 + x) - 0x02000000)[0]
         if name == "front1.lift":
-            return front_lift(self.core.shot(self.hooks).crop((0, 0, 256, 192)), self.value(ram, "battler1.species"))
+            return front_lift(self.core.shot(self.hooks).crop((0, 0, 256, 192)), self.value(ram, "battler1.species"),
+                              self.value(ram, "battler1.shiny"))
         raise SystemExit(f"a scenario asks for {name!r}, which scene.py cannot read")
 
     @staticmethod
@@ -1981,19 +1983,22 @@ class Scene:
         return wrong
 
 
-def front_lift(top, species):
+def front_lift(top, species, shiny=False):
     """front1.lift: the wild foe's front found on the top screen where ov12
     draws its 80x80 frame, x 152 (ov07_022377DC), any row; the line a Y
     offset of 0 stands the picture's lowest row on is 50 + 39 (its place,
     ov07_022377F4, and the frame's bottom). Either gender's PNG, either
-    frame; None where none shows 90% of its pixels."""
+    frame, a shiny foe in the colours of its gender's back PNG (the shiny
+    palette the archive builds from it); None where none shows 90% of its
+    pixels."""
     import species as walk
     px, best = top.load(), (0.0, None)
     for gender in ("male", "female"):
         png = walk.POKEGRA / "pokegra" / f"{species:04d}" / gender / "front.png"
         if not png.exists() or not png.stat().st_size:
             continue
-        for frame in walk._frames(png, 80):
+        palette = tuple(walk._palette_of(png.with_name("back.png"))) if shiny else None
+        for frame in walk._frames(png, 80, palette):
             lowest = max(y for _, y, _ in frame)
             for x in range(151, 154):
                 for y in range(-40, 60):
