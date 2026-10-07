@@ -1143,7 +1143,7 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(len(re.findall(r'html: `<span class="ico">', page)), 1)
         self.assertNotIn('html: `<span class="nm">', page, "the move field's rows were its own")
         self.assertRegex(page, r"\.mvlist \{[^}]*color: var\(--text\); font-size: 14px;")
-        self.assertIn("const width = Math.min(Math.max(field.width, COMBO_WIDTH), edge.width - 32);", page)
+        self.assertIn('const width = input.closest(".dbody") ? edge.width - 32 : Math.min(Math.max(field.width, COMBO_WIDTH), edge.width - 32);', page)
         # An item's row, wherever an item is picked: its icon from the one sheet (asked for once, by the tree's count),
         # the price, the description, and in the held item's list, which mixes pockets, the pocket in its colour.
         self.assertIn('document.documentElement.style.setProperty("--itemsheet", `url("/api/itemicons.png?t=${d.tree}")`);', page)

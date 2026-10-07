@@ -186,7 +186,7 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
 .mvin input { width: 100%; }
 .mvtags { display: flex; flex-wrap: wrap; gap: 3px; min-height: 18px; }
 /* Every picker's list and row alike, wherever its field is (a label's muted small text included): the width is set by
-   combo() -- the field's, at least COMBO_WIDTH, inside the dialog or the page -- and a row is an icon's slot, the name with
+   combo() -- in a dialog its body's, on the page the field's, at least COMBO_WIDTH -- and a row is an icon's slot, the name with
    its badges and tags, the numbers on the right, and a second line for what more there is to say. */
 .mvlist { position: absolute; top: calc(100% + 2px); left: 0; width: 100%; z-index: 5; max-height: min(380px, 60vh); overflow: auto;
           background: var(--panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.18);
@@ -556,9 +556,10 @@ function combo(input, {rows, onPick, empty = "Nessun risultato", clearable = fal
         r.title ? ` title="${esc(r.title)}"` : ""}>${r.html}</div>`;
     }).join("") + (rest > 0 ? `<div class="mvmore muted">… e altri ${rest}: scrivi per restringere</div>` : "")
       || `<div class="mvmore muted">${esc(typeof empty === "function" ? empty() : empty)}</div>`;
-    // One width for every list: its field's, at least COMBO_WIDTH, moved left rather than past the dialog's or the page's edge.
+    // One width for every list: in a dialog the body's (a half or a third column's list was narrower than the species'),
+    // on the page its field's, at least COMBO_WIDTH; moved left rather than past the dialog's or the page's edge.
     const field = list.parentElement.getBoundingClientRect(), edge = (input.closest(".dbody") || document.body).getBoundingClientRect();
-    const width = Math.min(Math.max(field.width, COMBO_WIDTH), edge.width - 32);
+    const width = input.closest(".dbody") ? edge.width - 32 : Math.min(Math.max(field.width, COMBO_WIDTH), edge.width - 32);
     list.style.width = `${width}px`;
     list.style.left = `${Math.max(edge.left + 16, Math.min(field.left, edge.right - 16 - width)) - field.left}px`;
     list.hidden = false;
