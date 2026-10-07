@@ -33,7 +33,7 @@ and its table names none of them; a Core Form can have a follower of its own
 only once one is drawn for it.
 
 A species whose pictures are Paolo's own (own_art.py) keeps the texture the
-tree has for it.
+tree has for it (convert_chatgpt.py builds it with nsbtx from his picture).
 
     import_followers.py [--reference PATH] [--write]
 """
@@ -93,7 +93,7 @@ def _palette(text):
 FRAME_LISTS = {32: "data/graphics/sprites/bulbasaur", 64: "data/graphics/sprites/lugia"}
 
 
-def frames_of(directory, width, reference=REFERENCE):
+def frames_of(directory, width, reference=REFERENCE, read=None):
     """The frames of the picture in directory, which is width wide.
 
     Every overworld.json in the reference is one of two frame lists, the
@@ -103,24 +103,28 @@ def frames_of(directory, width, reference=REFERENCE):
     sizes the texture by the list, so theirs came out a quarter or four
     times the picture and Hydrapple walked as a shadow. Their size classes
     in overworld_table.c are the pictures', so the list is too."""
-    frames = list(json.loads(show(f"{directory}/overworld.json", reference))["frames"].items())
+    read = read or (lambda path: show(path, reference))
+    frames = list(json.loads(read(f"{directory}/overworld.json"))["frames"].items())
     if frames[0][1]["width"] != width:
-        frames = list(json.loads(show(f"{FRAME_LISTS[width]}/overworld.json", reference))["frames"].items())
+        frames = list(json.loads(read(f"{FRAME_LISTS[width]}/overworld.json"))["frames"].items())
     return frames
 
 
-def nsbtx(directory, reference=REFERENCE):
+def nsbtx(directory, reference=REFERENCE, read=None):
     """tools/source/btx's BTX0 for the reference's overworld.png in directory:
     one TEX0 block, a 4bpp texture a frame, one 16-colour palette a
-    palette entry, and the frame and palette names the field looks up."""
+    palette entry, and the frame and palette names the field looks up.
+    read(path) gives a file's bytes, the reference's at COMMIT unless
+    another is passed (convert_chatgpt.py passes its own pictures)."""
     from PIL import Image
 
-    meta = json.loads(show(f"{directory}/overworld.json", reference))
+    read = read or (lambda path: show(path, reference))
+    meta = json.loads(read(f"{directory}/overworld.json"))
     palettes = list(meta["palettes"].items())
-    picture = Image.open(io.BytesIO(show(f"{directory}/overworld.png", reference)))
+    picture = Image.open(io.BytesIO(read(f"{directory}/overworld.png")))
     if picture.mode != "P":
         raise ValueError(f"{directory}: not an indexed picture")
-    frames = frames_of(directory, picture.width, reference)
+    frames = frames_of(directory, picture.width, reference, read)
     width, height = frames[0][1]["width"], frames[0][1]["height"]
     pixels = picture.tobytes()
     if max(pixels) > 15:
@@ -200,7 +204,7 @@ def nsbtx(directory, reference=REFERENCE):
     out.extend(bytes(max(0, texture_at + len(texture) - len(out))))
     out[texture_at:texture_at + len(texture)] = texture
     for _, palette in palettes:
-        for j, colour in enumerate(_palette(show(f"{directory}/overworld-{palette['fileName']}", reference))):
+        for j, colour in enumerate(_palette(read(f"{directory}/overworld-{palette['fileName']}"))):
             put(palette_at + palette["offset"] * 0x20 + 2 * j, colour, 2)
     total = len(out)
     put(tex + 4, total - tex, 4)

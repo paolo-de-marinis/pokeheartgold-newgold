@@ -256,5 +256,73 @@ class FrontLiftTests(unittest.TestCase):
         self.assertEqual(scene.front_lift(top, 521), 3)
 
 
+class ConvertChatgptTests(unittest.TestCase):
+    """convert_chatgpt.py on pictures drawn here: magenta backgrounds, a
+    shape a row of a follower sheet, a lighter one for the shiny."""
+
+    @classmethod
+    def setUpClass(cls):
+        sys.path.insert(0, str(DEVKIT / "sprites"))
+        import convert_chatgpt
+        cls.c = convert_chatgpt
+        cls.tmp = tempfile.TemporaryDirectory()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def sheet(self, name, rows, light=0):
+        """A 2-column sheet of 64x64 cells, rows tall ovals of two colours,
+        each row's drawn off-centre its own way."""
+        from PIL import Image, ImageDraw
+        im = Image.new("RGB", (128, 64 * rows), (255, 0, 255))
+        draw = ImageDraw.Draw(im)
+        for r in range(rows):
+            for c in range(2):
+                x, y = 64 * c + 10 + 4 * r, 64 * r + 8
+                draw.ellipse((x, y, x + 30 + 2 * r, y + 48), fill=(40 + light, 90 + light, 20 + light))
+                draw.rectangle((x + 4, y + 10, x + 12, y + 20), fill=(200, 60 + light, 30))
+        path = Path(self.tmp.name) / name
+        im.save(path)
+        return path
+
+    def palette_entries(self, data):
+        """How many colours a PNG's PLTE chunk holds."""
+        import struct
+        at = 8
+        while at < len(data):
+            length, kind = struct.unpack(">I4s", data[at:at + 8])
+            if kind == b"PLTE":
+                return length // 3
+            at += 12 + length
+
+    def test_the_follower_mirrors_its_left_frames_and_keeps_heartgold_s_size(self):
+        normal = self.sheet("follower.png", 3)
+        shiny = self.sheet("shiny.png", 3, light=60)
+        data, picture, shiny_picture = self.c.follower(normal, shiny, ["down", "up", "left"], 17)
+        frames = self.c.texture_pixels(data)
+        frame = lambda k: frames.crop((0, 32 * k, 32, 32 * k + 32))  # noqa: E731
+        from PIL import ImageOps
+        for left, right in ((4, 6), (5, 7)):
+            self.assertEqual(ImageOps.mirror(frame(left)).tobytes(), frame(right).tobytes())
+        self.assertEqual(self.c.drawn_height(data), 17)
+        self.assertEqual(self.c.drawn_box(data)[3], self.c.FEET + 1)
+        self.assertNotEqual(frame(0).tobytes(), frame(2).tobytes())
+        self.assertEqual(self.palette_entries(self.c.png(picture)), 16)
+        self.assertNotEqual(picture.getpalette()[3:48], shiny_picture.getpalette()[3:48])
+
+    def test_battle_pictures_have_sixteen_colours_and_the_back_the_shiny_ones(self):
+        normal, shiny = self.sheet("front.png", 1), self.sheet("front_shiny.png", 1, light=60)
+        front, back = self.c.battle(normal, normal, shiny, shiny, 42)
+        self.assertEqual(front.size, (160, 80))
+        self.assertEqual(front.tobytes(), back.tobytes())
+        self.assertEqual(self.palette_entries(self.c.png(front)), 16)
+        self.assertNotEqual(front.getpalette()[3:48], back.getpalette()[3:48])
+
+    def test_heartgold_s_followers_of_bramblin_s_height_are_17_rows_tall(self):
+        """DEVKIT-PROMPTS.md's rule, measured on the tree's own followers."""
+        self.assertEqual(self.c.follower_height(6), 17)
+
+
 if __name__ == "__main__":
     unittest.main()

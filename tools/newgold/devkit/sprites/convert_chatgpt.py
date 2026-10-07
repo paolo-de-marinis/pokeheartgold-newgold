@@ -1,139 +1,357 @@
-"""Paolo's ChatGPT pictures of Bramblin -> the game's formats (2026-10-07).
+#!/usr/bin/env python3
+"""Paolo's ChatGPT pictures of a species -> the game's formats, in this tree.
 
-The first conversion of docs/newgold/DEVKIT-PROMPTS.md's flow, kept as it ran:
-battle front and back with their normal and shiny palettes, the party icon in
-the closest shared icon palette, the follower's eight frames at HeartGold's
-size for the species' Dex height, with its two palettes. It reads the eight
-pictures as img1..img8.png from S and writes into the tree at W (a test
-worktree, never Paolo's saves). The sprite editor generalises it: the species,
-the picture files and the frame grid become its inputs.
+docs/newgold/DEVKIT-PROMPTS.md's flow, first run for Bramblin (2026-10-07).
+The pictures have a flat magenta background (made transparent) and are
+reduced by area average from the subject's own pixels. Each part is
+converted when its pictures are given:
+
+  battle    --front F --back B --shiny-front SF --shiny-back SB --width W
+            files/poketool/pokegra/pokegra/NNNN/<gender>/{front,back}.png for
+            each gender the species has a picture for: 160x80, two 80x80
+            frames alike, the subject cropped to its pixels and scaled to W
+            wide (the width of the species' community sprite), centred, its
+            lowest row on row 78. Front and back share 15 colours, index 0
+            transparent; the front's PNG carries the normal palette and the
+            back's the shiny one on the same indices (the shiny pictures vote
+            each index's colour). heights.py and import_sprite_offsets.py
+            then write the height and the record that follow the pictures.
+  icon      --icon I
+            poke_icon_N.png, 32x64: the picture's two frames side by side,
+            each scaled whole to 32x32, in the one of the three shared icon
+            palettes nearest its colours, and that palette's number in
+            sPokemonPalNoBySpeciesAndForm.
+  follower  --follower F --shiny-follower SF [--rows down,up,left]
+            the species' mmodel texture, built by import_followers.nsbtx:
+            eight 32x32 frames up, up, down, down, left, left, right, right.
+            The sheet's rows are named by --rows, two steps a row; a right
+            row is not used: the right frames are the left ones mirrored, as
+            HeartGold's are. One scale for every frame, the down frame as
+            tall as HeartGold's 32x32 followers of about the species' Dex
+            height are drawn (follower_height), each frame's feet on row 29,
+            centred at x 16; two 16-colour palettes, normal and shiny.
+
+The species has to be in tools/newgold/import/own_art.py first, or the next
+import would put the reference's pictures back over these. --preview DIR
+writes the pictures there magnified four times, to look at. Every PNG is
+written with a 16-entry palette: one of 256 entries made the battle load 256
+colours over every other sprite's.
+
+    convert_chatgpt.py SPECIES [--front ...] [--icon ...] [--follower ...] [--preview DIR]
+
+Bramblin, from Paolo's eight pictures (img1 shiny follower, 2 shiny icon,
+3 follower, 4 icon, 5 back, 6 front, 7 shiny back, 8 shiny front):
+
+    convert_chatgpt.py BRAMBLIN --front img6.png --back img5.png \\
+        --shiny-front img8.png --shiny-back img7.png --width 42 --icon img4.png \\
+        --follower img3.png --shiny-follower img1.png --rows down,up,left,right
 """
-import sys, io, json, collections
+import argparse
+import collections
+import io
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+
 from PIL import Image, ImageChops
-W = '/home/paolo/hgss-worktrees/extra2'
-S = '/home/paolo/hgss-worktrees/.rounds/sprites-test/set2'
-sys.path.insert(0, W + '/tools/newgold/import')
+
+ROOT = Path(__file__).resolve().parents[4]
+IMPORT = ROOT / "tools/newgold/import"
+sys.path.insert(0, str(IMPORT))
+import import_followers  # noqa: E402
+import import_icons  # noqa: E402
+import import_species  # noqa: E402
+import own_art  # noqa: E402
+
+SPRITES = ROOT / "files/poketool/pokegra/pokegra"
+MAGENTA = (255, 0, 255)
+FRAME = 32          # a follower's frames; the largest Pokemon's 64 are not done here yet
+FEET = 29           # a follower's lowest row
+DOWN = 2            # the texture's first down-facing frame, the one followers are measured by
+
+
+def number_of(name):
+    found = re.search(rf"^#define SPECIES_{name}\s+(\d+)", (ROOT / "include/constants/species.h").read_text(), re.M)
+    if not found:
+        raise SystemExit(f"there is no SPECIES_{name}")
+    return int(found.group(1))
+
+
+def load(path):
+    return Image.open(path).convert("RGB")
+
 
 def mask_of(im):
+    """255 where the picture is not its magenta background."""
     r, g, b = im.split()
     bg = ImageChops.multiply(ImageChops.multiply(r.point(lambda v: 255 if v > 190 else 0),
                                                  b.point(lambda v: 255 if v > 190 else 0)),
                              g.point(lambda v: 255 if v < 90 else 0))
     return ImageChops.invert(bg)
 
+
 def shrink(im, size, crop=True):
-    """dict (x,y)->rgb555-ish colour of the picture scaled to `size` (w,h);
-    crop to the picture's bbox first when crop (battle), else the whole cell."""
+    """{(x, y): colour} of the picture's opaque pixels scaled to size (w, h),
+    each the average of the subject's own pixels it covers, in 15-bit colour;
+    cropped to the subject first when crop, the height then following the
+    width (size (w, 0))."""
     m = mask_of(im)
     if crop:
-        box = m.getbbox(); im, m = im.crop(box), m.crop(box)
-        w = size[0]; h = round(im.height * w / im.width); size = (w, h)
-    pre = ImageChops.multiply(im, Image.merge('RGB', (m,) * 3)).resize(size, Image.BOX)
+        box = m.getbbox()
+        im, m = im.crop(box), m.crop(box)
+        size = (size[0], round(im.height * size[0] / im.width))
+    pre = ImageChops.multiply(im, Image.merge("RGB", (m,) * 3)).resize(size, Image.BOX)
     cov = m.resize(size, Image.BOX)
     pp, cv, out = pre.load(), cov.load(), {}
     for y in range(size[1]):
         for x in range(size[0]):
             if cv[x, y] >= 128:
                 out[x, y] = tuple(min(255, v * 255 // cv[x, y]) & 0xF8 for v in pp[x, y])
-    return out, size
+    return out
 
-def quantize(dicts, n=15):
-    pts = [c for d in dicts for c in d.values()]
-    strip = Image.new('RGB', (len(pts), 1)); strip.putdata(pts)
+
+def quantize(pictures, n=15):
+    """The pictures' colours brought down to n shared ones: each picture as
+    {(x, y): index 1..n}, and the n colours."""
+    points = [c for d in pictures for c in d.values()]
+    strip = Image.new("RGB", (len(points), 1))
+    strip.putdata(points)
     q = strip.quantize(n, method=Image.Quantize.LIBIMAGEQUANT, dither=Image.Dither.NONE)
-    pal = q.getpalette()[:3 * n]; pal += [0] * (3 * n - len(pal))
-    idx = list(q.tobytes()); out, k = [], 0
-    for d in dicts:
-        out.append({p: idx[k + i] + 1 for i, p in enumerate(d)}); k += len(d)
-    return out, [tuple(pal[3 * i:3 * i + 3]) for i in range(n)]
+    palette = q.getpalette()[:3 * n]
+    palette += [0] * (3 * n - len(palette))
+    indices, out, k = list(q.tobytes()), [], 0
+    for d in pictures:
+        out.append({p: indices[k + i] + 1 for i, p in enumerate(d)})
+        k += len(d)
+    return out, [tuple(palette[3 * i:3 * i + 3]) for i in range(n)]
 
-def shiny_palette(index_maps, shiny_dicts, normal):
+
+def shiny_palette(index_maps, shiny_pictures, normal):
+    """Each index's colour in the shiny pictures, by the most pixels."""
     votes = collections.defaultdict(collections.Counter)
-    for im_, sd in zip(index_maps, shiny_dicts):
-        for p, i in im_.items():
-            if p in sd: votes[i][sd[p]] += 1
+    for indices, shiny in zip(index_maps, shiny_pictures):
+        for p, i in indices.items():
+            if p in shiny:
+                votes[i][shiny[p]] += 1
     return [votes[i + 1].most_common(1)[0][0] if votes[i + 1] else normal[i] for i in range(len(normal))]
 
-def flat(pal):
-    return [v for c in pal for v in c]
 
-def load(n): return Image.open(f'{S}/img{n}.png').convert('RGB')
+def indexed(size, frames, palette):
+    """A 16-colour indexed picture, index 0 the magenta of transparency;
+    frames are ((x, y), {(x, y): index}), placed at their corner."""
+    im = Image.new("P", size, 0)
+    for (ox, oy), indices in frames:
+        for (x, y), i in indices.items():
+            im.putpixel((ox + x, oy + y), i)
+    im.putpalette([v for c in [MAGENTA] + list(palette) for v in c])
+    return im
 
-# A. battle: 6 front, 5 back; shiny 8 front, 7 back
-fr, _ = shrink(load(6), (42, 0)); bk, _ = shrink(load(5), (42, 0))
-sfr, _ = shrink(load(8), (42, 0)); sbk, _ = shrink(load(7), (42, 0))
-(ifr, ibk), pal = quantize([fr, bk])
-spal = shiny_palette([ifr, ibk], [sfr, sbk], pal)
-def sheet(imap, palette):
-    w = max(x for x, y in imap) + 1; h = max(y for x, y in imap) + 1
-    frame = Image.new('P', (80, 80), 0); x0, y0 = (80 - w) // 2, 79 - h
-    for (x, y), i in imap.items(): frame.putpixel((x0 + x, y0 + y), i)
-    s = Image.new('P', (160, 80), 0); s.paste(frame, (0, 0)); s.paste(frame, (80, 0))
-    s.putpalette([255, 0, 255] + flat(palette)); return s
-for g in ('male', 'female'):
-    sheet(ifr, pal).save(f'{W}/files/poketool/pokegra/pokegra/0967/{g}/front.png', transparency=0)
-    sheet(ibk, spal).save(f'{W}/files/poketool/pokegra/pokegra/0967/{g}/back.png', transparency=0)
 
-# B. icon: img4, two frames side by side -> 32x64, one shared palette
-import import_icons as ic
-icon = load(4); cw = icon.width // 2
-frames = [shrink(icon.crop((k * cw, 0, k * cw + cw, icon.height)), (32, 32), crop=False)[0] for k in range(2)]
-shared = ic.shared_palettes()
-def err(c, p): return sum((a - b) ** 2 for a, b in zip(c, p))
-best = min(range(3), key=lambda k: sum(min(err(c, shared[k][i]) for i in range(1, 16)) for f in frames for c in f.values()))
-ip = Image.new('P', (32, 64), 0)
-for k, f in enumerate(frames):
-    for (x, y), c in f.items():
-        ip.putpixel((x, y + 32 * k), min(range(1, 16), key=lambda i: err(c, shared[best][i])))
-ip.putpalette(flat(shared[best]))
-ip.save(f'{W}/files/poketool/icongra/poke_icon/poke_icon_00001010.png')
-print('icon palette', best, 'current', ic.drawn_in(f'{S}/../icon_orig_1010.png', shared) if False else '?')
+def png(im, transparent=True):
+    out = io.BytesIO()
+    im.save(out, "PNG", bits=4, **({"transparency": 0} if transparent else {}))
+    return out.getvalue()
 
-# C. follower: img3 normal, img1 shiny; grid 2x4 -> frames up,up,down,down,left,left,right,right
-def follower_height(dm):
-    """HGSS's rule, measured: the median drawn height of retail's 32x32
-    followers whose Dex height is within 1 dm of this one."""
-    rows = json.load(open('/home/paolo/hgss-worktrees/.rounds/sprites-test/follower_sizes.json'))
-    near = sorted(r[2] for r in rows if r[1] == 32 and abs(r[0] - dm) <= 1)
+
+def battle(front, back, shiny_front, shiny_back, width):
+    """(front, back) sheets: the back's PNG carries the shiny palette."""
+    fr, bk, sfr, sbk = (shrink(load(p), (width, 0)) for p in (front, back, shiny_front, shiny_back))
+    (ifr, ibk), normal = quantize([fr, bk])
+    shiny = shiny_palette([ifr, ibk], [sfr, sbk], normal)
+
+    def sheet(indices, palette):
+        w, h = max(x for x, _ in indices) + 1, max(y for _, y in indices) + 1
+        at = ((80 - w) // 2, 79 - h)
+        return indexed((160, 80), [(at, indices), ((at[0] + 80, at[1]), indices)], palette)
+    return sheet(ifr, normal), sheet(ibk, shiny)
+
+
+def icon(path):
+    """The 32x64 icon and the shared palette it is drawn in."""
+    im = load(path)
+    cw = im.width // 2
+    frames = [shrink(im.crop((k * cw, 0, k * cw + cw, im.height)), (32, 32), crop=False) for k in range(2)]
+    shared = import_icons.shared_palettes()
+
+    def err(c, p):
+        return sum((a - b) ** 2 for a, b in zip(c, p))
+
+    def nearest(c, palette):
+        return min(range(1, 16), key=lambda i: err(c, palette[i]))
+    best = min(range(len(shared)), key=lambda k: sum(err(c, shared[k][nearest(c, shared[k])])
+                                                     for f in frames for c in f.values()))
+    frames = [((0, 32 * k), {p: nearest(c, shared[best]) for p, c in f.items()}) for k, f in enumerate(frames)]
+    picture = indexed((32, 64), frames, shared[best][1:])
+    picture.putpalette([v for c in shared[best] for v in c])
+    return picture, best
+
+
+def texture_pixels(data):
+    """A follower BTX0's texture as an indexed picture, its frames stacked."""
+    tex = 0x14
+    at = tex + int.from_bytes(data[tex + 0x14:tex + 0x18], "little")
+    units = int.from_bytes(data[tex + 0xC:tex + 0xE], "little")
+    pixels = [v for b in data[at:at + 8 * units] for v in (b & 15, b >> 4)]
+    width = import_followers.texture_width(data)
+    im = Image.new("P", (width, len(pixels) // width))
+    im.putdata(pixels)
+    return im
+
+
+def drawn_box(data, frame=DOWN):
+    """The box a follower texture's frame has anything drawn in."""
+    im, width = texture_pixels(data), import_followers.texture_width(data)
+    return im.crop((0, frame * width, width, frame * width + width)).point(lambda v: 255 if v else 0).getbbox()
+
+
+def drawn_height(data, frame=DOWN):
+    box = drawn_box(data, frame)
+    return box[3] - box[1]
+
+
+def retail_followers():
+    """(Dex height in decimetres, drawn height) of each HeartGold species
+    whose follower has 32x32 frames, measured on its first down frame."""
+    header = import_followers.IDX_H.read_text()
+    models = dict((name, int(n)) for name, n in re.findall(r"#define (FOLLOWER_MON_\w+)\s+(\d+)", header))
+    dex = json.loads((ROOT / "files/application/zukanlist/zkn_data/zukan_data.json").read_text())["mon_stats"]
+    out = []
+    for species, model in enumerate(import_followers.retail_models()[1:], 1):
+        data = (import_followers.MMODEL_DIR /
+                f"mmodel_{import_followers.MMODEL_BASE + models[model]:08d}.NSBTX").read_bytes()
+        if import_followers.texture_width(data) == FRAME:
+            out.append((dex[species]["height"], drawn_height(data)))
+    return out
+
+
+def follower_height(decimetres):
+    """HeartGold's rule, measured on its own followers: the median drawn
+    height of its 32x32 followers whose Dex height is within 1 dm."""
+    near = sorted(h for d, h in retail_followers() if abs(d - decimetres) <= 1)
     return near[len(near) // 2]
 
-def cells(im, target):
-    cw, ch = im.width // 2, im.height // 4
-    raw = [[im.crop((c * cw, r * ch, c * cw + cw, r * ch + ch)) for c in range(2)] for r in range(4)]
-    boxes = [[mask_of(x).getbbox() for x in row] for row in raw]
-    tall = max(b[3] - b[1] for row in boxes for b in row)
-    scale = target / tall                     # one factor for every frame
+
+def follower_frames(path, rows, height):
+    """The sheet's up, up, down, down, left, left frames as {(x, y): colour}
+    in 32x32, at one scale: the first down frame drawn `height` tall."""
+    im = load(path)
+    cw, ch = im.width // 2, im.height // len(rows)
+    cells = {row: [im.crop((c * cw, r * ch, c * cw + cw, r * ch + ch)) for c in range(2)]
+             for r, row in enumerate(rows)}
+    boxes = {row: [mask_of(cell).getbbox() for cell in cells[row]] for row in cells}
+    scale = height / (boxes["down"][0][3] - boxes["down"][0][1])
     out = []
-    for row, brow in zip(raw, boxes):
-        line = []
-        for x, b in zip(row, brow):
-            x = x.crop(b)
-            w, h = max(1, round(x.width * scale)), max(1, round(x.height * scale))
-            d, _ = shrink(x, (w, h), crop=False)
-            frame = {(16 - w // 2 + px, 30 - h + py): c for (px, py), c in d.items()
-                     if 0 <= 16 - w // 2 + px < 32 and 0 <= 30 - h + py < 32}
-            line.append(frame)
-        out.append(line)
-    return [out[1][0], out[1][1], out[0][0], out[0][1], out[2][0], out[2][1], out[3][0], out[3][1]]
-zk = json.load(open(W + "/files/application/zukanlist/zkn_data/zukan_data.json"))["mon_stats"]
-target = follower_height(zk[967]["height"]); print("follower height", target)
-nf, sf = cells(load(3), target), cells(load(1), target)
-imaps, opal = quantize(nf)
-ospal = shiny_palette(imaps, sf, opal)
-ow = Image.new('P', (32, 256), 0)
-for k, m in enumerate(imaps):
-    for (x, y), i in m.items(): ow.putpixel((x, y + 32 * k), i)
-ow.putpalette([255, 0, 255] + flat(opal))
-buf = io.BytesIO(); ow.save(buf, 'PNG'); ow.save(f'{S}/overworld_new.png')
-def jasc(p): return ('JASC-PAL\r\n0100\r\n16\r\n' + ''.join(f'{r} {g} {b}\r\n' for r, g, b in [(255, 0, 255)] + list(p))).encode()
-import import_followers as f
-real = f.show
-files = {'NEW/overworld.png': buf.getvalue(), 'NEW/overworld-tsure_poke0.pal': jasc(opal), 'NEW/overworld-tsure_poke1.pal': jasc(ospal)}
-def show(path, reference=f.REFERENCE):
-    if path in files: return files[path]
-    if path.startswith('NEW/'): return real('data/graphics/sprites/bramblin/' + path[4:], reference)
-    return real(path, reference)
-f.show = show
-meta = json.loads(show('NEW/overworld.json')); print('palettes', [p['fileName'] for p in meta['palettes'].values()])
-open(f'{W}/files/data/mmodel/mmodel/mmodel_00001322.NSBTX', 'wb').write(f.nsbtx('NEW'))
-print('done')
+    for row in ("up", "down", "left"):
+        for cell, box in zip(cells[row], boxes[row]):
+            cell = cell.crop(box)
+            w, h = max(1, round(cell.width * scale)), max(1, round(cell.height * scale))
+            x0, y0 = FRAME // 2 - w // 2, FEET + 1 - h
+            out.append({(x0 + x, y0 + y): c for (x, y), c in shrink(cell, (w, h), crop=False).items()
+                        if 0 <= x0 + x < FRAME and 0 <= y0 + y < FRAME})
+    return out
+
+
+def jasc(palette):
+    return ("JASC-PAL\r\n0100\r\n16\r\n" + "".join(f"{r} {g} {b}\r\n" for r, g, b in [MAGENTA] + list(palette))).encode()
+
+
+def follower(normal, shiny, rows, height):
+    """(the texture, the 32x256 picture it is built from with the normal
+    palette, the same with the shiny one)."""
+    if not {"down", "up", "left"} <= set(rows):
+        raise SystemExit("--rows has to name the down, up and left rows")
+    indices, palette = quantize(follower_frames(normal, rows, height))
+    shiny_colours = shiny_palette(indices, follower_frames(shiny, rows, height), palette)
+    indices += [{(FRAME - 1 - x, y): i for (x, y), i in left.items()} for left in indices[4:6]]
+    frames = [((0, FRAME * k), m) for k, m in enumerate(indices)]
+    picture = indexed((FRAME, 8 * FRAME), frames, palette)
+    directory = "PAOLO"
+    files = {f"{directory}/overworld.png": png(picture),
+             f"{directory}/overworld-tsure_poke0.pal": jasc(palette),
+             f"{directory}/overworld-tsure_poke1.pal": jasc(shiny_colours),
+             f"{directory}/overworld.json": import_followers.show(
+                 f"{import_followers.FRAME_LISTS[FRAME]}/overworld.json")}
+    data = import_followers.nsbtx(directory, read=lambda p: files[p] if p in files else import_followers.show(p))
+    return data, picture, indexed((FRAME, 8 * FRAME), frames, shiny_colours)
+
+
+def set_palette_number(name, number):
+    """The species' line in sPokemonPalNoBySpeciesAndForm (import_icons.py's block)."""
+    source = import_icons.INDEX.read_text()
+    line = re.compile(rf"^    \d+(, // {name},?)$", re.M)
+    if len(line.findall(source)) != 1:
+        raise SystemExit(f"{name}: not one line in {import_icons.INDEX.name}'s palette table")
+    import_icons.INDEX.write_text(line.sub(rf"    {number}\1", source))
+
+
+def preview(directory, name, im):
+    directory.mkdir(parents=True, exist_ok=True)
+    im.resize((im.width * 4, im.height * 4), Image.NEAREST).save(directory / f"{name}.png")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("species", help="the SPECIES_ constant's name, BRAMBLIN")
+    for part in ("front", "back", "shiny-front", "shiny-back", "icon", "follower", "shiny-follower"):
+        parser.add_argument(f"--{part}", type=Path)
+    parser.add_argument("--width", type=int, help="the battle picture's width")
+    parser.add_argument("--rows", default="down,up,left", help="the follower sheet's rows, top to bottom")
+    parser.add_argument("--preview", type=Path)
+    args = parser.parse_args()
+    name = args.species.upper().removeprefix("SPECIES_")
+    number = number_of(name)
+    if name not in own_art.SPECIES:
+        raise SystemExit(f"{name} is not in tools/newgold/import/own_art.py: the next import would put "
+                         "the reference's pictures back")
+
+    battle_parts = (args.front, args.back, args.shiny_front, args.shiny_back)
+    if any(battle_parts):
+        if not all(battle_parts) or not args.width:
+            raise SystemExit("the battle pictures need --front, --back, --shiny-front, --shiny-back and --width")
+        front, back = battle(*battle_parts, args.width)
+        folder = SPRITES / f"{number:04d}"
+        genders = [g for g in ("male", "female") if (folder / g / "front.png").stat().st_size]
+        for gender in genders:
+            (folder / gender / "front.png").write_bytes(png(front))
+            (folder / gender / "back.png").write_bytes(png(back))
+        print(f"battle: {', '.join(genders)} front and back written")
+        for script, word in (("heights.py", "write"), ("import_sprite_offsets.py", "--write")):
+            subprocess.run([sys.executable, str(IMPORT / script), word], check=True)
+        if args.preview:
+            preview(args.preview, "front", front)
+            preview(args.preview, "back", back)
+
+    if args.icon:
+        picture, palette = icon(args.icon)
+        path = ROOT / "files/poketool/icongra/poke_icon" / (
+            f"poke_icon_{import_icons.first_added_icon() + import_species.added_species().index(name):08d}.png")
+        path.write_bytes(png(picture, transparent=False))
+        if import_icons.drawn_in(path, import_icons.shared_palettes()) != palette:
+            raise SystemExit(f"{path.name}: its colours fit more than one shared palette")
+        set_palette_number(name, palette)
+        print(f"icon: {path.name}, shared palette {palette}")
+        if args.preview:
+            preview(args.preview, "icon", picture)
+
+    if args.follower or args.shiny_follower:
+        if not (args.follower and args.shiny_follower):
+            raise SystemExit("the follower needs --follower and --shiny-follower")
+        dex = json.loads((ROOT / "files/application/zukanlist/zkn_data/zukan_data.json").read_text())["mon_stats"]
+        height = follower_height(dex[number]["height"])
+        data, picture, shiny = follower(args.follower, args.shiny_follower, args.rows.split(","), height)
+        member = re.search(rf"^#define MMODEL_FOLLOWER_MON_{name}\s+(\d+)",
+                           import_followers.MMODEL_H.read_text(), re.M)
+        if not member:
+            raise SystemExit(f"{name} has no follower model of its own (import_followers.py)")
+        path = import_followers.MMODEL_DIR / f"mmodel_{int(member.group(1)):08d}.NSBTX"
+        path.write_bytes(data)
+        print(f"follower: {path.name}, drawn {drawn_height(data)} rows tall (HeartGold's rule: {height})")
+        if args.preview:
+            preview(args.preview, "follower", picture)
+            preview(args.preview, "follower_shiny", shiny)
+
+
+if __name__ == "__main__":
+    main()
