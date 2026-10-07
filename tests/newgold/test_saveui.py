@@ -1280,7 +1280,11 @@ class SaveUiTests(unittest.TestCase):
         finally:
             rom.write_bytes(good)
         self.assertIsNone(saveui.rom_problem(rom, slot))
-        # Launched for real, melonDS's sandbox keeps /tmp to itself.
+        # Launched for real, melonDS's sandbox keeps /tmp to itself -- the temp build is there unless TMPDIR is
+        # somewhere the flatpak can reach (the rounds' scratch in the home), where it is playable.
+        real = rom.resolve()
+        if not real.is_relative_to("/tmp") and any(real.is_relative_to(f) for f in saveui.flatpak_folders() or []):
+            self.skipTest(f"the temp build is in {real.parent.parent}, which melonDS can reach")
         os.environ.pop("SAVEUI_DRY_RUN")
         try:
             problem = saveui.rom_problem(rom, slot)
