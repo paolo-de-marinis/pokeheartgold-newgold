@@ -5752,4 +5752,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">BAXCALIBUR</language>
 	</row>
+	<row id="msg_0817_01438" index="1438">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">BABY LUGIA</language>
+	</row>
 </body>

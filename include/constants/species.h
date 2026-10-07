@@ -1467,7 +1467,10 @@
 #define SPECIES_MEGA_TATSUGIRI_STRETCHY 1436
 #define SPECIES_MEGA_BAXCALIBUR 1437
 
-#define NUM_SPECIES SPECIES_MEGA_BAXCALIBUR
+// New Gold's own species, after the reference's: tools/newgold/import/own_species.py
+#define SPECIES_BABY_LUGIA      1438
+
+#define NUM_SPECIES SPECIES_BABY_LUGIA
 
 // The highest species with a Dex entry. HeartGold's own stop at Arceus and
 // the fourteen identifiers after it are the egg and the alternate forms,

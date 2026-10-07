@@ -17,11 +17,15 @@ import os
 import re
 import shlex
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 from test_level_cap import ROOT
+
+sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+import own_species  # noqa: E402
 
 REFERENCE = Path(os.environ.get("HG_ENGINE_NEWGOLD_REFERENCE",
                                 "/home/paolo/Porting HGSS/hg-engine-newgold-reference"))
@@ -94,6 +98,7 @@ REGISTRATION = PREFIX + r'''
 #define WORDS ((NATIONAL_DEX_COUNT + 8 + 31) / 32)
 
 @FORM_DEFINES@
+@OWN@
 
 // The fields the two setters touch, sized as the save's are: for the Dex
 // species and no further, so a form's own number would be out of bounds,
@@ -199,10 +204,16 @@ int main(void) {
     assert(Pokedex_CheckMonCaughtFlag(&dex, SPECIES_TOXTRICITY));
 
     // Every form lands on a Dex page and in the record, and nothing else
-    // moves.
+    // moves. New Gold's own species is no form, and has no page yet: seeing
+    // it records nothing.
     for (u16 species = NATIONAL_DEX_COUNT + 1; species <= NUM_SPECIES; species++) {
         Pokemon mon = { species };
         Pokedex_SetMonSeenFlag(&dex, &mon);
+        if (IsOwnSpecies(species)) {
+            assert(!Pokedex_CheckMonSeenFlag(&dex, species));
+            assert(!FormRecorded(dex.formsSeen, species));
+            continue;
+        }
         assert(Pokedex_CheckMonSeenFlag(&dex, species));
         assert(FormRecorded(dex.formsSeen, species));
     }
@@ -230,7 +241,7 @@ int main(void) {
     }
     assert(SpeciesToDexSpecies(SPECIES_SLOWPOKE_GALARIAN) == SPECIES_SLOWPOKE);
     assert(SpeciesToDexSpecies(SPECIES_SLOWBRO_GALARIAN) == SPECIES_SLOWBRO);
-    printf("PASS: %d forms register as their base species.\n", NUM_SPECIES - NATIONAL_DEX_COUNT);
+    printf("PASS: %d forms register as their base species.\n", NUM_SPECIES - NATIONAL_DEX_COUNT - NUM_OWN_SPECIES);
     return 0;
 }
 '''
@@ -302,6 +313,14 @@ NATIVE = ["CheckDexFlag", "SetDexFlag", "SetDexFlagState",
           "Pokedex_CheckMonSeenFlag", "Pokedex_RecordMonSeen", "Pokedex_SetMonSeenFlag", "Pokedex_SetMonCaughtFlag"]
 
 
+def own_defines():
+    """New Gold's own species (own_species.py): past the Dex species, and no
+    form."""
+    listed = " || ".join(f"species == SPECIES_{name}" for name in own_species.SPECIES) or "0"
+    return (f"#define NUM_OWN_SPECIES {len(own_species.SPECIES)}\n"
+            f"static int IsOwnSpecies(u16 species) {{ return {listed}; }}")
+
+
 def form_defines():
     """include/pokedex.h's sizes of the record of the forms."""
     header = (ROOT / "include/pokedex.h").read_text()
@@ -316,7 +335,7 @@ class FormTableTests(unittest.TestCase):
 
     def test_every_form_has_a_dex_species(self):
         names, last, (first_gap, last_gap) = numbered()
-        forms = {name for name, number in names.items() if number > last}
+        forms = {name for name, number in names.items() if number > last} - set(own_species.SPECIES)
         self.assertEqual(set(self.table), forms)
         for form, base in self.table.items():
             self.assertLessEqual(names[base], last, form)
@@ -343,7 +362,8 @@ class FormDexTests(unittest.TestCase):
     def test_a_form_registers_its_base(self):
         source = (ROOT / "src/pokedex.c").read_text()
         native = form_table(source) + "\n" + "\n".join(definition(source, name) for name in NATIVE)
-        print(run(REGISTRATION.replace("@NATIVE@", native).replace("@FORM_DEFINES@", form_defines()), "newgold-form-dex-"))
+        print(run(REGISTRATION.replace("@NATIVE@", native).replace("@FORM_DEFINES@", form_defines())
+                  .replace("@OWN@", own_defines()), "newgold-form-dex-"))
 
     def test_a_form_prints_its_base_number(self):
         source = (ROOT / "src/pokedex.c").read_text()

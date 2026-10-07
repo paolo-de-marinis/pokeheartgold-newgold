@@ -5752,4 +5752,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English"> 463.0 lbs.</language>
 	</row>
+	<row id="msg_0812_01438" index="1438">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">  47.6 lbs.</language>
+	</row>
 </body>

@@ -457,6 +457,12 @@ static const u16 sFormBaseSpecies[NUM_SPECIES - NATIONAL_DEX_COUNT] = {
 // credited to Slowpoke and Slowbro in the same way, and have no Dex entry of
 // their own to count (Pokedex_IsOwnDexEntry).
 u16 SpeciesToDexSpecies(u16 species) {
+    // New Gold's own species (tools/newgold/import/own_species.py) is no
+    // form: it counts as itself. Until it has a Dex page, DexSpeciesIsInvalid
+    // keeps it out of the Dex, silently.
+    if (species == SPECIES_BABY_LUGIA) {
+        return species;
+    }
     if (species > NATIONAL_DEX_COUNT && species <= NUM_SPECIES) {
         return sFormBaseSpecies[species - NATIONAL_DEX_COUNT - 1];
     }

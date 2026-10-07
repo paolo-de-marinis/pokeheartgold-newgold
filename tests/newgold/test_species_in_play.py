@@ -66,13 +66,14 @@ SPECIES_HEADER = ROOT / "include/constants/species.h"
 PICTURES_PER_SPECIES = 6
 FOOTPRINT_OFFSET = import_footprints.MEMBER_OFFSET
 
-# HeartGold's own 493, New Gold's 534 and the reference's 396 forms numbered
-# as species (1042..1437): 493 + 534 + 396 = 1423. The fourteen between the
-# first two -- the egg, the bad egg and the twelve alternate forms -- are
-# species numbers but not Pokemon: nothing can put one in a party, they have
-# no Dex page of their own, and their sprites come from otherpoke.narc. They
-# are checked by the tests that own those tables, not here.
-SPECIES_IN_PLAY = 1423
+# HeartGold's own 493, New Gold's 534, the reference's 396 forms numbered as
+# species (1042..1437) and New Gold's own Baby Lugia (1438, own_species.py):
+# 493 + 534 + 396 + 1 = 1424. The fourteen between the first two -- the egg,
+# the bad egg and the twelve alternate forms -- are species numbers but not
+# Pokemon: nothing can put one in a party, they have no Dex page of their
+# own, and their sprites come from otherpoke.narc. They are checked by the
+# tests that own those tables, not here.
+SPECIES_IN_PLAY = 1424
 
 # The two the reference ships with an empty Pokedex entry and placeholder
 # measurements of its own -- konefr's Galarian Slowpoke is still called "-----"

@@ -20140,6 +20140,20 @@
       "mon_ypos_f": 0,
       "ypos_m": 0,
       "mon_ypos_m": 0
+    },
+    {
+      "species": "SPECIES_BABY_LUGIA",
+      "height": 14,
+      "weight": 216,
+      "body_style": 5,
+      "scale_f": 272,
+      "mon_scale_f": 229,
+      "scale_m": 256,
+      "mon_scale_m": 229,
+      "ypos_f": 8,
+      "mon_ypos_f": 7,
+      "ypos_m": 9,
+      "mon_ypos_m": 7
     }
   ],
   "sorting": [

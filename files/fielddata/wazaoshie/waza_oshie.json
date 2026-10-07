@@ -16991,6 +16991,29 @@
     {
       "mon": "SPECIES_MEGA_BAXCALIBUR",
       "moves": []
+    },
+    {
+      "mon": "SPECIES_BABY_LUGIA",
+      "moves": [
+        "TUTOR_DIVE",
+        "TUTOR_MUD_SLAP",
+        "TUTOR_ICY_WIND",
+        "TUTOR_IRON_HEAD",
+        "TUTOR_AQUA_TAIL",
+        "TUTOR_OMINOUS_WIND",
+        "TUTOR_SNORE",
+        "TUTOR_AIR_CUTTER",
+        "TUTOR_ANCIENT_POWER",
+        "TUTOR_SIGNAL_BEAM",
+        "TUTOR_ZEN_HEADBUTT",
+        "TUTOR_EARTH_POWER",
+        "TUTOR_TWISTER",
+        "TUTOR_TRICK",
+        "TUTOR_SWIFT",
+        "TUTOR_TAILWIND",
+        "TUTOR_SKY_ATTACK",
+        "TUTOR_HEADBUTT"
+      ]
     }
   ]
 }

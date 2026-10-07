@@ -928,3 +928,4 @@
     1267, // Mega Tatsugiri Droopy
     1267, // Mega Tatsugiri Stretchy
     1284, // Mega Baxcalibur
+    1310, // Baby Lugia

@@ -1578,7 +1578,8 @@ static const u8 sPokemonPalNoBySpeciesAndForm[] = {
     0, // MEGA_TATSUGIRI,
     0, // MEGA_TATSUGIRI_DROOPY,
     0, // MEGA_TATSUGIRI_STRETCHY,
-    0, // MEGA_BAXCALIBUR
+    0, // MEGA_BAXCALIBUR,
+    0, // BABY_LUGIA
 };
 
 const u8 GetMonIconPaletteEx(u32 species, u32 form, u32 isEgg) {

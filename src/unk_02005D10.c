@@ -13,7 +13,7 @@
 // played Karrablast's cry, and the last thirteen read past the end of the
 // table entirely for whatever halfword followed it.
 #define NUM_SPECIES_WITH_CRIES 507
-#define ARCHIVE_WAVE_ARC_COUNT 1310
+#define ARCHIVE_WAVE_ARC_COUNT 1311
 
 #include "heap.h"
 #include "newgold/diag.h"
@@ -1357,6 +1357,7 @@ static const u16 sAddedCryBanks[] = {
     1267, // Mega Tatsugiri Droopy
     1267, // Mega Tatsugiri Stretchy
     1284, // Mega Baxcalibur
+    1310, // Baby Lugia
 };
 
 static int CryBankForSpecies(int species) {

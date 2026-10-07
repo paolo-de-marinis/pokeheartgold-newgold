@@ -5753,4 +5753,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">This Pokémon blasts cryogenic air\nout from its mouth. This air can\ninstantly freeze even liquid-hot lava.</language>
 	</row>
+	<row id="msg_0806_baby_lugia" index="1438">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">It is said that it quietly spends its\ntime deep at the bottom of the sea\nbecause its powers are too strong.</language>
+	</row>
 </body>

@@ -1,0 +1,8 @@
+{
+  "about": "New Gold's own Baby Lugia (own_species.py) cries Lugia's cry seven semitones higher: its own wave archive, 1310, Lugia's samples played at 15,750 Hz (import_cries.raised), as large as Lugia's and so within the cry player's heap. A level-12 Baby Lugia leads against a forced wild Geodude, and its cry, the last before the first command, starts (PlayCry's result, gDiagCryStarted). The field's RNG is pinned as in cry_added_species.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "BABY_LUGIA:12"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=74", "LEFT", "fight:1:0"],
+  "expect": {"lines": ["Go! Baby Lugia!"], "gDiagCrySpecies": "SPECIES_BABY_LUGIA", "gDiagCryStarted": 1}
+}

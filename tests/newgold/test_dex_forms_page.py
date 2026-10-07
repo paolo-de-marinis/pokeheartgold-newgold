@@ -642,11 +642,13 @@ class DexFormsPageTests(unittest.TestCase):
         """Every form that is a species of its own here has a row of its own
         among msg_0802's form names (PokedexApp_FormName, compiled): the
         Galarian Slowpoke and Slowbro, then every species past the last Dex
-        species, and nothing after them. A regional form is named by its
-        region, Paldean Tauros by its breed, a totem (a _LARGE that is not
-        a Pumpkaboo's or Gourgeist's size) as one; any other by the latest
-        games' name of the form. Each fits the FORMS page's bar, where the
-        name sits in window 2 of ov18_021F9EBC, 15 tiles wide."""
+        species that is a form (sFormBaseSpecies; New Gold's own species,
+        own_species.py, is none and has no row), and nothing after them. A
+        regional form is named by its region, Paldean Tauros by its breed, a
+        totem (a _LARGE that is not a Pumpkaboo's or Gourgeist's size) as one;
+        any other by the latest games' name of the form. Each fits the FORMS
+        page's bar, where the name sits in window 2 of ov18_021F9EBC, 15 tiles
+        wide."""
         label = LABEL.read_text()
         header = (ROOT / "include/pokedex.h").read_text()
         species_h = (ROOT / "include/constants/species.h").read_text()
@@ -654,9 +656,9 @@ class DexFormsPageTests(unittest.TestCase):
         names = {}
         for name, number in numbers.items():
             names.setdefault(number, name)
-        last_dex = numbers[re.search(r"#define LAST_DEX_SPECIES\s+SPECIES_(\w+)", species_h).group(1)]
+        table = re.findall(r"\[SPECIES_(\w+) - NATIONAL_DEX_COUNT - 1\] = SPECIES_", (ROOT / "src/pokedex.c").read_text())
         first = numbers["SLOWPOKE_GALARIAN"]
-        forms = [first, numbers["SLOWBRO_GALARIAN"]] + list(range(last_dex + 1, max(numbers.values()) + 1))
+        forms = [first, numbers["SLOWBRO_GALARIAN"]] + sorted(numbers[name] for name in table)
         defines = "\n".join(re.findall(r"^#define (?:DEX_FIRST_FORM)\b.*$", header, re.M))
         msgs = "\n".join(f"#define {name} {index}" for name, (index, _) in messages().items())
         program = (FORM_NAMES.replace("@DEFINES@", defines + "\n" + msgs).replace("@FORMS@", ", ".join(map(str, forms)))

@@ -20,10 +20,25 @@ from test_level_cap import ROOT
 sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
 import import_cries  # noqa: E402
 import import_species  # noqa: E402
+import own_species  # noqa: E402
 import sdat  # noqa: E402
 
 SOURCE = ROOT / "src/unk_02005D10.c"
 RETAIL_BANKS = 778
+
+
+def own_cries():
+    """The wave archive of each of New Gold's own species (own_species.py),
+    as sAddedCryBanks names it."""
+    table = re.search(r"sAddedCryBanks\[\] = \{(.*?)\n\};", SOURCE.read_text(), re.S).group(1)
+    banks = [int(n) for n in re.findall(r"^    (\d+), //", table, re.M)]
+    added = import_species.added_species()
+    return {name: banks[added.index(name)] for name in own_species.SPECIES}
+
+
+def raised_rate(name):
+    """The most an own species' cry may be sampled at: its like's, raised."""
+    return round(import_cries.CRY_RATE * 2 ** (own_species.SPECIES[name]["cry_semitones"] / 12))
 
 
 class SoundArchiveTests(unittest.TestCase):
@@ -121,6 +136,7 @@ class SoundArchiveTests(unittest.TestCase):
                 self.assertFalse(kind == 1 and number in cries, f"a group loads bank {number}")
 
     def test_every_added_wave_archive_holds_one_playable_sample(self):
+        ceilings = {index: raised_rate(name) for name, index in own_cries().items()}
         for index in range(RETAIL_BANKS, len(self.archive.records["SWAR"])):
             fileId, = struct.unpack("<H", self.archive.records["SWAR"][index][:2])
             blob = self.archive.files[fileId]
@@ -130,11 +146,26 @@ class SoundArchiveTests(unittest.TestCase):
             self.assertEqual(count, 1, index)
             fmt, loop, rate, timer, loopStart, loopLen = struct.unpack("<BBHHHI", blob[offset:offset + 12])
             self.assertEqual(fmt, 0, "eight-bit samples")
-            # A long cry is sampled lower so that it fits the cry player's heap.
-            self.assertLessEqual(rate, import_cries.CRY_RATE)
+            # A long cry is sampled lower so that it fits the cry player's heap;
+            # an own species' is its like's played higher (own_species.py).
+            self.assertLessEqual(rate, ceilings.get(index, import_cries.CRY_RATE))
             self.assertEqual(timer, round(import_cries.NDS_CLOCK / rate))
             self.assertGreater(loopLen, 0, index)
             self.assertEqual(len(blob), offset + 12 + loopLen * 4, index)
+
+    def test_an_own_species_cries_its_like_s_cry_higher(self):
+        """Baby Lugia's cry is Lugia's wave archive's samples byte for byte,
+        played higher (import_cries.raised): the rate raised by its
+        semitones, the timer with it."""
+        def wave(index):
+            return self.archive.files[struct.unpack("<H", self.archive.records["SWAR"][index][:2])[0]]
+        numbers = import_cries.our_species()
+        self.assertIn("BABY_LUGIA", own_cries())
+        for name, index in own_cries().items():
+            own, like = wave(index), wave(numbers[own_species.like(name)])
+            self.assertEqual(own[0x4C:], like[0x4C:], name)
+            self.assertEqual(struct.unpack_from("<H", like, 0x42)[0], import_cries.CRY_RATE, name)
+            self.assertEqual(struct.unpack_from("<H", own, 0x42)[0], raised_rate(name), name)
 
     def test_every_added_cry_fits_the_cry_players_heap(self):
         # A cry whose bank and wave archive outweigh HeartGold's largest is
@@ -230,7 +261,7 @@ class CryLookupTests(unittest.TestCase):
                                  self.source).group(1))
         last = constant + len(self.banks)
         collide = [bank for bank in self.banks if constant < bank <= last]
-        self.assertEqual(len(collide), 781)
+        self.assertEqual(len(collide), 782)
         self.assertIn(997, collide)
 
     def test_play_cry_ex_keeps_its_argument_a_species(self):

@@ -19,6 +19,7 @@ from test_level_cap import ROOT
 
 sys.path[:0] = [str(ROOT / "tools/newgold" / sub) for sub in ("import", "devkit", "devkit/harness", "devkit/diag")]
 import import_species  # noqa: E402
+import own_species  # noqa: E402
 
 REFERENCE = os.environ.get("HG_ENGINE_NEWGOLD_REFERENCE")
 if REFERENCE is None:
@@ -71,6 +72,23 @@ class SpeciesRecordTests(unittest.TestCase):
             self.assertLessEqual(entry["expYield"], 255, name)
             self.assertLessEqual(max(entry["tms"], default=0), 92, name)
             self.assertLessEqual(max(entry["hms"], default=0), 8, name)
+
+    def test_new_gold_s_own_species_come_after_the_reference_s(self):
+        """import_species.py appends an own species (own_species.py) after
+        every species and form of the reference's, so its number never
+        moves: Baby Lugia is 1438, after Mega Baxcalibur."""
+        theirs = [self.constants[name] for name in import_species.added_species() if name not in own_species.SPECIES]
+        for name in own_species.SPECIES:
+            self.assertGreater(self.constants[name], max(theirs), name)
+        self.assertEqual(self.constants["BABY_LUGIA"], 1438)
+
+    def test_an_own_species_is_its_like_s_record(self):
+        """Lugia's data for now (Paolo, 2026-10-07), and a rebalance of the
+        like reaches it (update_vanilla_species.py)."""
+        for name in own_species.SPECIES:
+            own = self.records[self.constants[name]]
+            like = self.records[self.constants[own_species.like(name)]]
+            self.assertEqual({**own, "species": None}, {**like, "species": None}, name)
 
     def test_the_fairy_retypes_landed(self):
         # The species the later generations moved to Fairy, plus the two konefr
