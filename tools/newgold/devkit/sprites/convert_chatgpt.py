@@ -59,6 +59,14 @@ Bramblin, from Paolo's eight pictures (img1 shiny follower, 2 shiny icon,
     convert_chatgpt.py BRAMBLIN --front img6.png --back img5.png \\
         --shiny-front img8.png --shiny-back img7.png --width 42 --icon img4.png \\
         --follower img3.png --shiny-follower img1.png --rows down,up,left,right
+
+Baby Lugia, from Paolo's pixel art (.rounds/round18/babylugia/art) and the
+follower sheets of round 17 (.rounds/round17/lugia):
+
+    convert_chatgpt.py BABY_LUGIA --front front_normal.png --back back_normal.png \\
+        --shiny-front front_shiny.png --shiny-back back_shiny.png --grid 14 \\
+        --follower baby_lugia_sheet_normal_hq.png --shiny-follower baby_lugia_sheet_shiny_hq.png \\
+        --rows down,up,left,right --paired
 """
 import argparse
 import cmath

@@ -19,8 +19,9 @@ converter.
 **Baby Lugia is a species** (2026-10-07), the first one New Gold has that
 the reference has not: species 1438, No. 1026, Lugia's data for now with a
 size, a name and a cry of its own (below, "A species the reference has not
-got"). Its pictures are Lugia's until Paolo's are converted; then it joins
-`own_art.py` as Bramblin did.
+got"). Its battle pictures and follower are Paolo's (2026-10-07), the battle
+ones at his own pixels, and it is in `own_art.py` as Bramblin is; its party
+icon is Lugia's until he redraws his at 32x32.
 
 The prompts are in English, which ChatGPT follows best. Replace `<NAME>` with
 the Pokemon's or the item's English name.
@@ -39,7 +40,7 @@ the Pokemon's or the item's English name.
   same indices, so a part the normal draws in one colour and the shiny in two
   (or the other way round) is one more pair; past 15 pairs two of them become
   one, and the normal or the shiny loses a shade there. Baby Lugia's drawings
-  have 21 pairs.
+  have 21 pairs: 6 merged, 72 of its pixels a neighbouring shade.
 
 ## Battle pictures: front and back
 
@@ -93,7 +94,8 @@ A sheet goes through the converter (`--rows`), which makes the texture's
 16-colour indexed picture and scales the down frame by HeartGold's size rule:
 Baby Lugia's round-17 `build_sheets.py` wrote RGBA strips of about 1,170
 colours, its down frame 21 rows, which neither the texture tool nor the size
-rule takes.
+rule takes; its sheets went through the converter with `--paired`, its
+shiny sheet colouring the parts its own way.
 
 No right-facing row: HeartGold draws a follower's right-facing frames as the exact mirror of
 its left-facing ones (checked on Pikachu's), so the conversion mirrors row 3. ChatGPT's own
@@ -123,9 +125,14 @@ of its own. In the game: the shop and the bag's Items pocket
 
 - **Transparent background:** magenta out, and the letters' holes with it.
 - **Scaling:** the picture is reduced by area average from the subject's own
-  pixels, so its edges take no magenta.
+  pixels, so its edges take no magenta. Pixel art drawn N screen pixels a
+  pixel is read back at its own pixels instead (`--grid N`), each cell the
+  colour most of it has, and placed as drawn: Baby Lugia's battle pictures.
 - **Colours:** 15 at most, chosen together for all the frames that share a
-  palette, in 15-bit colour; index 0 is the transparent one.
+  palette, in 15-bit colour; index 0 is the transparent one. With `--grid`
+  (the battle pictures) or `--paired` (the follower) each pixel's normal and
+  shiny colour pair is an index, past 15 the cheapest merged into their
+  nearest; otherwise the shiny pictures vote each index's colour.
 - **The PNG's palette must have exactly 16 entries.** A 256-entry palette made
   the battle load 256 colours over every other sprite's: the whole battle was
   garbled (found with Bramblin).
@@ -137,7 +144,8 @@ of its own. In the game: the shop and the bag's Items pocket
   follows the pictures, and `import_sprite_offsets.py` stands the front as it
   is drawn in its frame, over a shadow its size. The size of a new species'
   battle picture follows the community sprites of the same Pokemon (Bramblin
-  42 wide).
+  42 wide), or, pixel art, its own pixels (Baby Lugia 75x62, as tall as the
+  median of retail's fronts of 1.3 to 1.5 m).
 - **Party icon:** `poke_icon_<n>.png`, 32x64, in one of the three palettes all
   icons share (`poke_icon_00000000.pal`); the species' palette number is in
   `sPokemonPalNoBySpeciesAndForm` (src/pokemon_icon_idx.c): the conversion
@@ -163,12 +171,13 @@ of its own. In the game: the shop and the bag's Items pocket
   player's Pokemon -- the 256-colour trap showed only with the back loaded).
   `front1.lift` finds the foe's front on the screen in its PNG's colours, a
   shiny one in its back's: Bramblin's scenarios are `bramblin_pictures.json`
-  and `bramblin_pictures_shiny.json`.
+  and `bramblin_pictures_shiny.json`, Baby Lugia's `baby_lugia_pictures.json`
+  and `baby_lugia_pictures_shiny.json`.
 
 The converter is `tools/newgold/devkit/sprites/convert_chatgpt.py`: it takes
 the species, each picture and the follower sheet's rows (`--rows`, top to
 bottom; a right row is not used), writes into the tree and runs what follows
-the pictures; its docstring has Bramblin's command. It refuses a species not
+the pictures; its docstring has Bramblin's command and Baby Lugia's. It refuses a species not
 in `own_art.py`. The sprite editor will host it.
 
 ## A species the reference has not got
