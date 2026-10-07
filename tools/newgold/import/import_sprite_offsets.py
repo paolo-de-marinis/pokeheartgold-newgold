@@ -53,6 +53,11 @@ shadow is sized by its picture instead (shadow_size): retail sized its
 shadows by hand, and the opaque pixels of a front's first frame give retail's
 size for 71% of its 492 fronts with a shadow, and one a size off but for 7.
 
+A species whose pictures are Paolo's own (own_art.py) has no record the
+reference placed for them: its front stands where convert_chatgpt.py drew
+it in its frame, the offset its clearance (ov12 moves it neither up nor
+down), over a shadow centred under it and sized by the picture.
+
     import_sprite_offsets.py [--reference PATH] [--write]
 """
 import argparse
@@ -89,6 +94,7 @@ GROUNDED = {"SPECIES_TIRTOUGA", "SPECIES_CLAWITZER", "SPECIES_STEENEE", "SPECIES
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from heights import SPRITES, png_rows  # noqa: E402
 from wotbl import build_narc, read_narc  # noqa: E402
+import own_art  # noqa: E402
 
 
 def reference_records(reference):
@@ -182,6 +188,8 @@ def records(reference):
             ours = heights[4 * number + 3] or heights[4 * number + 2]
             if owner != number:
                 record[Y_OFFSET:] = out[owner][Y_OFFSET:]
+            elif name[len("SPECIES_"):] in own_art.SPECIES:
+                record[Y_OFFSET:] = struct.pack("<bbB", ours[0], 0, shadow_size(picture))
             elif name in GROUNDED:
                 if tail in UNPLACED:
                     record[-1] = shadow_size(picture)

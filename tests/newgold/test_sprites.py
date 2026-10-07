@@ -8,15 +8,32 @@ gender's files empty only where that gender does not exist. An importer that
 left the female empty when it matched the male sent 504 species' females
 into a data abort on the way into battle (2026-09-22, a female Sylveon
 against Falkner).
+
+A species listed in tools/newgold/import/own_art.py has pictures Paolo had
+drawn (docs/newgold/DEVKIT-PROMPTS.md) where the reference has a
+placeholder, written into the tree by convert_chatgpt.py. Every importer
+that writes those files has to keep the tree's for it: one that copied the
+reference's again would put Bulbasaur's battle pictures back on Bramblin.
 """
 
 import json
+import os
 import re
+import sys
 import unittest
+from pathlib import Path
 
 from test_level_cap import ROOT, function
 
+sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+import import_followers  # noqa: E402
+import import_icons  # noqa: E402
+import import_species  # noqa: E402
+import import_sprites  # noqa: E402
+import own_art  # noqa: E402
+
 SPRITES = ROOT / "files/poketool/pokegra/pokegra"
+REFERENCE = Path(os.environ.get("HG_ENGINE_NEWGOLD_REFERENCE", import_followers.REFERENCE))
 
 
 def species_numbers():
@@ -80,6 +97,56 @@ class SpriteTests(unittest.TestCase):
         for name in ("GetMonSpriteCharAndPlttNarcIdsEx", "GetMonPicHeightBySpeciesGenderForm"):
             with self.subTest(function=name):
                 self.assertIn("PicSpecies_FemaleForm(species, gender)", function(pokemon, name))
+
+
+def palette_table():
+    source = import_icons.INDEX.read_text()
+    start = source.index("sPokemonPalNoBySpeciesAndForm[] = {")
+    return [int(v) for v in re.findall(r"^\s*(\d+),", source[start:source.index("\n};", start)], re.M)]
+
+
+def icon_of(name):
+    return import_icons.ICONS / f"poke_icon_{import_icons.first_added_icon() + import_species.added_species().index(name):08d}.png"
+
+
+def member_of(name):
+    header = import_followers.MMODEL_H.read_text()
+    return int(re.search(rf"^#define MMODEL_FOLLOWER_MON_{name}\s+(\d+)", header, re.M).group(1))
+
+
+class OwnArtImportTests(unittest.TestCase):
+    def test_the_list_names_species_the_tree_has(self):
+        self.assertIn("BRAMBLIN", own_art.SPECIES)
+        self.assertEqual(set(own_art.SPECIES) - set(import_species.added_species()), set())
+
+    def test_the_battle_pictures_are_not_copied_again(self):
+        """import_sprites.py copies every added species' battle pictures but
+        Paolo's."""
+        copied = import_sprites.species_to_copy()
+        self.assertEqual(set(own_art.SPECIES) & set(copied), set())
+        self.assertEqual(len(copied), len(import_species.added_species()) - len(own_art.SPECIES))
+
+    def test_the_icon_and_its_palette_are_the_tree_s(self):
+        """import_icons.py keeps the tree's icon, and gives it the shared
+        palette that icon is drawn in, which is the table's."""
+        if not REFERENCE.exists():
+            self.skipTest("no reference checkout")
+        plan = {name: (picture, number) for name, picture, number, _theirs in import_icons.plan(REFERENCE)}
+        first = import_species.added_species().index
+        header = (ROOT / "include/pokemon_icon_idx.h").read_text()
+        first_palette = int(re.search(r"#define FIRST_ADDED_PALETTE\s+(\d+)", header).group(1))
+        for name in own_art.SPECIES:
+            picture, number = plan[name]
+            self.assertEqual(picture, icon_of(name), name)
+            self.assertEqual(number, import_icons.drawn_in(icon_of(name), import_icons.shared_palettes()), name)
+            self.assertEqual(palette_table()[first_palette + first(name)], number, name)
+
+    def test_the_follower_is_the_tree_s(self):
+        """import_followers.py keeps the texture the tree has for the species,
+        at whatever member it writes it to."""
+        for name in own_art.SPECIES:
+            kept = (import_followers.MMODEL_DIR / f"mmodel_{member_of(name):08d}.NSBTX").read_bytes()
+            self.assertEqual(import_followers.texture(name, f"data/graphics/sprites/{name.lower()}"), kept, name)
 
 
 if __name__ == "__main__":

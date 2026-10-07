@@ -32,6 +32,9 @@ Bulbasaur's picture (blob 257f6588), a placeholder, in konefr's range too,
 and its table names none of them; a Core Form can have a follower of its own
 only once one is drawn for it.
 
+A species whose pictures are Paolo's own (own_art.py) keeps the texture the
+tree has for it.
+
     import_followers.py [--reference PATH] [--write]
 """
 
@@ -54,6 +57,8 @@ SPECIES_H = ROOT / "include/constants/species.h"
 IDX_H = ROOT / "include/constants/follow_mon_idx.h"
 MMODEL_H = ROOT / "include/constants/mmodel.h"
 SPRITES_H = ROOT / "include/constants/sprites.h"
+
+import own_art  # noqa: E402
 
 FIRST_ADDED = 508               # SPECIES_LILLIPUP, after the egg and the alternate forms
 RETAIL_MODELS = 566             # FOLLOWER_MON_BULBASAUR .. FOLLOWER_MON_ARCEUS_DARK
@@ -204,6 +209,16 @@ def nsbtx(directory, reference=REFERENCE):
     return bytes(out)
 
 
+def texture(name, directory, reference=REFERENCE):
+    """A model's texture: the reference's picture in directory built, or for
+    a species whose pictures are Paolo's own (own_art.py) the tree's, kept
+    from the member mmodel.h gives it now."""
+    if name not in own_art.SPECIES:
+        return nsbtx(directory, reference)
+    member = re.search(rf"^#define MMODEL_FOLLOWER_MON_{name}\s+(\d+)", MMODEL_H.read_text(), re.M)
+    return (MMODEL_DIR / f"mmodel_{int(member.group(1)):08d}.NSBTX").read_bytes()
+
+
 def texture_width(data):
     """A follower BTX0's frame width: the texture is eight frames, square."""
     units = int.from_bytes(data[0x20:0x22], "little")
@@ -340,7 +355,7 @@ def main():
     args = parser.parse_args()
 
     models, lut = plan(args.reference)
-    textures = {name: nsbtx(directory, args.reference) for name, directory, *_ in models}
+    textures = {name: texture(name, directory, args.reference) for name, directory, *_ in models}
     for name, _directory, _size, _bounce, parameter in models:
         sprite_parameter(name, texture_width(textures[name]), parameter)
     shared = len(lut) - len(models)

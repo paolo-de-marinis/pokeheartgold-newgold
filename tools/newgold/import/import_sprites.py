@@ -11,6 +11,9 @@ bad egg and the alternate forms, whose pictures come from otherpoke.narc
 instead, so those fourteen slots are padded here purely to keep the numbering
 aligned; nothing reads them.
 
+A species whose pictures are Paolo's own (own_art.py) keeps the tree's: the
+reference's are a placeholder for it.
+
 Usage: import_sprites.py REFERENCE_CHECKOUT [--write]
 """
 
@@ -24,6 +27,7 @@ ROOT = Path(__file__).resolve().parents[3]
 SPRITES = ROOT / "files/poketool/pokegra/pokegra"
 
 import import_species  # noqa: E402
+import own_art  # noqa: E402
 
 # The pictures the padding slots borrow. Only their size matters: a palette is
 # built from whichever of the two genders has a picture, and a slot with none
@@ -73,6 +77,13 @@ def copy_species(source, destination, write, can_be_female=True):
     return actions
 
 
+def species_to_copy():
+    """The added species whose pictures come from the reference, by name, with
+    their identifiers: all but those whose pictures are Paolo's own."""
+    return {name: 508 + index for index, name in enumerate(import_species.added_species())
+            if name not in own_art.SPECIES}
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("reference", type=Path)
@@ -99,7 +110,7 @@ def main():
                 (destination / "female" / name).write_bytes(b"")
 
     personal = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
-    names = {name: 508 + index for index, name in enumerate(import_species.added_species())}
+    names = species_to_copy()
     for name, identifier in names.items():
         source = reference / name.lower()
         if not source.is_dir():
@@ -111,7 +122,8 @@ def main():
         emptied += sum(1 for origin, _ in actions if origin is None)
 
     print(f"padding slots {padded[0]} to {padded[-1]}" if padded else "no padding needed")
-    print(f"{len(names)} species: {copied} files copied, {emptied} female pictures left empty")
+    print(f"{len(names)} species: {copied} files copied, {emptied} female pictures left empty; "
+          f"{len(own_art.SPECIES)} kept as Paolo's own")
     if not args.write:
         print("nothing written; pass --write")
 

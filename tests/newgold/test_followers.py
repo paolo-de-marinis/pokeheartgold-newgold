@@ -151,13 +151,14 @@ class FollowerTests(unittest.TestCase):
 
     def test_the_textures_are_the_reference_s(self):
         """Each added texture is what the reference's tool builds from its
-        picture; retail's are what it builds from retail's."""
+        picture, but Paolo's own (own_art.py), kept as the tree has them
+        (test_sprites); retail's are what it builds from retail's."""
         if not import_followers.REFERENCE.exists():
             self.skipTest("no reference checkout")
         models, _ = import_followers.plan()
         for i, (name, directory, *_rest) in enumerate(models):
             data = (import_followers.MMODEL_DIR / f"mmodel_{863 + i:08d}.NSBTX").read_bytes()
-            self.assertEqual(data, import_followers.nsbtx(directory), name)
+            self.assertEqual(data, import_followers.texture(name, directory), name)
         self.assertEqual((import_followers.MMODEL_DIR / "mmodel_00000297.NSBTX").read_bytes(),
                          import_followers.nsbtx("data/graphics/sprites/bulbasaur"))
 
