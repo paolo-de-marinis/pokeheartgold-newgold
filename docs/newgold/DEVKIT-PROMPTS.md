@@ -13,8 +13,14 @@ shiny colours, the party icon and the follower are Paolo's, where the
 reference had Bulbasaur's battle pictures. A species whose pictures are
 Paolo's is listed in `tools/newgold/import/own_art.py`, which every importer
 that writes those files reads, so a re-import keeps his pictures instead of
-the reference's; the next species (Baby Lugia) is one line there, then one
-run of the converter.
+the reference's; the next species is one line there, then one run of the
+converter.
+
+**Baby Lugia is a species** (2026-10-07), the first one New Gold has that
+the reference has not: species 1438, No. 1026, Lugia's data for now with a
+size, a name and a cry of its own (below, "A species the reference has not
+got"). Its pictures are Lugia's until Paolo's are converted; then it joins
+`own_art.py` as Bramblin did.
 
 The prompts are in English, which ChatGPT follows best. Replace `<NAME>` with
 the Pokemon's or the item's English name.
@@ -28,6 +34,12 @@ the Pokemon's or the item's English name.
 - **Few colours**: the DS gives a picture 16, one of them transparent.
 - **The exact size, or an exact multiple** (each pixel a clean block); the
   conversion copes with less, but scaling a painted picture down blurs it.
+- **The shiny colours each part with the index the normal colours it with.**
+  The DS keeps one picture for both and two palettes of 15 colours over the
+  same indices, so a part the normal draws in one colour and the shiny in two
+  (or the other way round) is one more pair; past 15 pairs two of them become
+  one, and the normal or the shiny loses a shade there. Baby Lugia's drawings
+  have 21 pairs.
 
 ## Battle pictures: front and back
 
@@ -61,7 +73,11 @@ Two frames side by side, each exactly 32x32 pixels (or each 128x128 with every p
 Small, chunky, cute proportions, dark 1-pixel outline, at most 12 colours, no anti-aliasing, flat pure magenta (#FF00FF) background, the Pokémon facing the viewer slightly to the left, feet near the bottom of each frame. Faithful to <NAME>'s official design.
 ```
 
-The game has no shiny icons: one picture serves both.
+The game has no shiny icons: one picture serves both. **The frame is 32x32,
+and the Pokemon at most 32 wide and 24 tall in it**, as every retail icon is,
+in the colours of one of the three palettes all icons share
+(`poke_icon_00000000.pal`): a bigger drawing can only be shrunk, and shrunk it
+is no longer pixel art (Baby Lugia's icon was drawn in 50x50 frames).
 
 ## Following Pokemon (overworld)
 
@@ -72,6 +88,12 @@ Top-down three-quarter view as in the DS overworld, dark 1-pixel outline, at mos
 ```
 
 And the same sheet again in the official shiny colours, shape for shape.
+
+A sheet goes through the converter (`--rows`), which makes the texture's
+16-colour indexed picture and scales the down frame by HeartGold's size rule:
+Baby Lugia's round-17 `build_sheets.py` wrote RGBA strips of about 1,170
+colours, its down frame 21 rows, which neither the texture tool nor the size
+rule takes.
 
 No right-facing row: HeartGold draws a follower's right-facing frames as the exact mirror of
 its left-facing ones (checked on Pikachu's), so the conversion mirrors row 3. ChatGPT's own
@@ -148,3 +170,49 @@ the species, each picture and the follower sheet's rows (`--rows`, top to
 bottom; a right row is not used), writes into the tree and runs what follows
 the pictures; its docstring has Bramblin's command. It refuses a species not
 in `own_art.py`. The sprite editor will host it.
+
+## A species the reference has not got
+
+A species New Gold adds beyond konefr's reference is one entry in
+`tools/newgold/import/own_species.py`: the species it is like, whose data it
+takes until its own is written; its name, ten characters at most, as the
+names bank has them ("Baby Lugia"); its National Dex number; its height and
+weight in decimetres and hectograms and as the Dex prints them; the Dex's
+size page; and how many semitones its cry is raised over its like's. The
+file's docstring has the rules every importer follows for it. Then the
+importers, from `tools/newgold/import` with the reference's checkout as REF,
+in the order Baby Lugia's commit ran them:
+
+```text
+import_species.py REF --write             # appended after the reference's last
+import_hidden_abilities.py REF --write
+wotbl.py extend REF --write               # the like's learnset as the tree has it
+import_egg_moves.py REF --write
+import_tutor_moves.py REF --write
+import_baby_species.py REF --write        # it hatches as itself
+import_trainer_seed.py --write
+import_species_text.py --write
+import_dex_text.py --write
+import_dex_metrics.py REF --write
+../devkit/dex_areas.py
+git show 4c8176ea1^:files/data/sound/gs_sound_data.sdat > ../../../files/data/sound/gs_sound_data.sdat
+import_cries.py REF --write               # the like's samples, played higher
+import_footprints.py REF --write          # the like's footprint
+import_sprites.py REF --write             # the like's pictures, until Paolo's
+heights.py write
+import_sprite_offsets.py --write
+import_icons.py REF --write
+import_followers.py --write               # it walks as its like
+```
+
+A re-run of any of them keeps it, and none moves it. What is not generated
+is its Dex page: `src/pokedex.c` names it in SpeciesToDexSpecies (it is no
+form), DexSpeciesIsInvalid (it has a page), SpeciesToNationalDexNo (its
+number) and DexFlagNo, which keeps its flags at the place after Pecharunt's,
+in room HeartGold's save has (SAVE-LAYOUT.md). One more own species fits
+there, at 1043, with a line in each of the four; a third needs a save
+layout. savedit's `dex_place` follows DexFlagNo. Not obtainable in the game
+until a wild table, a trainer or a gift names it: `savedit.py --party
+BABY_LUGIA:12` and the diagnostics build's `gDiagForceBattleSpecies` (1438)
+reach it. Its scenarios are `cry_baby_lugia.json`, its cry in battle, and
+`dex_baby_lugia.json`, its Dex page, AREA and SIZE.
