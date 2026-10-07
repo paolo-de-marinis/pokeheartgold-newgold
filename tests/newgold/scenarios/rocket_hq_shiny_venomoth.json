@@ -1,0 +1,14 @@
+{
+  "about": "konefr's shiny Rocket HQ experiment Pokemon (8fe483d5a, hg-engine's shiny lock; TRPOKE_SHINY here since 09608b06a): Grunt 18 on the Rocket HQ's B2F leads with a Venomoth his table shiny-locks, and the battle has it shiny -- its BattleMon's personality and OT ID pass SHINY_CHECK, the bit the sparkle and the shiny palette are drawn from -- while his Dustox, not locked, is not. The save is a scratch copy of Paolo's Route 29 save put beside the Grunt on B2F (savedit --where, the tile west of his, facing him), Lance's healing scene there marked done (VAR_UNK_40A9 1, FLAG_UNK_1E5 hiding Lance and his Dragonite), and a Typhlosion at 80 that knocks each Pokemon out in one turn.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "TYPHLOSION:80", "--var", "VAR_UNK_40A9=1", "--flag", "FLAG_UNK_1E5",
+           "--where", "248:37:25:3"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceDamageRoll": 1},
+  "steps": ["fight:0:0",
+            {"expect": {"battler1.species": "SPECIES_VENOMOTH", "battler1.shiny": 1}},
+            "fight:0:1",
+            {"expect": {"battler1.species": "SPECIES_DUSTOX", "battler1.shiny": 0}},
+            "fight", "field"],
+  "expect": {"lines": ["sent out Venomoth!", "The opposing Venomoth fainted!", "sent out Dustox!", "sent out Grafaiai!"],
+             "trainer:TRAINER_TEAM_ROCKET_GRUNT_18": 1}
+}
