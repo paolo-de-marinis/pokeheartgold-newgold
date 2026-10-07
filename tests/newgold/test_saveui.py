@@ -897,6 +897,25 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual([i["item"] for i in out["bag"]["keyItems"]], [items["ITEM_OLD_ROD"]])
         self.assertEqual(len(self.backups()), 2, "a refused change writes nothing")
 
+    def test_one_picker_for_every_list(self):
+        """Every list the page picks from is its own picker (combo: the move
+        field's list, keys and look), none a native datalist or select; the
+        bag's add field and lists are drawn from the open pocket's own items
+        (/api/data's "items", the other games' "others" only when asked),
+        never from every item -- Paolo's Potion among the Poké Balls -- and
+        the held item's from what the bag's GIVE offers."""
+        page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
+        for native in ("<datalist", ' list="'):
+            self.assertFalse(native in page, native)
+        for picker in ("combo(form.elements.species", "combo(form.elements.nature", "combo(form.elements.held",
+                       "inputs.map(el => combo(el", "combo($(\"#boxsel\")",
+                       "const input = $(\"#additem\");\n    combo(input,"):
+            self.assertTrue(picker in page, picker)
+        self.assertTrue(re.search(r"rows: \(\) => \[\.\.\.pocket\.items, \.\.\.\(view\.others \? pocket\.others : \[\]\)\]", page),
+                        "the add field: the open pocket's items")
+        self.assertTrue(re.search(r"for \(const id of \[\.\.\.p\.items, \.\.\.\(others \? p\.others : \[\]\)\]\)[^}]*!r\.give", page),
+                        "the held item: GIVE's items, pocket by pocket")
+
     def test_files(self):
         self.edit("trainer", {"money": 1})
         self.assertEqual(self.ok("/api/duplicate", {"f": "gyms/test.sav", "name": "copia"})["f"], "copia.sav")

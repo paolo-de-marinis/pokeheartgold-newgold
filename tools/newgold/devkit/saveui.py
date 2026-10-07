@@ -1504,7 +1504,8 @@ def tables():
     field_moves = lambda: {badge: [sv.move_numbers()[m[len("MOVE_"):]] for m in moves if m[len("MOVE_"):] in sv.move_numbers()]
                            for badge, moves in sv.field_move_badges().items()}
     players = {"PLAYER_GENDER_MALE": sv.PLAYER_GENDER_MALE, "PLAYER_GENDER_FEMALE": sv.PLAYER_GENDER_FEMALE}
-    return {"species": sv.species_table(), "moves": sv.move_table(),
+    types = lambda row: list(dict.fromkeys(t[len("TYPE_"):] for t in sv.personal_records()[row["id"]]["types"]))  # noqa: E731
+    return {"species": [{**row, "types": types(row)} for row in sv.species_table()], "moves": sv.move_table(),
             "items": [{**row, "limit": sv.item_limit(row["id"])} if row["pocket"] else row
                       for row in sv.item_table().values()],
             "natures": sv.bank(sv.NATURE_NAMES), "nature_mods": sv.nature_mods(),

@@ -97,6 +97,19 @@ label.f input, label.f select { color: var(--text); font-size: 14px; }
 .badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px 12px; }
 .badges label { display: flex; gap: 6px; align-items: center; }
 .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+/* Where changes wait for "Salva modifiche": the bar stays on screen, at the bottom, however long the list. */
+.stickybar { position: sticky; bottom: 0; z-index: 4; background: var(--panel); border-top: 1px solid var(--border);
+             margin: 12px -16px -16px; padding: 10px 16px; box-shadow: 0 -4px 10px rgba(0,0,0,.06); }
+.stickybar.idle { box-shadow: none; }
+.qty { display: inline-flex; align-items: center; gap: 2px; }
+.qty input { width: 4.6em; text-align: right; }
+.qty button { padding: 2px 8px; height: 32px; }
+.switch { display: inline-flex; gap: 6px; align-items: center; }
+.hint { font-size: 12px; color: var(--muted); }
+.radiocards { display: grid; gap: 6px; }
+.radiocards label { display: flex; gap: 8px; align-items: center; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+.radiocards label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0; }
 
 .mon { border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--panel); display: flex; flex-direction: column; gap: 6px; }
 .mon .head { display: flex; gap: 8px; align-items: center; }
@@ -133,11 +146,14 @@ th { font-size: 12px; color: var(--muted); font-weight: 600; }
 td.num, th.num { text-align: right; }
 .scroll { overflow-x: auto; }
 .seg { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
-.seg button.on { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
+.seg button.on, .seg button[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); }
 
 .dexlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2px 14px; }
 .dexrow { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-radius: 6px; }
-.dexrow.dirty { background: var(--accent-soft); }
+.dexrow.dirty, tr.dirty td { background: var(--accent-soft); }
+.dexrow .tag { white-space: nowrap; }
+.itemgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 2px 14px; }
+.itemgrid .dexrow .nm { white-space: normal; }
 .dexrow .n { width: 3.2em; color: var(--muted); font-variant-numeric: tabular-nums; }
 .dexrow .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dexrow label { display: flex; align-items: center; gap: 3px; font-size: 12px; color: var(--muted); }
@@ -150,16 +166,22 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
 .dfoot { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; padding: 12px 16px; border-top: 1px solid var(--border); }
 .dfoot .left { margin-right: auto; display: flex; gap: 8px; flex-wrap: wrap; }
 .stats6 { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
-.stats6 input { width: 100%; }
+.stats6 input[type=number] { width: 100%; }
+.hyper { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; margin-top: 4px; }
+.hyper label { display: flex; gap: 5px; align-items: center; font-size: 12.5px; color: var(--muted); }
 .moves4 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; }
 .mvfield { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .mvin { position: relative; }
 .mvin input { width: 100%; }
 .mvtags { display: flex; flex-wrap: wrap; gap: 3px; min-height: 18px; }
-.mvlist { position: absolute; top: calc(100% + 2px); left: 0; right: 0; z-index: 5; max-height: 280px; overflow: auto;
+.mvlist { min-width: min(320px, 86vw); position: absolute; top: calc(100% + 2px); left: 0; right: 0; z-index: 5; max-height: 280px; overflow: auto;
           background: var(--panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
 .mvopt { padding: 5px 8px; cursor: pointer; display: flex; flex-wrap: wrap; gap: 3px; align-items: baseline; }
 .mvopt:hover { background: var(--accent-soft); }
+.mvopt.cur .nm::before { content: "✓ "; color: var(--accent); }
+.mvopt img.ic { align-self: center; margin: -4px 2px -4px -2px; }
+.mvmore { padding: 6px 8px; font-size: 12.5px; }
+.mvin { position: relative; }
 .mvopt.on { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
 .mvopt .nm { font-weight: 600; margin-right: 4px; }
 .mvhead { padding: 6px 8px 2px; font-size: 12px; font-weight: 650; color: var(--muted); border-top: 1px solid var(--border); position: sticky; top: 0; background: var(--panel); }
@@ -192,6 +214,7 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
   .top { padding: 8px 12px; }
   .layout { padding: 8px; gap: 10px; }
   #editor { padding: 12px; }
+  .stickybar { margin: 12px -12px -12px; padding: 10px 12px; }
   .pc { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 3px; }
   .pc button { height: 52px; }
 }
@@ -274,8 +297,6 @@ details summary { cursor: pointer; }
 
 <dialog id="dlg"></dialog>
 <div id="toasts" aria-live="polite"></div>
-<datalist id="dl-species"></datalist>
-<datalist id="dl-items"></datalist>
 
 <script>
 "use strict";
@@ -314,7 +335,7 @@ const typeBadges = types => (types || []).map(t => { const [name, colour] = TYPE
 const typeNames = types => (types || []).map(t => (TYPES[t] || [t])[0]).join("/");
 
 const S = {data: null, lib: null, f: null, save: null, tab: "trainer", box: 0, pocket: null,
-           dex: {changes: new Map(), q: "", show: "all"}, tm: {changes: new Map(), q: "", show: "all"},
+           dex: {changes: new Map(), q: "", show: "all"}, tm: {changes: new Map(), q: "", show: "all"}, bagch: new Map(), bagView: {},
            storyq: "", storyshow: "all", storyopen: new Set(), melon: false, busy: 0};
 const store = {
   get(k) { try { return localStorage.getItem("saveui." + k); } catch { return null; } },
@@ -343,20 +364,17 @@ async function run(fn, ok) {
 }
 
 // ---- names -----------------------------------------------------------
-const ref = (label, id) => `${label} #${id}`;
-// A field's text to an id: "Name #N" when the name is that row's own (as ref() wrote it), else a name alone;
-// null for text that is neither -- a "#N" behind other text does not decide it.
-function parseRef(value, index, label) {
-  value = (value || "").trim();
-  if (!value) return 0;
-  const m = value.match(/^(.*?)\s*#(\d+)$/);
-  if (m && (label(+m[2]) ?? "").toLowerCase() === m[1].toLowerCase()) return +m[2];
-  const hit = index.get(value.toLowerCase());
-  return hit === undefined ? null : hit;
+// A form's own words, Italian where the page has them: SLOWPOKE_GALARIAN is "Slowpoke · Galar".
+const FORM_WORDS_IT = {GALARIAN: "Galar", ALOLAN: "Alola", HISUIAN: "Hisui", PALDEAN: "Paldea", MEGA: "Mega",
+  ORIGIN: "Originale", ALTERED: "Alterata", SKY: "Cielo", LAND: "Terra", ATTACK: "Attacco", DEFENSE: "Difesa", SPEED: "Velocità",
+  HEAT: "Calore", WASH: "Lavaggio", FROST: "Gelo", FAN: "Vortice", MOW: "Taglio", FEMALE: "♀", MALE: "♂", WHITE: "Bianco", BLACK: "Nero"};
+function formWords(row) {
+  const base = S.speciesByName.get(row.name);
+  if (!base || base.id === row.id) return "";
+  const own = new Set(base.const.split("_"));
+  return row.const.split("_").filter(w => !own.has(w)).map(w => FORM_WORDS_IT[w] ?? w[0] + w.slice(1).toLowerCase()).join(" ");
 }
-const speciesOf = v => parseRef(v, S.speciesIndex, id => S.species.get(id)?.label);
-const moveOf = v => parseRef(v, S.moveIndex, id => S.moves.get(id)?.name);
-const itemOf = v => parseRef(v, S.itemIndex, id => S.items.get(id)?.label ?? S.items.get(id)?.name);
+const speciesLabel = id => { const r = S.species.get(id); if (!r) return `#${id}`; const f = formWords(r); return f ? `${r.name} · ${f}` : r.name; };
 // gNatureStatMods' row: 1 on the stat the nature raises, -1 on the one it lowers, over the stats after HP.
 function natureLabel(n) {
   const name = S.data.natures[n], mods = S.data.nature_mods[n] || [], after = stats().slice(1);
@@ -383,14 +401,21 @@ function buildLists() {
   S.steps = new Map(d.story.map(s => [s.id, s]));
   S.itemByConst = new Map(d.items.map(r => [r.const, r]));
   S.speciesByConst = new Map(d.species.map(r => [r.const, r]));
-  S.speciesIndex = firstWins(d.species.filter(r => r.pick), r => r.label);
-  S.moveIndex = new Map(d.moves.filter(r => r.id).map(r => [r.name.toLowerCase(), r.id]));
-  const items = d.items.filter(usableItem), named = new Set();
-  for (const r of items) {   // a name printed twice gets its constant after the first
-    r.label = named.has(r.name.toLowerCase()) ? `${r.name} (${r.const.replace(/^ITEM_/, "")})` : r.name;
-    named.add(r.name.toLowerCase());
+  S.speciesByName = new Map();
+  for (const r of d.species) if (!S.speciesByName.has(r.name)) S.speciesByName.set(r.name, r);
+  // An item's name: a machine's as the bag prints it, with its move; where two of this game's items print the same,
+  // the constant after the first (another game's item never takes a name from one of this game's).
+  const named = new Set();
+  for (const r of [...d.items].sort((a, b) => b.game - a.game || a.id - b.id)) {
+    if (!r.id || !r.name) continue;
+    const machine = d.machines.find(m => m.item === r.id);
+    r.label = machine ? `${machineName(r.name)} ${S.moves.get(machine.move)?.name ?? ""}`.trim() : r.name;
+    if (named.has(r.label.toLowerCase())) r.label += ` (${r.const.replace(/^ITEM_/, "")})`;
+    named.add(r.label.toLowerCase());
   }
-  S.itemIndex = firstWins(items, r => r.label);
+  // Who gives an item in the story: the steps that write it, for the key items' "lo dà".
+  S.givenBy = new Map();
+  for (const st of d.story) for (const w of st.writes) if (w[0] === "item" && w[2] > 0 && !S.givenBy.has(w[1])) S.givenBy.set(w[1], st.id);
   // The words of a trainer's or a place's name, which a flag's name may hold as they are.
   S.properWords = new Set([...d.story.map(s => s.trainer), ...d.maps.map(r => r.name)].flatMap(n => (n || "").toUpperCase().split(/[^A-Z0-9]+/)).filter(Boolean));
   buildStepNames();
@@ -407,24 +432,103 @@ function buildLists() {
   // The maps as the Posizione list shows them: by region, section, the section's own ground first.
   S.mapOrder = d.maps.slice().sort((a, b) => a.region.localeCompare(b.region) || (a.name || "~").localeCompare(b.name || "~")
     || S.mainMaps.has(b.id) - S.mainMaps.has(a.id) || a.const.localeCompare(b.const));
-  const opts = (rows, label) => rows.map(r => `<option value="${esc(ref(label(r), r.id))}">`).join("");
-  $("#dl-species").innerHTML = opts(d.species.filter(r => r.pick), r => r.label);
-  $("#dl-items").innerHTML = opts(items, r => r.label);
+  // The species a Pokemon may be made as, each with its icon, its form, its types and its Dex number.
+  S.speciesRows = d.species.filter(r => r.pick).map(r => comboRow(r.id, speciesLabel(r.id), {
+    before: iconImg({species: r.id, form: 0}, 32), after: typeBadges(r.types),
+    tags: [`n. ${S.speciesByName.get(r.name)?.id ?? r.id}`, formWords(r) ? {text: "forma", cls: "pre"} : ""],
+    words: `${r.const} ${r.id} ${typeNames(r.types)} ${r.name}`}));
 }
-// A typed name to its id; where two rows print the same, the lower number.
-function firstWins(rows, label) {
-  const index = new Map();
-  for (const r of rows) if (!index.has(label(r).toLowerCase())) index.set(label(r).toLowerCase(), r.id);
-  return index;
-}
-// Not the recipes and the Legends: Arceus items, which only share a name with HeartGold's.
-const usableItem = r => r.id && r.name && r.name !== "???" && !/UNUSED|_RECIPE$|_PLA$/.test(r.const);
 // A map's own words, out of its constant: MAP_VIOLET_POKECENTER_1F is "Violet Pokecenter 1F".
 const mapWords = r => r.const.replace(/^MAP_/, "").split("_").map(w => /\d/.test(w) ? w : w[0] + w.slice(1).toLowerCase()).join(" ");
 const mapTitle = r => !r ? "" : !r.name || r.name.toLowerCase() === mapWords(r).toLowerCase() ? r.name || mapWords(r) : `${r.name} · ${mapWords(r)}`;
-const speciesRef = id => id ? ref(S.species.get(id)?.label ?? `#${id}`, id) : "";
-const moveRef = id => id ? ref(S.moves.get(id)?.name ?? `#${id}`, id) : "";
-const itemRef = id => id ? ref(S.items.get(id)?.label ?? S.items.get(id)?.name ?? `#${id}`, id) : "";
+
+// ---- the picker -----------------------------------------------------------
+// One picker for every long list -- species, moves, held items, a pocket's items, natures, places, boxes -- the
+// move field's look and ways: type to filter (every word, in the name, the tags, the number), the list under the
+// field, the keyboard (↑ ↓, Pag↑ Pag↓, Home and Fine on the list, Invio picks, Esc closes) and the mouse. A row is
+// {id, label: what the field shows once picked, text: what the search reads, html: the row, group: the header it
+// goes under}. The field shows the label alone, its id in input.dataset.id; left without a pick it shows again the
+// value it had -- emptied, when `clearable`, it is none. The current value is marked and in view when the list opens.
+const COMBO_ROWS = 150;     // rows drawn at once: typing narrows the rest
+let comboCount = 0;
+function combo(input, {rows, onPick, empty = "Nessun risultato", clearable = false}) {
+  const id = `combo${++comboCount}`;
+  Object.assign(input, {autocomplete: "off", spellcheck: false});
+  for (const [k, v] of [["role", "combobox"], ["aria-autocomplete", "list"], ["aria-expanded", "false"], ["aria-controls", id]]) input.setAttribute(k, v);
+  const list = Object.assign(document.createElement("div"), {id, className: "mvlist", hidden: true});
+  list.setAttribute("role", "listbox");
+  (input.closest(".mvin") || input.parentElement).append(list);
+  let shown = [], active = -1;
+  const same = (a, b) => String(a ?? "") === String(b ?? "");
+  const labelOf = v => v === "" || v === undefined ? "" : rows().find(r => same(r.id, v))?.label ?? input.value;
+  const close = () => { list.hidden = true; input.setAttribute("aria-expanded", "false"); input.removeAttribute("aria-activedescendant"); active = -1; };
+  const mark = (i, block = "nearest") => {
+    $$(".mvopt.on", list).forEach(o => o.classList.remove("on"));
+    active = Math.max(0, Math.min(shown.length - 1, i));
+    const o = $(`#${id}-${active}`, list);
+    if (!o) return;
+    o.classList.add("on"); o.scrollIntoView({block});
+    input.setAttribute("aria-activedescendant", o.id);
+  };
+  const open = q => {
+    const words = (q || "").toLowerCase().split(/\s+/).filter(Boolean), all = rows();
+    const hits = words.length ? all.filter(r => words.every(w => r.text.includes(w))) : all;
+    shown = hits.slice(0, COMBO_ROWS);
+    let group;
+    list.innerHTML = shown.map((r, i) => {
+      const head = r.group !== undefined && r.group !== group ? `<div class="mvhead">${r.group}</div>` : "";
+      group = r.group;
+      return `${head}<div class="mvopt${same(r.id, input.dataset.id) ? " cur" : ""}" role="option" id="${id}-${i}" data-i="${i}">${r.html}</div>`;
+    }).join("") + (hits.length > shown.length ? `<div class="mvmore muted">… e altri ${hits.length - shown.length}: scrivi per restringere</div>` : "")
+      || `<div class="mvopt muted">${esc(typeof empty === "function" ? empty() : empty)}</div>`;
+    list.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+    active = -1;
+    const cur = shown.findIndex(r => same(r.id, input.dataset.id));
+    if (!words.length && cur >= 0) mark(cur, "center");
+  };
+  const pick = i => {
+    const r = shown[i];
+    close();
+    if (!r) return;
+    input.value = r.label; input.dataset.id = r.id;
+    onPick?.(r);
+  };
+  list.addEventListener("mousedown", ev => { ev.preventDefault(); const o = ev.target.closest("[data-i]"); if (o) pick(+o.dataset.i); });
+  // On focus the whole list, the field's text selected so typing replaces it; text typed before (the window left
+  // and come back to) keeps its search.
+  input.addEventListener("focus", () => {
+    if (input.value === labelOf(input.dataset.id)) { input.select(); open(""); } else open(input.value);
+  });
+  input.addEventListener("input", () => open(input.value));
+  input.addEventListener("blur", () => {
+    close();
+    if (clearable && !input.value.trim() && input.dataset.id) { input.dataset.id = ""; onPick?.(null); }
+    else input.value = labelOf(input.dataset.id);
+  });
+  input.addEventListener("keydown", ev => {
+    const step = {ArrowDown: 1, ArrowUp: -1, PageDown: 10, PageUp: -10}[ev.key];
+    if (step) {
+      ev.preventDefault();
+      if (list.hidden) open(input.value === labelOf(input.dataset.id) ? "" : input.value);
+      if (shown.length) mark(active < 0 ? (step > 0 ? 0 : shown.length - 1) : active + step);
+    } else if ((ev.key === "Home" || ev.key === "End") && !list.hidden && active >= 0) {
+      ev.preventDefault(); mark(ev.key === "Home" ? 0 : shown.length - 1);
+    } else if (ev.key === "Enter") {     // never the form's submit from here
+      ev.preventDefault();
+      if (!list.hidden && (active >= 0 || shown.length === 1)) pick(Math.max(active, 0));
+      else close();
+    } else if (ev.key === "Escape" && !list.hidden) {
+      ev.preventDefault(); ev.stopPropagation(); close(); input.value = labelOf(input.dataset.id); input.select();
+    }
+  });
+  return {open, close, set(v) { input.dataset.id = v ?? ""; input.value = labelOf(v ?? ""); }};
+}
+// A row's tags, and the text the search reads: the name, the tags, any other words.
+const tagHtml = tags => tags.filter(Boolean).map(t => typeof t === "string" ? `<span class="tag">${esc(t)}</span>` : `<span class="tag ${t.cls || ""}" ${t.title ? `title="${esc(t.title)}"` : ""}>${esc(t.text)}</span>`).join("");
+const comboRow = (id, name, {tags = [], before = "", after = "", group, words = "", label} = {}) => ({id, group, label: label ?? name,
+  text: `${name} ${tags.filter(Boolean).map(t => typeof t === "string" ? t : t.text).join(" ")} ${words}`.toLowerCase(),
+  html: `${before}<span class="nm">${esc(name)}</span>${after}${tagHtml(tags)}`});
 
 // ---- library -----------------------------------------------------------
 async function loadLibrary() {
@@ -730,10 +834,24 @@ async function showHistory(f) {
 }
 
 // ---- the open save -------------------------------------------------------
-async function openSave(f) {
+// The lists whose changes wait for "Salva modifiche" -- the bag's pockets, the machines, the Pokédex -- are not
+// thrown away without asking: opening another save, reloading, undoing, or leaving the page.
+function clearStaged() { S.dex.changes.clear(); S.tm.changes.clear(); S.bagch.clear(); }
+async function mayDrop(doing) {
+  const n = unsaved();
+  if (!n) return true;
+  const r = await ask("Modifiche non salvate", `<p>${n === 1 ? "C'è un cambio" : `Ci sono ${n} cambi`} della Borsa o del Pokédex non ancora salvati.
+    ${esc(doing)} li butta via.</p>`, [["", "Torna indietro"], ["drop", "Buttali via e continua", "danger"]]);
+  if (r.value !== "drop") return false;
+  clearStaged();
+  return true;
+}
+window.addEventListener("beforeunload", ev => { if (unsaved()) { ev.preventDefault(); ev.returnValue = ""; } });
+async function openSave(f, asked = false) {
+  if (!asked && S.f && S.f !== f && !await mayDrop("Aprire un altro salvataggio")) return;
   const detail = await run(() => api(`/api/save?f=${encodeURIComponent(f)}`));
   if (!detail) return;
-  if (S.f !== f) { S.dex.changes.clear(); S.tm.changes.clear(); }
+  if (S.f !== f) clearStaged();
   S.f = f;
   store.set("f", f);
   showSave(detail);
@@ -788,10 +906,11 @@ async function edit(op, args, ok = "Salvato (backup fatto)", version = S.save.ve
   } finally { S.busy--; }
 }
 $("#undo").addEventListener("click", async () => {
+  if (!await mayDrop("Annullare l'ultima modifica")) return;
   S.busy++;
   try {
     const out = await api("/api/undo", {f: S.f, version: S.save.version});
-    toast("Ultima modifica annullata"); S.dex.changes.clear(); S.tm.changes.clear(); showSave(out); loadLibrary();
+    toast("Ultima modifica annullata"); clearStaged(); showSave(out); loadLibrary();
   } catch (e) {
     toast(e.message, true);
     if (e.code === "stale") await openSave(S.f);
@@ -1241,13 +1360,14 @@ function renderBoxArea() {
   $("#boxarea").innerHTML = `<div class="zonehead"><h3>Box</h3><span class="muted">Il gioco è aperto sul box ${boxes.current + 1}.</span></div>
     <div class="boxnav">
       <button type="button" class="small" data-boxnav="-1" aria-label="Box precedente">◀</button>
-      <select id="boxsel" aria-label="Box">${boxes.names.map((n, b) => `<option value="${b}" ${b === S.box ? "selected" : ""}>${b + 1}. ${esc(n)} (${count(b)}/${boxes.mons[b].length})</option>`).join("")}</select>
+      <span class="mvin" style="width:min(320px, 60vw)"><input id="boxsel" aria-label="Box" placeholder="Cerca un box per nome o numero"></span>
       <button type="button" class="small" data-boxnav="1" aria-label="Box successivo">▶</button>
     </div>
     <div class="pc">${mons.map((m, s) => `<button type="button" class="${m ? "full" : ""}" data-slot="${s}" data-pos="box:${S.box}:${s}" ${m ? "data-mon" : ""}
       title="${m ? (m.ok ? esc(`${m.nickname || m.species_name} · Lv. ${m.level}${m.egg ? "" : " · " + typeNames(m.types)}${unlearnt(m)}`) : "Checksum errato") : `Posto ${s + 1}, vuoto: clic per aggiungere, o trascina qui un Pokémon`}">${m ? iconImg(m, 48) : ""}</button>`).join("")}</div>
     <p class="note">Clic su un posto occupato per modificarlo; su uno vuoto per aggiungere un Pokémon.</p>`;
-  $("#boxsel").onchange = ev => goBox(+ev.target.value);
+  combo($("#boxsel"), {rows: () => boxes.names.map((n, b) => comboRow(b, `${b + 1}. ${n}`, {tags: [`${count(b)}/${boxes.mons[b].length}`,
+    b === boxes.current ? "aperto nel gioco" : ""]})), onPick: r => goBox(+r.id)}).set(S.box);
   $("#boxarea").onclick = ev => {
     if (DRAG.suppress) return;
     const nav = ev.target.closest("[data-boxnav]");
@@ -1376,16 +1496,44 @@ function sourceTag(s) {
 }
 const sourceTags = sources => sources.map(s => `<span class="tag src${s.from ? " pre" : ""}">${esc(sourceTag(s))}</span>`).join("");
 
-// `typed` is what the user had entered when the dialog was turned down:
-// it opens again with it, not with the Pokemon's values, and with `why` on top.
+// The held-item picker's rows: "Nessuno", then what the bag's GIVE offers ("give": no key item, no machine, no
+// Apricorn), pocket by pocket, with how many the bag holds; never a Mail for a box Pokemon (the PC refuses it).
+// The other games' items only when asked; an item the Pokemon holds already is there whatever it is.
+function heldRows(box, others, holding) {
+  const bag = new Map(Object.values(S.save.bag).flat().map(r => [r.item, r.quantity]));
+  const mail = new Set(S.data.pockets.find(p => p.const === "POCKET_MAIL")?.items ?? []);
+  const rows = [comboRow(0, "Nessuno", {label: "", words: "niente"})];
+  for (const p of S.data.pockets) {
+    for (const id of [...p.items, ...(others ? p.others : [])]) {
+      const r = S.items.get(id);
+      if (id !== holding && (!r.give || (box && mail.has(id)))) continue;
+      rows.push(comboRow(id, r.label, {group: esc(pocketName(p.const)), words: r.const,
+        tags: [bag.get(id) ? `ne hai ${bag.get(id)}` : "", r.game ? "" : {text: "di altri giochi", cls: "pre"},
+               r.give ? "" : {text: "nel gioco non si dà", cls: "warn"}]}));
+    }
+  }
+  if (holding && !rows.some(r => r.id === holding)) {
+    const r = S.items.get(holding);
+    rows.push(comboRow(holding, r?.label ?? `#${holding}`, {group: "Quello che ha ora", tags: [{text: "nel gioco non si dà", cls: "warn"}]}));
+  }
+  return rows;
+}
+const natureRows = () => S.data.natures.map((name, n) => {
+  const mods = S.data.nature_mods[n] || [], after = stats().slice(1), up = mods.indexOf(1), down = mods.indexOf(-1);
+  return comboRow(n, name, {label: natureLabel(n), tags: up < 0 ? ["neutra"] : [`+${after[up]}`, `−${after[down]}`]});
+});
+
+// `typed` holds the values entered when the dialog was turned down (ids, not text):
+// it opens again with them, not with the Pokemon's, and with `why` on top.
 function monDialog(where, m, typed = null, version = S.save.version, why = "") {
   const isNew = !m;
-  const lim = S.data.limits, six = range(S.data.stats.length);
+  const lim = S.data.limits, six = range(S.data.stats.length), box = where.kind === "box";
   // A new one's friendship is its species' own (personal.json), filled in when the species is chosen.
-  const v = m || {species: 0, level: 5, nature: 0, item: 0, moves: [], ivs: six.map(() => lim.iv), evs: six.map(() => 0), hyper: six.map(() => false), friendship: ""};
+  const v = {...(m || {species: 0, level: 5, nature: 0, item: 0, moves: [], ivs: six.map(() => lim.iv), evs: six.map(() => 0),
+                       hyper: six.map(() => false), friendship: ""}), ...(typed || {})};
   const title = isNew ? (where.kind === "party" ? "Nuovo Pokémon in squadra" : `Nuovo Pokémon · box ${where.box + 1}, posto ${where.slot + 1}`)
                       : (where.kind === "party" ? `Squadra, posto ${where.slot + 1}` : `Box ${where.box + 1}, posto ${where.slot + 1}`);
-  const moves = range(lim.moves).map(i => v.moves[i]?.id ?? 0);
+  const moves = range(lim.moves).map(i => typed ? typed.moves[i] ?? 0 : v.moves[i]?.id ?? 0);
   const perStat = (name, vals, max) => `<div class="stats6">${stats().map((s, i) => `<label class="f">${s}<input type="number" name="${name}${i}" min="0" max="${max}" value="${vals[i]}"></label>`).join("")}</div>`;
   const summary = isNew ? "" : `<div class="monsum">${iconImg(m, 64)}<dl class="kv">
       <dt>Soprannome</dt><dd>${esc(m.nickname)}${m.nicknamed ? "" : ` <span class="muted">(nome della specie)</span>`}</dd>
@@ -1397,16 +1545,19 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     </dl></div>`;
   const body = `${why ? `<p class="lock" style="margin:0 0 12px">${esc(why)}</p>` : ""}${summary}
     <div class="form">
-      <label class="f" style="grid-column:1/-1">Specie<input name="species" list="dl-species" required value="${esc(speciesRef(v.species))}" placeholder="Cerca per nome…"></label>
+      <label class="f" style="grid-column:1/-1">Specie<span class="mvin"><input name="species" required placeholder="Cerca per nome, numero o tipo…"></span>
+        <span class="mvtags" id="sptags"></span></label>
       <label class="f">Livello<input type="number" name="level" min="1" max="${lim.level}" required value="${v.level}"></label>
-      <label class="f">Natura<select name="nature">${S.data.natures.map((_, n) => `<option value="${n}" ${n === v.nature ? "selected" : ""}>${esc(natureLabel(n))}</option>`).join("")}</select></label>
-      <label class="f" id="abilitybox">Abilità<select name="ability" required><option value="">Scegli la specie</option></select></label>
-      <label class="f">Strumento tenuto<input name="held" list="dl-items" value="${esc(itemRef(v.item))}" placeholder="Nessuno"></label>
+      <label class="f">Natura<span class="mvin"><input name="nature" required placeholder="Cerca: nome o statistica (Att, Vel…)"></span></label>
+      <div class="f" id="abilitybox" style="grid-column:1/-1"><span class="hint">Abilità</span><div class="seg" id="abilities" style="margin:0"><span class="muted">Scegli la specie</span></div>
+        <input type="hidden" name="ability" value=""></div>
+      <label class="f">Strumento tenuto<span class="mvin"><input name="held" placeholder="Nessuno"></span>
+        <span class="switch hint"><input type="checkbox" id="heldall"> anche di altri giochi</span></label>
       <label class="f">Amicizia<input type="number" name="friendship" min="0" max="255" value="${v.friendship}" placeholder="della specie"></label>
     </div>
+    ${box ? "" : `<p class="note">Una Lettera data qui è vuota: il gioco scrive il messaggio quando la si dà dalla Borsa.</p>`}
     <div class="box" id="movesbox"><div class="sechead"><h3 style="margin:0">Mosse</h3><button type="button" class="small" id="learn">Mosse per livello</button></div>
-      <div class="moves4">${moves.map((id, i) => `<div class="mvfield"><div class="mvin"><input name="move${i}" value="${esc(moveRef(id))}" placeholder="Mossa ${i + 1}" aria-label="Mossa ${i + 1}"
-        autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mvlist"></div><div class="mvtags" id="mvtags${i}"></div></div>`).join("")}</div>
+      <div class="moves4">${moves.map((_, i) => `<div class="mvfield"><div class="mvin"><input name="move${i}" placeholder="Mossa ${i + 1}" aria-label="Mossa ${i + 1}"></div><div class="mvtags" id="mvtags${i}"></div></div>`).join("")}</div>
       <p class="note" id="presetnote" hidden></p>
       <p class="note">Si sceglie solo tra le mosse che la specie può imparare, a qualsiasi livello, ognuna con tutte le sue fonti: livello (Evoluzione: quando si evolve),
         MT e MN, insegnanti, mosse uovo, la mossa della forma (Rotom), e le stesse delle pre-evoluzioni ("da …"). Una mossa che il Pokémon ha già ma che la specie non impara
@@ -1414,15 +1565,16 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
         controlla: una mossa imparata salendo di livello va bene a qualsiasi livello, perché un uovo la eredita a livello 1 se
         entrambi i genitori la conoscono (per una specie che non nasce da un uovo, invece, sta a te). Una mossa che il Pokémon già conosce tiene i suoi PP (salvando, quelli oltre il massimo scendono al massimo); una nuova li ha pieni.
         "Mosse per livello" mette quelle che il gioco dà alla specie a quel livello, le stesse che arrivano cambiando specie; finché
-        non le tocchi, seguono il livello se lo cambi.</p></div>
+        non le tocchi, seguono il livello se lo cambi. Svuota un campo per togliere la mossa.</p></div>
     <div class="box"><div class="sechead"><h3 style="margin:0">IV</h3><span><button type="button" class="small" data-iv="${lim.iv}">Tutti ${lim.iv}</button> <button type="button" class="small" data-iv="0">Tutti 0</button></span></div>${perStat("iv", v.ivs, lim.iv)}
-      <div class="stats6">${stats().map((s, i) => `<label class="f"><span><input type="checkbox" name="ht${i}" ${v.hyper?.[i] ? "checked" : ""}> <span class="star">★</span> Allenamento Pro</span></label>`).join("")}</div>
-      <p class="note">Allenamento Pro (Tappo d'argento, Tappo d'oro): la statistica conta come se l'IV fosse 31; l'IV vero resta, per Introforza e per l'allevamento.</p></div>
+      <div class="hyper" title="Allenamento Pro (Tappo d'argento, Tappo d'oro)">${stats().map((s, i) => `<label><input type="checkbox" name="ht${i}" ${v.hyper?.[i] ? "checked" : ""}><span class="star">★</span> Pro</label>`).join("")}</div>
+      <p class="note">★ Pro, l'Allenamento Pro (Tappo d'argento, Tappo d'oro): la statistica conta come se l'IV fosse 31; l'IV vero resta, per Introforza e per l'allevamento.</p></div>
     <div class="box"><div class="sechead"><h3 style="margin:0">EV</h3><span class="muted" id="evsum"></span></div>${perStat("ev", v.evs, lim.ev)}</div>
     <p class="note">Cambiare specie sostituisce subito mosse e abilità con quelle che il gioco dà alla nuova specie: le mosse al livello scelto, l'abilità
       che il Pokémon avrebbe come quella specie (la nascosta se ha la nascosta e la specie ne ha una, altrimenti prima o seconda come la sua personalità);
       natura, livello, IV, EV e strumento restano, genere e nome (se non ha un soprannome) si ricalcolano. Cambiare natura cambia la personalità,
-      tenendo genere, abilità e cromaticità (una menta viene tolta).</p>`;
+      tenendo genere, abilità e cromaticità (una menta viene tolta). Una Lastra tenuta da Arceus, una ROM da Silvally e la Grigiosfera da Giratina
+      ne cambiano la forma, come quando si danno nel gioco.</p>`;
   const buttons = isNew ? [["save", "Aggiungi", "primary"], ["", "Annulla"]]
     : [["save", "Salva", "primary"], ["", "Chiudi"],
        [where.kind === "party" ? "deposit" : "withdraw", where.kind === "party" ? `Sposta nel box ${S.box + 1}` : "Sposta in squadra", "", "left"],
@@ -1430,47 +1582,51 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
   // The species whose rules the dialog holds: its moves (with their sources), and those the Pokemon knows already.
   // `preset`: the move fields hold the game's moves for the species at the level, untouched since; `asked`: the
   // last request, so an older answer arriving late is dropped.
-  const st = {species: 0, moves: [], legal: new Map(), known: new Set(), preset: false, asked: 0};
+  const st = {species: 0, moves: [], legal: new Map(), known: new Set(), preset: false, asked: 0, abilities: []};
+  let fields = null;      // the values read when the dialog closes
   return ask(title, body, buttons, d => {
     const form = $("form", d), evsum = () => {
       const t = six.reduce((a, i) => a + (+form.elements["ev" + i].value || 0), 0);
       $("#evsum", d).textContent = `totale ${t} / ${lim.ev_sum}`; $("#evsum", d).style.color = t > lim.ev_sum ? "var(--danger)" : "";
       form.elements.ev0.setCustomValidity(t > lim.ev_sum ? `Gli EV sono al massimo ${lim.ev_sum} in tutto (ora ${t})` : "");
     };
-    if (typed) for (const [k, v] of Object.entries(typed)) if (form.elements[k]) form.elements[k].value = v;
     evsum();
     form.addEventListener("input", ev => { if (ev.target.name?.startsWith("ev")) evsum(); });
     $$("[data-iv]", d).forEach(b => b.onclick = () => six.forEach(i => form.elements["iv" + i].value = b.dataset.iv));
-    const inputs = range(lim.moves).map(i => form.elements["move" + i]), sel = form.elements.ability;
-    const tagLine = value => {
-      const id = moveOf(value);
-      if (id === null) return `<span class="tag bad">nome sconosciuto: sceglila dall'elenco</span>`;
+    const inputs = range(lim.moves).map(i => form.elements["move" + i]), ability = form.elements.ability;
+    const tagLine = id => {
       if (!id || !st.species) return "";
       if (st.legal.has(id)) return sourceTags(st.legal.get(id));
       if (st.known.has(id)) return `<span class="tag warn">${esc(NOT_LEARNT)}</span>`;
       return `<span class="tag bad">${esc(S.species.get(st.species)?.name ?? "")} non la impara</span>`;
     };
-    const showTags = () => inputs.forEach((el, i) => { $(`#mvtags${i}`, d).innerHTML = tagLine(el.value); });
+    const showTags = () => inputs.forEach((el, i) => { $(`#mvtags${i}`, d).innerHTML = tagLine(+el.dataset.id || 0); });
     const flash = el => { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); };
+    // The ability: the species' two or three, a button each, as the game keeps them by slot.
+    const drawAbilities = (chosen, stale) => {
+      ability.value = chosen ?? "";
+      $("#abilities", d).innerHTML = (stale ? `<span class="tag warn">${esc(m.ability_name)} non è sua: scegline una</span>` : "")
+        + st.abilities.map(a => `<button type="button" data-slot="${a.slot}" aria-pressed="${String(a.slot) === String(ability.value)}">${esc(a.name)}${a.slot === lim.hidden_slot ? ` <span class="tag">nascosta</span>` : ""}</button>`).join("");
+    };
+    $("#abilities", d).onclick = ev => { const b = ev.target.closest("[data-slot]"); if (b) drawAbilities(+b.dataset.slot, false); };
     // mode: null keeps what the fields hold, "moves" puts the preset in, "all" the preset and the ability.
-    async function load(species, mode, ability) {
+    async function load(species, mode, chosen) {
       st.species = species;
       const asked = ++st.asked;
       const same = !!m && species === m.species, lv = Math.min(lim.level, Math.max(1, +form.elements.level.value || 1));
       const r = await run(() => api(`/api/species?species=${species}&form=${same ? m.form : 0}&level=${lv}&hidden=${m?.hidden_ability ? 1 : 0}&bit=${m?.ability_bit ?? 0}`));
       if (!r || asked !== st.asked) return;           // another species or level was asked for meanwhile
-      Object.assign(st, {moves: r.moves, legal: new Map(r.moves.map(x => [x.id, x.sources])), known: new Set(same ? m.moves.map(x => x.id) : [])});
-      const was = sel.value;
+      Object.assign(st, {moves: r.moves, legal: new Map(r.moves.map(x => [x.id, x.sources])), known: new Set(same ? m.moves.map(x => x.id) : []),
+                         abilities: r.abilities});
       // An ability the species would not give (m.ability_ok false) is not silently replaced: one is chosen here.
       const stale = same && !m.ability_ok && mode !== "all";
-      sel.innerHTML = (stale ? `<option value="">Scegli: ${esc(m.ability_name)} non è sua</option>` : "")
-        + r.abilities.map(a => `<option value="${a.slot}">${esc(a.name)}${a.slot === lim.hidden_slot ? " (nascosta)" : ""}</option>`).join("");
-      sel.value = mode === "all" ? r.ability : mode === "moves" ? was : ability ?? (same ? (m.ability_ok ? m.ability_slot : "") : r.ability);
-      if (!stale && !sel.value) sel.value = r.ability;
+      const was = ability.value;
+      drawAbilities(mode === "all" ? r.ability : mode === "moves" ? was : chosen ?? (same ? (m.ability_ok ? m.ability_slot : "") : r.ability), stale && chosen === undefined);
+      if (ability.value === "" && !stale) drawAbilities(r.ability, false);
       const name = S.species.get(species)?.name ?? `#${species}`;
       if (isNew && (mode === "all" || form.elements.friendship.value === "")) form.elements.friendship.value = r.friendship;
       if (mode) {
-        inputs.forEach((el, i) => el.value = moveRef(r.preset[i] || 0));
+        inputs.forEach((el, i) => moveCombos[i].set(r.preset[i] || ""));
         st.preset = true;
         $("#presetnote", d).hidden = false;
         $("#presetnote", d).textContent = mode === "all" ? `Mosse e abilità sostituite con quelle che il gioco dà a ${name} al livello ${lv}.`
@@ -1480,71 +1636,54 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
       }
       showTags();
     }
-    const first = typed ? speciesOf(typed.species) : v.species;
-    if (first) load(first, null, typed?.ability);
-    form.elements.species.addEventListener("input", () => {
-      const sp = speciesOf(form.elements.species.value);
-      if (!sp || sp === st.species) return;
+    // The species: a row a species with its icon, its form, its types and its Dex number.
+    const speciesBox = combo(form.elements.species, {rows: () => S.speciesRows, empty: "Nessuna specie con questo nome", onPick: r => {
+      const sp = +r.id;
+      $("#sptags", d).innerHTML = typeBadges(S.species.get(sp)?.types);
+      if (sp === st.species) return;
       if (!m || sp !== m.species) return load(sp, "all");
       // Back to the Pokemon's own species: its own moves and ability again, not the species' preset.
-      inputs.forEach((el, i) => el.value = moveRef(m.moves[i]?.id ?? 0));
+      inputs.forEach((el, i) => moveCombos[i].set(m.moves[i]?.id ?? ""));
       st.preset = false;
       $("#presetnote", d).hidden = false;
       $("#presetnote", d).textContent = `Di nuovo ${S.species.get(sp)?.name ?? ""}: mosse e abilità sono tornate quelle del Pokémon.`;
       load(sp, null);
-    });
+    }});
+    const natureBox = combo(form.elements.nature, {rows: natureRows});
+    const holding = m?.item || 0, heldAll = $("#heldall", d);
+    const heldBox = combo(form.elements.held, {rows: () => heldRows(box, heldAll.checked, holding), clearable: true,
+                                               empty: "Nessuno strumento con questo nome (prova «anche di altri giochi»)"});
+    // Each move field: the species' moves, a row a move with all its sources, none another field holds.
+    const moveCombos = inputs.map(el => combo(el, {clearable: true, empty: () => st.species ? "Nessuna mossa della specie ha questo nome" : "Scegli prima la specie",
+      rows: () => {
+        const taken = new Set(inputs.filter(x => x !== el).map(x => +x.dataset.id).filter(Boolean));
+        return st.moves.filter(x => !taken.has(x.id)).map(x => ({id: x.id, label: S.moves.get(x.id)?.name ?? `#${x.id}`,
+          text: `${S.moves.get(x.id)?.name ?? ""} ${x.sources.map(sourceTag).join(" ")}`.toLowerCase(),
+          html: `<span class="nm">${esc(S.moves.get(x.id)?.name ?? `#${x.id}`)}</span>${sourceTags(x.sources)}`}))
+          .concat(st.known.has(+el.dataset.id) && !st.legal.has(+el.dataset.id)
+            ? [comboRow(+el.dataset.id, S.moves.get(+el.dataset.id)?.name ?? "", {tags: [{text: "la conosce già", cls: "warn"}]})] : []);
+      },
+      onPick: () => { st.preset = false; showTags(); }}));
+    // The moves the Pokemon knows, by id: a name is not looked up in a list that has not loaded yet.
+    const nameOfMove = id => S.moves.get(id)?.name ?? "";
+    inputs.forEach((el, i) => { el.dataset.id = moves[i] || ""; el.value = moves[i] ? nameOfMove(moves[i]) : ""; });
+    speciesBox.set(v.species || ""); natureBox.set(v.nature); heldBox.set(v.item || "");
+    if (v.species) $("#sptags", d).innerHTML = typeBadges(S.species.get(v.species)?.types);
+    if (v.species) load(v.species, null, typed?.ability);
     // Moves the game gave for one level follow the level while they are left alone.
     form.elements.level.addEventListener("input", () => { if (st.preset && st.species) load(st.species, "moves"); });
     $("#learn", d).onclick = () => {
-      const sp = speciesOf(form.elements.species.value);
-      if (!sp) return toast("Scegli prima la specie", true);
-      load(sp, "moves");
+      if (!st.species) return toast("Scegli prima la specie", true);
+      load(st.species, "moves");
     };
-    // Each move field is a search over the species' moves, a row a move with all its sources.
-    const list = Object.assign(document.createElement("div"), {id: "mvlist", className: "mvlist", hidden: true});
-    list.setAttribute("role", "listbox");
-    let cur = null, shown = [], active = -1;
-    const close = () => { list.hidden = true; cur?.setAttribute("aria-expanded", "false"); cur?.removeAttribute("aria-activedescendant"); active = -1; };
-    const open = (el, q) => {
-      cur = el; el.parentElement.append(list);
-      // A move another field already holds is not offered: the game never teaches a move twice.
-      const taken = new Set(inputs.filter(x => x !== el).map(x => moveOf(x.value)).filter(Boolean));
-      shown = st.moves.filter(x => !taken.has(x.id) && (!q || (S.moves.get(x.id)?.name ?? "").toLowerCase().includes(q.toLowerCase())));
-      active = -1;
-      list.innerHTML = shown.map((x, i) => `<div class="mvopt" role="option" id="mvopt${i}" data-i="${i}"><span class="nm">${esc(S.moves.get(x.id)?.name ?? `#${x.id}`)}</span>${sourceTags(x.sources)}</div>`).join("")
-        || `<div class="mvopt muted">${st.species ? "Nessuna mossa della specie ha questo nome" : "Scegli prima la specie"}</div>`;
-      list.hidden = false;
-      el.setAttribute("aria-expanded", "true");
-    };
-    const mark = i => {
-      $$(".mvopt.on", list).forEach(o => o.classList.remove("on"));
-      active = i;
-      const o = $(`#mvopt${i}`, list);
-      if (!o) return;
-      o.classList.add("on"); o.scrollIntoView({block: "nearest"});
-      cur.setAttribute("aria-activedescendant", o.id);
-    };
-    const pick = i => { cur.value = moveRef(shown[i].id); st.preset = false; close(); showTags(); };
-    list.addEventListener("mousedown", ev => { ev.preventDefault(); const o = ev.target.closest("[data-i]"); if (o) pick(+o.dataset.i); });
-    for (const el of inputs) {
-      el.addEventListener("focus", () => open(el, ""));
-      el.addEventListener("input", () => { st.preset = false; open(el, el.value.replace(/\s*#\d+\s*$/, "").trim()); showTags(); });
-      el.addEventListener("blur", close);
-      el.addEventListener("keydown", ev => {
-        if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
-          ev.preventDefault();
-          if (list.hidden) open(el, "");
-          const step = ev.key === "ArrowDown" ? 1 : -1;
-          if (shown.length) mark(((active < 0 && step < 0 ? 0 : active) + step + shown.length) % shown.length);
-        } else if (ev.key === "Enter") {     // never the dialog's submit from here
-          ev.preventDefault();
-          if (!list.hidden && (active >= 0 || shown.length === 1)) pick(Math.max(active, 0));
-          else close();
-        } else if (ev.key === "Escape" && !list.hidden) {
-          ev.preventDefault(); close();
-        }
-      });
-    }
+    // What the dialog closes with: the ids, not the names the fields show.
+    d.addEventListener("close", () => {
+      const e = form.elements;
+      fields = {species: +e.species.dataset.id || 0, level: +e.level.value, nature: +e.nature.dataset.id, item: +e.held.dataset.id || 0,
+                ability: e.ability.value === "" ? undefined : +e.ability.value, friendship: e.friendship.value,
+                moves: inputs.map(el => +el.dataset.id || 0), ivs: six.map(i => +e["iv" + i].value), evs: six.map(i => +e["ev" + i].value),
+                hyper: six.map(i => e["ht" + i].checked)};
+    }, {once: true, capture: true});
   }).then(async r => {
     if (!r.value) return;
     const base = where.kind === "party" ? {slot: where.slot} : {box: where.box, slot: where.slot};
@@ -1555,24 +1694,16 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     }
     if (r.value === "deposit") return edit("deposit", {slot: where.slot, box: S.box}, `Spostato nel box ${S.box + 1}`, version);
     if (r.value === "withdraw") return edit("withdraw", base, "Spostato in squadra", version);
-    const d = r.data, bad = [];
-    const species = speciesOf(d.species), item = itemOf(d.held);
-    const mv = range(lim.moves).map(i => moveOf(d["move" + i]));
-    if (!species) bad.push("specie");
-    if (item === null) bad.push("strumento");
-    mv.forEach((x, i) => x === null && bad.push(`mossa ${i + 1}`));
-    const again = why => { toast(why, true); return monDialog(where, m, d, version, why); };
-    if (bad.length) return again(`Non riconosco: ${bad.join(", ")}. Sceglili dall'elenco.`);
-    const wrong = st.species === species ? mv.filter(x => x && !st.legal.has(x) && !st.known.has(x)) : [];
-    if (wrong.length)
-      return again(`${S.species.get(species)?.name ?? ""} non può imparare ${wrong.map(x => S.moves.get(x)?.name ?? x).join(", ")}: scegli dall'elenco delle sue mosse.`);
-    const args = {...base, species, level: +d.level, nature: +d.nature, item, friendship: d.friendship === "" ? undefined : +d.friendship,
-                  ability: d.ability === "" ? undefined : +d.ability,
-                  moves: mv.filter(Boolean), ivs: six.map(i => +d["iv" + i]), evs: six.map(i => +d["ev" + i]),
-                  hyper: six.map(i => !!d["ht" + i])};
+    const f = fields;
+    const again = why => { toast(why, true); return monDialog(where, m, f, version, why); };
+    if (!f.species) return again("Scegli la specie dall'elenco.");
+    if (f.ability === undefined) return again("Scegli l'abilità.");
+    if (!f.moves.some(Boolean)) return again("Serve almeno una mossa: un Pokémon senza mosse non può lottare.");
+    const args = {...base, species: f.species, level: f.level, nature: f.nature, item: f.item, ability: f.ability,
+                  friendship: f.friendship === "" ? undefined : +f.friendship, moves: f.moves.filter(Boolean), ivs: f.ivs, evs: f.evs, hyper: f.hyper};
     const op = isNew ? (where.kind === "party" ? "party_add" : "box_add") : (where.kind === "party" ? "party_edit" : "box_edit");
     if (!await edit(op, args, isNew ? "Pokémon aggiunto" : "Pokémon salvato", version) && refusal?.code !== "stale")
-      return monDialog(where, m, d, version, refusal?.message);
+      return monDialog(where, m, f, version, refusal?.message);
   });
 }
 
@@ -1582,46 +1713,140 @@ async function dropUnreadable(op, args, where) {
   if (r.value === "yes") edit(op, args, "Pokémon tolto");
 }
 
-// ---- Box -----------------------------------------------------------------
 // ---- Borsa -----------------------------------------------------------------
+// A pocket shows and offers only its own items, as the tree files them (/api/data's pockets: this game's, and the
+// other games' apart). Every pocket is a list whose changes wait for "Salva modifiche" (op "pocket"; the machines,
+// op "machines"): the key items and the machines are ticks, as the game gives each once; the small pockets list
+// all their items with a count each (0: none); the Items pocket, too long for that, lists what it holds and adds
+// with a search over its own items.
+const bagChanges = pocket => { if (!S.bagch.has(pocket)) S.bagch.set(pocket, new Map()); return S.bagch.get(pocket); };
+const unsaved = () => [...S.bagch.values()].reduce((n, m) => n + m.size, 0) + S.tm.changes.size + S.dex.changes.size;
 function renderBag() {
   const bag = S.save.bag, pockets = S.data.pockets;
   const here = pockets.find(p => p.name === S.pocket) || pockets[0];
   S.pocket = here.name;
-  const rows = bag[S.pocket] || [], limit = id => S.items.get(id)?.limit ?? 0;
   const machines = S.data.machines.length && S.items.get(S.data.machines[0].item)?.pocket === S.pocket;
-  $("#tab").innerHTML = `<div class="seg">${pockets.map(p => `<button type="button" data-pocket="${p.name}" class="${p.name === S.pocket ? "on" : ""}">${esc(pocketName(p.const))} <span class="muted">${(bag[p.name] || []).length}</span></button>`).join("")}</div>
-    <form id="additem" class="bar" style="margin:0 0 12px">
-      <input name="what" list="dl-items" placeholder="Aggiungi uno strumento…" required style="flex:1;min-width:200px" aria-label="Strumento">
-      <input type="number" name="quantity" min="1" value="1" aria-label="Quantità">
-      <button class="primary" type="submit">Aggiungi</button>
-    </form>
-    <p class="note" style="margin-bottom:10px">Lo strumento va nella tasca che il gioco gli assegna, e al massimo quanti il gioco ne tiene: una MT è una sola (New Gold non le consuma).</p>
-    ${machines ? `<div id="machines"></div>` : `<div class="scroll"><table>
-      <tr><th>${esc(pocketName(here.const))} <span class="muted">(${rows.length} di ${S.save.info.pockets?.[here.name] ?? here.slots} posti)</span></th><th class="num">Quantità</th><th></th></tr>
-      ${rows.map(r => `<tr><td>${esc(r.name)}</td>
-        <td class="num"><input type="number" min="1" max="${limit(r.item)}" value="${r.quantity}" data-item="${r.item}" aria-label="Quantità di ${esc(r.name)}"></td>
-        <td class="num"><button type="button" class="small" data-set="${r.item}">Imposta</button> <button type="button" class="small danger" data-del="${r.item}">Togli</button></td></tr>`).join("")
-        || `<tr><td colspan="3" class="muted">Tasca vuota.</td></tr>`}
-    </table></div>`}`;
-  $(".seg").onclick = ev => { const b = ev.target.closest("[data-pocket]"); if (b) { S.pocket = b.dataset.pocket; renderBag(); } };
-  $("#additem").onsubmit = ev => {
-    ev.preventDefault();
-    const id = itemOf(ev.target.elements.what.value);
-    if (!id) return toast("Scegli lo strumento dall'elenco", true);
-    const pocket = S.items.get(id)?.pocket;
-    if (!pocket) return toast("Questo strumento non va in nessuna tasca", true);
-    const have = (bag[pocket] || []).find(r => r.item === id)?.quantity || 0;
-    S.pocket = pocket;
-    edit("item", {item: id, quantity: have + +ev.target.elements.quantity.value}, "Strumento aggiunto");
+  $("#tab").innerHTML = `<div class="seg" id="pockets" role="tablist">${pockets.map(p => {
+      const n = p.name === pocketOfMachines() ? S.tm.changes.size : bagChanges(p.name).size;
+      return `<button type="button" data-pocket="${p.name}" aria-pressed="${p.name === S.pocket}">${esc(pocketName(p.const))} <span class="muted">${(bag[p.name] || []).length}</span>${
+        n ? ` <span class="tag warn" title="Modifiche non salvate in questa tasca">${n}</span>` : ""}</button>`; }).join("")}</div>
+    <div id="pocket"></div>`;
+  $("#pockets").onclick = ev => { const b = ev.target.closest("[data-pocket]"); if (b) { S.pocket = b.dataset.pocket; store.set("pocket", S.pocket); renderBag(); } };
+  return machines ? renderMachines(here) : renderPocket(here);
+}
+const pocketOfMachines = () => S.items.get(S.data.machines[0]?.item)?.pocket;
+// The bar under a staged list: the places used, Salva and Scarta -- always there, so the list does not move.
+function pocketBar(el, pocket, used, ch, save, drop) {
+  el.className = `bar stickybar${ch.size ? "" : " idle"}`;
+  const slots = S.save.info.pockets?.[pocket.name] ?? pocket.slots;
+  el.innerHTML = `<strong class="${used > slots ? "invalid" : ""}">${used} di ${S.save.info.pockets?.[pocket.name] ?? pocket.slots} posti</strong>
+    <span class="hint">${ch.size ? `${ch.size} ${ch.size === 1 ? "cambio" : "cambi"} non ancora salvati` : "le caselle cambiano solo qui finché non salvi"}</span>
+    <span style="flex:1"></span>
+    <button type="button" class="primary" data-act="save" ${ch.size && used <= slots ? "" : "disabled"}>Salva modifiche${ch.size ? ` (${ch.size})` : ""}</button>
+    <button type="button" data-act="drop" ${ch.size ? "" : "disabled"}>Scarta</button>`;
+  el.querySelector('[data-act="save"]').onclick = save;
+  el.querySelector('[data-act="drop"]').onclick = drop;
+}
+// A count with − and + beside it, from 0 to the item's limit.
+const qtyField = (id, n, max, name) => `<span class="qty"><button type="button" class="small" data-step="-1" aria-label="Uno in meno" ${n ? "" : "disabled"}>−</button>
+  <input type="number" min="0" max="${max}" value="${n}" data-qty="${id}" aria-label="Quanti ${esc(name)}"><button type="button" class="small" data-step="1" aria-label="Uno in più" ${n < max ? "" : "disabled"}>+</button></span>`;
+const SHOW_HELD = [["all", "Tutti"], ["have", "Ce l'ho"], ["missing", "Mancano"]];
+const segButtons = (id, options, on, label) => `<div class="seg" id="${id}" role="group" aria-label="${esc(label)}" style="margin:0">${options.map(([k, l]) =>
+  `<button type="button" data-v="${k}" aria-pressed="${k === on}">${esc(l)}</button>`).join("")}</div>`;
+function renderPocket(pocket) {
+  const kind = pocket.const === "POCKET_KEY_ITEMS" ? "tick" : pocket.const === "POCKET_ITEMS" ? "pick" : "all";
+  const held = new Map((S.save.bag[pocket.name] || []).map(r => [r.item, r.quantity])), ch = bagChanges(pocket.name);
+  const view = S.bagView[pocket.name] ??= {q: "", show: "all", others: false};
+  const count = id => ch.has(id) ? ch.get(id) : held.get(id) || 0;
+  const limit = id => S.items.get(id)?.limit ?? 0;
+  const label = id => S.items.get(id)?.label ?? `#${id}`;
+  // Who gives a key item in the story; the others say what kind of item they are.
+  const tags = id => {
+    const by = kind === "tick" && S.givenBy.get(S.items.get(id)?.const);
+    return [by ? {text: `si riceve: ${S.steps.get(by)?.section || "script comuni"}`, title: `${stepLabel(by)} — spunta il passo in Allenatore per farlo come nel gioco`} : "",
+            S.items.get(id)?.game ? "" : {text: "di altri giochi", cls: "pre"}];
   };
-  if (machines) return renderMachines(here);
-  $("table", $("#tab")).onclick = ev => {
-    const b = ev.target.closest("button");
+  const own = new Set([...pocket.items, ...pocket.others]);
+  const extra = [...held.keys()].filter(id => !own.has(id));     // in the pocket, though the tree files it elsewhere now
+  // The key items a script gives first: the ones the story hands over, then those only the code uses.
+  const given = id => kind === "tick" && S.givenBy.has(S.items.get(id)?.const) ? 0 : 1;
+  const listed = kind === "pick" ? [...new Set([...held.keys(), ...ch.keys()])].filter(id => count(id) || held.has(id))
+                                 : [...pocket.items.slice().sort((a, b) => given(a) - given(b)), ...extra, ...(view.others ? pocket.others : []), ...[...ch.keys(), ...held.keys()].filter(id => pocket.others.includes(id) && !view.others)];
+  const q = view.q.trim().toLowerCase();
+  const shown = [...new Set(listed)].filter(id => (!q || `${label(id)} ${S.items.get(id)?.const ?? ""}`.toLowerCase().includes(q))
+    && (view.show === "all" || (view.show === "have") === count(id) > 0));
+  const row = id => `<div class="dexrow ${ch.has(id) ? "dirty" : ""}" data-item="${id}">
+      <span class="nm" title="${esc(S.items.get(id)?.const ?? "")}">${esc(label(id))} ${tagHtml(tags(id))}</span>
+      ${kind === "tick" ? `<label><input type="checkbox" data-k="have" ${count(id) ? "checked" : ""}> ce l'ho</label>` : qtyField(id, count(id), limit(id), label(id))}</div>`;
+  const others = pocket.others.length && kind !== "pick";
+  $("#pocket").innerHTML = `
+    ${kind === "pick" ? `<div class="bar" style="margin:0 0 10px"><span class="mvin" style="flex:1;min-width:220px"><input id="additem" placeholder="Aggiungi: cerca tra gli strumenti di questa tasca…" aria-label="Strumento da aggiungere"></span>
+        <label class="switch hint"><input type="checkbox" id="bagothers" ${view.others ? "checked" : ""}> anche di altri giochi</label></div>` : ""}
+    <div class="bar" style="margin-top:0">
+      <input type="search" id="bagq" placeholder="Cerca in questa tasca…" value="${esc(view.q)}" style="flex:1;min-width:180px" aria-label="Cerca nella tasca">
+      ${segButtons("bagshow", kind === "tick" ? [["all", "Tutti"], ["have", "Ce l'ho"], ["missing", "Mancano"]] : SHOW_HELD, view.show, "Mostra")}
+      ${others ? `<label class="switch hint"><input type="checkbox" id="bagothers" ${view.others ? "checked" : ""}> anche quelli di altri giochi (${pocket.others.length})</label>` : ""}
+    </div>
+    <p class="note">${kind === "tick" ? "Ogni strumento chiave una volta, come li dà il gioco. " : kind === "all" ? "Tutti gli strumenti di questa tasca: 0 vuol dire che non ce l'hai. " : ""}Solo gli strumenti che il gioco mette in questa tasca${
+      pocket.others.length ? `; quelli che esistono solo in altri giochi (${pocket.others.length}) si vedono solo se lo chiedi` : ""}. Le caselle cambiano solo qui finché non premi "Salva modifiche".</p>
+    <div class="itemgrid" id="bagrows">${shown.map(row).join("") || `<span class="muted">${kind === "pick" && !held.size && !ch.size ? "Tasca vuota: aggiungi uno strumento qui sopra." : "Nessuno strumento."}</span>`}</div>
+    <div id="bagbar"></div>`;
+  const used = () => new Set([...held.keys(), ...ch.keys()].filter(id => count(id) > 0)).size;
+  const bar = () => pocketBar($("#bagbar"), pocket, used(), ch, async () => {
+    const changes = [...ch].map(([item, quantity]) => ({item, quantity}));
+    if (await edit("pocket", {pocket: pocket.name, changes}, `Borsa salvata (${changes.length} ${changes.length === 1 ? "strumento" : "strumenti"})`)) { ch.clear(); renderBag(); }
+  }, () => { ch.clear(); renderBag(); });
+  bar();
+  // A change redraws its row's state and the bar, not the list: the keyboard's focus stays where it is.
+  const set = (rowEl, id, n) => {
+    n = Math.max(0, Math.min(limit(id), n));
+    if (n === (held.get(id) || 0)) ch.delete(id); else ch.set(id, n);
+    rowEl.classList.toggle("dirty", ch.has(id));
+    const box = rowEl.querySelector("[data-qty]");
+    if (box) { box.value = n; rowEl.querySelector('[data-step="-1"]').disabled = !n; rowEl.querySelector('[data-step="1"]').disabled = n >= limit(id); }
+    const tick = rowEl.querySelector('[data-k="have"]');
+    if (tick) tick.checked = n > 0;
+    bar();
+    $$("#pockets [data-pocket]").forEach(b => { if (b.dataset.pocket === pocket.name) {
+      const t = b.querySelector(".tag.warn"); if (ch.size && !t) b.insertAdjacentHTML("beforeend", ` <span class="tag warn">${ch.size}</span>`);
+      else if (t) { if (ch.size) t.textContent = ch.size; else t.remove(); } } });
+  };
+  $("#bagrows").onchange = ev => {
+    const rowEl = ev.target.closest(".dexrow");
+    if (!rowEl) return;
+    const id = +rowEl.dataset.item;
+    if (ev.target.dataset.k === "have") set(rowEl, id, ev.target.checked ? Math.max(1, held.get(id) || 1) : 0);
+    if (ev.target.dataset.qty) set(rowEl, id, +ev.target.value || 0);
+  };
+  $("#bagrows").onclick = ev => {
+    const b = ev.target.closest("[data-step]");
     if (!b) return;
-    if (b.dataset.del) return edit("item", {item: +b.dataset.del, quantity: 0}, "Strumento tolto");
-    if (b.dataset.set) return edit("item", {item: +b.dataset.set, quantity: +$(`input[data-item="${b.dataset.set}"]`).value}, "Quantità cambiata");
+    const rowEl = b.closest(".dexrow"), id = +rowEl.dataset.item;
+    set(rowEl, id, count(id) + +b.dataset.step);
   };
+  // Enter in a count saves it as typed (a change event), and leaves the field.
+  $("#bagrows").onkeydown = ev => { if (ev.key === "Enter" && ev.target.dataset.qty) { ev.preventDefault(); ev.target.blur(); } };
+  $("#bagq").oninput = ev => { view.q = ev.target.value; const pos = ev.target.selectionStart; renderPocket(pocket); const el = $("#bagq"); el.focus(); el.setSelectionRange(pos, pos); };
+  $("#bagshow").onclick = ev => { const b = ev.target.closest("[data-v]"); if (b) { view.show = b.dataset.v; renderPocket(pocket); } };
+  if ($("#bagothers")) $("#bagothers").onchange = ev => { view.others = ev.target.checked; renderPocket(pocket); };
+  if (kind === "pick") {
+    // The add field: this pocket's items, a row each with how many the bag holds and how many it takes.
+    const input = $("#additem");
+    combo(input, {empty: "Nessuno strumento di questa tasca ha questo nome", rows: () => [...pocket.items, ...(view.others ? pocket.others : [])]
+      .map(id => comboRow(id, label(id), {words: S.items.get(id)?.const, tags: [count(id) ? {text: `ne hai ${count(id)}`, cls: count(id) >= limit(id) ? "warn" : ""} : "",
+                                                                             `max ${limit(id)}`, S.items.get(id)?.game ? "" : {text: "di altri giochi", cls: "pre"}]})),
+      onPick: r => {
+        const id = +r.id;
+        input.value = ""; input.dataset.id = "";
+        if (count(id) >= limit(id)) return toast(`${label(id)}: ne hai già ${count(id)}, il massimo`, true);
+        ch.set(id, count(id) + 1);
+        if (ch.get(id) === (held.get(id) || 0)) ch.delete(id);
+        view.q = ""; view.show = "all";
+        renderPocket(pocket);
+        const box = $(`[data-qty="${id}"]`);
+        box?.closest(".dexrow").classList.add("flash"); box?.focus(); box?.select();
+      }});
+  }
 }
 // The machines pocket as a checklist, the Pokédex's way: every TM and HM the
 // tree has, in the order the bag sorts them; none is used up, so none has a
@@ -1642,32 +1867,34 @@ function renderMachines(pocket) {
   // The kinds in the order the bag sorts them, as the tree's table has them.
   const kind = m => machineName(S.items.get(m.item)?.name ?? "").split(" ")[0];
   const groups = [...new Set(S.data.machines.map(kind))];
-  $("#machines").innerHTML = `<div class="bar" id="tmhead" style="margin-top:0"></div>
-    <div class="bar">
+  $("#pocket").innerHTML = `<div id="machines">
+    <div class="bar" style="margin-top:0">
       <input type="search" id="tmq" placeholder="Cerca: numero, mossa, tipo…" value="${esc(S.tm.q)}" style="flex:1;min-width:180px" aria-label="Cerca tra le macchine">
-      <select id="tmshow" aria-label="Mostra">${[["all", "Tutte"], ["have", "Ce l'ho"], ["missing", "Mancano"]].map(([k, l]) => `<option value="${k}" ${S.tm.show === k ? "selected" : ""}>${l}</option>`).join("")}</select>
+      ${segButtons("tmshow", [["all", "Tutte"], ["have", "Ce l'ho"], ["missing", "Mancano"]], S.tm.show, "Mostra")}
     </div>
     <p class="note">Le caselle cambiano solo qui finché non premi "Salva modifiche"; il salvataggio tiene la tasca come il gioco: ogni macchina una volta, ordinate
       ${esc(groups.join(", "))}, e nessuna si consuma a ogni uso. Una macchina che un personaggio
       regala, se ce l'hai già, non te la dà: il gioco vede la tasca senza posto e il regalo non avviene.</p>
     <div class="dexlist" style="margin-top:10px">${rows.map(m => {
-      const n = count(m.item), name = machineName(S.items.get(m.item)?.label ?? S.items.get(m.item)?.name ?? `#${m.item}`);   // two named alike: the constant too
+      const n = count(m.item), name = machineName(S.items.get(m.item)?.name ?? `#${m.item}`);
       return `<div class="dexrow ${ch.has(m.item) ? "dirty" : ""}" data-item="${m.item}">
         <span class="n" style="width:4.6em">${esc(name)}</span><span class="nm">${esc(S.moves.get(m.move)?.name ?? m.move)} ${typeBadges([m.type])}</span>
         <label><input type="checkbox" data-k="have" ${n ? "checked" : ""}> ce l'ho</label></div>`;
-    }).join("") || `<span class="muted">Nessuna macchina.</span>`}</div>`;
+    }).join("") || `<span class="muted">Nessuna macchina.</span>`}</div>
+    <div id="tmhead"></div></div>`;
   // The counts and the buttons are drawn again on a change; the list is not, so the keyboard's focus stays where it is.
   const head = () => {
     const used = S.data.machines.filter(m => count(m.item) > 0).length;
-    $("#tmhead").innerHTML = `<strong>${used} di ${S.save.info.pockets?.[pocket.name] ?? pocket.slots} posti</strong> <span class="muted">${S.data.machines.length} macchine in tutto</span>
+    $("#tmhead").className = `bar stickybar${ch.size ? "" : " idle"}`;
+    $("#tmhead").innerHTML = `<strong>${used} di ${S.save.info.pockets?.[pocket.name] ?? pocket.slots} posti</strong> <span class="hint">${S.data.machines.length} macchine in tutto${ch.size ? ` · ${ch.size} ${ch.size === 1 ? "cambio" : "cambi"} non ancora salvati` : ""}</span>
       <span style="flex:1"></span>
-      <button type="button" class="primary" id="tmsave" ${ch.size ? "" : "disabled"}>Salva modifiche (${ch.size})</button>
+      <button type="button" class="primary" id="tmsave" ${ch.size ? "" : "disabled"}>Salva modifiche${ch.size ? ` (${ch.size})` : ""}</button>
       <button type="button" id="tmdrop" ${ch.size ? "" : "disabled"}>Scarta</button>`;     // always there: the list does not move
     $("#tmsave").onclick = async () => {
       const changes = [...ch].map(([item, quantity]) => ({item, quantity}));
       if (await edit("machines", {changes}, `Macchine salvate (${changes.length})`)) { ch.clear(); renderBag(); }
     };
-    $("#tmdrop").onclick = () => { ch.clear(); renderMachines(pocket); };
+    $("#tmdrop").onclick = () => { ch.clear(); renderBag(); };
   };
   head();
   const set = (row, id, n) => {
@@ -1681,7 +1908,7 @@ function renderMachines(pocket) {
     if (ev.target.dataset.k === "have") set(row, id, ev.target.checked ? Math.max(1, held.get(id) || 1) : 0);
   };
   $("#tmq").oninput = ev => { S.tm.q = ev.target.value; const pos = ev.target.selectionStart; renderMachines(pocket); const el = $("#tmq"); el.focus(); el.setSelectionRange(pos, pos); };
-  $("#tmshow").onchange = ev => { S.tm.show = ev.target.value; renderMachines(pocket); };
+  $("#tmshow").onclick = ev => { const b = ev.target.closest("[data-v]"); if (b) { S.tm.show = b.dataset.v; renderMachines(pocket); } };
 }
 
 // ---- Pokédex -------------------------------------------------------------
@@ -2022,6 +2249,7 @@ async function init() {
   const saved = store.get("tab") === "box" ? "party" : store.get("tab");   // the Box tab is part of Squadra now
   S.tab = TABS.some(t => t[0] === saved) ? saved : "trainer";
   S.box = Math.min(S.data.limits.boxes - 1, Math.max(0, +store.get("box") || 0));
+  S.pocket = store.get("pocket");
   await loadLibrary();
   if (S.lib && (S.lib.missing || (!S.lib.configured && !S.lib.files.length))) openSettings(true);
   const last = store.get("f");
