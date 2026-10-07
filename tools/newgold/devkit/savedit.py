@@ -3451,18 +3451,25 @@ def level_cap_milestones():
                            for (badge, flag, _), value in zip(tests, values)], "none": values[-1]}
 
 
-def level_cap(save):
-    """What GetLevelCap returns for this save."""
+def level_cap_reached(save):
+    """Each of GetLevelCap's tests (level_cap_milestones), whether the save
+    meets it: its badge, or its flag."""
     player, flags, badge_of = save.block("SAVE_PLAYERDATA"), constants("include/constants/flags.h", "FLAG_"), \
         {b["const"]: b for b in badges()}
+    out = []
     for m in level_cap_milestones()["milestones"]:
         if m["badge"]:
             b = badge_of[m["badge"]]
-            if player[JOHTO_BADGES if b["field"] == "johto" else KANTO_BADGES] >> b["bit"] & 1:
-                return m["cap"]
-        elif flag_is_set(save, flags[m["flag"]]):
-            return m["cap"]
-    return level_cap_milestones()["none"]
+            out.append(bool(player[JOHTO_BADGES if b["field"] == "johto" else KANTO_BADGES] >> b["bit"] & 1))
+        else:
+            out.append(flag_is_set(save, flags[m["flag"]]))
+    return out
+
+
+def level_cap(save):
+    """What GetLevelCap returns for this save: the first milestone met."""
+    caps = level_cap_milestones()
+    return next((m["cap"] for m, met in zip(caps["milestones"], level_cap_reached(save)) if met), caps["none"])
 
 
 @tree_cache

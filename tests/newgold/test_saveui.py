@@ -393,10 +393,16 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(out["party"][0]["species_name"], "Pidgey")
         self.assertIn("sei", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "party_add",
                                                         "args": {"species": 1, "level": 5}}))
-        # Squadra's "Porta la squadra al livello massimo": every one at the cap, its moves kept.
+        # Squadra's "Porta la squadra al livello massimo": the ones below the cap raised, its moves kept; the ones
+        # above it -- Garchomp at 55 -- brought down only when asked (the review's six Lv. 36 at 34 in one click).
         moves = [[mv["id"] for mv in m["moves"]] for m in out["party"]]
+        out = self.edit("party_edit", {"slot": 0, "level": 5})
+        levels, cap = [m["level"] for m in out["party"]], out["given"]["level_cap"]
+        self.assertTrue(min(levels) < cap < max(levels), levels)
         out = self.edit("party_cap", {})
-        self.assertEqual({m["level"] for m in out["party"]}, {out["given"]["level_cap"]})
+        self.assertEqual([m["level"] for m in out["party"]], [max(cap, lv) for lv in levels])
+        out = self.edit("party_cap", {"lower": True})
+        self.assertEqual({m["level"] for m in out["party"]}, {cap})
         self.assertEqual([[mv["id"] for mv in m["moves"]] for m in out["party"]], moves)
 
     def test_what_a_pokemon_may_hold_and_where_it_may_go(self):
@@ -790,6 +796,29 @@ class SaveUiTests(unittest.TestCase):
         page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
         self.assertIn("if (x.beat) args.beat = x.beat;", page)
 
+    def test_a_place_puts_the_party_at_the_cap_the_plan_leaves(self):
+        """op "position" with "cap" raises the party to the cap the plan's
+        story steps leave, not the one the save had: Whitney's place on a
+        save past her badge takes the badge back (cap 34 to 30 here) and
+        raises to 30; "lower" brings the ones above down. The page labels
+        the ticks with that cap (capAfter, from /api/save's milestones)."""
+        data = self.ok("/api/data")
+        beaten, lass, badge, tm = data["chains"]["BADGE_PLAIN"]
+        hive = next(i for i in data["chains"]["BADGE_HIVE"] if ["badge", "BADGE_HIVE", 1, False] in
+                    next(s for s in data["story"] if s["id"] == i)["writes"])
+        self.edit("story", {"run": [hive, beaten, lass, badge]})
+        whitney = next(p for p in data["places"] if p["trainer_const"] == "TRAINER_LEADER_WHITNEY")
+        at = {"map": whitney["map"], "x": whitney["x"], "y": whitney["y"], "direction": whitney["direction"]}
+        levels = [m["level"] for m in self.ok("/api/save?f=gyms/test.sav")["party"]]
+        out = self.edit("position", {**at, "undo": [badge, lass, beaten], "cap": True})
+        self.assertEqual(out["given"]["level_cap"], 30)
+        self.assertEqual([m["level"] for m in out["party"]], [max(30, lv) for lv in levels])
+        out = self.edit("position", {**at, "lower": True})
+        self.assertEqual(max(m["level"] for m in out["party"]), 30)
+        page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
+        plan = page[page.index("function placePlan("):page.index("function drawNeeds(")]
+        self.assertIn("cap = capAfter(ticked.flatMap(x => x.undo || []), ticked.flatMap(x => x.run || []))", plan)
+
     def test_a_plan_says_what_the_editor_does_not_do(self):
         """A place's plan names, in a tick's line, what its story steps do
         that the editor does not (an egg given: savedit's "other" writes),
@@ -840,6 +869,9 @@ class SaveUiTests(unittest.TestCase):
         self.assertNotIn(badge, out["story"]["done"], "Whitney beaten, the badge not given yet")
         out = self.edit("story", {"run": [lass, badge]})
         self.assertEqual((out["profile"]["johto"] != 0, out["given"]["level_cap"]), (True, 34))
+        plain = next(k for k, m in enumerate(data["level_cap"]["milestones"]) if m["badge"] == "BADGE_PLAIN")
+        self.assertEqual([k for k, met in enumerate(out["given"]["milestones"]) if met], [plain],
+                         "each milestone met or not: the page works out a plan's cap from them")
         out = self.edit("story", {"undo": [badge]})
         self.assertEqual(out["report"], {"ran": {}, "left": {}})
         self.assertEqual((out["profile"]["johto"], out["given"]["level_cap"]), (0, 10))

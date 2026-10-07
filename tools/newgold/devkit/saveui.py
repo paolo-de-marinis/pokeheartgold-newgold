@@ -562,7 +562,7 @@ class Library:
                 "boxes": sv.boxes(save), "bag": sv.bag(save), "dex": sv.dex(save),
                 "position": position_of(save), "info": sv.info(save), "backups": self.history(key),
                 "given": part(errors, "given", lambda: given(save), {"shoes": False, "pokegear": {"cards": 0, "map_level": 0},
-                                                                     "level_cap": 0, "menu": {}}),
+                                                                     "level_cap": 0, "milestones": [], "menu": {}}),
                 "story": part(errors, "story", lambda: {**sv.story_state(save), "left": self.story_left(key, save)},
                               {"done": [], "met": {}, "left": {}}),
                 "places": part(errors, "places", lambda: [sv.place_state(save, p) for p in sv.story_places()], []),
@@ -1022,17 +1022,19 @@ class Library:
                 raise Refused(f"{trainer} non è un allenatore di questa mappa")
             sv._apply(save, ("trainer", trainer, 1))
         self.put(save, a)
-        if a.get("cap"):
-            self.op_party_cap(save, {})
+        if a.get("cap") or a.get("lower"):     # the cap the story steps above leave
+            self.op_party_cap(save, {"raise": bool(a.get("cap")), "lower": bool(a.get("lower"))})
         return report
 
     def op_party_cap(self, save, a):
-        """Every Pokemon of the party (not an Egg) to the level cap the save's
-        badges and story make (savedit.level_cap), its moves kept."""
-        cap = sv.level_cap(save)
+        """The party (not an Egg) at the level cap the save's badges and
+        story make (savedit.level_cap), its moves kept: the Pokemon below it
+        raised ("raise", by default), and with "lower" the ones above it
+        brought down -- which the page asks first, naming them."""
+        cap, up, down = sv.level_cap(save), a.get("raise", True), a.get("lower", False)
         for slot, raw in enumerate(sv.party_raw(save)):
             mon = sv.describe_mon(raw)
-            if mon and mon["ok"] and not mon["egg"] and mon["level"] != cap:
+            if mon and mon["ok"] and not mon["egg"] and (up and mon["level"] < cap or down and mon["level"] > cap):
                 sv.set_party_mon(save, slot, sv.edit_mon(raw, level=cap))
 
     def put(self, save, a):
@@ -1163,8 +1165,10 @@ def world():
 
 def given(save):
     """What the player was given that the bag does not hold, and the level
-    cap it all makes."""
+    cap it all makes, with each of its milestones met or not (the page
+    works out the cap a place's plan will leave)."""
     return {"shoes": sv.running_shoes(save), "pokegear": sv.pokegear(save), "level_cap": sv.level_cap(save),
+            "milestones": sv.level_cap_reached(save),
             "menu": {e["icon"]: sv.running_shoes(save) if e.get("shoes") else sv.flag_is_set(save, e["flag"])
                      for e in sv.menu_unlocks()}}
 

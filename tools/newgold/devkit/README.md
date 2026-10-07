@@ -259,8 +259,9 @@ On the right, the open save, in tabs: Allenatore (name, ids, money, gender,
 coins, play time, and the story), Squadra and Box (every Pokemon, a
 slot editor for species, level, nature, ability, held item, moves, IVs, EVs
 and friendship; adding, removing, reordering, moving between box and
-party; "Porta la squadra al livello massimo" puts the party at the level
-cap, its moves kept), Borsa, Pokedex (per
+party; "Porta la squadra al livello massimo" raises the party to the level
+cap, its moves kept, and brings down the ones above it only when the
+dialog naming them is confirmed), Borsa, Pokedex (per
 species, all at once, and the two switches; then the forms the Dex records
 on their own, a Galarian Slowpoke seen or caught, its species with it, for
 a save of the layout that has the record), Posizione (the `--where`
@@ -319,8 +320,10 @@ are left to the person, or to Lance's trigger), and offers, ticked, what the bat
 (their hide flag cleared), the gym's gate step, the story put just before
 the battle (the earlier steps run, or a battle won taken back with the
 steps after it), and, unticked, the map's sight trainers given as beaten
-(the walk from Cianwood's winch to Chuck passes Black Belt Nob) and the
-party at the level cap; Sposta does it all in one change. `savedit.py --before TRAINER_OR_BADGE` does the
+(the walk from Cianwood's winch to Chuck passes Black Belt Nob), the party
+raised to the level cap, and the ones above it brought down -- the cap the
+ticked steps will leave (Whitney's badge taken back: 30, not 34), each
+Pokemon named; Sposta does it all in one change. `savedit.py --before TRAINER_OR_BADGE` does the
 position and the hide flag from the command line (the scenario
 `editor_place_before_jasmine.json`). Then every map, grouped by its section
 (the name the game shows) with its region and kind --

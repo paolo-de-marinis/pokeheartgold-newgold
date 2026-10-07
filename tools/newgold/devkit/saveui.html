@@ -1367,9 +1367,11 @@ function monCard(m, i, count) {
 function renderParty() {
   const party = S.save.party;
   const addable = party.length < S.data.limits.party;
-  const cap = S.save.given.level_cap, below = party.filter(m => m?.ok && !m.egg && m.level !== cap).length;
+  const cap = S.save.given.level_cap, mons = party.filter(m => m?.ok && !m.egg);
+  const below = mons.filter(m => m.level < cap), above = mons.filter(m => m.level > cap);
   $("#tab").innerHTML = `<div class="zonehead" style="margin-top:0"><h3>Squadra</h3><span class="muted">${party.length} di ${S.data.limits.party}</span>
-      <span style="flex:1"></span><button type="button" class="small" id="tocap" ${below ? "" : "disabled"} title="Ogni Pokémon della squadra (non le uova) a quel livello, le mosse come sono">Porta la squadra al livello massimo (${cap})</button></div>
+      <span style="flex:1"></span><button type="button" class="small" id="tocap" ${below.length || above.length ? "" : "disabled"}
+        title="Alza a quel livello chi è sotto (le mosse restano); chi è sopra lo abbassa solo se lo confermi">Porta la squadra al livello massimo (${cap})</button></div>
     <div class="grid" id="partyzone">${party.map((m, i) => monCard(m, i, party.length)).join("")}
       ${addable ? `<div class="addmon" data-pos="party:${party.length}"><button type="button" class="primary" id="addparty">Aggiungi un Pokémon</button></div>` : ""}</div>
     <p class="note">Trascina un Pokémon per spostarlo: su un altro, nella squadra o nei box, i due si scambiano; su un posto vuoto del box
@@ -1377,7 +1379,18 @@ function renderParty() {
       giocatore (allenatore originale, ID e genere), così obbedisce.</p>
     <div id="boxarea"></div>`;
   renderBoxArea();
-  $("#tocap").onclick = () => edit("party_cap", {}, `Squadra al livello ${S.save.given.level_cap}`);
+  // Raising is what the button says; bringing one down loses experience, so it is asked, naming who.
+  $("#tocap").onclick = async () => {
+    let lower = false;
+    if (above.length) {
+      const r = await ask(`Livello massimo ${cap}`, `<p>${above.length === 1 ? "È sopra il livello massimo" : "Sono sopra il livello massimo"}:
+        <strong>${esc(monList(above))}</strong>. Portarli a ${cap} toglie loro esperienza e statistiche; le mosse restano.</p>`,
+        [...below.length ? [["raise", `Alza solo chi è sotto (${below.length})`, "primary"]] : [], ["all", `Porta tutti a ${cap}, anche abbassando`, "danger"], ["", "Annulla"]]);
+      if (!r.value) return;
+      lower = r.value === "all";
+    }
+    edit("party_cap", {lower}, `Squadra al livello ${cap}`);
+  };
   $("#partyzone").onclick = ev => {
     if (DRAG.suppress) return;
     const b = ev.target.closest("button");
@@ -1392,6 +1405,7 @@ function renderParty() {
   $("#tab").ondragstart = ev => ev.preventDefault();
 }
 
+const monList = mons => mons.map(m => `${m.nickname || m.species_name} Lv. ${m.level}`).join(", ");
 const unlearnt = m => {
   const odd = m.moves.filter(mv => !mv.learnable).map(mv => mv.name);
   return (odd.length ? ` · ${m.species_name} non impara ${odd.join(", ")}` : "") + (m.ability_ok ? "" : ` · abilità non sua`);
@@ -2169,9 +2183,27 @@ function placePlan(i) {
     x.on = false;
     x.why += ` · ${x.undo ? "l'editor non toglie" : "l'editor non fa"}: ${odd.join(", ")}`;
   }
-  if (S.save.party.length) plan.push({key: "cap", on: false, text: `Porta la squadra al livello massimo (${S.save.given.level_cap})`,
-                                      why: "ogni Pokémon della squadra a quel livello, mosse come sono"});
+  for (const x of plan) if (x.key in S.pos.ticks) x.on = S.pos.ticks[x.key];
+  // The party at the cap the save will have once the ticked steps are done: they move the badges and flags it is made of.
+  const ticked = plan.filter(x => x.on), cap = capAfter(ticked.flatMap(x => x.undo || []), ticked.flatMap(x => x.run || []));
+  const mons = S.save.party.filter(m => m?.ok && !m.egg), below = mons.filter(m => m.level < cap), above = mons.filter(m => m.level > cap);
+  const after = cap === S.save.given.level_cap ? "" : ` · ${cap} dopo i passi spuntati qui sopra (ora è ${S.save.given.level_cap})`;
+  if (below.length) plan.push({key: "cap", on: S.pos.ticks.cap ?? false, text: `Alza al livello massimo (${cap}) chi è sotto`,
+                               why: `${monList(below)}${after}; le mosse restano`});
+  if (above.length) plan.push({key: "lower", on: S.pos.ticks.lower ?? false, text: `Abbassa al livello massimo (${cap}) chi è sopra`,
+                               why: `${monList(above)}${after}: perdono esperienza e statistiche, le mosse restano`});
   return plan;
+}
+// The level cap after a plan's steps: GetLevelCap's milestones (a badge or a flag each, the latest first) as the save
+// meets them, with the badges and flags the steps taken back and then run write.
+function capAfter(undo, run) {
+  const lc = S.data.level_cap, met = lc.milestones.map((_, k) => !!S.save.given.milestones?.[k]);
+  const apply = (ids, back) => ids.forEach(id => (S.steps.get(id)?.writes || []).forEach(([kind, name, value]) => lc.milestones.forEach((m, k) => {
+    if ((kind === "badge" && m.badge === name) || (kind === "flag" && m.flag === name)) met[k] = back ? !value : !!value;
+  })));
+  apply(undo, true); apply(run, false);
+  const k = met.indexOf(true);
+  return k < 0 ? lc.none : lc.milestones[k].cap;
 }
 function drawNeeds() {
   const box = $("#placeneeds");
@@ -2186,13 +2218,20 @@ function drawNeeds() {
       : p.via === "bg" ? "Qui c'è la leva che la lotta vuole girata (la rimette ferma ogni volta che si entra): A, poi vai dalla persona. "
       : p.via === "coord" ? "Un passo avanti e parte la scena. " : p.via === "frame" ? "La scena parte appena si entra. "
       : "Rivolto verso la persona: premi A e parla. "}${p.step ? `Il passo della storia: ${esc(stepLabel(p.step))}.` : ""}</p>
-    ${plan.map((x, k) => x.key ? `<label class="plan"><input type="checkbox" data-plan="${k}" ${x.on ? "checked" : ""}><span><strong>${esc(x.text)}</strong>
+    ${plan.map(x => x.key ? `<label class="plan"><input type="checkbox" data-plan="${x.key}" ${x.on ? "checked" : ""}><span><strong>${esc(x.text)}</strong>
       <span class="muted">${esc(x.why)}</span></span></label>` : `<p class="note">${esc(x.text)}: ${esc(x.why)}</p>`).join("")}`;
-  box.onchange = ev => { const k = ev.target.dataset.plan; if (k !== undefined) plan[+k].on = ev.target.checked; };
+  // A tick is kept by its key and the plan drawn again: the cap and who is above or below it follow the steps ticked.
+  box.onchange = ev => {
+    const key = ev.target.dataset.plan;
+    if (key === undefined) return;
+    S.pos.ticks[key] = ev.target.checked;
+    drawNeeds();
+    $(`#placeneeds [data-plan="${key}"]`)?.focus();
+  };
 }
 function pickPlace(i) {
   const p = S.data.places[i], f = $("#posform").elements;
-  S.pos.place = i;
+  S.pos.place = i; S.pos.ticks = {};
   pickMap(p.map, true);
   S.pos.box.set(`p${i}`);
   f.x.value = p.x; f.y.value = p.y; setDir(p.direction);
@@ -2210,7 +2249,7 @@ function setDir(v) {
 const DIR_ARROWS = {DIR_NORTH: "↑", DIR_SOUTH: "↓", DIR_WEST: "←", DIR_EAST: "→"};
 function renderPosition() {
   const pos = S.save.position, c = pos.current, here = S.maps.get(c.map), w = S.data.world;
-  S.pos = {map: here ? c.map : null, hover: null, asked: 0, place: null};
+  S.pos = {map: here ? c.map : null, hover: null, asked: 0, place: null, ticks: {}};
   const leaders = S.data.places.map((p, i) => [p, i]).filter(([p]) => isLeader(p)).sort((a, b) => badgeOrder(a[0]) - badgeOrder(b[0]));
   $("#tab").innerHTML = `<dl class="kv" style="font-size:14px">
       <dt>Mappa</dt><dd><strong>${esc(here ? mapTitle(here) : "?")}</strong> <span class="muted">id ${c.map}</span></dd>
@@ -2260,6 +2299,7 @@ function renderPosition() {
       if (x.run) args.run = [...(args.run || []), ...x.run.filter(id => !(args.run || []).includes(id))];
       if (x.undo) args.undo = x.undo;
       if (x.key === "cap") args.cap = true;
+      if (x.key === "lower") args.lower = true;
     }
     const out = await edit("position", args, S.pos.place !== null ? `Davanti a ${placeWho(S.data.places[S.pos.place])} (backup fatto)` : "Posizione scritta");
     if (out) storyToast(out);
