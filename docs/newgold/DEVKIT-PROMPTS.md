@@ -87,8 +87,15 @@ Each icon: dark 1-pixel outline, at most 15 colours, simple shading as the DS ic
 
 The first use, Paolo, 2026-10-08: the seven Mochi of Scarlet/Violet (Health,
 Muscle, Resist, Genius, Clever, Swift and Fresh-Start Mochi), which the
-reference has no icons for (they show the "?" icon in the EV/IV trainer's shop
-and in the bag).
+reference has no icons for (they showed the "?" icon in the EV/IV trainer's
+shop and in the bag). How they came out: usable as drawn, one try, no
+retouching. ChatGPT ignored the 32-pixel squares -- one 2000x667 picture, its
+pixels about 6 screen pixels, each disc 252x193 with a 2-3 pixel blend of
+outline and magenta round it -- so `tools/newgold/devkit/sprites/convert_item_icons.py`
+cuts the icons apart by their columns, erodes the blend (it tinted the
+outlines purple), scales each to 22x17 by area average and gives it 15 colours
+of its own. In the game: the shop and the bag's Items pocket
+(`tests/newgold/scenarios/mochi_icons.json`).
 
 ## What the conversion does, and the traps found
 
@@ -123,7 +130,11 @@ and in the bag).
   on row 29, centred at x 16, one scale for all eight frames so it does not
   change size while walking; the largest Pokemon use 64x64 frames.
 - **Item icon:** 32x32, 4bpp, its own 16-colour palette, as the items
-  `item_data.mk` builds from PNGs.
+  `item_data.mk` builds from PNGs, the item **in the top-left 24x24**, centred
+  on (12, 12): every HeartGold item icon is drawn there, and one centred on
+  the 32x32 square would sit 4 pixels off in the bag. An item whose reference
+  art is the blank goes in `OWN_ICONS` (`import_items.py`), so a re-import
+  keeps it.
 - **Checked in the game,** not on the PNG: the field, the party menu and a
   battle, normal and shiny (the harness: `scene.py` with
   `gDiagForceBattleSpecies` on a route, the species both as the foe and as the
