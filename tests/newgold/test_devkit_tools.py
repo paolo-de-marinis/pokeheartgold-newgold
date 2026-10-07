@@ -340,5 +340,22 @@ class ConvertChatgptTests(unittest.TestCase):
         self.assertEqual(self.c.follower_height(6), 17)
 
 
+class IconShownTests(unittest.TestCase):
+    """scene.py's icon:ITEM_...: the item's icon, its PNG as item_data.mk
+    builds it, found whole anywhere on the two screens of a shot."""
+
+    def test_an_icon_on_the_bottom_screen(self):
+        sys.path.insert(0, str(DEVKIT / "diag"))
+        import scene
+        from PIL import Image
+        icon = Image.open(ROOT / "files/itemtool/itemdata/item_icon/absorb_bulb.png")
+        mask = Image.frombytes("L", icon.size, bytes(255 if i else 0 for i in icon.tobytes()))
+        shot = Image.new("RGB", (256, 384), (200, 200, 200))
+        shot.paste(icon.convert("RGB"), (37, 251), mask)
+        self.assertEqual(scene.icon_shown(shot, "ITEM_ABSORB_BULB"), 1)
+        self.assertEqual(scene.icon_shown(shot, "ITEM_AIR_BALLOON"), 0)
+        self.assertIsNone(scene.icon_shown(shot, "ITEM_POTION"), "retail's icons have no PNG")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -178,7 +178,11 @@ ground line the wild foe's front stands on the screen: the line ov12 stands
 the lowest opaque row of a front with a Y offset of 0 on, 89, less that row
 as a shot shows it, the picture found by its PNG, in the shiny colours its
 back's PNG carries for a shiny foe; so its a/1/8/0 Y offset;
-None where the picture is not there), music (the sequence the field's sound
+None where the picture is not there), icon:ITEM_... (1 when that item's icon
+shows whole on either screen -- every opaque pixel of the PNG item_data.mk
+builds it from, in its colours -- 0 when not, None for an icon with no PNG:
+retail's, extracted; a bag or a mart showing the item's own picture and not
+another's), music (the sequence the field's sound
 handle plays, -1 for none: a load the sound heap cannot hold leaves it empty
 and counts as no failed allocation), or any gDiag* global (gDiagFieldMessage,
 the line a field script has up, as bank << 16 | row). A value is a
@@ -261,6 +265,7 @@ def readable(step_or_key, key=False):
                 or re.fullmatch(r"trainer:TRAINER_\w+", step_or_key) is not None
                 or re.fullmatch(r"caught:SPECIES_\w+", step_or_key) is not None
                 or re.fullmatch(r"bag:ITEM_\w+", step_or_key) is not None
+                or re.fullmatch(r"icon:ITEM_\w+", step_or_key) is not None
                 or re.fullmatch(r"bg[0-7]:\d+,\d+", step_or_key) is not None
                 or re.fullmatch(rf"battler[0-3]\.({'|'.join(BATTLER_FIELDS)}|types|shiny)", step_or_key) is not None
                 or re.fullmatch(rf"party[0-5]\.({'|'.join(PARTY_FIELDS)})", step_or_key) is not None
@@ -1919,6 +1924,8 @@ class Scene:
         if name == "front1.lift":
             return front_lift(self.core.shot(self.hooks).crop((0, 0, 256, 192)), self.value(ram, "battler1.species"),
                               self.value(ram, "battler1.shiny"))
+        if name.startswith("icon:"):
+            return icon_shown(self.core.shot(self.hooks), name[len("icon:"):])
         raise SystemExit(f"a scenario asks for {name!r}, which scene.py cannot read")
 
     @staticmethod
@@ -2007,6 +2014,40 @@ def front_lift(top, species, shiny=False):
                     if score > best[0]:
                         best = (score, 89 - (y + lowest))
     return best[1] if best[0] >= walk.PASS else None
+
+
+def icon_shown(shot, item):
+    """icon:ITEM_...: 1 when the item's icon shows whole on either screen of the
+    shot, 0 when not, None when the icon is not built from a PNG. The item's
+    tiles member is its row's in sItemNarcIds or its sImportedItemIcons entry
+    (0 there: ITEM_NONE's, 793), and the PNG is the one item_data.mk builds
+    that member from; a pixel matches in 15-bit colour."""
+    import re
+    from PIL import Image
+    text = (ROOT / "src/item.c").read_text()
+    row = re.search(rf"\[{item}\] = \{{ NARC_item_data_\d+_bin, NARC_item_icon_item_icon_(\d+)_NCGR", text)
+    if row:
+        tiles = int(row.group(1))
+    else:
+        table = text[text.index("sImportedItemIcons[ITEMS_COUNT - FIRST_IMPORTED_ITEM] = {"):]
+        icons = [int(v) for v in re.findall(r"\d+", table[table.index("{") + 1:table.index("};")])]
+        first = savedit.constants("include/constants/items.h", "FIRST_IMPORTED_")["FIRST_IMPORTED_ITEM"]
+        tiles = icons[savedit.constants("include/constants/items.h", "ITEM_")[item] - first] or 793
+    mk = (ROOT / "files/itemtool/itemdata/item_data.mk").read_text()
+    png = dict(re.findall(r"ITEMICON_FROM_PNG,(\d+),\d+,(\w+)\)", mk)).get(str(tiles))
+    if png is None:
+        return None
+    icon = Image.open(ROOT / "files/itemtool/itemdata/item_icon" / f"{png}.png")
+    palette, indices = icon.getpalette(), icon.tobytes()
+    want = [(k % 32, k // 32, tuple(v >> 3 for v in palette[3 * i:3 * i + 3])) for k, i in enumerate(indices) if i]
+    px, (width, height) = shot.convert("RGB").load(), shot.size
+    seen = lambda x, y: tuple(v >> 3 for v in px[x, y])
+    x0, y0, first_colour = want[0]
+    for y in range(y0, height - 32 + y0 + 1):
+        for x in range(x0, width - 32 + x0 + 1):
+            if seen(x, y) == first_colour and all(seen(x - x0 + dx, y - y0 + dy) == c for dx, dy, c in want):
+                return 1
+    return 0
 
 
 def leg_save(path, chain, rom=ROM, elf=DIAG_ELF, start=None):
