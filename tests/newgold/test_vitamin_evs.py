@@ -65,7 +65,10 @@ int main(void) {
 
 class VitaminEVTests(unittest.TestCase):
     def test_native_vitamin_ceiling(self):
-        native = function((ROOT / "src/use_item_on_mon.c").read_text(), "TryModEV")
+        # TryModEV reads the Fresh-Start Mochi's reset, defined beside it.
+        header = (ROOT / "include/use_item_on_mon.h").read_text()
+        native = "\n".join(line for line in header.splitlines() if line.startswith("#define ITEM_EV_PARAM_RESET"))
+        native += "\n" + function((ROOT / "src/use_item_on_mon.c").read_text(), "TryModEV")
         program = PREFIX.replace("@NATIVE@", native) + MAIN
         with tempfile.TemporaryDirectory(prefix="newgold-vitamin-evs-") as temp:
             c, exe = Path(temp) / "check.c", Path(temp) / "check"
