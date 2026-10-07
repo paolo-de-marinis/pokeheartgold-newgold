@@ -75,9 +75,10 @@ aside section + section, aside details { margin-top: 16px; }
 .invalid { color: var(--danger); font-weight: 600; }
 .tag { display: inline-block; border-radius: 4px; padding: 0 6px; font-size: 11.5px; background: var(--sunk); border: 1px solid var(--border); color: var(--muted); }
 
-/* An item's bag icon: its cell of the one sheet /api/itemicons.png serves (--itemsheet). */
+/* An item's bag icon, a species' first frame: its cell of the one sheet /api/itemicons.png or /api/speciesicons.png serves. */
 .mcls { display: inline-block; flex: none; width: 32px; height: 16px; background-image: var(--classsheet); background-repeat: no-repeat; image-rendering: pixelated; }
 .iic { display: inline-block; flex: none; width: 32px; height: 32px; background-image: var(--itemsheet); background-repeat: no-repeat; image-rendering: pixelated; }
+.sic { display: inline-block; flex: none; width: 32px; height: 32px; background-image: var(--speciessheet); background-repeat: no-repeat; image-rendering: pixelated; }
 img.ic { image-rendering: pixelated; object-fit: cover; object-position: top; display: inline-block; vertical-align: middle; }
 .badq { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; color: var(--danger); font-weight: 700; }
 
@@ -441,6 +442,13 @@ function iconImg(m, size = 32) {
   // included -- is the new one; the tree's count in the address renews the ones this page already drew.
   return `<img class="ic" width="${size}" height="${size}" alt="" loading="lazy" src="/api/icon?species=${m.species}&form=${m.form || 0}&egg=${m.egg ? 1 : 0}&t=${S.data?.tree ?? 0}">`;
 }
+// A species' icon in a picker's row: its cell of /api/speciesicons.png, one image for the whole list where each row's
+// own was a request; a form's or an egg's (a box's first Pokemon) is the server's own.
+function speciesIcon(m) {
+  const cell = !m.egg && !m.form ? S.species.get(m.species)?.icon : null, n = S.data.species_icons?.columns;
+  return cell === null || cell === undefined || !n ? iconImg(m)
+    : `<span class="sic" style="background-position:${-(cell % n) * 32}px ${-Math.floor(cell / n) * 32}px"></span>`;
+}
 // An item's icon, its name, the pocket (in the pocket's colour, where the list mixes pockets), the price, and the bag's
 // description on a second line, on hover all of it.
 function itemIcon(id) {
@@ -472,6 +480,9 @@ function buildLists() {
   S.itemByConst = new Map(d.items.map(r => [r.const, r]));
   document.documentElement.style.setProperty("--itemsheet", `url("/api/itemicons.png?t=${d.tree}")`);
   document.documentElement.style.setProperty("--classsheet", `url("/api/moveclasses.png?t=${d.tree}")`);
+  document.documentElement.style.setProperty("--speciessheet", `url("/api/speciesicons.png?t=${d.tree}")`);
+  // Asked for now, so the first list opened has them (the species' sheet takes the server a second or two a tree).
+  for (const sheet of ["speciesicons", "itemicons"]) new Image().src = `/api/${sheet}.png?t=${d.tree}`;
   S.speciesByConst = new Map(d.species.map(r => [r.const, r]));
   S.speciesByName = new Map();
   for (const r of d.species) if (!S.speciesByName.has(r.name)) S.speciesByName.set(r.name, r);
@@ -506,7 +517,7 @@ function buildLists() {
     || S.mainMaps.has(b.id) - S.mainMaps.has(a.id) || a.const.localeCompare(b.const));
   // The species a Pokemon may be made as, each with its icon, its form, its types and its Dex number.
   S.speciesRows = d.species.filter(r => r.pick).map(r => comboRow(r.id, speciesLabel(r.id), {
-    before: iconImg({species: r.id, form: 0}, 32), after: typeBadges(r.types),
+    before: speciesIcon({species: r.id}), after: typeBadges(r.types),
     tags: [formWords(r) ? {text: "forma", cls: "pre"} : ""], side: `n. ${S.speciesByName.get(r.name)?.id ?? r.id}`,
     words: `n. ${S.speciesByName.get(r.name)?.id ?? r.id} ${r.const} ${r.id} ${typeNames(r.types)} ${r.name}`}));
 }
@@ -1520,7 +1531,7 @@ function renderBoxArea() {
       title="${m ? (m.ok ? esc(`${m.nickname || m.species_name} · Lv. ${m.level}${m.egg ? "" : " · " + typeNames(m.types)}${unlearnt(m)}`) : "Checksum errato") : `Posto ${s + 1}, vuoto: clic per aggiungere, o trascina qui un Pokémon`}">${m ? iconImg(m, 48) : ""}</button>`).join("")}</div>
     <p class="note">Clic su un posto occupato per modificarlo; su uno vuoto per aggiungere un Pokémon.</p>`;
   // A box's row: its first Pokemon's icon, its name, how full it is.
-  combo($("#boxsel"), {rows: () => boxes.names.map((n, b) => comboRow(b, `${b + 1}. ${n}`, {before: (m => m ? iconImg(m) : "")(boxes.mons[b].find(m => m?.ok)),
+  combo($("#boxsel"), {rows: () => boxes.names.map((n, b) => comboRow(b, `${b + 1}. ${n}`, {before: (m => m ? speciesIcon(m) : "")(boxes.mons[b].find(m => m?.ok)),
     side: `${count(b)}/${boxes.mons[b].length}`, words: `${count(b)}/${boxes.mons[b].length}`, tags: [b === boxes.current ? "aperto nel gioco" : ""]})),
     onPick: r => goBox(+r.id)}).set(S.box);
   $("#boxarea").onclick = ev => {

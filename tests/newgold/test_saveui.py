@@ -309,6 +309,25 @@ class SaveUiTests(unittest.TestCase):
         with urllib.request.urlopen(urllib.request.Request(url, headers={"If-None-Match": '"0"'})) as response:
             self.assertEqual(response.read(), png, "another icon than the browser's: this one")
 
+    def test_the_pickers_species_icons_are_one_sheet(self):
+        """/api/data's species carry their icon's cell in
+        /api/speciesicons.png, the first frame of /api/icon's for the
+        species, so the species picker asks for one image, not one a row;
+        a species that draws another's icon shares its cell."""
+        data = self.ok("/api/data")
+        species = {r["const"]: r for r in data["species"]}
+        status, png = self.call("/api/speciesicons.png")
+        self.assertEqual(status, 200)
+        columns, rows = data["species_icons"]["columns"], rgba_rows(png)
+        self.assertGreaterEqual(len(rows) // 32 * columns, max(r["icon"] for r in data["species"]) + 1)
+        for const in ("PIKACHU", "MISDREAVUS"):
+            cell, number = species[const]["icon"], sv.species_numbers()[const]
+            pixels, plte = sv._png_rows(self.call(f"/api/icon?species={number}")[1])
+            self.assertEqual([rows[cell // columns * 32 + y][cell % columns * 128:cell % columns * 128 + 128] for y in range(32)],
+                             [b"".join(plte[3 * p:3 * p + 3] + b"\xff" if p else b"\0" * 4 for p in line) for line in pixels[:32]], const)
+        self.assertNotEqual(species["PIKACHU"]["icon"], species["MISDREAVUS"]["icon"])
+        self.assertEqual(len({r["icon"] for r in data["species"]}), len(saveui.species_icon_cells()[0]))
+
     def test_a_move_as_its_record_has_it(self):
         """/api/data's moves carry what LoadMoveEntry's record has beside
         the PP: the type, the class (CATEGORY_, which the class marks'
@@ -1147,6 +1166,9 @@ class SaveUiTests(unittest.TestCase):
         # An item's row, wherever an item is picked: its icon from the one sheet (asked for once, by the tree's count),
         # the price, the description, and in the held item's list, which mixes pockets, the pocket in its colour.
         self.assertIn('document.documentElement.style.setProperty("--itemsheet", `url("/api/itemicons.png?t=${d.tree}")`);', page)
+        # The species picker's icons, and the boxes', from their one sheet too, asked for as the page loads.
+        self.assertIn("before: speciesIcon({species: r.id}), after: typeBadges(r.types),", page)
+        self.assertRegex(page, r"\.sic \{[^}]*background-image: var\(--speciessheet\);")
         self.assertRegex(page, r"\.iic \{[^}]*background-image: var\(--itemsheet\);")
         self.assertIn("rows.push(itemRow(id, {group: pocketDot(p.const), pocket: true,", page)
         self.assertIn(".map(id => itemRow(id, {tags: [count(id)", page)

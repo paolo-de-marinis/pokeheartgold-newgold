@@ -291,25 +291,55 @@ def _icon_colours():
     return palette_of, colours
 
 
-def icon(species, form=0, egg=False):
-    """GetMonIconNaixEx's icon for the Pokemon, with GetMonIconPaletteEx's palette."""
-    palette_of, colours = _icon_colours()
+def icon_pair(species, form=0, egg=False):
+    """GetMonIconNaixEx's icon and GetMonIconPaletteEx's palette entry for
+    the Pokemon: (icon, palette entry)."""
     rules = icon_rules()
     first, last = rules["added"]
     if egg:
-        index, pal = rules["egg"].get(species, rules["egg"][None])
-    elif species > rules["retail"]:
-        if first <= species <= last:
-            index, pal = (species - first + start for start in rules["first_added"])
-        else:
-            index, pal = rules["own"], 0
-    elif species in rules["forms"] and 0 < form < rules["forms"][species][2]:
-        index, pal = (start + form - 1 for start in rules["forms"][species][:2])
-    else:
-        index, pal = species + rules["own"], species
-    png = sv.source(ICONS / f"poke_icon_{index:08d}.png").read_bytes()     # watched: a new icon moves the tree on
+        return rules["egg"].get(species, rules["egg"][None])
+    if species > rules["retail"]:
+        return tuple(species - first + start for start in rules["first_added"]) if first <= species <= last else (rules["own"], 0)
+    if species in rules["forms"] and 0 < form < rules["forms"][species][2]:
+        return tuple(start + form - 1 for start in rules["forms"][species][:2])
+    return species + rules["own"], species
+
+
+def _icon_file(index, pal):
+    """The icon's PNG (watched: a new icon moves the tree on) and its
+    palette's 16 colours."""
+    palette_of, colours = _icon_colours()
     number = palette_of[pal] if pal < len(palette_of) else 0
-    return recolour(png, colours[16 * number:16 * number + 16])
+    return sv.source(ICONS / f"poke_icon_{index:08d}.png").read_bytes(), colours[16 * number:16 * number + 16]
+
+
+def icon(species, form=0, egg=False):
+    """GetMonIconNaixEx's icon for the Pokemon, with GetMonIconPaletteEx's palette."""
+    return recolour(*_icon_file(*icon_pair(species, form, egg)))
+
+
+@sv.tree_cache
+def species_icon_cells():
+    """Each distinct icon of a species (its first form, not an egg) once,
+    and every species' cell of the sheet: ([(icon, palette entry)], {species: cell})."""
+    pairs = {row["id"]: icon_pair(row["id"]) for row in sv.species_table()}
+    distinct = sorted(set(pairs.values()))
+    cell = {pair: i for i, pair in enumerate(distinct)}
+    return distinct, {species: cell[pair] for species, pair in pairs.items()}
+
+
+@sv.tree_cache
+def species_icon_sheet():
+    """The pickers' species icons, the first frame of each, 32x32,
+    SHEET_COLUMNS to a row: one request where each row asked for its own.
+    One whose file is not in the tree is left clear."""
+    def drawn(pair):
+        try:
+            png, colours = _icon_file(*pair)
+            return sv._png_rows(png)[0][:32], bytes(c for rgb in colours for c in rgb)
+        except (OSError, ValueError):
+            return [], b""
+    return sheet([drawn(pair) for pair in species_icon_cells()[0]], SHEET_COLUMNS, 32, 32)
 
 
 def chunk(kind, body):
@@ -338,7 +368,7 @@ def recolour(png, colours):
 # each set one sheet the page asks for once (an icon a cell of it).
 
 ITEM_ICONS = ROOT / "files/itemtool/itemdata/item_icon"
-SHEET_COLUMNS = 32      # the item sheet's cells a row
+SHEET_COLUMNS = 32      # the item and species sheets' cells a row
 
 
 @sv.tree_cache
@@ -1692,12 +1722,14 @@ def tables():
     players = {"PLAYER_GENDER_MALE": sv.PLAYER_GENDER_MALE, "PLAYER_GENDER_FEMALE": sv.PLAYER_GENDER_FEMALE}
     types = lambda row: list(dict.fromkeys(t[len("TYPE_"):] for t in sv.personal_records()[row["id"]]["types"]))  # noqa: E731
     icons = part(errors, "item_icons", lambda: item_icon_cells()[1], {})
+    species_icons = part(errors, "species_icons", lambda: species_icon_cells()[1], {})
     classes = sorted(sv.constants("include/constants/moves.h", "CATEGORY_").items(), key=lambda kv: kv[1])
-    return {"species": [{**row, "types": types(row)} for row in sv.species_table()], "moves": sv.move_table(),
+    return {"species": [{**row, "types": types(row), "icon": species_icons.get(row["id"])} for row in sv.species_table()],
+            "moves": sv.move_table(),
             "move_classes": [const[len("CATEGORY_"):] for const, _ in classes],
             "items": [{**row, "icon": icons.get(row["id"]), **({"limit": sv.item_limit(row["id"])} if row["pocket"] else {})}
                       for row in sv.item_table().values()],
-            "item_icons": {"columns": SHEET_COLUMNS},
+            "item_icons": {"columns": SHEET_COLUMNS}, "species_icons": {"columns": SHEET_COLUMNS},
             "natures": sv.bank(sv.NATURE_NAMES), "nature_mods": sv.nature_mods(),
             "maps": [m for m in sv.map_table().values() if standable(m["id"])],
             "world": part(errors, "world", world, {"cols": 0, "rows": 0, "tiles": {}, "main": [], "buildings": [], "heals": []}),
@@ -1800,6 +1832,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self.image(sv.town_map()["png"])
             if url.path == "/api/itemicons.png":
                 return self.image(item_icon_sheet())
+            if url.path == "/api/speciesicons.png":
+                return self.image(species_icon_sheet())
             if url.path == "/api/moveclasses.png":
                 return self.image(move_class_sheet())
             if url.path == "/api/icon":
