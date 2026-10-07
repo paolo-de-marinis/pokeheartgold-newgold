@@ -1003,6 +1003,15 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(len(bag["TMsHMs"]), 1)
         sv.set_item(save, items["ITEM_CHERI_BERRY"], 0)
         self.assertEqual([i["name"] for i in sv.bag(save)["berries"]], ["Chesto Berry"])
+        # Taken out, an item registered to Y is unregistered as Bag_UnregisterItem does it.
+        sv.set_item(save, items["ITEM_BICYCLE"], 1)
+        sv.set_item(save, items["ITEM_OLD_ROD"], 1)
+        _, at = sv.registered_items(save)
+        struct.pack_into("<2H", save.block("SAVE_BAG"), at, items["ITEM_BICYCLE"], items["ITEM_OLD_ROD"])
+        sv.set_item(save, items["ITEM_BICYCLE"], 0)
+        self.assertEqual(sv.registered_items(self.written(save))[0], [items["ITEM_OLD_ROD"], 0])
+        sv.set_item(save, items["ITEM_OLD_ROD"], 0)
+        self.assertEqual(sv.registered_items(save)[0], [0, 0])
         self.assert_only(save, ["SAVE_BAG"])
 
     def test_the_items_this_game_has(self):

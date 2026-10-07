@@ -282,7 +282,7 @@ def _layout():
         # its TMs/HMs pocket, from HeartGold's 101.
         "BERRIES_AT": f"{offset}(Bag, berries)", "ITEM_SLOT": "sizeof(ItemSlot)",
         "BAG_BERRIES": "NUM_BAG_BERRIES", "BAG_BERRIES_LEGACY": "NUM_BAG_BERRIES_LEGACY",
-        "TMS_HMS_AT": f"{offset}(Bag, TMsHMs)",
+        "TMS_HMS_AT": f"{offset}(Bag, TMsHMs)", "REGISTERED_AT": f"{offset}(Bag, registeredItems)",
         "BAG_TMS_HMS": "NUM_BAG_TMS_HMS", "BAG_TMS_HMS_LEGACY": "NUM_BAG_TMS_HMS_LEGACY",
         "CHUNK_CRC_AT": f"{offset}(struct SaveChunkFooter, crc)",
         "ARRAY_FOOTER": "sizeof(struct SaveArrayFooter)", "FOOTER_CRC_AT": f"{offset}(struct SaveArrayFooter, crc)",
@@ -3008,12 +3008,32 @@ def set_item(save, item, quantity):
         added = True
     if not quantity:
         slots = [s for s in slots if s[1]] + [s for s in slots if not s[1]]
+        _unregister(save, entry["id"])
     if added and pocket_const(pocket) == "POCKET_BERRIES":
         slots.sort(key=lambda s: (s[1] == 0, s[0]))
     if added and pocket_const(pocket) == "POCKET_TMHMS":
         slots.sort(key=_machine_order)
     for s, (got, many) in enumerate(slots):
         struct.pack_into("<HH", block, at + 4 * s, got, many)
+
+
+def registered_items(save):
+    """The two items registered to the Y button (Bag.registeredItems), in
+    the save's layout: past the pockets, which were smaller before."""
+    shift = sum((now["slots"] - then["slots"]) * ITEM_SLOT for now, then in zip(_pockets(), pockets(save.layout)))
+    return list(struct.unpack_from("<2H", save.block("SAVE_BAG"), REGISTERED_AT - shift)), REGISTERED_AT - shift
+
+
+def _unregister(save, item):
+    """Bag_UnregisterItem: an item gone from the bag is no longer on Y,
+    whose field function the game runs without asking the bag (a Bike
+    taken out would still be ridden); the second moves up to the first."""
+    (first, second), at = registered_items(save)
+    if second == item:
+        second = 0
+    elif first == item:
+        first, second = second, 0
+    struct.pack_into("<2H", save.block("SAVE_BAG"), at, first, second)
 
 
 @tree_cache
