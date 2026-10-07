@@ -200,7 +200,8 @@ TMs and HMs (`sMachineRuns`, which `ItemIsTM` and `ItemIsHM` read), the message 
 (`message_format.c`'s Buffer functions), the icons' numbers
 (`GetMonIconNaixEx`). The blocks' sizes are the one thing measured from the
 build, since the game's `Save_*_sizeof` exist in no other form; the page
-says when a header the layout is read from is newer than that build.
+says when a header the layout is read from is newer than that build. A tree
+with no build reads them from `save_layout.json` (saveui, below).
 
 What the game has only as code -- a Pokemon's byte offsets and bits, the
 footers, the encryption's generator, `SHINY_CHECK`, the nature as
@@ -234,10 +235,36 @@ of the same name beside it, and "Gioca" wants a HeartGold one (the cartridge
 header's game code) since the saves are HeartGold's. With no folder there
 the page opens on "Cartelle e ROM" and nothing is read or written until one
 is chosen. `--library DIR` sets the folder for one run; `--build DIR` is
-also where the save layout is measured (`heartgold.us`: without its
-`main.sbin` and `main.elf`, during a `make clean` for one, the page says so
-instead of reading any save); `--no-browser` only prints the address.
-Standard library only; the page is `saveui.html` next to it.
+also where the save layout is measured (`heartgold.us`'s `main.sbin` and
+`main.elf`; with none there, `save_layout.json`'s, below); `--no-browser`
+only prints the address. Standard library only; the page is `saveui.html`
+next to it.
+
+A clone of the repository is enough: no build, no ROM. The one thing the
+editor takes from a build, the blocks' sizes, is kept in `save_layout.json`
+next to it and read from there when `build/heartgold.us` has no `main.sbin`
+and `main.elf`; with a build the editor measures it as ever, and the page
+says when the file is not what the build measures (so does
+`tests/newgold/test_save_layout.py`). After a change that resizes a block,
+and make, the file is written again by
+
+    python3 tools/newgold/devkit/harness/save_budget.py --write
+
+What a clone needs is Python 3.9 or newer and a host C compiler that
+builds 32-bit (`cc -m32`: the save's layout is what it makes of the
+headers, `compile_c`). The one header make generates that those compiles
+include, `lib/include/nitro/fx/fx_const.h`, the editor makes the first
+time with the same `cc`, as make does (`tools/gen_fx_consts`). With no ROM
+there are no emulator slots and no "Gioca". On Windows that is WSL's
+Ubuntu, cloned with its own git into its home rather than under `/mnt/c`,
+where every file read is slow:
+
+    sudo apt install git python3 gcc gcc-multilib
+    git clone -b newgold https://github.com/paolo-de-marinis/pokeheartgold-newgold
+    python3 pokeheartgold-newgold/tools/newgold/devkit/saveui.py --no-browser
+
+and the address it prints opened in Windows' browser; the saves on the
+Windows side are under `/mnt/c/Users/...`, chosen in "Cartelle e ROM".
 
 On the left, the library: every `.sav` under the folder and every emulator
 slot (the `.sav` melonDS reads beside each ROM), each with the player, the
@@ -489,7 +516,8 @@ before the run.
   the same every run and a replay does what the last one did.
 - `where.py` -- symbols out of `main.elf`, and the player's position and
   party out of a memory dump.
-- `save_budget.py` -- how the save's blocks fit their sectors.
+- `save_budget.py` -- how the save's blocks fit their sectors; `--write`
+  puts their sizes in `save_layout.json` for a clone.
 - `boots.py BUILD OUT OFFSET...` -- one ROM booted at many console clocks
   (`clock:`, a second each), each boot's pre-size, the arena it left and
   what would be left at the largest pre-size, and a screen that stayed
