@@ -1524,9 +1524,12 @@ def species_table():
 def item_table():
     """Every item: its name, its constant, the pocket it goes in
     (fieldPocket, which the csv gives by the item's name), whether this
-    game has it ("game", _game_items) and whether the bag lets a Pokemon
-    hold it ("give": overlay 15's item menu offers GIVE when the item's
-    prevent_toss is clear and its pocket is not POCKET_TMHMS)."""
+    game has it ("game", _game_items), whether it is one of HeartGold's
+    own numbers ("retail": below FIRST_IMPORTED_ITEM -- the Park Ball, the
+    Lock Capsule, Diamond and Pearl's key items: the game's, none of them
+    ever given) and whether the bag lets a Pokemon hold it ("give":
+    overlay 15's item menu offers GIVE when the item's prevent_toss is
+    clear and its pocket is not POCKET_TMHMS)."""
     names = bank(ITEM_NAMES)
     with source("files/itemtool/itemdata/item_data.csv").open() as f:
         rows = {row["item"]: row for row in csv.DictReader(f)}
@@ -1534,9 +1537,10 @@ def item_table():
     by_id = {}
     for const, number in constants("include/constants/items.h", "ITEM_").items():
         by_id.setdefault(number, const)
-    game = _game_items(rows)
+    game, first = _game_items(rows), constants("include/constants/items.h", "FIRST_IMPORTED_")["FIRST_IMPORTED_ITEM"]
     return {number: {"id": number, "const": const, "pocket": pocket_of.get(rows.get(const, {}).get("fieldPocket")),
                      "name": names[number] if number < len(names) else const, "game": const in game,
+                     "retail": number < first,
                      "give": const in rows and rows[const]["prevent_toss"] != "true"
                      and rows[const]["fieldPocket"] != "POCKET_TMHMS"}
             for number, const in sorted(by_id.items())}

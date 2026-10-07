@@ -981,6 +981,12 @@ class SaveUiTests(unittest.TestCase):
         for pocket in data["pockets"]:
             self.assertEqual([i for i in pocket["items"] + pocket["others"] if not names[i].strip()], [],
                              f"{pocket['name']}: no nameless ITEM_NONE_ placeholder")
+        # The Park Ball is HeartGold's own, never given: said so, not "di altri giochi" as the Strange Ball.
+        row = {r["const"]: r for r in data["items"]}
+        self.assertEqual([(row[c]["game"], row[c]["retail"]) for c in ("ITEM_PARK_BALL", "ITEM_STRANGE_BALL", "ITEM_POKE_BALL")],
+                         [(False, True), (False, False), (True, True)])
+        page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
+        self.assertIn('r.retail ? {text: "nel gioco non si ottiene"', page)
         offered = {p["name"]: set(p["items"]) for p in data["pockets"]}
         self.assertNotIn(items["ITEM_POTION"], offered["balls"], "Paolo: no Potion among the Poké Balls")
         self.assertIn(items["ITEM_POTION"], offered["medicine"])

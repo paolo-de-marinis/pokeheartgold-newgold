@@ -290,8 +290,11 @@ Borsa: each pocket shows and offers only its own items, as `/api/data`
 gives them from the tree's `fieldPocket` -- this game's (`savedit`'s
 "game": HeartGold's own, anything with a hold effect or a use, anything the
 game's code or data names; no TR, no TM outside `sMachineRuns`, nothing
-without a pocket) and, behind a switch, the other games' that hg-engine's
-table also names -- never its 84 nameless `ITEM_NONE_` placeholders. op "item" and op "pocket" refuse an item of another pocket.
+without a pocket) and, behind a switch, the ones the game never gives:
+the other games' that hg-engine's table also names (never its 84 nameless
+`ITEM_NONE_` placeholders), and HeartGold's own numbers nothing hands out
+(the Park Ball, the Lock Capsule, Diamond and Pearl's key items), tagged
+"nel gioco non si ottiene". op "item" and op "pocket" refuse an item of another pocket.
 Every pocket is a list whose changes wait for "Salva modifiche", in a bar
 that stays at the bottom of the screen: the machines and the key items are
 ticks (every one the game has, the key items a script gives first, tagged

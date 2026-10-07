@@ -1555,6 +1555,9 @@ function sourceTag(s) {
   const from = s.from ? S.species.get(s.from)?.name ?? `#${s.from}` : "";
   return !from ? how : s.how === "egg" ? `${how} da ${from}` : `da ${from} ${how}`;
 }
+// An item this game never gives: another game's, or one of HeartGold's own numbers no part of it hands out (the Park Ball).
+const notGiven = r => !r || r.game ? "" : r.retail ? {text: "nel gioco non si ottiene", cls: "pre", title: "Di HeartGold, ma nessuna parte del gioco lo dà"}
+  : {text: "di altri giochi", cls: "pre"};
 const sourceTags = sources => sources.map(s => `<span class="tag src${s.from ? " pre" : ""}">${esc(sourceTag(s))}</span>`).join("");
 
 // The held-item picker's rows: "Nessuno", then what the bag's GIVE offers ("give": no key item, no machine, no
@@ -1570,7 +1573,7 @@ function heldRows(box, others, holding) {
       const r = S.items.get(id);
       if (id !== holding && (!r.give || (box && mail.has(id)))) continue;
       rows.push(comboRow(id, r.label, {group: esc(pocketName(p.const)), words: r.const,
-        tags: [bag.get(id) ? `ne hai ${bag.get(id)}` : "", r.game ? "" : {text: "di altri giochi", cls: "pre"},
+        tags: [bag.get(id) ? `ne hai ${bag.get(id)}` : "", notGiven(r),
                r.give ? "" : {text: "nel gioco non si dà", cls: "warn"}]}));
     }
   }
@@ -1614,7 +1617,7 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
       <div class="f" id="abilitybox" style="grid-column:1/-1"><span class="hint">Abilità</span><div class="seg" id="abilities" style="margin:0"><span class="muted">Scegli la specie</span></div>
         <input type="hidden" name="ability" value=""></div>
       <label class="f">Strumento tenuto<span class="mvin"><input name="held" placeholder="Nessuno"></span>
-        <span class="switch hint"><input type="checkbox" id="heldall"> anche di altri giochi</span></label>
+        <span class="switch hint"><input type="checkbox" id="heldall"> anche quelli che il gioco non dà</span></label>
       <label class="f">Amicizia<input type="number" name="friendship" min="0" max="255" value="${v.friendship}" placeholder="della specie"></label>
     </div>
     ${box ? "" : `<p class="note">Una Lettera data qui è vuota: il gioco scrive il messaggio quando la si dà dalla Borsa.</p>`}
@@ -1714,7 +1717,7 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     const natureBox = combo(form.elements.nature, {rows: natureRows});
     const holding = m?.item || 0, heldAll = $("#heldall", d);
     const heldBox = combo(form.elements.held, {rows: () => heldRows(box, heldAll.checked, holding), clearable: true,
-                                               empty: "Nessuno strumento con questo nome (prova «anche di altri giochi»)"});
+                                               empty: "Nessuno strumento con questo nome (prova «anche quelli che il gioco non dà»)"});
     // Each move field: the species' moves, a row a move with all its sources, none another field holds.
     const moveCombos = inputs.map(el => combo(el, {clearable: true, empty: () => st.species ? "Nessuna mossa della specie ha questo nome" : "Scegli prima la specie",
       rows: () => {
@@ -1826,7 +1829,7 @@ function renderPocket(pocket) {
   const tags = id => {
     const by = kind === "tick" && S.givenBy.get(S.items.get(id)?.const);
     return [by ? {text: `si riceve: ${S.steps.get(by)?.section || "script comuni"}`, title: `${stepLabel(by)} — spunta il passo in Allenatore per farlo come nel gioco`} : "",
-            S.items.get(id)?.game ? "" : {text: "di altri giochi", cls: "pre"}];
+            notGiven(S.items.get(id))];
   };
   const own = new Set([...pocket.items, ...pocket.others]);
   const extra = [...held.keys()].filter(id => !own.has(id));     // in the pocket, though the tree files it elsewhere now
@@ -1843,14 +1846,14 @@ function renderPocket(pocket) {
   const others = pocket.others.length && kind !== "pick";
   $("#pocket").innerHTML = `
     ${kind === "pick" ? `<div class="bar" style="margin:0 0 10px"><span class="mvin" style="flex:1;min-width:220px"><input id="additem" placeholder="Aggiungi: cerca tra gli strumenti di questa tasca…" aria-label="Strumento da aggiungere"></span>
-        <label class="switch hint"><input type="checkbox" id="bagothers" ${view.others ? "checked" : ""}> anche di altri giochi</label></div>` : ""}
+        <label class="switch hint"><input type="checkbox" id="bagothers" ${view.others ? "checked" : ""}> anche quelli che il gioco non dà</label></div>` : ""}
     <div class="bar" style="margin-top:0">
       <input type="search" id="bagq" placeholder="Cerca in questa tasca…" value="${esc(view.q)}" style="flex:1;min-width:180px" aria-label="Cerca nella tasca">
       ${segButtons("bagshow", kind === "tick" ? [["all", "Tutti"], ["have", "Ce l'ho"], ["missing", "Mancano"]] : SHOW_HELD, view.show, "Mostra")}
-      ${others ? `<label class="switch hint"><input type="checkbox" id="bagothers" ${view.others ? "checked" : ""}> anche quelli di altri giochi (${pocket.others.length})</label>` : ""}
+      ${others ? `<label class="switch hint"><input type="checkbox" id="bagothers" ${view.others ? "checked" : ""}> anche quelli che il gioco non dà (${pocket.others.length})</label>` : ""}
     </div>
     <p class="note">${kind === "tick" ? "Ogni strumento chiave una volta, come li dà il gioco. " : kind === "all" ? "Tutti gli strumenti di questa tasca: 0 vuol dire che non ce l'hai. " : ""}Solo gli strumenti che il gioco mette in questa tasca${
-      pocket.others.length ? `; quelli che esistono solo in altri giochi (${pocket.others.length}) si vedono solo se lo chiedi` : ""}. Le caselle cambiano solo qui finché non premi "Salva modifiche".</p>
+      pocket.others.length ? `; quelli che il gioco non dà (${pocket.others.length}: di altri giochi, o di HeartGold ma mai dati) si vedono solo se lo chiedi` : ""}. Le caselle cambiano solo qui finché non premi "Salva modifiche".</p>
     <div class="itemgrid" id="bagrows">${shown.map(row).join("") || `<span class="muted">${kind === "pick" && !held.size && !ch.size ? "Tasca vuota: aggiungi uno strumento qui sopra." : "Nessuno strumento."}</span>`}</div>
     <div id="bagbar"></div>`;
   const used = () => new Set([...held.keys(), ...ch.keys()].filter(id => count(id) > 0)).size;
@@ -1896,7 +1899,7 @@ function renderPocket(pocket) {
     const input = $("#additem");
     combo(input, {empty: "Nessuno strumento di questa tasca ha questo nome", rows: () => [...pocket.items, ...(view.others ? pocket.others : [])]
       .map(id => comboRow(id, label(id), {words: S.items.get(id)?.const, tags: [count(id) ? {text: `ne hai ${count(id)}`, cls: count(id) >= limit(id) ? "warn" : ""} : "",
-                                                                             `max ${limit(id)}`, S.items.get(id)?.game ? "" : {text: "di altri giochi", cls: "pre"}]})),
+                                                                             `max ${limit(id)}`, notGiven(S.items.get(id))]})),
       onPick: r => {
         const id = +r.id;
         input.value = ""; input.dataset.id = "";
