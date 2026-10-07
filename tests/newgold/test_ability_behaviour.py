@@ -550,6 +550,14 @@ int main(void) {
     CopyStatStagesAndCriticalRises(&ctx, 0, 2);
     EXPECT(ctx.battleMons[0].status2, STATUS2_CONFUSION | STATUS2_FOCUS_ENERGY);
     EXPECT(ctx.moveConditions[0].dragonCheer, 2);
+    // A Laser Focus the ally has one turn left of is the holder's afresh,
+    // for this turn and the next (Showdown adds the volatile anew).
+    ctx.moveConditions[2].laserFocusTimer = 1;
+    CopyStatStagesAndCriticalRises(&ctx, 0, 2);
+    EXPECT(ctx.moveConditions[0].laserFocusTimer, 2);
+    ctx.moveConditions[2].laserFocusTimer = 0;
+    CopyStatStagesAndCriticalRises(&ctx, 0, 2);
+    EXPECT(ctx.moveConditions[0].laserFocusTimer, 0);
     // The ally is not touched.
     EXPECT(ctx.battleMons[2].statChanges[STAT_ATK], 8);
     return 0;

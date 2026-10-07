@@ -5841,7 +5841,10 @@ BOOL Battler_CriticalRisen(BattleContext *ctx, int battlerId) {
 // Dragon Cheer, a Dragon-type's two stages kept as they were cheered -- this
 // one's own going first (Pokemon Central, Psicamisu, Coprotagonismo, Grido del
 // Drago; Showdown's gen-9 psychup and costar take the four critical rises
-// away, then copy the other's).
+// away, then copy the other's). A Laser Focus copied starts afresh, for this
+// turn and the next, whatever the other had left of it -- one turn or two
+// left is two, none is none -- as Showdown adds the laserfocus volatile anew,
+// its two turns, where Pokemon Central is silent.
 void CopyStatStagesAndCriticalRises(BattleContext *ctx, int battlerId, int from) {
     int stat;
 
@@ -5849,7 +5852,7 @@ void CopyStatStagesAndCriticalRises(BattleContext *ctx, int battlerId, int from)
         ctx->battleMons[battlerId].statChanges[stat] = ctx->battleMons[from].statChanges[stat];
     }
     ctx->battleMons[battlerId].status2 = (ctx->battleMons[battlerId].status2 & ~STATUS2_FOCUS_ENERGY) | (ctx->battleMons[from].status2 & STATUS2_FOCUS_ENERGY);
-    ctx->moveConditions[battlerId].laserFocusTimer = ctx->moveConditions[from].laserFocusTimer;
+    ctx->moveConditions[battlerId].laserFocusTimer = (ctx->moveConditions[from].laserFocusTimer + 1) & 2;
     ctx->moveConditions[battlerId].dragonCheer = ctx->moveConditions[from].dragonCheer;
 }
 

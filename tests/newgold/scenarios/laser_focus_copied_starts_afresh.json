@@ -1,0 +1,15 @@
+{
+  "about": "A Laser Focus copied by Psych Up starts afresh, for that turn and the next, whatever the other had left of it (Showdown's gen-9 psychup adds the laserfocus volatile anew, its two turns; Pokemon Central is silent). A level-20 Pikachu against a forced wild Chansey: the Chansey focuses on the first turn (teach:), the Pikachu copies it with Psych Up on the second, when the Chansey has that turn left, and its Tackle on the third is a critical hit. Before, the copy kept the Chansey's last turn, gone by the third. The field's RNG is pinned as in rolls_forced_high.json; the critical-hit roll is not forced.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:20"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_SPLASH", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_LASER_FOCUS", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1",
+            {"expect": {"lines": ["The wild Chansey used Laser Focus!"]}},
+            "teach:0,0,MOVE_PSYCH_UP", "teach:1,0,MOVE_SPLASH", "fight:1:1",
+            {"expect": {"new_lines": ["Pikachu used Psych Up!"]}},
+            "teach:0,0,MOVE_TACKLE", "fight:1:1"],
+  "expect": {"new_lines": ["Pikachu used Tackle!", "A critical hit!"]}
+}
