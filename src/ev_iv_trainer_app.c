@@ -115,6 +115,8 @@ enum TrainerQuestion {
 #define COL_TRACK_TOP (PLTT_OWN + 6)
 #define COL_BAR_RIM   (PLTT_OWN + 7)
 #define COL_CURSOR    (PLTT_OWN + 8)
+#define COL_MARK_OFF  (PLTT_OWN + 9)
+#define COL_MARK_ON   (PLTT_OWN + 10)
 #define PLTT_ARROWS   0x70 // slot 7: the summary's arrow buttons, a/1/6/2 member 3
 #define PLTT_BUTTONS  0x80 // slot 8: the party menu's blue buttons, plist_gra member 8
 #define PLTT_MON      0x90 // slot 9: the Pokemon's own
@@ -144,6 +146,8 @@ static const u16 sOwnColours[16] = {
     RGB(25, 22, 16),
     RGB(9, 9, 9),    // the bar's rim
     RGB(31, 3, 3),   // the summary's red frame
+    RGB(23, 23, 20), // a marking not set, and one set: the summary's (a/1/6/2 member 61)
+    RGB(9, 8, 7),
 };
 static const u16 sButtonTextShadow = RGB(5, 5, 5);
 
@@ -294,6 +298,7 @@ typedef struct EvIvTrainer {
     NNSG2dCharacterData *digits;
     void *ballRaw;
     NNSG2dCharacterData *ball;
+    u8 markTiles[6][2 * TILE_SIZE_4BPP]; // each marking's two tiles: not set, set
     u8 *monTiles;
     MsgData *msgData;
     MsgData *setNames;
@@ -721,6 +726,19 @@ static void LabelBox(EvIvTrainer *app, Window *window, int x0, int y0, int x1, u
     PrintRow(app, window, label, 0, x0 + 5, y0 + 1, TEXT_WHITE, ALIGN_LEFT);
 }
 
+// The markings under the picture, where the summary puts them (its sprites
+// 23 to 28, at x 200 to 240, y 150, their cells 4 up and left): a tile's
+// pixels are 14 not set and 1 set, entries of the summary's palette.
+static void DrawMarkings(EvIvTrainer *app, Window *win) {
+    int markings = GetMonData(app->mon, MON_DATA_MARKINGS, NULL);
+    int i;
+
+    for (i = 0; i < 6; i++) {
+        BOOL set = (markings >> i) & 1;
+        BlitTiles(win, app->markTiles[i] + (set ? TILE_SIZE_4BPP : 0), 1, 1, 1, 196 + 8 * i, 146, set ? COL_MARK_ON - 1 : COL_MARK_OFF - 14);
+    }
+}
+
 static void Trainer_DrawTop(EvIvTrainer *app) {
     Window *win = &app->top;
     const u8 *evs = Trainer_ShownEvs(app);
@@ -809,6 +827,7 @@ static void Trainer_DrawTop(EvIvTrainer *app) {
             tiles += sBlocks[i][2] * sBlocks[i][3] * TILE_SIZE_4BPP;
         }
     }
+    DrawMarkings(app, win);
     PrintRow(app, win, msg_0829_00011, 0, 161, 160, TEXT_WHITE, ALIGN_LEFT);
     BufferNatureName(app->msgFormat, 0, app->nature);
     ReadRow(app, msg_0829_00059);
@@ -1315,6 +1334,21 @@ static void Trainer_OpenScreens(EvIvTrainer *app) {
         }
         app->ballRaw = GfGfxLoader_GetCharData(NARC_a_1_6_2, ball == BALL_NONE ? 25 : ball + 24, FALSE, &app->ball, app->heapID);
         GfGfxLoader_GXLoadPal(NARC_a_1_6_2, 49 + _02104C68[ball], GF_PAL_LOCATION_MAIN_BG, GF_PAL_SLOT_10_OFFSET, 0x20, app->heapID);
+    }
+
+    // The six markings, as the summary draws them under the picture: each
+    // its own two tiles in a/0/3/9 (the summary's sprites 23 to 28, circle,
+    // triangle, square, heart, star, diamond), the first not set, the second
+    // set.
+    {
+        static const u8 sMarkingChars[6] = { 52, 56, 55, 57, 53, 54 };
+        NNSG2dCharacterData *chars;
+        int i;
+        for (i = 0; i < 6; i++) {
+            void *raw = GfGfxLoader_GetCharData(NARC_a_0_3_9, sMarkingChars[i], FALSE, &chars, app->heapID);
+            memcpy(app->markTiles[i], chars->pRawData, sizeof(app->markTiles[i]));
+            Heap_Free(raw);
+        }
     }
 
     // The Pokemon's front picture, as the summary draws it.

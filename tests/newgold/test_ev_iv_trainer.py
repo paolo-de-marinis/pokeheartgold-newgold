@@ -242,6 +242,44 @@ int main(void) {
 """
 
 
+MARKINGS = r"""
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef int BOOL;
+#define MON_DATA_MARKINGS 0
+#define TILE_SIZE_4BPP 32
+typedef struct { int unused; } Window;
+typedef struct { void *mon; u8 markTiles[6][2 * TILE_SIZE_4BPP]; } EvIvTrainer;
+@DEFINES@
+static int sMarkings, sDrawn;
+static int GetMonData(void *mon, int attr, void *dest) { (void)mon; (void)attr; (void)dest; return sMarkings; }
+static EvIvTrainer sApp;
+static void BlitTiles(Window *window, const u8 *tiles, int tw, int th, int columns, int x, int y, u8 base) {
+    int marking = (int)(tiles - sApp.markTiles[0]) / (2 * TILE_SIZE_4BPP);
+    int set = (int)(tiles - sApp.markTiles[marking]) / TILE_SIZE_4BPP;
+    (void)window;
+    assert(tw == 1 && th == 1 && columns == 1);
+    assert(x == 196 + 8 * marking && y == 146);
+    // Each tile's pixels: 14 not set, 1 set, landing on the two colours.
+    assert(set == ((sMarkings >> marking) & 1));
+    assert(base + (set ? 1 : 14) == (set ? COL_MARK_ON : COL_MARK_OFF));
+    sDrawn |= 1 << marking;
+}
+@DRAW@
+int main(void) {
+    static Window win;
+    for (sMarkings = 0; sMarkings < 64; sMarkings++) {
+        sDrawn = 0;
+        DrawMarkings(&sApp, &win);
+        assert(sDrawn == 63);
+    }
+    return 0;
+}
+"""
+
+
 def run_c(source, *flags):
     with tempfile.TemporaryDirectory(prefix="newgold-trainer-") as directory:
         path = Path(directory)
@@ -293,6 +331,19 @@ class RulesTests(unittest.TestCase):
         start = app.index("        int ball = GetMonData(app->mon, MON_DATA_POKEBALL, NULL);")
         block = app[start:app.index("\n    }\n", start)].replace("app->mon", "mon")
         run_c(BALL.replace("@BALL@", block), "-fsanitize=address,undefined", "-fno-sanitize-recover=all")
+
+    def test_the_markings_under_the_picture(self):
+        """Mockup A's name box has the summary's six markings under the
+        picture: each its own tile, set or not, where the summary's sprites 23
+        to 28 put them, in the summary's two colours."""
+        app = read("src/ev_iv_trainer_app.c")
+        defines = "\n".join(re.findall(r"^#define (?:PLTT_OWN|COL_MARK_\w+) .*$", app, re.M))
+        self.assertEqual(len(defines.splitlines()), 3)
+        run_c(MARKINGS.replace("@DEFINES@", defines).replace("@DRAW@", function(app, "DrawMarkings")))
+        # The two colours are the summary's (a/1/6/2 member 61, entries 14 and 1).
+        own = app[app.index("static const u16 sOwnColours[16] = {"):]
+        own = re.findall(r"RGB\((\d+), (\d+), (\d+)\)", own[:own.index("};")])
+        self.assertEqual(own[9:11], [("23", "23", "20"), ("9", "8", "7")])
 
     def test_the_app_writes_only_what_was_confirmed(self):
         """The Pokemon is written in one place, after the YES, and the money
