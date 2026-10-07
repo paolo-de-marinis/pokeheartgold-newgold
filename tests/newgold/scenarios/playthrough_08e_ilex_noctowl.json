@@ -1,5 +1,5 @@
 {
-  "about": "The playthrough trains the Hoothoot the rest of the way for Bugsy, from Azalea's Pokemon Center after leg 08d: swap: puts it first, and on Ilex Forest's floor inside the gatehouse (12, 77 to 12, 81) it fights alone now, its Air Slash twice as strong against the forest's bugs and grass, winning all a battle pays rather than half (relieved by the Quilava, 16 to 18 took 57,228 frames), until it is a Noctowl (walked to the species: one that reached 20 in a battle it lost evolves at its next level) (42,504 frames where the leg was written): with the Hoothoot at 18 Bugsy's Heracross still swept the team, faster than any of it and taking the Hoothoot in one Aerial Ace; with a Noctowl at 20 he fell at the first attempt in round 15's probe. flee:40 and heal: as before. Then swap: puts the Noctowl back third for him; the nurse, and the game's save. The party is the bot's own, no edit. The field's RNG is pinned and the battle's seed fixed.",
+  "about": "The playthrough trains the Hoothoot the rest of the way for Bugsy, from Azalea's Pokemon Center after leg 08d: swap: puts it first, and on Ilex Forest's floor inside the gatehouse (12, 77 to 12, 81) it fights alone now, its Air Slash twice as strong against the forest's bugs and grass, winning all a battle pays rather than half (relieved by the Quilava, 16 to 18 took 57,228 frames), until it is a Noctowl (walked to the species: one that reached 20 in a battle it lost evolves at its next level) (42,504 frames where the leg was written): with the Hoothoot at 18 Bugsy's Heracross still swept the team, faster than any of it and taking the Hoothoot in one Aerial Ace; with a Noctowl at 20 he fell at the first attempt in round 15's probe. flee:40 and heal: as before. Its Air Slash is checked in whichever slot (party0.moves): since leg 08b's savedit --train 18 (Paolo's balance rule of 2026-10-06: the Ilex rival beat the bot's own team seven times running on 33299bd93's chain) the Hoothoot knows it fourth, as the edit gives the moves, where learnt in play it took the Peck's, the second; from 18 to the Noctowl the leg still trains it in play (35,478 frames on the chain from 08b). Then swap: puts the Noctowl back third for him; the nurse, and the game's save. The leg edits nothing; the party is the bot's, raised in leg 08b. The field's RNG is pinned and the battle's seed fixed.",
   "from": "playthrough_08d_ilex_hoothoot",
   "hold": {
     "gDiagBattleSeed": 1
@@ -16,7 +16,7 @@
           "SPECIES_HOOTHOOT",
           "SPECIES_NOCTOWL"
         ],
-        "party0.move1": "MOVE_AIR_SLASH"
+        "party0.moves": "MOVE_AIR_SLASH"
       }
     },
     "pace:MAP_ILEX_FOREST,12,77,12,81,party0.species,SPECIES_NOCTOWL,140000",
