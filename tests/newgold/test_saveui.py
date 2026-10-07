@@ -1038,10 +1038,18 @@ class SaveUiTests(unittest.TestCase):
                        "inputs.map(el => combo(el", "combo($(\"#boxsel\")", "return combo(el, {",
                        "const input = $(\"#additem\");\n    combo(input,"):
             self.assertTrue(picker in page, picker)
-        self.assertTrue(re.search(r"rows: \(\) => \[\.\.\.pocket\.items, \.\.\.\(view\.others \? pocket\.others : \[\]\)\]", page),
-                        "the add field: the open pocket's items")
-        self.assertTrue(re.search(r"for \(const id of \[\.\.\.p\.items, \.\.\.\(others \? p\.others : \[\]\)\]\)[^}]*!r\.give", page),
-                        "the held item: GIVE's items, pocket by pocket")
+        self.assertTrue(re.search(r"rows: \(\) => \[\.\.\.pocket\.items, \.\.\.\(view\.others \? pocket\.others : \[\]\)\]\s*"
+                                  r"\.sort\(\(a, b\) => label\(a\)\.localeCompare\(label\(b\)", page),
+                        "the add field: the open pocket's items, by name as the moves")
+        self.assertTrue(re.search(r"for \(const id of \[\.\.\.p\.items, \.\.\.\(others \? p\.others : \[\]\)\]\.sort\([^\n]*localeCompare[^}]*!r\.give", page),
+                        "the held item: GIVE's items, pocket by pocket, by name")
+        # The Items pocket: one search to add, one to filter what it holds, and no "Mancano" that is always empty;
+        # the counts have − and + a finger can hit, and no second pair of arrows.
+        self.assertIn('kind === "pick" ? "" : segButtons("bagshow"', page)
+        self.assertIn('"Filtra quelli che hai…"', page)
+        self.assertNotIn("`max ${limit(id)}`", page)
+        self.assertIn(".qty input { appearance: textfield;", page)
+        self.assertRegex(page, r"\.qty button \{[^}]*min-width: 36px; height: 36px;")
 
     def test_files(self):
         self.edit("trainer", {"money": 1})

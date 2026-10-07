@@ -301,8 +301,9 @@ ticks (every one the game has; the key items the story gives first, then
 those any map's script gives -- `savedit.item_givers`: GiveItemNoCheck, the
 item GoToIfNoItemSpace makes room for, a std give's VAR_SPECIAL_x8004 --
 each tagged with where, then the ones no script gives, tagged so), the small pockets list all their items with a count each, and
-the Items pocket lists what it holds and adds through the picker over its
-own items. Unsaved changes are not thrown away without asking: another save
+the Items pocket lists what it holds (a field filters it) and adds through
+the picker over its own items, by name as the moves; a count has − and +
+a finger can hit, and no spinner of its own. Unsaved changes are not thrown away without asking: another save
 opened, the last change undone, the open save played or loaded as it is on
 disk (Gioca, Carica, Sposta e gioca), the open slot overwritten, the page
 closed. A held item is only one
