@@ -560,6 +560,7 @@ class SaveUiTests(unittest.TestCase):
         header = (ROOT / "include/map_header.h").read_text()
         for table, known in (("BADGE_NAMES", {b["const"] for b in data["badges"]}),
                              ("POCKET_NAMES", {p["const"] for p in data["pockets"]}),
+                             ("POCKET_COLOURS", {p["const"] for p in data["pockets"]}),
                              ("STAT_NAMES", {s["const"] for s in data["stats"]}),
                              ("DIR_NAMES", {d["const"] for d in data["directions"]}),
                              ("GENDER_MARKS", {g["const"] for g in data["genders"]}), ("TYPES", types),
@@ -1142,6 +1143,12 @@ class SaveUiTests(unittest.TestCase):
         self.assertNotIn('html: `<span class="nm">', page, "the move field's rows were its own")
         self.assertRegex(page, r"\.mvlist \{[^}]*color: var\(--text\); font-size: 14px;")
         self.assertIn("const width = Math.min(Math.max(field.width, COMBO_WIDTH), edge.width - 32);", page)
+        # An item's row, wherever an item is picked: its icon from the one sheet (asked for once, by the tree's count),
+        # the price, the description, and in the held item's list, which mixes pockets, the pocket in its colour.
+        self.assertIn('document.documentElement.style.setProperty("--itemsheet", `url("/api/itemicons.png?t=${d.tree}")`);', page)
+        self.assertRegex(page, r"\.iic \{[^}]*background-image: var\(--itemsheet\);")
+        self.assertIn("rows.push(itemRow(id, {group: pocketDot(p.const), pocket: true,", page)
+        self.assertIn(".map(id => itemRow(id, {tags: [count(id)", page)
 
     def test_files(self):
         self.edit("trainer", {"money": 1})

@@ -75,6 +75,8 @@ aside section + section, aside details { margin-top: 16px; }
 .invalid { color: var(--danger); font-weight: 600; }
 .tag { display: inline-block; border-radius: 4px; padding: 0 6px; font-size: 11.5px; background: var(--sunk); border: 1px solid var(--border); color: var(--muted); }
 
+/* An item's bag icon: its cell of the one sheet /api/itemicons.png serves (--itemsheet). */
+.iic { display: inline-block; flex: none; width: 32px; height: 32px; background-image: var(--itemsheet); background-repeat: no-repeat; image-rendering: pixelated; }
 img.ic { image-rendering: pixelated; object-fit: cover; object-position: top; display: inline-block; vertical-align: middle; }
 .badq { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; color: var(--danger); font-weight: 700; }
 
@@ -215,6 +217,7 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
 .tag.warn { background: var(--warn-soft); border-color: var(--warn-border); color: var(--text); }
 .tag.bad { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
 /* A nature's raised stat and its lowered one, red and blue as the summary screen colours them. */
+.tag.pk { border-color: var(--pk); background: color-mix(in srgb, var(--pk) 16%, var(--panel)); color: var(--text); }
 .tag.up { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
 .tag.down { background: var(--cool-soft); border-color: var(--cool); color: var(--cool); }
 .flash { animation: flash 1.8s ease-out; }
@@ -341,6 +344,9 @@ const BADGE_NAMES = {BADGE_ZEPHYR: "Zefiro", BADGE_HIVE: "Alveare", BADGE_PLAIN:
   BADGE_SOUL: "Anima", BADGE_MARSH: "Palude", BADGE_VOLCANO: "Vulcano", BADGE_EARTH: "Terra"};
 const POCKET_NAMES = {POCKET_ITEMS: "Strumenti", POCKET_MEDICINE: "Rimedi", POCKET_BALLS: "Poké Ball", POCKET_TMHMS: "MT e MN",
   POCKET_BERRIES: "Bacche", POCKET_MAIL: "Lettere", POCKET_BATTLE_ITEMS: "Strumenti lotta", POCKET_KEY_ITEMS: "Strumenti chiave"};
+// A pocket's colour: its tag and its group's dot, where a list mixes pockets.
+const POCKET_COLOURS = {POCKET_ITEMS: "#e08a2e", POCKET_MEDICINE: "#3f9d5a", POCKET_BALLS: "#d9443f", POCKET_TMHMS: "#3f78d1",
+  POCKET_BERRIES: "#7fae2e", POCKET_MAIL: "#c79a1d", POCKET_BATTLE_ITEMS: "#9a59c4", POCKET_KEY_ITEMS: "#7d7a8f"};
 const STAT_NAMES = {STAT_HP: "PS", STAT_ATK: "Att", STAT_DEF: "Dif", STAT_SPEED: "Vel", STAT_SPATK: "AttSp", STAT_SPDEF: "DifSp"};
 const DIR_NAMES = {DIR_NORTH: "su", DIR_SOUTH: "giù", DIR_WEST: "sinistra", DIR_EAST: "destra"};
 const GENDER_MARKS = {MON_MALE: "♂", MON_FEMALE: "♀", MON_GENDERLESS: ""};
@@ -416,6 +422,22 @@ function iconImg(m, size = 32) {
   // included -- is the new one; the tree's count in the address renews the ones this page already drew.
   return `<img class="ic" width="${size}" height="${size}" alt="" loading="lazy" src="/api/icon?species=${m.species}&form=${m.form || 0}&egg=${m.egg ? 1 : 0}&t=${S.data?.tree ?? 0}">`;
 }
+// An item's icon, its name, the pocket (in the pocket's colour, where the list mixes pockets), the price, and the bag's
+// description on a second line, on hover all of it.
+function itemIcon(id) {
+  const cell = S.items.get(id)?.icon, n = S.data.item_icons?.columns;
+  // The game draws an item in the top-left 24x24 of its 32x32 cell: moved 4 pixels in, the picture sits in the middle (the
+  // rest of a cell is clear, so the neighbour's edge shows nothing).
+  return cell === null || cell === undefined || !n ? "" : `<span class="iic" style="background-position:${4 - cell % n * 32}px ${4 - Math.floor(cell / n) * 32}px"></span>`;
+}
+const itemPrice = r => r?.price ? `${r.price.toLocaleString("it-IT")} ₽` : "";
+const pocketDot = c => `<span class="dot" style="background:${POCKET_COLOURS[c] ?? "#888"}"></span>${esc(pocketName(c))}`;
+function itemRow(id, {group, tags = [], pocket = false} = {}) {
+  const r = S.items.get(id), p = r && S.data.pockets.find(x => x.name === r.pocket);
+  return comboRow(id, r?.label ?? `#${id}`, {group, before: itemIcon(id), side: itemPrice(r), title: r?.desc, words: r?.const,
+    sub: r?.desc ? `<span class="desc">${esc(r.desc)}</span>` : "",
+    tags: [pocket && p ? {text: pocketName(p.const), cls: "pk", style: `--pk:${POCKET_COLOURS[p.const] ?? "#888"}`} : "", ...tags]});
+}
 const fmtDate = t => new Date(t * 1000).toLocaleString("it-IT", {dateStyle: "short", timeStyle: "short"});
 const fmtTime = pt => `${pt[0]}:${String(pt[1]).padStart(2, "0")}`;
 const bits = n => [...Array(8)].map((_, i) => (n >> i) & 1);
@@ -429,6 +451,7 @@ function buildLists() {
   S.maps = new Map(d.maps.map(r => [r.id, r]));
   S.steps = new Map(d.story.map(s => [s.id, s]));
   S.itemByConst = new Map(d.items.map(r => [r.const, r]));
+  document.documentElement.style.setProperty("--itemsheet", `url("/api/itemicons.png?t=${d.tree}")`);
   S.speciesByConst = new Map(d.species.map(r => [r.const, r]));
   S.speciesByName = new Map();
   for (const r of d.species) if (!S.speciesByName.has(r.name)) S.speciesByName.set(r.name, r);
@@ -1606,14 +1629,13 @@ function heldRows(box, others, holding) {
     for (const id of [...p.items, ...(others ? p.others : [])].sort((a, b) => (S.items.get(a).label || "").localeCompare(S.items.get(b).label || "", "it"))) {
       const r = S.items.get(id);
       if (id !== holding && (!r.give || (box && mail.has(id)))) continue;
-      rows.push(comboRow(id, r.label, {group: esc(pocketName(p.const)), words: r.const,
+      rows.push(itemRow(id, {group: pocketDot(p.const), pocket: true,
         tags: [bag.get(id) ? `ne hai ${bag.get(id)}` : "", notGiven(r),
                r.give ? "" : {text: "nel gioco non si dà", cls: "warn"}]}));
     }
   }
   if (holding && !rows.some(r => r.id === holding)) {
-    const r = S.items.get(holding);
-    rows.push(comboRow(holding, r?.label ?? `#${holding}`, {group: "Quello che ha ora", tags: [{text: "nel gioco non si dà", cls: "warn"}]}));
+    rows.push(itemRow(holding, {group: "Quello che ha ora", pocket: true, tags: [{text: "nel gioco non si dà", cls: "warn"}]}));
   }
   return rows;
 }
@@ -1877,8 +1899,8 @@ function renderPocket(pocket) {
   const q = view.q.trim().toLowerCase();
   const shown = [...new Set(listed)].filter(id => (!q || `${label(id)} ${S.items.get(id)?.const ?? ""}`.toLowerCase().includes(q))
     && (view.show === "all" || (view.show === "have") === count(id) > 0));
-  const row = id => `<div class="dexrow ${ch.has(id) ? "dirty" : ""}" data-item="${id}">
-      <span class="nm" title="${esc(S.items.get(id)?.const ?? "")}">${esc(label(id))} ${tagHtml(tags(id))}</span>
+  const row = id => `<div class="dexrow ${ch.has(id) ? "dirty" : ""}" data-item="${id}">${itemIcon(id)}
+      <span class="nm" title="${esc([S.items.get(id)?.const, S.items.get(id)?.desc].filter(Boolean).join(": "))}">${esc(label(id))} ${tagHtml(tags(id))}</span>
       ${kind === "tick" ? `<label><input type="checkbox" data-k="have" ${count(id) ? "checked" : ""}> ce l'ho</label>` : qtyField(id, count(id), limit(id), label(id))}</div>`;
   const others = pocket.others.length && kind !== "pick";
   $("#pocket").innerHTML = `
@@ -1938,8 +1960,8 @@ function renderPocket(pocket) {
     const input = $("#additem");
     combo(input, {empty: "Nessuno strumento di questa tasca ha questo nome", rows: () => [...pocket.items, ...(view.others ? pocket.others : [])]
       .sort((a, b) => label(a).localeCompare(label(b), "it"))
-      .map(id => comboRow(id, label(id), {words: S.items.get(id)?.const, tags: [count(id) ? {text: count(id) >= limit(id) ? `ne hai ${count(id)}, il massimo` : `ne hai ${count(id)}`,
-                                                                                            cls: count(id) >= limit(id) ? "warn" : ""} : "", notGiven(S.items.get(id))]})),
+      .map(id => itemRow(id, {tags: [count(id) ? {text: count(id) >= limit(id) ? `ne hai ${count(id)}, il massimo` : `ne hai ${count(id)}`,
+                                                  cls: count(id) >= limit(id) ? "warn" : ""} : "", notGiven(S.items.get(id))]})),
       onPick: r => {
         const id = +r.id;
         input.value = ""; input.dataset.id = "";
@@ -1982,7 +2004,7 @@ function renderMachines(pocket) {
       regala, se ce l'hai già, non te la dà: il gioco vede la tasca senza posto e il regalo non avviene.</p>
     <div class="dexlist" style="margin-top:10px">${rows.map(m => {
       const n = count(m.item), name = machineName(S.items.get(m.item)?.name ?? `#${m.item}`);
-      return `<div class="dexrow ${ch.has(m.item) ? "dirty" : ""}" data-item="${m.item}">
+      return `<div class="dexrow ${ch.has(m.item) ? "dirty" : ""}" data-item="${m.item}">${itemIcon(m.item)}
         <span class="n" style="width:4.6em">${esc(name)}</span><span class="nm">${esc(S.moves.get(m.move)?.name ?? m.move)} ${typeBadges([m.type])}</span>
         <label><input type="checkbox" data-k="have" ${n ? "checked" : ""}> ce l'ho</label></div>`;
     }).join("") || `<span class="muted">Nessuna macchina.</span>`}</div>
