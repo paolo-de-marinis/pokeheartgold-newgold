@@ -1931,7 +1931,7 @@ function mapCombo(el) {
 let flagTimer = null;
 function renderFlags() {
   $("#tab").innerHTML = `<div class="bar" style="margin-top:0">
-      <input type="search" id="flagq" placeholder="Cerca per nome: UNK_076, 4079, GYM…" value="${esc(S.flagq || "")}" style="flex:1;min-width:200px" aria-label="Cerca flag e variabili">
+      <input type="search" id="flagq" placeholder="Cerca per nome o numero: UNK_076, GYM, 0x6a, 6a, 106…" value="${esc(S.flagq || "")}" style="flex:1;min-width:200px" aria-label="Cerca flag e variabili">
     </div>
     <p class="note">Solo flag e variabili che il salvataggio conserva (include/constants/flags.h e vars.h). Ogni cambio si salva subito, con backup.</p>
     <div id="flagres" class="scroll" style="margin-top:10px"></div>`;

@@ -654,6 +654,10 @@ class SaveUiTests(unittest.TestCase):
         found = {r["name"]: r["value"] for r in self.ok("/api/flags?f=gyms/test.sav&q=UNK_07")["rows"]}
         self.assertEqual(found["FLAG_UNK_076"], 1)
         self.assertEqual(self.ok("/api/flags?f=gyms/test.sav&q=4079")["rows"][0]["value"], 2)
+        # A number as the table shows it -- hex, with or without 0x -- or in decimal.
+        starter = sv.constants("include/constants/flags.h", "FLAG_")["FLAG_GOT_STARTER"]
+        for typed in (f"{starter:#x}", f"{starter:x}", str(starter)):
+            self.assertIn("FLAG_GOT_STARTER", [r["name"] for r in self.ok(f"/api/flags?f=gyms/test.sav&q={typed}")["rows"]], typed)
         self.assertEqual(len(self.backups()), 8, "one backup a write")
         self.assertIn("mappa", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "position",
                                                           "args": {"map": 60000, "x": 1, "y": 1}}))

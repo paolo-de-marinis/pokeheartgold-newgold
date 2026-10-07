@@ -3482,14 +3482,18 @@ def write_var(save, number, value):
 
 def find_flags(save, query):
     """The variables, then the flags, the save keeps whose name holds the
-    query. VAR_BASE is where the variables start, not one of them."""
-    query = query.upper()
+    query, or whose number it is: hex with or without 0x, as the page shows
+    them, or decimal. VAR_BASE is where the variables start, not one of
+    them."""
+    query, said = query.upper(), query.strip().lower()
+    numbers = {int(said, 16)} if re.fullmatch(r"(0x)?[0-9a-f]+", said) else set()
+    numbers |= {int(said)} if said.isdigit() else set()
     out = []
     for name, number in constants("include/constants/vars.h", "VAR_").items():
-        if query in name and VAR_BASE <= number < VAR_BASE + NUM_VARS and name != "VAR_BASE":
+        if (query in name or number in numbers) and VAR_BASE <= number < VAR_BASE + NUM_VARS and name != "VAR_BASE":
             out.append({"kind": "var", "name": name, "number": number, "value": var_value(save, number)})
     for name, number in constants("include/constants/flags.h", "FLAG_").items():
-        if query in name and 0 < number < num_flags() and not name.startswith("FLAG_ACTION_"):
+        if (query in name or number in numbers) and 0 < number < num_flags() and not name.startswith("FLAG_ACTION_"):
             out.append({"kind": "flag", "name": name, "number": number, "value": int(flag_is_set(save, number))})
     return out
 
