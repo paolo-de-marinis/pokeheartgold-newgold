@@ -319,8 +319,10 @@ Posizione: the map field lists first the places before someone
 (`savedit.story_places`: every person of a map's zone events whose talk
 script runs a scripted battle or gives a badge, and the trigger tiles and
 map scenes that start one -- the sixteen gym leaders, the Elite Four and
-Lance, Red, Elder Li, Proton, the rival, the Rocket executives, the
-leaders' rematches), each tagged, for the open save, as beaten, hidden or
+Lance, Red, Elder Li, Proton, the rival, the Rocket executives; then, in
+groups of their own, the gym trainers who fight from a talk -- Fuchsia's,
+Blaine's quiz -- and the leaders' rematches at the Fighting Dojo), each
+tagged, for the open save, as beaten, hidden or
 behind a closed gym; the leaders also as buttons under the field and, in
 Allenatore, beside their badge. A place puts the player on the tile the
 person faces, turned to them (Cianwood's before the winch Chuck needs

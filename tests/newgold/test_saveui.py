@@ -862,6 +862,29 @@ class SaveUiTests(unittest.TestCase):
         page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
         self.assertIn("S.givenBy.get(S.items.get(id)?.const) || S.data.givers?.[S.items.get(id)?.const]", page)
 
+    def test_a_place_is_named_for_what_is_there(self):
+        """The places' words say what is there: the Champion is no Elite
+        Four member, the Fighting Dojo's leaders are rematches and the gym
+        trainers who fight from a talk (Fuchsia's, Blaine's quiz) a group of
+        their own, a scene on entering is told from its person (the two
+        Kuni rows), the Pokégear map's level 0 has words, and the notes say
+        "davanti alla leva" for Chuck and "chi dà la Medaglia" for the
+        Rising Badge, whose places the data has as the page expects."""
+        places = self.ok("/api/data")["places"]
+        kuni = [p for p in places if p["key"] == "TRAINER_KIMONO_GIRL_KUNI"]
+        self.assertEqual(sorted(str(p["via"]) for p in kuni), ["None", "frame"])
+        self.assertTrue(any(p["trainer_const"] == "TRAINER_LEADER_WHITNEY_2" and not p["badge"] for p in places), "a rematch")
+        self.assertTrue(any(p["badge"] == "BADGE_SOUL" and not p["trainer_const"].startswith("TRAINER_LEADER_") for p in places))
+        page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
+        self.assertIn('/^TRAINER_CHAMPION_/.test(p.trainer_const) ? "Campione" : "Superquattro"', page)
+        self.assertIn('isRematch(p) ? "rivincita"', page)
+        for group in ("★ Allenatori delle palestre", "★ Rivincite dei capipalestra"):
+            self.assertIn(group, page)
+        self.assertIn('p.via === "frame" ? " (scena all\'ingresso)" : ""', page)
+        self.assertIn("n ? \"\" : \" · all'inizio\"", page)
+        self.assertIn('p.via === "bg" ? "Messo davanti alla leva"', page)
+        self.assertIn("`${placeName(S.data.places[S.pos.place])} (backup fatto)`", page)
+
     def test_a_plan_says_what_the_editor_does_not_do(self):
         """A place's plan names, in a tick's line, what its story steps do
         that the editor does not (an egg given: savedit's "other" writes),
