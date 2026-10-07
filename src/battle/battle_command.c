@@ -5474,7 +5474,16 @@ BOOL BtlCmd_TryKnockOff(BattleSystem *battleSystem, BattleContext *ctx) {
                // the power aside. The page says nothing of Corrosive Gas.
                && !(ctx->moveNoCur == MOVE_KNOCK_OFF && BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdAttacker)
                     && !BattleSystem_GetFieldSide(battleSystem, ctx->battlerIdTarget)
-                    && !(BattleSystem_GetBattleType(battleSystem) & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER)))) {
+                    && !(BattleSystem_GetBattleType(battleSystem) & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER)))
+               // A Sticky Barb latches onto the empty-handed Pokemon that
+               // touched its holder, Knock Off's included (Pokemon Central,
+               // Vischiopunta: "inclusa Privazione"; Showdown's gen-9 Barb
+               // moves in onHit, before Knock Off's onAfterHit finds nothing
+               // to take): it is left for the hit's held-item step
+               // (CheckItemEffectOnHit). Retail and the reference knock it
+               // off. Corrosive Gas touches nothing, and burns it.
+               && !(GetBattlerHeldItemEffect(ctx, ctx->battlerIdTarget) == HOLD_EFFECT_DMG_USER_CONTACT_XFR
+                    && ctx->battleMons[ctx->battlerIdAttacker].item == ITEM_NONE && BattleMoveMakesContact(ctx, ctx->moveNoCur))) {
         // "{0} knocked off {1}'s {2}!", or Corrosive Gas's "{0} corroded
         // {1}'s {2}!": the item is gone for the rest of the battle either way,
         // out of Recycle's and Harvest's reach (Pokemon Central, Gas

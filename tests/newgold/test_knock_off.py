@@ -244,7 +244,24 @@ class KnockOffTests(unittest.TestCase):
         self.assertRegex(knock, r"\} else if \(KnockOffCanRemoveItem\(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget\)\n(\s*//.*\n)*"
                                 r"\s*&& !\(ctx->moveNoCur == MOVE_KNOCK_OFF && BattleSystem_GetFieldSide\(battleSystem, ctx->battlerIdAttacker\)\n"
                                 r"\s*&& !BattleSystem_GetFieldSide\(battleSystem, ctx->battlerIdTarget\)\n"
-                                r"\s*&& !\(BattleSystem_GetBattleType\(battleSystem\) & \(BATTLE_TYPE_TRAINER \| BATTLE_TYPE_LINK \| BATTLE_TYPE_FRONTIER\)\)\)\) \{")
+                                r"\s*&& !\(BattleSystem_GetBattleType\(battleSystem\) & \(BATTLE_TYPE_TRAINER \| BATTLE_TYPE_LINK \| BATTLE_TYPE_FRONTIER\)\)\)\n")
+
+    def test_a_sticky_barb_latches_on_rather_than_coming_off(self):
+        # Pokemon Central (Vischiopunta): the Barb goes to the empty-handed
+        # Pokemon that touched its holder, "inclusa Privazione"; Showdown
+        # gen 9 moves it in onHit, before Knock Off's onAfterHit. Knock Off
+        # leaves it for the hit's held-item step, which no longer leaves
+        # Knock Off out; Corrosive Gas, touching nothing, still burns it.
+        knock = function(read("src/battle/battle_command.c"), "BtlCmd_TryKnockOff")
+        self.assertRegex(knock, r"\} else if \(KnockOffCanRemoveItem\(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget\)\n"
+                                r"(.*\n)*?"
+                                r"\s*&& !\(GetBattlerHeldItemEffect\(ctx, ctx->battlerIdTarget\) == HOLD_EFFECT_DMG_USER_CONTACT_XFR\n"
+                                r"\s*&& ctx->battleMons\[ctx->battlerIdAttacker\]\.item == ITEM_NONE && BattleMoveMakesContact\(ctx, ctx->moveNoCur\)\)\) \{\n")
+        hit = function(read("src/battle/overlay_12_0224E4FC.c"), "CheckItemEffectOnHit")
+        case = hit[hit.index("case HOLD_EFFECT_DMG_USER_CONTACT_XFR:"):]
+        case = case[:case.index("break;")]
+        self.assertNotIn("MOVE_KNOCK_OFF", case)
+        self.assertIn("BATTLE_SUBSCRIPT_TRANSFER_STICKY_BARB", case)
 
     def test_bestow_fails_as_the_games_do(self):
         # Pokemon Central (Cediregalo), and the engine's before-move checks:
