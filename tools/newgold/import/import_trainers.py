@@ -7,7 +7,9 @@ is a translation: class, items, AI flags, battle type, and a party of levels,
 species, held items and moves.
 
 A trainer naming something this repository does not define is reported and left
-as it was rather than half-written.
+as it was rather than half-written. A field or a trainer-type flag the
+translation does not know stops the run before anything is written: one read
+past would be dropped from every trainer that has it (KNOWN_FIELDS).
 
 It runs in a built tree, after `wotbl.py konefr`: a party Pokemon konefr left
 without moves under the moves flag gets the ones the game makes it with
@@ -76,6 +78,35 @@ def named_override(slot, named):
     return ABILITY_SLOTS[slot][1]
 
 DOUBLE = {"SINGLE_BATTLE": 0, "DOUBLE_BATTLE": 2, "NO_PARTNER_DOUBLE_BATTLE": 3}
+
+# Every designator the reference's table writes that this translation reads,
+# at any depth: the trainer's, its .data's, a party entry's, and a line's in
+# .text (import_trainer_text.py's). .shinyLock is read under
+# TRAINER_DATA_TYPE_SHINY_LOCK, as hg-engine reads it: nonzero is "shiny".
+# Anything else -- hg-engine's .ball, .nature, .setIvs, .additionalFlags, a
+# .partySize -- stops the run (unknown_fields), and so does a trainer-type
+# flag outside KNOWN_TYPES: each says something about the Pokemon that this
+# table would otherwise leave out without a word.
+KNOWN_FIELDS = {"name", "data", "party", "text", "type",
+                "trainerType", "trainerClass", "items", "aiFlags", "battleType",
+                "ivs", "abilitySlot", "level", "species", "item", "moves", "ability", "ballSeal", "shinyLock"}
+KNOWN_TYPES = {"TRAINER_DATA_TYPE_NOTHING", "TRAINER_DATA_TYPE_MOVES", "TRAINER_DATA_TYPE_ITEMS",
+               "TRAINER_DATA_TYPE_ABILITY", "TRAINER_DATA_TYPE_SHINY_LOCK"}
+
+
+def unknown_fields(block):
+    """What in a trainer's block the translation would drop: designators
+    and trainer-type flags it does not read, and a .shinyLock set under a
+    trainer without the flag hg-engine reads it under."""
+    code = re.sub(r'"(?:[^"\\]|\\.)*"', '""', block)
+    found = sorted({f".{name}" for name in re.findall(r"\.(\w+)\s*=", code)} - {f".{n}" for n in KNOWN_FIELDS})
+    kind = re.search(r"\.trainerType\s*=\s*([^,]+),", code)
+    flags = set(re.findall(r"TRAINER_DATA_TYPE_\w+", kind.group(1))) if kind else set()
+    found += sorted(flags - KNOWN_TYPES)
+    if "TRAINER_DATA_TYPE_SHINY_LOCK" not in flags and re.search(r"\.shinyLock\s*=\s*(?!0\b)\w", code):
+        found.append(".shinyLock without TRAINER_DATA_TYPE_SHINY_LOCK")
+    return found
+
 
 # konefr's plain errors, corrected on the way in (Paolo, 2026-09-25: a plain
 # konefr error is fixed and stays in docs/newgold/KONEFR-NOTES.md). Each one
@@ -264,6 +295,7 @@ def translate(block, flags, types):
     trainerType = 0
     for name in re.findall(r"TRAINER_DATA_TYPE_[A-Z_]+", re.search(r"\.trainerType\s*=\s*([^,]+),", block).group(1)):
         trainerType |= types[name]
+    shiny_lock = trainerType & types["TRAINER_DATA_TYPE_SHINY_LOCK"]
 
     # konefr's slip: a party Pokemon given a held item under a trainer without
     # TRAINER_DATA_TYPE_ITEMS (Chow #43, Edmond #52, Nob #251 at 8cbe6ab86;
@@ -322,6 +354,9 @@ def translate(block, flags, types):
                     personal_abilities(), entry["species"], native(named.group(1))))
         seal = re.search(r"\.ballSeal\s*=\s*(\d+)", member)
         entry["capsule"] = int(seal.group(1)) if seal else 0
+        lock = re.search(r"\.shinyLock\s*=\s*(\d+)", member)
+        if shiny_lock and lock and int(lock.group(1)):
+            entry["shiny"] = True       # TRPOKE_SHINY: CreateNPCTrainerParty makes it shiny
         party.append(entry)
 
     return {
@@ -354,6 +389,10 @@ def main():
              | defined("include/constants/trainer_class.h", "TRAINERCLASS_"))
 
     table = entries(args.reference)
+    unknown = {index: found for index, block in table.items() if (found := unknown_fields(block))}
+    if unknown:
+        raise SystemExit("the reference's trainers carry what this importer does not translate; nothing written:\n"
+                         + "\n".join(f"  #{index}: {', '.join(found)}" for index, found in sorted(unknown.items())))
     data = json.loads(TRAINERS.read_text())
     trainers = data["trainers"]
 

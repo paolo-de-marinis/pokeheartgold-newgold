@@ -544,6 +544,81 @@ class TrainerTests(unittest.TestCase):
             self.assertIn("nothing written", output)
             self.assertNotIn("correction stale", output, revision)
 
+    # A trainer as konefr's data/Trainers.c writes one, with hg-engine's shiny
+    # lock: the flag on the trainer, a .shinyLock on each party entry.
+    SHINY_BLOCK = """
+        .name = "Grunt",
+        .data = {
+            .trainerType = TRAINER_DATA_TYPE_MOVES | TRAINER_DATA_TYPE_SHINY_LOCK,
+            .trainerClass = TRAINERCLASS_TEAM_ROCKET,
+            .items = { ITEM_NONE, ITEM_NONE, ITEM_NONE, ITEM_NONE },
+            .aiFlags = F_PRIORITIZE_SUPER_EFFECTIVE,
+            .battleType = SINGLE_BATTLE,
+        },
+        .party = {
+            {
+                .ivs = 30,
+                .abilitySlot = TRAINER_POKEMON_ABILITY_1,
+                .level = 50,
+                .species = SPECIES_VENOMOTH,
+                .moves = { MOVE_BUG_BUZZ, MOVE_PSYCHIC, MOVE_SLUDGE_BOMB, MOVE_SLEEP_POWDER },
+                .shinyLock = 1,
+                .ballSeal = 0,
+            },
+            {
+                .ivs = 30,
+                .abilitySlot = TRAINER_POKEMON_ABILITY_1,
+                .level = 50,
+                .species = SPECIES_DUSTOX,
+                .moves = { MOVE_BUG_BUZZ, MOVE_SLUDGE_BOMB, MOVE_PSYCHIC, MOVE_LIGHT_SCREEN },
+                .shinyLock = 0,
+                .ballSeal = 0,
+            },
+        },
+        .text = {
+            {
+                .type = TRMSG_INTRO,
+                .text = "Not .so = fast!\\\\n",
+            },
+        },
+    },
+"""
+    SHINY_TYPES = {"TRAINER_DATA_TYPE_NOTHING": 0, "TRAINER_DATA_TYPE_MOVES": 1, "TRAINER_DATA_TYPE_ITEMS": 2,
+                   "TRAINER_DATA_TYPE_ABILITY": 4, "TRAINER_DATA_TYPE_SHINY_LOCK": 0x40}
+
+    def test_the_importer_reads_the_shiny_lock(self):
+        """hg-engine reads a party entry's .shinyLock only under the trainer's
+        TRAINER_DATA_TYPE_SHINY_LOCK, and makes it shiny when it is not 0:
+        "shiny": true here, and nothing on the others."""
+        party = import_trainers.translate(self.SHINY_BLOCK, {"F_PRIORITIZE_SUPER_EFFECTIVE": 1}, self.SHINY_TYPES)["party"]
+        self.assertEqual([m.get("shiny") for m in party], [True, None])
+        self.assertEqual(import_trainers.unknown_fields(self.SHINY_BLOCK), [])
+
+    def test_the_importer_stops_at_what_it_does_not_translate(self):
+        """A field, or a trainer-type flag, the translation does not read
+        would be dropped from every trainer that has it -- as .shinyLock was
+        until 8fe483d5a used it -- so the run stops before writing and names
+        each one; a .shinyLock set under a trainer without the flag too,
+        since his build ignores it there."""
+        nature = self.SHINY_BLOCK.replace(".shinyLock = 0,", ".shinyLock = 0,\n                .nature = NATURE_BOLD,")
+        self.assertEqual(import_trainers.unknown_fields(nature), [".nature"])
+        natured = self.SHINY_BLOCK.replace("TRAINER_DATA_TYPE_MOVES | TRAINER_DATA_TYPE_SHINY_LOCK",
+                                           "TRAINER_DATA_TYPE_MOVES | TRAINER_DATA_TYPE_NATURE_SET")
+        self.assertEqual(import_trainers.unknown_fields(natured),
+                         ["TRAINER_DATA_TYPE_NATURE_SET", ".shinyLock without TRAINER_DATA_TYPE_SHINY_LOCK"])
+        with tempfile.TemporaryDirectory(prefix="newgold-import-") as directory:
+            path = Path(directory)
+            (path / "include").mkdir()
+            (path / "data").mkdir()
+            (path / "include/trainer_data.h").write_text("".join(
+                f"#define {name} 0x{value:02X}\n" for name, value in self.SHINY_TYPES.items()))
+            (path / "data/Trainers.c").write_text("const TrainerData sTrainerData[] = {\n    [0] = {" + nature + "};\n")
+            run = subprocess.run([sys.executable, str(ROOT / "tools/newgold/import/import_trainers.py"), directory, "--write"],
+                                 capture_output=True, text=True)
+        self.assertNotEqual(run.returncode, 0)
+        self.assertIn("nothing written", run.stderr)
+        self.assertIn("#0: .nature", run.stderr)
+
     def test_samantha_s_lines_name_her_persian(self):
         """konefr's eb4e20f17 made Beauty Samantha #70's Meowth a Persian with
         the same moves and her other Meowth a Wigglytuff; her retail lines,
