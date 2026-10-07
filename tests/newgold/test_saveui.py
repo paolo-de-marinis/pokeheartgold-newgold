@@ -274,6 +274,7 @@ class SaveUiTests(unittest.TestCase):
         the headers: a header saved after the build was linked is named, a
         build linked after them names none."""
         old = Path(tempfile.mkdtemp(dir=self.tmp.name))
+        (old / "main.sbin").write_bytes(b"")
         (old / "main.elf").write_bytes(b"")
         os.utime(old / "main.elf", ns=(0, 0))
         self.assertIn("include/constants/pokemon.h", sv.build_behind(old))

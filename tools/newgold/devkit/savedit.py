@@ -7,7 +7,8 @@ Pokemon Centre, the machine labels need a gym. The save holds all of it, and
 the save is decompiled here, so it can be prepared instead.
 
 Nothing here is a guessed offset. The block table is the one
-SaveData_InitSubstructs builds, measured out of the built ROM by save_budget;
+SaveData_InitSubstructs builds, measured out of the built ROM by save_budget
+(with no build, as save_layout.json keeps it);
 the flash mapping is GetChunkOffsetFromCurrentSaveSlot; the two checksums are
 SaveSubstruct_UpdateCRC and SaveSlot_BuildFooter; and every size, offset
 and limit of the save is what the host compiler makes of this repository's
@@ -386,14 +387,32 @@ def crc16(data, crc=0xFFFF):
 
 @functools.lru_cache(maxsize=4)
 def _measured(build, stamp):
-    return save_budget.measure(Path(build))
+    return save_budget.measure(build and Path(build))
+
+
+def linked(build=None):
+    """The build folder when the game is linked in it -- a clone has none."""
+    build = Path(build or ROOT / "build/heartgold.us")
+    return build if all((build / name).is_file() for name in ("main.sbin", "main.elf")) else None
 
 
 def measure(build=None):
-    """save_budget.measure, once per build of the ROM rather than once per file."""
-    build = Path(build or ROOT / "build/heartgold.us")
-    return _measured(str(build), tuple((build / name).stat().st_mtime_ns
-                                       for name in ("main.sbin", "main.elf")))
+    """save_budget.measure, once per build of the ROM rather than once per
+    file; with no build, the sizes save_layout.json keeps."""
+    build = linked(build)
+    files = [build / "main.sbin", build / "main.elf"] if build else [save_budget.LAYOUT, save_budget.ARRAYS]
+    return _measured(build and str(build), tuple(path.stat().st_mtime_ns for path in files))
+
+
+def layout_file_differs(build=None):
+    """The blocks whose size save_layout.json keeps otherwise than the build
+    measures it (a block changed, save_budget.py --write not run since);
+    none with no build to compare it with."""
+    if not linked(build):
+        return []
+    kept = json.loads(save_budget.LAYOUT.read_text())
+    inside, outside = measure(build)
+    return [name for name, size, _ in inside + outside if kept.get(name) != size]
 
 
 def build_behind(build=None):
@@ -401,12 +420,15 @@ def build_behind(build=None):
     build was linked. The blocks' sizes are measured from the build -- the
     game's Save_*_sizeof functions exist in no other form -- and the fields
     inside them are read from the headers: until make runs again, a
-    changed struct can make the two disagree."""
-    linked = (Path(build or ROOT / "build/heartgold.us") / "main.elf").stat().st_mtime_ns
+    changed struct can make the two disagree. With no build, none."""
+    build = linked(build)
+    if not build:
+        return []
+    at = (build / "main.elf").stat().st_mtime_ns
     newer = []
     for path in list(_READ):
         try:
-            if path.suffix == ".h" and path.stat().st_mtime_ns > linked:
+            if path.suffix == ".h" and path.stat().st_mtime_ns > at:
                 newer.append(str(path.relative_to(ROOT)))
         except OSError:
             continue
