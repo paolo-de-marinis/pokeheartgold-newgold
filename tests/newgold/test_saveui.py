@@ -708,6 +708,56 @@ class SaveUiTests(unittest.TestCase):
         out = self.edit("position", {"map": centre, "x": 8, "y": 13, "direction": 0})
         self.assertEqual(out["position"]["tile"], [15, 8 + 2], "the Pokégear's mark: Violet City's tile")
 
+    def test_a_place_before_every_leader(self):
+        """/api/data's places (savedit.story_places): one before every
+        gym's leader -- the person whose script runs the gym's battle, or
+        gives its badge -- and before the Elite Four and the others the
+        story has the player face; each one a tile op "position" takes,
+        a step from the person and turned to them. Cianwood's is at the
+        winch Chuck needs turned first; the League's rooms are their
+        arrival, where the game walks the player in. "show" clears the
+        flag that hides the person (Jasmine, until the Lighthouse), one
+        change with the position. The maps where the game never saves are
+        not offered."""
+        data = self.ok("/api/data")
+        places = data["places"]
+        leader = lambda p: p["badge"] and (p["kind"] == "badge" or (p["trainer_const"] or "").startswith("TRAINER_LEADER_"))  # noqa: E731
+        self.assertEqual({p["badge"] for p in places if leader(p)}, {b["const"] for b in data["badges"]})
+        self.assertGreaterEqual(len([p for p in places if leader(p)]), 16)
+        save = sv.Save(self.save)
+        lib = saveui.Handler.library
+        for p in places:
+            lib.put(save, {"map": p["map"], "x": p["x"], "y": p["y"], "direction": p["direction"]})
+            if not p["walked"] and p["via"] in (None, "bg"):
+                (ax, ay), (dx, dy) = p["at"], {0: (0, -1), 1: (0, 1), 2: (-1, 0), 3: (1, 0)}[p["direction"]]
+                self.assertEqual((p["x"] + dx, p["y"] + dy), (ax, ay), f"{p['key']}: turned to them, a step away")
+        maps = sv.constants("include/constants/maps.h", "MAP_")
+        chuck = next(p for p in places if p["trainer_const"] == "TRAINER_LEADER_CHUCK_CHUCK")
+        self.assertEqual((chuck["map"], chuck["via"]), (maps["MAP_CIANWOOD_GYM"], "bg"))
+        will = next(p for p in places if (p["trainer_const"] or "").startswith("TRAINER_ELITE_FOUR_WILL"))
+        self.assertTrue(will["walked"])
+        self.assertEqual((will["x"], will["y"]), (sv.preset(will["map"])["x"], sv.preset(will["map"])["y"]))
+        self.assertTrue(any(p["key"] == "TRAINER_ELDER_LI" for p in places))
+        # Jasmine: hidden in a new game's save, shown by the place's "show".
+        jasmine = next(p for p in places if p["trainer_const"] == "TRAINER_LEADER_JASMINE_JASMINE")
+        flags = sv.constants("include/constants/flags.h", "FLAG_")
+        sv.write_flag(save, flags[jasmine["hide"][0]], True)
+        self.save.write_bytes(save.image())
+        self.assertTrue(self.ok("/api/save?f=gyms/test.sav")["places"][places.index(jasmine)]["hidden"])
+        out = self.edit("position", {"map": jasmine["map"], "x": jasmine["x"], "y": jasmine["y"],
+                                     "direction": jasmine["direction"], "show": jasmine["hide"]})
+        self.assertEqual(out["position"]["current"]["map"], jasmine["map"])
+        self.assertFalse(out["places"][places.index(jasmine)]["hidden"])
+        self.assertIn("non è il flag", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "position", "args": {
+            "map": jasmine["map"], "x": jasmine["x"], "y": jasmine["y"], "show": ["FLAG_GAME_CLEAR"]}}))
+        offered = {m["id"] for m in data["maps"]}
+        for const in ("MAP_UNION", "MAP_SAFARI_ZONE_01", "MAP_PAL_PARK", "MAP_NATIONAL_PARK_BUG_CATCHING_CONTEST",
+                      "MAP_GOLDENROD_UNUSED_1"):
+            self.assertNotIn(maps[const], offered, const)
+        self.assertIn(maps["MAP_NATIONAL_PARK"], offered)
+        self.assertIn("non è un luogo", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "position",
+                                                                   "args": {"map": maps["MAP_UNION"], "x": 8, "y": 14}}))
+
     def test_a_part_that_does_not_read_leaves_the_rest(self):
         """A reader of the tree that fails -- the town map's art exported
         another way, a function renamed -- empties its part of /api/data

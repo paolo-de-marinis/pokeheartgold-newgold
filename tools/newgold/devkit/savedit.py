@@ -4383,6 +4383,261 @@ def story_state(save):
     return {"done": done, "met": met}
 
 
+# ---------------------------------------------------------------------------
+# The places to open a save in front of someone: the people (and trigger
+# tiles) whose script runs a scripted battle or gives a badge.
+
+_FACING = {0: (0, -1), 1: (0, 1), 2: (-1, 0), 3: (1, 0)}       # DIR_NORTH, SOUTH, WEST, EAST
+_FACING_BACK = {0: 1, 1: 0, 2: 3, 3: 2}
+
+
+def _reach(stem, start, zero=True):
+    """The lines an entry of a script file can run from `start`: each jump
+    and call followed both ways, to End or Return -- but, `zero`, a test of
+    a temporary variable decided as the game finds it on entering the map,
+    0 (Chuck answers only once the waterfall's winch has set one)."""
+    script = _script(stem)
+    lines, labels = script["lines"], script["labels"]
+    seen, todo, compared = set(), [start], {}
+    while todo:
+        i = todo.pop()
+        if i is None or i in seen or not 0 <= i < len(lines):
+            continue
+        seen.add(i)
+        op, args = lines[i]
+        if op in _ENDS or op == "Return":
+            continue
+        if op == "GoTo":
+            todo.append(labels.get(args[0]))
+            continue
+        if op == "Compare" and len(args) == 2:
+            compared[i + 1] = (args[0], _number(args[1]))
+        test = compared.get(i)
+        if (zero and test and test[0].startswith("VAR_TEMP_") and test[1] is not None
+                and op in ("GoToIfEq", "GoToIfNe", "GoToIfLt", "GoToIfGt", "GoToIfLe", "GoToIfGe")):
+            taken = _TESTS[op[6:].lower()](0, test[1])
+            todo.append(labels.get(args[-1]) if taken else i + 1)
+            continue
+        if op == "Call" or op[:6] in ("GoToIf", "CallIf"):
+            todo.append(labels.get(args[-1]))
+        todo.append(i + 1)
+    return seen
+
+
+def _marker(op, args):
+    """A battle or a badge a script gives: (kind, constant)."""
+    if op == "TrainerBattle" and args and args[0].startswith("TRAINER_"):
+        return "battle", args[0]
+    if op == "GiveBadge" and args:
+        return "badge", args[0]
+    return None
+
+
+def _walked_in(const):
+    """Whether entering the map runs a frame-table script before the player
+    can move -- a temporary variable at 0, as every entry leaves it, or one
+    the map's OnTransition script sets to the value -- that is no gate: the
+    Elite Four's rooms walk the player up to the member, Lance's to the
+    middle. A place there is the map's arrival, and the game does the rest."""
+    hdr = _bank_file(map_headers()[const], "scriptHeaderBank", "scr_seq_", SCRIPTS, ".s")
+    if not hdr or not (ROOT / hdr).exists():
+        return False
+    text = source(hdr).read_text()
+    stem = re.fullmatch(r"NARC_scr_seq_(scr_seq_\w+)_bin", map_headers()[const].get("scriptsBank", ""))
+    gates = _gates()[0]
+    set_on_entry = set()
+    for label in re.findall(r"InitScriptEntry_OnTransition _EV_(\w+) \+ 1", text):
+        if stem and label in _script(stem.group(1))["labels"]:
+            script = _script(stem.group(1))
+            set_on_entry |= {(a[0], _number(a[1])) for j in _reach(stem.group(1), script["labels"][label], zero=False)
+                             for op, a in [script["lines"][j]] if op == "SetVar" and len(a) == 2}
+    for var, value in re.findall(r"InitScriptGoToIfEqual (VAR_\w+), (\w+), _EV_\w+ \+ 1", text):
+        if var in gates:
+            continue
+        if (var.startswith("VAR_TEMP_") and _number(value) == 0) or (var, _number(value)) in set_on_entry:
+            return True
+    return False
+
+
+@tree_cache
+def nosave_maps():
+    """The maps where the game never leaves a save, as the start menu
+    turns SAVE off there: the Union Room (MapHeader_MapIsUnionRoom), the
+    Battle Tower's partner room (FieldSystem_MapIsBattleTowerMultiPartnerSelectRoom),
+    and the places the player is in only under the Safari Zone's or the Pal
+    Park's flag -- the map a script warps to after the command that sets
+    it (SafariZoneAction, PalParkAction, the case that calls the setter),
+    or the map whose own script sets it, and the maps of its section no
+    warp leads to (the Safari's areas, which the Safari lays out itself) --
+    and a second header over another map's ground in its section that only
+    a script warps to (the Bug-Catching Contest's National Park). A save put
+    there continues without the state the game sets on the way in.
+    {map: why}."""
+    maps = constants("include/constants/maps.h", "MAP_")
+    table = map_table()
+    out = {maps[m]: "union" for m in re.findall(r"mapId == (MAP_\w+)", c_function("src/map_header.c", "BOOL MapHeader_MapIsUnionRoom("))}
+    text = source("asm/unk_02066EDC.s").read_text()
+    body = text[text.index("FieldSystem_MapIsBattleTowerMultiPartnerSelectRoom:"):]
+    out.update({maps[m]: "partner" for m in re.findall(r"\.word (MAP_\w+)", body[:body.index("thumb_func_end")])})
+    starts = {"SafariZoneAction": (re.search(r"case (\d+):\s*Save_VarsFlags_SetSafariSysFlag",
+                                             c_function("src/scrcmd_c.c", "BOOL ScrCmd_SafariZoneAction(")).group(1), "safari"),
+              "PalParkAction": (re.search(r"var0 == (\d+)\) \{\s*Save_VarsFlags_SetPalParkSysFlag",
+                                          c_function("src/scrcmd_12.c", "BOOL ScrCmd_PalParkAction(")).group(1), "palpark")}
+    led = set()         # the maps a warp event leads to
+    for map_id in table:
+        for warp in map_events(map_id).get("warps", []) if map_chunks(map_id) else []:
+            if warp.get("header") in maps:
+                led.add(maps[warp["header"]])
+    flagged = {}
+    for stem in _script_stems():
+        script = _script(stem)
+        for label in script["entries"]:
+            if label not in script["labels"]:
+                continue
+            reach = sorted(_reach(stem, script["labels"][label], zero=False))
+            for j in reach:
+                op, args = script["lines"][j]
+                if op in starts and args and args[0] == starts[op][0]:
+                    after = [maps[a[0]] for k in reach if k > j for o, a in [script["lines"][k]] if o == "Warp" and a[0] in maps]
+                    for map_id in after or [maps[c] for c in _map_of_scripts().get(stem, []) if c in maps]:
+                        flagged[map_id] = starts[op][1]
+    for map_id, why in flagged.items():
+        out[map_id] = why
+        out.update({m: why for m, row in table.items() if row["section"] == table[map_id]["section"]
+                    and m not in led and m not in out and map_chunks(m)})
+    matrix = _matrix_of()
+    for map_id, row in table.items():
+        if map_id in out or map_id in led or not map_chunks(map_id) or matrix.get(map_id) == main_matrix()[1]:
+            continue
+        if any(m != map_id and m in led and matrix.get(m) == matrix.get(map_id) and other["section"] == row["section"]
+               for m, other in table.items()):
+            out[map_id] = "event"
+    return out
+
+
+@tree_cache
+def story_places():
+    """Every place to open a save in front of someone the story has the
+    player face: a person of a map's zone events whose talk script runs a
+    scripted battle (TrainerBattle; not a sight trainer's std_trainer) or
+    gives a badge, and a trigger tile whose script runs a battle. Each:
+    "map", "x", "y", "direction" -- the free tile the person faces (another
+    free side, else), the player turned to them; before a trigger, the free
+    tile beside it, turned onto it; on a map the game walks the player into
+    (_walked_in), the map's arrival -- "kind" (battle or badge), "key" (the
+    trainer or the badge), "trainer" (its name), "step" (the story step
+    whose marker it is, if one), "badge" (the gym's, if in one), "hide"
+    (the flag that hides the person, if any), "first": where a temporary
+    variable the battle needs is set first on a fresh entry (Cianwood's
+    winch), the place before that instead, and "via": what the player does
+    there first ("bg": a sign or switch, "coord": a step onto a trigger)."""
+    steps = {(s["script"], s["line"]): s for s in story()}
+    trainers, names = constants("include/constants/trainers.h", "TRAINER_"), trainer_names()
+    out = []
+    for map_id, row in map_table().items():
+        header = map_headers().get(row["const"], {})
+        stem = re.fullmatch(r"NARC_scr_seq_(scr_seq_\w+)_bin", header.get("scriptsBank", ""))
+        if not stem or not map_chunks(map_id) or map_id in nosave_maps():
+            continue
+        stem = stem.group(1)
+        script, events = _script(stem), map_events(map_id)
+        if not events:
+            continue
+        free = lambda x, y: tile_problem(map_id, x, y) is None   # noqa: E731
+        walked = None
+
+        def place(x, y, sides, facing=None):
+            """The first free side of (x, y), as (x, y, the way the player faces)."""
+            for d in sides:
+                dx, dy = _FACING[d]
+                if free(x + dx, y + dy):
+                    return x + dx, y + dy, _FACING_BACK[d] if facing is None else facing
+            return None
+
+        def entry(label):
+            return script["labels"].get(label) if label else None
+
+        hdr = _bank_file(header, "scriptHeaderBank", "scr_seq_", SCRIPTS, ".s")
+        frames = re.findall(r"InitScriptGoToIfEqual VAR_\w+, \w+, (_EV_\w+ \+ 1)", source(hdr).read_text()) \
+            if hdr and (ROOT / hdr).exists() else []
+        people = [("object", o) for o in events.get("objects", [])] + [("coord", c) for c in events.get("coords", [])] \
+            + [("frame", {"scriptId": f, "x": None, "z": None}) for f in frames]
+        for kind, ev in people:
+            label = re.fullmatch(r"_EV_(\w+) \+ 1", str(ev.get("scriptId", "")))
+            at = entry(label and label.group(1))
+            if at is None:
+                continue
+            lines = sorted(_reach(stem, at, zero=False))
+            found = [(j, _marker(*script["lines"][j])) for j in lines if _marker(*script["lines"][j])]
+            if not found:
+                continue
+            j, (what, key) = next(((j, m) for j, m in found if (stem, j + 1) in steps), found[0])
+            step = steps.get((stem, j + 1))
+            first, via = None, None
+            if kind == "object" and j not in _reach(stem, at):
+                # The battle wants a temporary variable no entry leaves set: stand first where it is set.
+                tested = {script["lines"][k][1][0] for k in lines if script["lines"][k][0] == "Compare"
+                          and script["lines"][k][1][0].startswith("VAR_TEMP_")}
+                for bg_kind, bg in [("bg", b) for b in events.get("bgs", [])] + [("object", o) for o in events.get("objects", [])]:
+                    bg_label = re.fullmatch(r"_EV_(\w+) \+ 1", str(bg.get("scriptId", "")))
+                    bg_at = entry(bg_label and bg_label.group(1))
+                    if bg_at is not None and any(script["lines"][k][0] != "Compare" and tested & set(script["lines"][k][1])
+                                                 for k in _reach(stem, bg_at)):
+                        first, via = bg, bg_kind
+                        break
+                if first is None:
+                    continue
+            if walked is None:
+                walked = _walked_in(row["const"])
+            x, y = ev["x"], ev["z"]
+            if walked or kind == "frame":
+                spot = preset(map_id)
+                spot = spot and (spot["x"], spot["y"], spot["direction"])
+            elif first is not None:
+                spot = place(first["x"], first["z"], (1, 0, 2, 3))
+            elif kind == "object":
+                d = ev.get("facingDirection", 1)
+                spot = place(x, y, [d] + [s for s in (1, 0, 2, 3) if s != d])
+            else:
+                width, height = ev.get("w", 1), ev.get("h", 1)
+                spot = next((s for s in (place(x + i, y + height - 1, (1,), facing=0) for i in range(width)) if s), None) \
+                    or next((s for s in (place(x + i, y, (0,), facing=1) for i in range(width)) if s), None)
+            if not spot:
+                continue
+            trainer = key if what == "battle" else (step or {}).get("battle")
+            hide = [ev["eventFlag"]] if kind == "object" and ev.get("eventFlag") not in (None, "FLAG_NOTHING", "0", 0) else []
+            same = next((p for p in out if (p["map"], p["x"], p["y"], p["key"]) == (map_id, spot[0], spot[1], key)), None)
+            if same:        # one person drawn twice, disguised and revealed (Fuchsia's Gym): one place, both flags
+                same["hide"] += [h for h in hide if h not in same["hide"]]
+                continue
+            out.append({"map": map_id, "x": spot[0], "y": spot[1], "direction": spot[2], "kind": what, "key": key,
+                        "trainer": names[trainers[trainer]] if trainer in trainers and trainers[trainer] < len(names) else "",
+                        "trainer_const": trainer, "step": step["id"] if step else None,
+                        "badge": (step or {}).get("badge"), "hide": hide, "walked": walked,
+                        "via": via if first is not None else kind if kind in ("coord", "frame") else None,
+                        "at": [x, y] if first is None else [first["x"], first["z"]]})
+    return out
+
+
+def place_state(save, place):
+    """Where the save stands for a place: whether its person is hidden
+    (their flag set), its trainer beaten, and the gate keeping the player
+    out of its map, if the save holds it closed (the gate step's id)."""
+    names, _, _, trainer_base = _script_names()
+    hidden = bool(place["hide"]) and all(h in names and flag_is_set(save, names[h]) for h in place["hide"])
+    beaten = bool(place["trainer_const"] and place["trainer_const"] in names
+                  and flag_is_set(save, trainer_base + names[place["trainer_const"]]))
+    gate = None
+    const = map_table()[place["map"]]["const"]
+    gates, _ = _gates()
+    hdr = _bank_file(map_headers()[const], "scriptHeaderBank", "scr_seq_", SCRIPTS, ".s")
+    if hdr and (ROOT / hdr).exists():
+        for var, value in re.findall(r"InitScriptGoToIfEqual (VAR_\w+), (\w+), _EV_\w+ \+ 1", source(hdr).read_text()):
+            if var in gates and var in names and var_value(save, names[var]) == _number(value):
+                gate = next((s["id"] for s in story() if s["kind"] == "gate" and s["key"] == var), None) or var
+    return {"hidden": hidden, "beaten": beaten, "gate": gate}
+
+
 def _step(step_id):
     step = next((s for s in story() if s["id"] == step_id), None)
     if step is None:
@@ -4544,6 +4799,10 @@ def main():
                              "mapId, warpId, x, y and direction; Continue enters the map as "
                              "a warp does, a gym in its first state (Azalea's Spinarak at "
                              "their starts, none in Bugsy's room)")
+    parser.add_argument("--before", metavar="TRAINER_OR_BADGE",
+                        help="put the player in front of the person who runs that scripted battle or gives "
+                             "that badge (story_places: TRAINER_LEADER_WHITNEY, BADGE_RISING), facing them, "
+                             "the flags that hide them cleared; as the editor's Posizione does")
     parser.add_argument("--from-ram", type=Path,
                         help="a boot_check memory dump; the game lays out a whole "
                              "save region before the title screen, and this seals it "
@@ -4686,6 +4945,17 @@ def main():
         save.write()
         print(f"{name} ({number:#x}) {'cleared' if value == '0' else 'set'}")
 
+    if args.before:
+        place = next((p for p in story_places() if args.before in (p["key"], p["trainer_const"])), None)
+        if place is None:
+            raise SystemExit(f"--before: nobody runs {args.before} (story_places)")
+        names = _script_names()[0]
+        for flag in place["hide"]:
+            write_flag(save, names[flag], False)
+        set_position(save, place["map"], place["x"], place["y"], place["direction"])
+        save.write()
+        print(f"put the player before {args.before} on map {place['map']} at ({place['x']}, {place['y']}) "
+              f"facing {place['direction']}{', showing ' + ', '.join(place['hide']) if place['hide'] else ''}")
     if args.where:
         parts = args.where.split(":")
         map_id, x, y = (int(v) for v in parts[:3])

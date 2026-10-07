@@ -565,6 +565,7 @@ class Library:
                                                                      "level_cap": 0, "menu": {}}),
                 "story": part(errors, "story", lambda: {**sv.story_state(save), "left": self.story_left(key, save)},
                               {"done": [], "met": {}, "left": {}}),
+                "places": part(errors, "places", lambda: [sv.place_state(save, p) for p in sv.story_places()], []),
                 "errors": errors}
 
     def story_records(self, key):
@@ -1002,6 +1003,20 @@ class Library:
         sv.set_dex_switches(save, enabled=a.get("enabled"), national=a.get("national"))
 
     def op_position(self, save, a):
+        """The player put on a map. With a place of the story (Posizione's
+        "Davanti a…"), in the same change: the story steps to run or take
+        back first ("run", "undo", as op "story"), and the flag that hides
+        the person there cleared ("show": a place's own hide flag)."""
+        report = self.op_story(save, a) if a.get("run") or a.get("undo") else None
+        names = sv._script_names()[0]
+        for flag in a.get("show", []):
+            if not any(p["hide"] == [flag] for p in sv.story_places()):
+                raise Refused(f"{flag} non è il flag che nasconde una persona davanti a cui mettersi")
+            sv.write_flag(save, names[flag], False)
+        self.put(save, a)
+        return report
+
+    def put(self, save, a):
         where = number(a["map"], 0, 0xFFFF, "mappa")
         if where not in sv.map_table() or not standable(where):
             raise Refused(f"la mappa {where} non è un luogo dove stare")
@@ -1156,9 +1171,13 @@ def story_table():
 
 def standable(map_id):
     """A map the player can be put on: not MAP_EVERYWHERE, which is the
-    header of no place, and one with chunks of its own (the unused ones
-    have none)."""
-    return map_id != sv.constants("include/constants/maps.h", "MAP_")["MAP_EVERYWHERE"] and bool(sv.map_chunks(map_id))
+    header of no place, one with chunks of its own, none the tree names as
+    unused (MAP_GOLDENROD_UNUSED_1: leftovers with a header), and none where
+    the game never leaves a save (savedit.nosave_maps: the Union Room, the
+    Safari Zone, Pal Park, the Bug-Catching Contest's park)."""
+    const = sv.map_table()[map_id]["const"] if map_id in sv.map_table() else ""
+    return (map_id != sv.constants("include/constants/maps.h", "MAP_")["MAP_EVERYWHERE"] and bool(sv.map_chunks(map_id))
+            and "_UNUSED" not in const and map_id not in sv.nosave_maps())
 
 
 def in_pocket(item, pocket=None):
@@ -1503,6 +1522,7 @@ def tables():
             "level_cap": part(errors, "level_cap", sv.level_cap_milestones, {"milestones": [], "none": 0}),
             "field_moves": part(errors, "field_moves", field_moves, {}),
             "machines": part(errors, "machines", sv.machine_table, []),
+            "places": part(errors, "places", sv.story_places, []),
             "limits": {"party": sv.PARTY_SIZE, "boxes": sv.NUM_BOXES, "box_slots": sv.MONS_PER_BOX,
                        "name": sv.PLAYER_NAME_LENGTH, "money": sv.MAX_MONEY, "coins": sv.MAX_COINS,
                        "hours": sv.MAX_PLAY_HOURS, "level": sv.MAX_LEVEL, "moves": sv.MAX_MON_MOVES,

@@ -1,0 +1,14 @@
+{
+  "about": "The save editor's places (savedit.story_places, Posizione's 'Davanti a…' and savedit --before): route29-official.sav put before Jasmine in Olivine's Gym, where a new game's save has her hidden (FLAG_HIDE_JASMINE_IN_GYM, set by the New Game script and cleared by the Lighthouse scene). --before clears the flag that hides her and puts the player on the tile she faces, turned to her: Continue enters the Gym there, and one A has her say her line before the battle (msg_0606_T26GYM0101 row 0, 606 << 16). A place on the wrong tile, turned away, or with her still hidden leaves the field with no line.",
+  "save": "route29-official.sav",
+  "edit": ["--before", "TRAINER_LEADER_JASMINE_JASMINE"],
+  "steps": [
+    "field",
+    {"expect": {"map": "MAP_OLIVINE_GYM", "x": 6, "y": 6, "flag:FLAG_HIDE_JASMINE_IN_GYM": 0}},
+    "poke:gDiagFieldMessage=0",
+    "A",
+    "wait:200",
+    {"expect": {"gDiagFieldMessage": 39714816}}
+  ],
+  "expect": {"map": "MAP_OLIVINE_GYM"}
+}
