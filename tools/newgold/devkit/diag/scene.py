@@ -169,7 +169,9 @@ battlerN.species|hp|maxHp|level|partySlot|status|item|moveK|ppK|form|movePos
 or Cherrim's sun: CASTFORM_SNOWY 3; movePos the slot it chose last, 0 to
 3), battlerN.types (its two types as the battle has them, BattleMon's type1
 and type2 -- a form's, Castform's in the rain, or the one Soak gave: a
-TYPE_... expected is one of them), front1.lift (how many rows over the
+TYPE_... expected is one of them), battlerN.shiny (1 when its BattleMon's
+personality and OT ID pass SHINY_CHECK, as the battle's own shiny bit is
+set from them: the sparkle and the shiny palette), front1.lift (how many rows over the
 ground line the wild foe's front stands on the screen: the line ov12 stands
 the lowest opaque row of a front with a Y offset of 0 on, 89, less that row
 as a shot shows it, the picture found by its PNG; so its a/1/8/0 Y offset;
@@ -257,7 +259,7 @@ def readable(step_or_key, key=False):
                 or re.fullmatch(r"caught:SPECIES_\w+", step_or_key) is not None
                 or re.fullmatch(r"bag:ITEM_\w+", step_or_key) is not None
                 or re.fullmatch(r"bg[0-7]:\d+,\d+", step_or_key) is not None
-                or re.fullmatch(rf"battler[0-3]\.({'|'.join(BATTLER_FIELDS)}|types)", step_or_key) is not None
+                or re.fullmatch(rf"battler[0-3]\.({'|'.join(BATTLER_FIELDS)}|types|shiny)", step_or_key) is not None
                 or re.fullmatch(rf"party[0-5]\.({'|'.join(PARTY_FIELDS)})", step_or_key) is not None
                 or re.fullmatch(rf"options\.({'|'.join(OPTION_FIELDS)})", step_or_key) is not None)
     if isinstance(step_or_key, dict):
@@ -268,15 +270,16 @@ def readable(step_or_key, key=False):
 
 @savedit.tree_cache
 def battle_layout():
-    """BattleMon's size and the offsets teach: and set: write and battlerN.types reads, from the tree's headers."""
+    """BattleMon's size and the offsets teach: and set: write and battlerN.types and .shiny read, from the tree's headers."""
     names = ("sizeof(BattleMon)", "__builtin_offsetof(BattleMon, moves)", "__builtin_offsetof(BattleMon, movePPCur)",
              "__builtin_offsetof(BattleMon, hp)", "__builtin_offsetof(BattleContext, battleMons)",
              "__builtin_offsetof(BattleContext, unk_0)", "__builtin_offsetof(BattleMon, status)",
              "__builtin_offsetof(BattleMon, ability)", "__builtin_offsetof(BattleMon, item)",
              "__builtin_offsetof(BattleMon, speed)", "__builtin_offsetof(BattleContext, unk_314C)",
-             "__builtin_offsetof(BattleMon, type1)", "__builtin_offsetof(BattleMon, type2)")
+             "__builtin_offsetof(BattleMon, type1)", "__builtin_offsetof(BattleMon, type2)",
+             "__builtin_offsetof(BattleMon, personality)", "__builtin_offsetof(BattleMon, otid)")
     return dict(zip(("size", "moves", "pp", "hp", "mons", "select", "status", "ability", "item", "speed", "chose",
-                     "type1", "type2"), savedit.compile_c(
+                     "type1", "type2", "personality", "otid"), savedit.compile_c(
         exprs=names, headers=savedit.LAYOUT_HEADERS + ("battle/battle.h",))[0]))
 
 
@@ -1879,6 +1882,13 @@ class Scene:
             if field == "types":    # the battle's own, a form's or a move's: BattleMon.type1 and type2
                 mon, layout = self.battle_mon(int(battler)), battle_layout()
                 return None if mon is None else [ram[mon - 0x02000000 + layout[t]] for t in ("type1", "type2")]
+            if field == "shiny":    # BattleMon.shiny's bitfield, from what the battle sets it by
+                mon, layout = self.battle_mon(int(battler)), battle_layout()
+                if mon is None:
+                    return None
+                personality, otid = (struct.unpack_from("<I", ram, mon - 0x02000000 + layout[f])[0]
+                                     for f in ("personality", "otid"))
+                return int(savedit.is_shiny(personality, otid))
             return shown[BATTLER_FIELDS.index(field)]
         if name.startswith("bg") and ":" in name:
             layer, _, at = name[len("bg"):].partition(":")
