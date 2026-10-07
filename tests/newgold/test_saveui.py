@@ -561,6 +561,7 @@ class SaveUiTests(unittest.TestCase):
         for table, known in (("BADGE_NAMES", {b["const"] for b in data["badges"]}),
                              ("POCKET_NAMES", {p["const"] for p in data["pockets"]}),
                              ("POCKET_COLOURS", {p["const"] for p in data["pockets"]}),
+                             ("CLASS_NAMES", set(data["move_classes"])),
                              ("STAT_NAMES", {s["const"] for s in data["stats"]}),
                              ("DIR_NAMES", {d["const"] for d in data["directions"]}),
                              ("GENDER_MARKS", {g["const"] for g in data["genders"]}), ("TYPES", types),
@@ -1149,6 +1150,9 @@ class SaveUiTests(unittest.TestCase):
         self.assertRegex(page, r"\.iic \{[^}]*background-image: var\(--itemsheet\);")
         self.assertIn("rows.push(itemRow(id, {group: pocketDot(p.const), pocket: true,", page)
         self.assertIn(".map(id => itemRow(id, {tags: [count(id)", page)
+        # A move's row: the game's mark for its class, its type's badge, power, accuracy and PP, its sources under it.
+        self.assertIn("return st.moves.filter(x => !taken.has(x.id)).map(x => moveRow(x.id, {sources: x.sources}))", page)
+        self.assertIn('document.documentElement.style.setProperty("--classsheet", `url("/api/moveclasses.png?t=${d.tree}")`);', page)
 
     def test_files(self):
         self.edit("trainer", {"money": 1})

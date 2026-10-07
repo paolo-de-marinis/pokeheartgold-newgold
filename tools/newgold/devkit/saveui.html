@@ -76,6 +76,7 @@ aside section + section, aside details { margin-top: 16px; }
 .tag { display: inline-block; border-radius: 4px; padding: 0 6px; font-size: 11.5px; background: var(--sunk); border: 1px solid var(--border); color: var(--muted); }
 
 /* An item's bag icon: its cell of the one sheet /api/itemicons.png serves (--itemsheet). */
+.mcls { display: inline-block; flex: none; width: 32px; height: 16px; background-image: var(--classsheet); background-repeat: no-repeat; image-rendering: pixelated; }
 .iic { display: inline-block; flex: none; width: 32px; height: 32px; background-image: var(--itemsheet); background-repeat: no-repeat; image-rendering: pixelated; }
 img.ic { image-rendering: pixelated; object-fit: cover; object-position: top; display: inline-block; vertical-align: middle; }
 .badq { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; color: var(--danger); font-weight: 700; }
@@ -368,6 +369,20 @@ const inkOn = hex => { const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i
 const typeBadges = types => (types || []).map(t => { const [name, colour] = TYPES[t] || [t, "#777777"]; const ink = inkOn(colour);
   return `<span class="type" style="background:${colour};color:${ink}${ink === "#fff" ? "" : ";text-shadow:none"}">${esc(name)}</span>`; }).join("");
 const typeNames = types => (types || []).map(t => (TYPES[t] || [t])[0]).join("/");
+// A move's class, as the Italian games name it, by the tree's CATEGORY_ constants; its mark is the game's own
+// (/api/moveclasses.png, one under the other in /api/data's move_classes order).
+const CLASS_NAMES = {PHYSICAL: "Fisico", SPECIAL: "Speciale", STATUS: "Stato"};
+const classMark = c => { const row = S.data.move_classes?.indexOf(c) ?? -1;
+  return row < 0 ? "" : `<span class="mcls" title="${esc(CLASS_NAMES[c] ?? c)}" style="background-position:0 -${16 * row}px"></span>`; };
+// Power, accuracy and PP as the summary gives them: "—" for a power the battle works out (1) or none, and for a move that never misses.
+const moveNumbers = mv => !mv?.type ? "" : `<span title="Potenza">Pot. ${mv.power > 1 ? mv.power : "—"}</span> · `
+  + `<span title="Precisione">Prec. ${mv.accuracy ? `${mv.accuracy}%` : "—"}</span> · <span title="Punti Potenza">PP ${mv.pp}</span>`;
+// A move's row: its class's mark, the name, its type, power, accuracy and PP, and the ways the species learns it under them.
+function moveRow(id, {sources = [], tags = []} = {}) {
+  const mv = S.moves.get(id);
+  return comboRow(id, mv?.name ?? `#${id}`, {before: classMark(mv?.class), after: typeBadges(mv?.type ? [mv.type] : []), side: moveNumbers(mv),
+    sub: sourceTags(sources), tags, words: `${typeNames(mv?.type ? [mv.type] : [])} ${CLASS_NAMES[mv?.class] ?? ""} ${sources.map(sourceTag).join(" ")}`});
+}
 
 const S = {data: null, lib: null, f: null, save: null, tab: "trainer", box: 0, pocket: null,
            dex: {changes: new Map(), q: "", show: "all"}, tm: {changes: new Map(), q: "", show: "all"}, bagch: new Map(), bagView: {},
@@ -452,6 +467,7 @@ function buildLists() {
   S.steps = new Map(d.story.map(s => [s.id, s]));
   S.itemByConst = new Map(d.items.map(r => [r.const, r]));
   document.documentElement.style.setProperty("--itemsheet", `url("/api/itemicons.png?t=${d.tree}")`);
+  document.documentElement.style.setProperty("--classsheet", `url("/api/moveclasses.png?t=${d.tree}")`);
   S.speciesByConst = new Map(d.species.map(r => [r.const, r]));
   S.speciesByName = new Map();
   for (const r of d.species) if (!S.speciesByName.has(r.name)) S.speciesByName.set(r.name, r);
@@ -1717,9 +1733,10 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     const inputs = range(lim.moves).map(i => form.elements["move" + i]), ability = form.elements.ability;
     const tagLine = id => {
       if (!id || !st.species) return "";
-      if (st.legal.has(id)) return sourceTags(st.legal.get(id));
-      if (st.known.has(id)) return `<span class="tag warn">${esc(NOT_LEARNT)}</span>`;
-      return `<span class="tag bad">${esc(S.species.get(st.species)?.name ?? "")} non la impara</span>`;
+      const type = S.moves.get(id)?.type ? typeBadges([S.moves.get(id).type]) : "";
+      if (st.legal.has(id)) return type + sourceTags(st.legal.get(id));
+      if (st.known.has(id)) return `${type}<span class="tag warn">${esc(NOT_LEARNT)}</span>`;
+      return `${type}<span class="tag bad">${esc(S.species.get(st.species)?.name ?? "")} non la impara</span>`;
     };
     const showTags = () => inputs.forEach((el, i) => { $(`#mvtags${i}`, d).innerHTML = tagLine(+el.dataset.id || 0); });
     const flash = el => { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); };
@@ -1778,10 +1795,9 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     const moveCombos = inputs.map(el => combo(el, {clearable: true, empty: () => st.species ? "Nessuna mossa della specie ha questo nome" : "Scegli prima la specie",
       rows: () => {
         const taken = new Set(inputs.filter(x => x !== el).map(x => +x.dataset.id).filter(Boolean));
-        return st.moves.filter(x => !taken.has(x.id)).map(x => comboRow(x.id, S.moves.get(x.id)?.name ?? `#${x.id}`, {
-          sub: sourceTags(x.sources), words: x.sources.map(sourceTag).join(" ")}))
+        return st.moves.filter(x => !taken.has(x.id)).map(x => moveRow(x.id, {sources: x.sources}))
           .concat(st.known.has(+el.dataset.id) && !st.legal.has(+el.dataset.id)
-            ? [comboRow(+el.dataset.id, S.moves.get(+el.dataset.id)?.name ?? "", {tags: [{text: "la conosce già", cls: "warn"}]})] : []);
+            ? [moveRow(+el.dataset.id, {tags: [{text: "la conosce già", cls: "warn"}]})] : []);
       },
       onPick: () => { st.preset = false; showTags(); }}));
     // The moves the Pokemon knows, by id: a name is not looked up in a list that has not loaded yet.
