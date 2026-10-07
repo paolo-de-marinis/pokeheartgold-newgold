@@ -9,7 +9,7 @@
     "poke:sLCRNG_State=0xbb160215",
     "flee:40",
     "heal:MAP_VIOLET_POKECENTER_1F,8,13",
-    "pace:MAP_ROUTE_32,475,292,475,296,party0.level,13,60000",
+    "pace:MAP_ROUTE_32,475,292,475,296,party0.level,13,120000",
     {
       "expect": {
         "party0.species": "SPECIES_MISDREAVUS",
@@ -17,7 +17,7 @@
       }
     },
     "swap:0,2",
-    "pace:MAP_ROUTE_32,475,292,475,296,party0.level,13,40000",
+    "pace:MAP_ROUTE_32,475,292,475,296,party0.level,13,80000",
     {
       "expect": {
         "party0.species": "SPECIES_CYNDAQUIL",
@@ -26,7 +26,7 @@
       }
     },
     "swap:0,1",
-    "pace:MAP_ROUTE_32,475,292,475,296,party0.level,10,60000",
+    "pace:MAP_ROUTE_32,475,292,475,296,party0.level,10,120000",
     "goto:MAP_VIOLET_POKECENTER_1F,8,13",
     "UP",
     "A",

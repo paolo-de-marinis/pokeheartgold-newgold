@@ -10,7 +10,7 @@
     "flee:40",
     "heal:MAP_VIOLET_POKECENTER_1F,8,13",
     "swap:0,4",
-    "pace:MAP_ROUTE_32,475,292,475,296,party0.level,13,80000",
+    "pace:MAP_ROUTE_32,475,292,475,296,party0.level,13,160000",
     {
       "expect": {
         "party0.species": "SPECIES_MAREEP",

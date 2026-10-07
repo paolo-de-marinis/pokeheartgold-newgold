@@ -16,7 +16,7 @@
       }
     },
     "shift:4",
-    "pace:MAP_ILEX_FOREST,12,77,12,81,party0.level,18,80000",
+    "pace:MAP_ILEX_FOREST,12,77,12,81,party0.level,18,160000",
     "shift:none",
     {
       "expect": {

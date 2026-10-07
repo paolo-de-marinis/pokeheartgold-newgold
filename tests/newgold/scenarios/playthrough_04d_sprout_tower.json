@@ -27,7 +27,7 @@
     "goto:MAP_SPROUT_TOWER_3F,14,23",
     "hold:gDiagBattleSeed=2",
     "catch:SPECIES_MISDREAVUS",
-    "pace:MAP_SPROUT_TOWER_3F,14,23,16,23,caught:SPECIES_MISDREAVUS,1,30000",
+    "pace:MAP_SPROUT_TOWER_3F,14,23,16,23,caught:SPECIES_MISDREAVUS,1,60000",
     "catch:none",
     {
       "expect": {

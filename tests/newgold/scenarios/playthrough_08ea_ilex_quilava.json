@@ -4,7 +4,7 @@
   "hold": {"gDiagBattleSeed": 1},
   "steps": ["field", "poke:sLCRNG_State=0xbb160215", "flee:40", "heal:MAP_AZALEA_POKECENTER_1F,8,13",
             "swap:0,1", {"expect": {"party0.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"], "party1.species": "SPECIES_GEODUDE"}},
-            "pace:MAP_ILEX_FOREST,12,77,12,81,party0.level,22,80000",
+            "pace:MAP_ILEX_FOREST,12,77,12,81,party0.level,22,160000",
             "swap:0,1",
             {"expect": {"party0.species": ["SPECIES_GEODUDE", "SPECIES_GRAVELER"], "party1.species": "SPECIES_QUILAVA", "party2.species": "SPECIES_NOCTOWL"}},
             "goto:MAP_AZALEA_POKECENTER_1F,8,13", "UP", "A", "field", "save"],

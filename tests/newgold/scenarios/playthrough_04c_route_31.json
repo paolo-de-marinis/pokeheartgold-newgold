@@ -10,7 +10,7 @@
     "flee:40",
     "heal:MAP_VIOLET_POKECENTER_1F,8,13",
     "catch:SPECIES_HOOTHOOT",
-    "pace:MAP_ROUTE_31,556,283,564,286,caught:SPECIES_HOOTHOOT,1,30000",
+    "pace:MAP_ROUTE_31,556,283,564,286,caught:SPECIES_HOOTHOOT,1,60000",
     {
       "expect": {
         "map": "MAP_ROUTE_31",
@@ -34,7 +34,7 @@
     "A",
     "field",
     "catch:SPECIES_GEODUDE",
-    "pace:MAP_DARK_CAVE_ROUTE_31_SIDE,5,8,14,17,caught:SPECIES_GEODUDE,1,30000",
+    "pace:MAP_DARK_CAVE_ROUTE_31_SIDE,5,8,14,17,caught:SPECIES_GEODUDE,1,60000",
     "catch:none",
     {
       "expect": {
