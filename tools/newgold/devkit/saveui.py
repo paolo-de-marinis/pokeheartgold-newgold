@@ -312,10 +312,13 @@ def icon(species, form=0, egg=False):
     return recolour(png, colours[16 * number:16 * number + 16])
 
 
+def chunk(kind, body):
+    """A PNG chunk."""
+    return struct.pack(">I", len(body)) + kind + body + struct.pack(">I", zlib.crc32(kind + body))
+
+
 def recolour(png, colours):
     """The PNG with this palette, colour 0 transparent as the game draws it."""
-    def chunk(kind, body):
-        return struct.pack(">I", len(body)) + kind + body + struct.pack(">I", zlib.crc32(kind + body))
     out, at = bytearray(png[:8]), 8
     while at < len(png):
         size, kind = struct.unpack(">I4s", png[at:at + 8])
@@ -328,6 +331,114 @@ def recolour(png, colours):
         else:
             out += chunk(kind, body)
     return bytes(out)
+
+
+# ---------------------------------------------------------------------------
+# The items' icons: the game's pictures, one sheet the page asks for once
+# (an icon a cell of it).
+
+ITEM_ICONS = ROOT / "files/itemtool/itemdata/item_icon"
+SHEET_COLUMNS = 32      # the item sheet's cells a row
+
+
+@sv.tree_cache
+def item_icon_members():
+    """GetItemIndexMapping's icon for each item: the members of
+    item_icon.narc it draws with, (tiles, palette) -- sItemNarcIds' row for
+    HeartGold's own numbers, sImportedItemIcons' member (its palette the
+    next) after them, and where that says none, or for a number neither
+    has, the blank pair ITEM_NONE's row gives."""
+    text = sv.source("src/item.c").read_text()
+    blank = tuple(int(n) for n in re.search(
+        r"return icon \? icon : NARC_item_icon_item_icon_(\d+)_NCGR;\s*case ITEMNARC_NCLR:\s*"
+        r"return icon \? icon \+ 1 : NARC_item_icon_item_icon_(\d+)_NCLR;", sv.c_function("src/item.c", "int GetItemIndexMapping(")).groups())
+    items = sv.constants("include/constants/items.h", "ITEM_")
+    out = {items[c]: (int(t), int(p)) for c, t, p in re.findall(
+        r"\[(ITEM_\w+)\] = \{\s*NARC_item_data_\d+_bin,\s*NARC_item_icon_item_icon_(\d+)_NCGR,\s*NARC_item_icon_item_icon_(\d+)_NCLR,", text)
+        if c in items}
+    first = sv.constants("include/constants/items.h", "FIRST_IMPORTED_")["FIRST_IMPORTED_ITEM"]
+    table = text[text.index("sImportedItemIcons["):]
+    table = re.sub(r"//.*", "", table[table.index("{") + 1:table.index("};")])
+    out.update({first + i: (icon, icon + 1) if icon else blank for i, icon in enumerate(int(n) for n in re.findall(r"\d+", table))})
+    return {item: out.get(item, blank) for item in sv.item_table()}
+
+
+@sv.tree_cache
+def _item_icon_pngs():
+    """The members item_data.mk builds from a PNG of the icon folder
+    (ITEMICON_FROM_PNG), tiles and palette both: {member: the PNG's name}."""
+    out = {}
+    for tiles, colours, name in re.findall(r"call ITEMICON_FROM_PNG,(\d+),(\d+),(\w+)\)",
+                                           sv.source("files/itemtool/itemdata/item_data.mk").read_text()):
+        out[int(tiles)] = out[int(colours)] = name
+    return out
+
+
+def _ncgr(data, wide):
+    """An NCGR's 4-bit tiles as rows of colour indices, `wide` tiles a row
+    as a sprite mapped in one dimension lays them out."""
+    at = data.index(b"RAHC")
+    size, offset = struct.unpack_from("<II", data, at + 24)
+    tiles = data[at + 8 + offset:at + 8 + offset + size]
+    rows = [bytearray(8 * wide) for _ in range(8 * (size // 32 // wide))]
+    for i, byte in enumerate(tiles):
+        tile, y, x = i // 32, i % 32 // 4, i % 4 * 2
+        rows[tile // wide * 8 + y][tile % wide * 8 + x:tile % wide * 8 + x + 2] = bytes((byte & 15, byte >> 4))
+    return rows
+
+
+def _palette(nclr, number):
+    """Palette `number` (16 colours) of an NCLR, as a PNG's PLTE. (The
+    battle archive's says it holds more than it does: its count is not
+    read.)"""
+    at = nclr.index(b"TTLP")
+    colours = struct.unpack_from("<16H", nclr, at + 8 + struct.unpack_from("<I", nclr, at + 20)[0] + 32 * number)
+    return b"".join(bytes((c >> shift & 31) * 255 // 31 for shift in (0, 5, 10)) for c in colours)
+
+
+def item_icon(tiles, colours):
+    """An item's icon as the bag draws it: 32 rows of 32 colour indices,
+    and its palette as a PLTE -- the members' files, or the PNG item_data.mk
+    builds a member from."""
+    pngs = _item_icon_pngs()
+    png = lambda name: sv._png_rows(sv.source(ITEM_ICONS / f"{name}.png").read_bytes())  # noqa: E731
+    rows = png(pngs[tiles])[0] if tiles in pngs else _ncgr(sv.source(ITEM_ICONS / f"item_icon_{tiles:03d}.NCGR").read_bytes(), 4)
+    return rows, png(pngs[colours])[1] if colours in pngs else _palette(sv.source(ITEM_ICONS / f"item_icon_{colours:03d}.NCLR").read_bytes(), 0)
+
+
+def sheet(images, columns, width, height):
+    """Images (rows of colour indices and a PLTE each) as one RGBA PNG,
+    `columns` cells a row, colour 0 clear as the game draws it."""
+    rows = [bytearray(4 * columns * width) for _ in range(height * -(-len(images) // columns))]
+    for i, (pixels, palette) in enumerate(images):
+        rgba = [b"\0\0\0\0"] + [palette[3 * c:3 * c + 3].ljust(3, b"\0") + b"\xff" for c in range(1, 16)]
+        x, y = i % columns * width * 4, i // columns * height
+        for line, row in zip(pixels[:height], rows[y:y + height]):
+            row[x:x + 4 * width] = b"".join(rgba[p & 15] for p in line[:width])
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", columns * width, len(rows), 8, 6, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(b"".join(b"\0" + bytes(r) for r in rows), 9)) + chunk(b"IEND", b""))
+
+
+@sv.tree_cache
+def item_icon_cells():
+    """Each distinct item icon once, in the members' order, and every
+    item's cell of the sheet: ([(tiles, palette)], {item: cell})."""
+    members = item_icon_members()
+    pairs = sorted(set(members.values()))
+    cell = {pair: i for i, pair in enumerate(pairs)}
+    return pairs, {item: cell[pair] for item, pair in members.items()}
+
+
+@sv.tree_cache
+def item_icon_sheet():
+    """Every item icon, 32x32, SHEET_COLUMNS to a row; one whose files are
+    not in the tree is left clear."""
+    def drawn(pair):
+        try:
+            return item_icon(*pair)
+        except (OSError, ValueError):
+            return [], b""
+    return sheet([drawn(pair) for pair in item_icon_cells()[0]], SHEET_COLUMNS, 32, 32)
 
 
 # ---------------------------------------------------------------------------
@@ -1537,9 +1648,11 @@ def tables():
                            for badge, moves in sv.field_move_badges().items()}
     players = {"PLAYER_GENDER_MALE": sv.PLAYER_GENDER_MALE, "PLAYER_GENDER_FEMALE": sv.PLAYER_GENDER_FEMALE}
     types = lambda row: list(dict.fromkeys(t[len("TYPE_"):] for t in sv.personal_records()[row["id"]]["types"]))  # noqa: E731
+    icons = part(errors, "item_icons", lambda: item_icon_cells()[1], {})
     return {"species": [{**row, "types": types(row)} for row in sv.species_table()], "moves": sv.move_table(),
-            "items": [{**row, "limit": sv.item_limit(row["id"])} if row["pocket"] else row
+            "items": [{**row, "icon": icons.get(row["id"]), **({"limit": sv.item_limit(row["id"])} if row["pocket"] else {})}
                       for row in sv.item_table().values()],
+            "item_icons": {"columns": SHEET_COLUMNS},
             "natures": sv.bank(sv.NATURE_NAMES), "nature_mods": sv.nature_mods(),
             "maps": [m for m in sv.map_table().values() if standable(m["id"])],
             "world": part(errors, "world", world, {"cols": 0, "rows": 0, "tiles": {}, "main": [], "buildings": [], "heals": []}),
@@ -1640,6 +1753,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self.reply(200, map_place(q))
             if url.path == "/api/townmap.png":
                 return self.image(sv.town_map()["png"])
+            if url.path == "/api/itemicons.png":
+                return self.image(item_icon_sheet())
             if url.path == "/api/icon":
                 return self.image(icon(number(q.get("species"), 0, 0xFFFF, "specie"), number(q.get("form", 0), 0, 255, "forma"),
                                        q.get("egg") in ("1", "true")))

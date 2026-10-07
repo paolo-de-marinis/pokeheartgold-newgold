@@ -22,6 +22,7 @@ import threading
 import unittest
 import urllib.error
 import urllib.request
+import zlib
 from pathlib import Path
 
 from test_level_cap import ROOT
@@ -42,6 +43,17 @@ def header_only(code=None):
     struct.pack_into("<I", header, 0x80, 0x200)
     struct.pack_into("<H", header, 0x15E, saveui.nds_crc(header[:0x15E]))
     return bytes(header)
+
+
+def rgba_rows(png):
+    """The rows of an RGBA PNG saveui wrote (every row unfiltered)."""
+    width, at, idat = struct.unpack(">I", png[16:20])[0], 8, b""
+    while at < len(png):
+        size, kind = struct.unpack_from(">I4s", png, at)
+        idat += png[at + 8:at + 8 + size] if kind == b"IDAT" else b""
+        at += 12 + size
+    raw, stride = zlib.decompress(idat), 4 * width + 1
+    return [raw[y * stride + 1:(y + 1) * stride] for y in range(len(raw) // stride)]
 
 
 class SaveUiTests(unittest.TestCase):
@@ -296,6 +308,35 @@ class SaveUiTests(unittest.TestCase):
         unchanged.exception.close()
         with urllib.request.urlopen(urllib.request.Request(url, headers={"If-None-Match": '"0"'})) as response:
             self.assertEqual(response.read(), png, "another icon than the browser's: this one")
+
+    def test_an_item_has_its_price_description_and_icon(self):
+        """/api/data's items carry ITEMATTR_PRICE (the two fields it puts
+        together), the bag's description on one line and their icon's cell in
+        /api/itemicons.png: GetItemIndexMapping's members, the files of the
+        icon folder or the PNG item_data.mk builds one from; an item with no
+        icon of its own shares ITEM_NONE's. The sheet is watched like a
+        Pokemon's icon."""
+        data = self.ok("/api/data")
+        items = {r["const"]: r for r in data["items"]}
+        self.assertEqual([items[c]["price"] for c in ("ITEM_POTION", "ITEM_NUGGET", "ITEM_ABILITY_PATCH", "ITEM_MASTER_BALL")],
+                         [300, 10000, 500000, 0], "the Ability Patch's price needs price_high")
+        self.assertIn("restore 20 HP to a Pokémon", items["ITEM_POTION"]["desc"])
+        self.assertNotIn("\\n", items["ITEM_POTION"]["desc"])
+        cell = {c: items[c]["icon"] for c in ("ITEM_NONE", "ITEM_POTION", "ITEM_SUPER_POTION", "ITEM_ABSORB_BULB", "ITEM_TERA_ORB")}
+        self.assertEqual(cell["ITEM_TERA_ORB"], cell["ITEM_NONE"], "sImportedItemIcons' 0: the blank pair")
+        self.assertEqual(len(set(cell.values())), 4, "the Super Potion: the Potion's tiles in its own palette")
+        status, png = self.call("/api/itemicons.png")
+        self.assertEqual(status, 200)
+        columns, rows = data["item_icons"]["columns"], rgba_rows(png)
+        self.assertEqual(len(rows[0]) // 4, 32 * columns)
+        self.assertGreaterEqual(len(rows) // 32 * columns, max(r["icon"] for r in data["items"]) + 1)
+        at = lambda c, y: rows[cell[c] // columns * 32 + y][cell[c] % columns * 128:cell[c] % columns * 128 + 128]  # noqa: E731
+        # The Absorb Bulb is one of the members item_data.mk builds from a PNG: its pixels are that PNG's, colour 0 clear.
+        pixels, plte = sv._png_rows((saveui.ITEM_ICONS / "absorb_bulb.png").read_bytes())
+        self.assertEqual([at("ITEM_ABSORB_BULB", y) for y in range(32)],
+                         [b"".join(plte[3 * p:3 * p + 3] + b"\xff" if p else b"\0" * 4 for p in line) for line in pixels])
+        self.assertNotEqual(at("ITEM_POTION", 12), at("ITEM_SUPER_POTION", 12))
+        self.assertIn(saveui.ITEM_ICONS / "item_icon_024.NCGR", sv._READ, "the Potion's tiles, watched")
 
     # -- writing ------------------------------------------------------------
 

@@ -1529,8 +1529,13 @@ def item_table():
     Lock Capsule, Diamond and Pearl's key items: the game's, none of them
     ever given) and whether the bag lets a Pokemon hold it ("give":
     overlay 15's item menu offers GIVE when the item's prevent_toss is
-    clear and its pocket is not POCKET_TMHMS)."""
+    clear and its pocket is not POCKET_TMHMS); its price as ITEMATTR_PRICE
+    reads it (the csv's two fields it puts together), and the description
+    the bag shows (GetItemDescIntoString's bank, on one line)."""
     names = bank(ITEM_NAMES)
+    descs = _bank_rows(int(re.search(r"NARC_msg_msg_(\d+)_bin", c_function("src/item.c", "void GetItemDescIntoString(")).group(1)))
+    low, high, shift = re.search(r"case ITEMATTR_PRICE:\s*return itemData->(\w+) \| \(itemData->partyUseParam\.(\w+) << (\d+)\);",
+                                 c_function("src/item.c", "s32 GetItemAttr_PreloadedItemData(")).groups()
     with source("files/itemtool/itemdata/item_data.csv").open() as f:
         rows = {row["item"]: row for row in csv.DictReader(f)}
     pocket_of = {p["const"]: p["name"] for p in pockets()}
@@ -1538,11 +1543,14 @@ def item_table():
     for const, number in constants("include/constants/items.h", "ITEM_").items():
         by_id.setdefault(number, const)
     game, first = _game_items(rows), constants("include/constants/items.h", "FIRST_IMPORTED_")["FIRST_IMPORTED_ITEM"]
+    price = lambda row: int(row[low], 0) | int(row[high], 0) << int(shift) if row else 0  # noqa: E731
     return {number: {"id": number, "const": const, "pocket": pocket_of.get(rows.get(const, {}).get("fieldPocket")),
                      "name": names[number] if number < len(names) else const, "game": const in game,
                      "retail": number < first,
                      "give": const in rows and rows[const]["prevent_toss"] != "true"
-                     and rows[const]["fieldPocket"] != "POCKET_TMHMS"}
+                     and rows[const]["fieldPocket"] != "POCKET_TMHMS",
+                     "price": price(rows.get(const)),
+                     "desc": " ".join(re.sub(r"\\[nrf]", " ", descs[number]).split()) if number < len(descs) else ""}
             for number, const in sorted(by_id.items())}
 
 
@@ -1875,7 +1883,8 @@ def main_matrix():
 
 
 def _png_rows(data):
-    """An 8-bit indexed PNG's pixels, a row of indices a line, and its PLTE."""
+    """An indexed PNG's pixels (8 or 4 bits a pixel), a row of indices a
+    line, and its PLTE."""
     at, idat, head, palette = 8, b"", None, b""
     while at < len(data):
         size, kind = struct.unpack_from(">I4s", data, at)
@@ -1885,19 +1894,20 @@ def _png_rows(data):
         palette = body if kind == b"PLTE" else palette
         idat += body if kind == b"IDAT" else b""
     width, height, depth, colour, _, _, interlace = struct.unpack(">IIBBBBB", head)
-    if (depth, colour, interlace) != (8, 3, 0):
-        raise ValueError("the town map's PNG is not 8-bit indexed, uninterlaced")
-    raw, rows, prev = zlib.decompress(idat), [], bytearray(width)
+    if depth not in (4, 8) or (colour, interlace) != (3, 0):
+        raise ValueError("the PNG is not 8- or 4-bit indexed, uninterlaced")
+    stride = (width * depth + 7) // 8
+    raw, rows, prev = zlib.decompress(idat), [], bytearray(stride)
     for y in range(height):
-        kind, line = raw[y * (width + 1)], bytearray(raw[y * (width + 1) + 1:(y + 1) * (width + 1)])
-        for i in range(width):
+        kind, line = raw[y * (stride + 1)], bytearray(raw[y * (stride + 1) + 1:(y + 1) * (stride + 1)])
+        for i in range(stride):
             a, b, c = line[i - 1] if i else 0, prev[i], prev[i - 1] if i else 0
             p = a + b - c
             line[i] = (line[i] + (0, a, b, (a + b) // 2,
                                   a if abs(p - a) <= abs(p - b) and abs(p - a) <= abs(p - c) else
                                   b if abs(p - b) <= abs(p - c) else c)[kind]) & 0xFF
-        rows.append(line)
         prev = line
+        rows.append(line if depth == 8 else bytearray(x >> s & 15 for x in line for s in (4, 0))[:width])
     return rows, palette
 
 
