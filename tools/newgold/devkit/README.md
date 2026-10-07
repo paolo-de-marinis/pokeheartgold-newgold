@@ -29,7 +29,7 @@ always the player's own, so it obeys; `--level SLOT:LEVEL` raises one already
 there and keeps the rest of it; `--hp SLOT:HP` leaves one hurt; `--form SLOT:FORM`
 puts one in a form with base stats of its own, its stats with it, a Rotom's 1 Heat
 to 5 Mow; `--hyper SLOT:STAT+STAT` Hyper trains its stats), the bag, TMs (`--tm 1,94,148`, by their
-number), badges, money (`--money N`), the Dex, the
+number), badges, money (`--money N`), Battle Points (`--bp N`), the Dex, the
 position (`--where MAP:X:Y:DIR`, as a warp so the map builds itself; MAP
 is the map's number), script
 flags (`--flag NAME`, and `--flag NAME=0` to clear one) and variables (`--var NAME=VALUE`); `--dex` takes a

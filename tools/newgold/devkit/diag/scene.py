@@ -153,7 +153,8 @@ holds it, slot N from 0, move K from 0, once the field is up: what a battle
 gave back), partyN.atk|def|speed|spatk|spdef (its stats), partyN.evK|ivK
 (its EVs and IVs, K in the record's order: HP, Attack, Defense, Speed,
 Sp. Atk, Sp. Def), partyN.hyper (its Hyper trained stats, a mask, bit 0 HP),
-bag:ITEM_... (how many the bag holds), badges, money, running_shoes (1 once the
+bag:ITEM_... (how many the bag holds), badges, money, bp (the Battle Points,
+in the Frontier's static, which the game loads from the save), running_shoes (1 once the
 player has them: PlayerSaveData's, which no flag says),
 options.textSpeed|soundMethod|battleStyle|battleScene|buttonMode|frame (the
 start menu's settings as Options holds them: text speed 2 fast, battle
@@ -253,7 +254,7 @@ def readable(step_or_key, key=False):
     from core import BUTTONS
     if key:
         return (step_or_key in ("lines", "new_lines", "once_lines", "no_lines", "heaps", "asserts", "alloc_failures", "map", "x", "y",
-                                "party", "badges", "money", "music", "running_shoes", "front1.lift")
+                                "party", "badges", "money", "bp", "music", "running_shoes", "front1.lift")
                 or step_or_key.startswith(("flag:", "var:", "gDiag"))
                 or re.fullmatch(r"trainer:TRAINER_\w+", step_or_key) is not None
                 or re.fullmatch(r"caught:SPECIES_\w+", step_or_key) is not None
@@ -1843,6 +1844,12 @@ class Scene:
         if name == "money":     # PlayerProfile's, in the save block the field keeps
             at = party.block(memory, self.elf, savedit.block_ids().index("SAVE_PLAYERDATA")) - 0x02000000
             return struct.unpack_from("<I", ram, at + savedit.MONEY)[0]
+        if name == "bp":        # FrontierData's, in the static Save_Frontier_GetStatic loads (ldr r0, =static)
+            function = markers.address("Save_Frontier_GetStatic") & ~1
+            load = struct.unpack_from("<H", ram, function - 0x02000000)[0]
+            pool = ((function + 4) & ~3) + (load & 0xFF) * 4
+            static = struct.unpack_from("<I", ram, pool - 0x02000000)[0]
+            return struct.unpack_from("<H", ram, static + savedit.battle_points_layout()[0] - 0x02000000)[0]
         if name.startswith("options."):
             at = party.block(memory, self.elf, savedit.block_ids().index("SAVE_PLAYERDATA")) - 0x02000000
             offset, width, mask = options_layout()[name.partition(".")[2]]

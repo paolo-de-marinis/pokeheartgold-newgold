@@ -1234,6 +1234,19 @@ class SaveditLibraryTests(unittest.TestCase):
                                    "johto": 0b1011, "kanto": 0x80, "coins": 50, "play_time": [12, 34, 56]})
         self.assert_only(save, ["SAVE_PLAYERDATA"])
 
+    def test_the_battle_points(self):
+        """--bp writes FrontierData's first halfword, 0x954 into the
+        Frontier's block (Save_FrontierData_Get), at most 9999 (as
+        FrontierData_BattlePointAction caps them), and nothing else."""
+        self.assertEqual(sv.battle_points_layout(), (0x954, 9999))
+        save = self.open()
+        sv.set_battle_points(save, 1234)
+        with self.assertRaises(ValueError):
+            sv.set_battle_points(save, 10000)
+        again = self.written(save)
+        self.assertEqual(struct.unpack_from("<H", again.block("SAVE_UNK_19"), 0x954)[0], 1234)
+        self.assert_only(save, ["SAVE_UNK_19"])
+
     def test_the_names_are_the_games(self):
         self.assertEqual(sv.species_name(sv.species_numbers()["PIKACHU"]), "Pikachu")
         self.assertEqual(sv.move_table()[sv.move_numbers()["TACKLE"]]["pp"], 35)

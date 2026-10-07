@@ -2838,6 +2838,27 @@ def set_profile(save, money=None, gender=None, johto=None, kanto=None, coins=Non
 
 
 @tree_cache
+def battle_points_layout():
+    """Where the Battle Points are, and their most: FrontierData's first
+    halfword, at Save_FrontierData_Get's offset into the Frontier's block
+    (SAVE_UNK_19, which the game copies into its static at load), capped at
+    FrontierData_BattlePointAction's 9999 -- both read from the tree's
+    asm/unk_0202D230.s."""
+    text = source("asm/unk_0202D230.s").read_text()
+
+    def word(function):
+        return int(re.search(r"\.word (0x[0-9A-Fa-f]+)", text[text.index(f"\n{function}: "):]).group(1), 16)
+    return word("Save_FrontierData_Get"), word("FrontierData_BattlePointAction")
+
+
+def set_battle_points(save, points):
+    at, most = battle_points_layout()
+    if not 0 <= points <= most:
+        raise ValueError(f"Battle Points are 0 to {most}")
+    struct.pack_into("<H", save.block("SAVE_UNK_19"), at, points)
+
+
+@tree_cache
 def legacy_machines():
     """LegacyMachineToItem (src/item.c): what each machine item of a save
     from before TM93 to TM148 (hg-engine's numbering) becomes when the game
@@ -4362,6 +4383,7 @@ def main():
     parser.add_argument("--trainer-id", type=int)
     parser.add_argument("--badges", type=int, help="how many Johto badges to set")
     parser.add_argument("--money", type=int, help="the money the player has")
+    parser.add_argument("--bp", type=int, help="the Battle Points the player has (0 to 9999)")
     parser.add_argument("--var", action="append", default=[], metavar="VAR_NAME=VALUE",
                         help="set a script variable by its name in include/constants/vars.h; repeatable")
     parser.add_argument("--flag", action="append", default=[], metavar="FLAG_NAME[=0]",
@@ -4494,6 +4516,14 @@ def main():
         set_profile(save, money=args.money)
         save.write()
         print(f"money {args.money}")
+
+    if args.bp is not None:
+        try:
+            set_battle_points(save, args.bp)
+        except ValueError as e:
+            raise SystemExit(f"--bp: {e}")
+        save.write()
+        print(f"{args.bp} Battle Points")
 
     for assignment in args.var:
         name, _, value = assignment.partition("=")
