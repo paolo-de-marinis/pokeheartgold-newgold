@@ -468,6 +468,44 @@ int main(void) {
 }
 '''
 
+ICON = r'''
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/species.h"
+#include "constants/pokemon.h"
+typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32;
+typedef struct PokedexAppData {
+    u16 curSpecies;
+    u8 seenForms[0x20];
+    u16 seenFormSpecies[0x20];
+} PokedexAppData;
+static u32 sIcon;
+static void ov18_021F14FC(PokedexAppData *app, u16 species, int form, int spriteIdx) { (void)app; (void)spriteIdx; sIcon = species | form << 16; }
+@NATIVE@
+
+int main(void) {
+    // Pyroar's list: Male, then Female, drawn as her and with her icon.
+    PokedexAppData app = { SPECIES_PYROAR, { 1, 2 }, { SPECIES_PYROAR, SPECIES_PYROAR } };
+    ov18_021F5FFC(&app, 5, 0);
+    assert(sIcon == SPECIES_PYROAR);
+    ov18_021F5FFC(&app, 5, 1);
+    assert(sIcon == SPECIES_PYROAR_FEMALE);
+    // A species with no female species keeps its own icon for Female.
+    PokedexAppData slowpoke = { SPECIES_SLOWPOKE, { 1, 2, 0x80 }, { SPECIES_SLOWPOKE, SPECIES_SLOWPOKE, SPECIES_SLOWPOKE_GALARIAN } };
+    ov18_021F5FFC(&slowpoke, 5, 1);
+    assert(sIcon == SPECIES_SLOWPOKE);
+    ov18_021F5FFC(&slowpoke, 5, 2);
+    assert(sIcon == SPECIES_SLOWPOKE_GALARIAN);
+    // Pichu's Spiky-eared form, 2 in the Dex, is its icon's form 1.
+    PokedexAppData pichu = { SPECIES_PICHU, { 0x80, 0x82 }, { SPECIES_PICHU, SPECIES_PICHU } };
+    ov18_021F5FFC(&pichu, 5, 1);
+    assert(sIcon == (SPECIES_PICHU | 1 << 16));
+    puts("PASS: the FORMS list's icons: a form its own, a gendered species' Female hers.");
+    return 0;
+}
+'''
+
 REGIONS = {"ALOLAN": "Alolan Form", "GALARIAN": "Galarian Form", "HISUIAN": "Hisuian Form", "PALDEAN": "Paldean Form"}
 BREEDS = {"TAUROS_COMBAT": "Combat Breed", "TAUROS_BLAZE": "Blaze Breed", "TAUROS_AQUA": "Aqua Breed"}
 
@@ -589,6 +627,16 @@ class DexFormsPageTests(unittest.TestCase):
         native = "\n".join([function(page, "PokedexApp_ShownSpecies"), function(size, "ov18_021F4D64"),
                             function(size, "ov18_021F4DDC"), function(height, "ov18_021EEA84")])
         print(run(SIZE.replace("@DEFINES@", defines).replace("@FORM_TABLE@", table).replace("@NATIVE@", native)))
+
+    def test_the_list_s_icons(self):
+        """ov18_021F5FFC draws each FORMS entry's icon: a form that is a
+        species of its own its own, and the Female entry of the eight species
+        that keep their female as one (PicSpecies_FemaleForm) hers, as the
+        entry's front is: that entry is the one their female is listed as."""
+        icons = (ROOT / "src/application/pokedex/ov18_021F5EF0.c").read_text()
+        pokemon = (ROOT / "src/pokemon.c").read_text()
+        native = "\n".join([function(pokemon, "PicSpecies_FemaleForm"), function(icons, "ov18_021F5FFC")])
+        print(run(ICON.replace("@NATIVE@", native)))
 
     def test_every_form_has_its_name(self):
         """Every form that is a species of its own here has a row of its own

@@ -119,10 +119,12 @@ void ov18_021F5EFC(PokedexAppData *pokedexApp, int idx, int a2) {
 }
 
 // The icon of the FORMS page's entry idx, in the sprite spriteIdx: a form
-// that is a species of its own has that species' icon. Pichu's Spiky-eared
-// form (2 in the Dex) is its icon's form 1.
+// that is a species of its own has that species' icon, and the Female entry
+// of a species that keeps her as one (PicSpecies_FemaleForm) hers, as its
+// front is. Pichu's Spiky-eared form (2 in the Dex) is its icon's form 1.
 void ov18_021F5FFC(PokedexAppData *pokedexApp, int spriteIdx, int idx) {
     u8 entry = pokedexApp->seenForms[idx];
+    u16 species = pokedexApp->seenFormSpecies[idx];
     int form;
 
     if (entry & 0x80) {
@@ -136,6 +138,9 @@ void ov18_021F5FFC(PokedexAppData *pokedexApp, int spriteIdx, int idx) {
         }
     } else {
         form = 0;
+        if (entry == 2) {
+            species = PicSpecies_FemaleForm(species, MON_FEMALE);
+        }
     }
-    ov18_021F14FC(pokedexApp, pokedexApp->seenFormSpecies[idx], form, spriteIdx);
+    ov18_021F14FC(pokedexApp, species, form, spriteIdx);
 }
