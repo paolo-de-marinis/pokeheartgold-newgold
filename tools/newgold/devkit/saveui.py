@@ -935,17 +935,47 @@ class Library:
             raise Refused(str(e))
 
     def op_item(self, save, a):
+        """One item's count in the bag; `pocket`, the pocket the page shows,
+        refuses an item the game files in another one."""
         item = number(a["item"], 1, 0xFFFF, "strumento")
-        entry = sv.item_table().get(item)
-        if not entry or not entry["pocket"]:
-            raise Refused("questo strumento non va in nessuna tasca")
+        entry = in_pocket(item, a.get("pocket"))
         limit = sv.item_limit(item)
         quantity = number(a["quantity"], 0, limit, f"{entry['name']}, quantità" +
                           (" (una MT è una sola: New Gold non le consuma)" if limit == 1 else ""))
         held = sv.bag(save)[entry["pocket"]]
         if quantity and item not in {i["item"] for i in held} and len(held) >= sv.pocket_at(entry["pocket"], save.layout)[1]:
-            raise Refused(f"la tasca è piena ({len(held)} posti)")
+            raise Refused(f"la tasca è piena ({len(held)} posti): togline uno prima")
         sv.set_item(save, item, quantity)
+
+    def op_pocket(self, save, a):
+        """A pocket's list saved at once -- the key items' checklist, a small
+        pocket's counts: each item from 0 to its limit, written as the game
+        keeps the pocket (set_item), refused for another pocket's item and
+        past the pocket's slots. Removals first, so that a swap never finds
+        the pocket full."""
+        pocket = a.get("pocket")
+        if pocket not in {p["name"] for p in sv.pockets()}:
+            raise Refused("tasca sconosciuta")
+        wanted = {}
+        for change in a["changes"]:
+            item = number(change["item"], 1, 0xFFFF, "strumento")
+            entry, limit = in_pocket(item, pocket), sv.item_limit(item)
+            wanted[item] = number(change["quantity"], 0, limit, f"{entry['name']}, quantità" +
+                                  (" (una MT è una sola: New Gold non le consuma)" if limit == 1 else ""))
+        held = {slot["item"]: slot["quantity"] for slot in sv.bag(save)[pocket]}
+        slots, used = sv.pocket_at(pocket, save.layout)[1], sum(1 for q in {**held, **wanted}.values() if q)
+        if used > slots:
+            raise Refused(f"la tasca ha {slots} posti: ne servirebbero {used}. Togline {used - slots} prima")
+        for item, quantity in sorted(wanted.items(), key=lambda kv: kv[1] != 0):
+            if held.get(item, 0) != quantity:
+                try:
+                    sv.set_item(save, item, quantity)
+                except ValueError as e:
+                    if "before TM93 to TM148" not in str(e):
+                        raise
+                    raise Refused(f"{sv.item_table()[item]['name']}: il salvataggio è di prima delle MT93–MT148 e "
+                                  "tiene le macchine di hg-engine; nessuna di loro diventa questa. Caricalo nel gioco "
+                                  "e salvalo, poi aggiungila")
 
     def op_dex(self, save, a):
         for change in a["changes"]:
@@ -1025,35 +1055,14 @@ class Library:
                         if "map_level" in a else None)
 
     def op_machines(self, save, a):
-        """The machines ticked and their counts, written as the game keeps
-        the pocket: each at most once, from 1 to its limit, filled slots
-        first and sorted as SortTMHMPocket sorts them (set_item). Removals
-        first, so that a swap never finds the pocket full."""
-        table = {row["item"]: row for row in sv.machine_table()}
-        wanted = {}
+        """The machines' checklist: op_pocket on the TMs and HMs pocket, each
+        machine at most once, sorted as SortTMHMPocket sorts them (set_item);
+        an item that is no machine is refused as such."""
+        table = {row["item"] for row in sv.machine_table()}
         for change in a["changes"]:
-            item = number(change["item"], 1, 0xFFFF, "macchina")
-            if item not in table:
-                raise Refused(f"lo strumento {item} non è una MT o una MN")
-            name = sv.item_table()[item]["name"]
-            wanted[item] = number(change["quantity"], 0, table[item]["limit"], f"{name}, quantità" +
-                                  (" (una MT è una sola: New Gold non le consuma)" if table[item]["limit"] == 1 else ""))
-        pocket = sv.item_table()[next(iter(table))]["pocket"]      # the machines' own
-        held = {slot["item"]: slot["quantity"] for slot in sv.bag(save)[pocket]}
-        after = {**held, **wanted}
-        slots = sv.pocket_at(pocket, save.layout)[1]
-        if sum(1 for q in after.values() if q) > slots:
-            raise Refused(f"la tasca MT e MN ha {slots} posti: ne servirebbero {sum(1 for q in after.values() if q)}")
-        for item, quantity in sorted(wanted.items(), key=lambda kv: kv[1] != 0):
-            if held.get(item, 0) != quantity:
-                try:
-                    sv.set_item(save, item, quantity)
-                except ValueError as e:
-                    if "before TM93 to TM148" not in str(e):
-                        raise
-                    raise Refused(f"{sv.item_table()[item]['name']}: il salvataggio è di prima delle MT93–MT148 e tiene "
-                                  "le macchine di hg-engine; nessuna di loro diventa questa. Caricalo nel gioco e "
-                                  "salvalo, poi aggiungila")
+            if number(change["item"], 1, 0xFFFF, "macchina") not in table:
+                raise Refused(f"lo strumento {change['item']} non è una MT o una MN")
+        self.op_pocket(save, {"pocket": sv.item_table()[next(iter(table))]["pocket"], "changes": a["changes"]})
 
     def op_flag(self, save, a):
         sv.write_flag(save, number(a["number"], 1, sv.num_flags() - 1, "flag"), bool(a["value"]))
@@ -1148,6 +1157,17 @@ def standable(map_id):
     header of no place, and one with chunks of its own (the unused ones
     have none)."""
     return map_id != sv.constants("include/constants/maps.h", "MAP_")["MAP_EVERYWHERE"] and bool(sv.map_chunks(map_id))
+
+
+def in_pocket(item, pocket=None):
+    """The item's row, refused when it goes in no pocket or -- `pocket`
+    given, the one the page shows -- in another one."""
+    entry = sv.item_table().get(item)
+    if not entry or not entry["pocket"]:
+        raise Refused("questo strumento non va in nessuna tasca")
+    if pocket is not None and entry["pocket"] != pocket:
+        raise Refused(f"{entry['name']} non va in questa tasca: il gioco lo tiene in un'altra")
+    return entry
 
 
 def last_one(save):
@@ -1392,6 +1412,14 @@ def species_rules(q):
             "friendship": sv.personal_records()[sv.personal_row(species, form)]["friendship"]}
 
 
+def offers(pocket):
+    """What a pocket's lists offer: its own items only, by id -- those this
+    game has ("items"), then the other games' ("others"), which the page
+    shows only when asked."""
+    rows = [row for row in sv.item_table().values() if row["pocket"] == pocket and row["id"]]
+    return {"items": [row["id"] for row in rows if row["game"]], "others": [row["id"] for row in rows if not row["game"]]}
+
+
 def tables():
     """What the page names and offers, as the tree has it: the species,
     moves, items, natures (and the stat each raises and lowers), maps and
@@ -1414,7 +1442,7 @@ def tables():
             "maps": [m for m in sv.map_table().values() if standable(m["id"])],
             "world": part(errors, "world", world, {"cols": 0, "rows": 0, "tiles": {}, "main": [], "buildings": [], "heals": []}),
             "dex": sv.dex_species(), "dex_forms": list(sv.dex_forms()),
-            "pockets": [{k: p[k] for k in ("name", "const", "slots")} for p in sv.pockets()],
+            "pockets": [{**{k: p[k] for k in ("name", "const", "slots")}, **offers(p["name"])} for p in sv.pockets()],
             "stats": by_value("include/constants/pokemon.h", "STAT_", sv.NUM_STATS),
             "directions": by_value("include/constants/global_fieldmap.h", "DIR_", sv.DIR_MAX),
             "genders": [{"const": const, "value": value} for const, value in genders.items()],

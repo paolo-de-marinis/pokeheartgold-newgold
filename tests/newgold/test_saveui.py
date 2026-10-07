@@ -781,6 +781,38 @@ class SaveUiTests(unittest.TestCase):
         for place in places:
             self.assertRegex(place, r"^S\.save\.info\.pockets\?\.\[\w+\.name\] \?\? \w+\.slots$")
 
+    def test_a_pocket_offers_only_its_own_items(self):
+        """Each pocket's lists in /api/data hold its own items only, this
+        game's first and the other games' apart; op "item" and op "pocket"
+        refuse an item the game files in another pocket than the one the
+        page shows, and a pocket's list past its slots."""
+        items = {row["const"]: row["id"] for row in sv.item_table().values()}
+        data = self.ok("/api/data")
+        pocket_of = {row["id"]: row["pocket"] for row in data["items"]}
+        for pocket in data["pockets"]:
+            self.assertTrue(pocket["items"], pocket["name"])
+            self.assertEqual({pocket_of[i] for i in pocket["items"] + pocket["others"]}, {pocket["name"]})
+        offered = {p["name"]: set(p["items"]) for p in data["pockets"]}
+        self.assertNotIn(items["ITEM_POTION"], offered["balls"], "Paolo: no Potion among the Poké Balls")
+        self.assertIn(items["ITEM_POTION"], offered["medicine"])
+        self.assertNotIn(items["ITEM_TERA_ORB"], offered["keyItems"], "another game's: shown only when asked")
+        self.assertIn(items["ITEM_TERA_ORB"], next(p["others"] for p in data["pockets"] if p["name"] == "keyItems"))
+        self.assertIn("non va in questa tasca", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "item", "args": {
+            "item": items["ITEM_POTION"], "quantity": 1, "pocket": "balls"}}))
+        out = self.edit("pocket", {"pocket": "keyItems", "changes": [{"item": items["ITEM_BICYCLE"], "quantity": 1},
+                                                                     {"item": items["ITEM_OLD_ROD"], "quantity": 1}]})
+        self.assertEqual([(i["item"], i["quantity"]) for i in out["bag"]["keyItems"]],
+                         [(items["ITEM_BICYCLE"], 1), (items["ITEM_OLD_ROD"], 1)])
+        self.assertIn("non va in questa tasca", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "pocket", "args": {
+            "pocket": "keyItems", "changes": [{"item": items["ITEM_POTION"], "quantity": 1}]}}))
+        balls = next(p for p in data["pockets"] if p["name"] == "balls")
+        many = [{"item": i, "quantity": 1} for i in balls["items"] + balls["others"]]
+        self.assertIn(f"ha {balls['slots']} posti", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "pocket",
+                                                                             "args": {"pocket": "balls", "changes": many}}))
+        out = self.edit("pocket", {"pocket": "keyItems", "changes": [{"item": items["ITEM_BICYCLE"], "quantity": 0}]})
+        self.assertEqual([i["item"] for i in out["bag"]["keyItems"]], [items["ITEM_OLD_ROD"]])
+        self.assertEqual(len(self.backups()), 2, "a refused change writes nothing")
+
     def test_files(self):
         self.edit("trainer", {"money": 1})
         self.assertEqual(self.ok("/api/duplicate", {"f": "gyms/test.sav", "name": "copia"})["f"], "copia.sav")
