@@ -6726,14 +6726,27 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 int battlerIdCopied;
 
                 battlerId = ctx->turnOrder[i];
+                // Imposter acts at the first entry check its Pokemon stands
+                // in after it comes in, or never: not given by Skill Swap
+                // later, not once a Neutralizing Gas that held it back has
+                // gone (Showdown's gen-9 imposter, a switch-in handler, says
+                // both), and not later in place of an empty place opposite
+                // (Pokemon Central, Sosia: it fails if the place opposite is
+                // empty). So the flag is spent here for every Pokemon that
+                // stands, whatever its ability. Every Pokemon sent in together
+                // -- the turn's replacements, both sides' -- is in before the
+                // check runs (BattleControllerPlayer_PokemonAppear).
+                if (ctx->battleMons[battlerId].imposterFlag || !ctx->battleMons[battlerId].hp) {
+                    continue;
+                }
+                ctx->battleMons[battlerId].imposterFlag = TRUE;
                 // The one standing visibly opposite, which in a double
                 // battle is the far slot rather than the near one.
                 battlerIdCopied = (BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_DOUBLES) ? (battlerId ^ 3) : (battlerId ^ 1);
                 // A wild Pokemon only copies if it is a Ditto or a Mew; a
                 // trainer's may be anything. The reference also refuses a
                 // target hidden behind an Illusion, and this game has none.
-                if (!ctx->battleMons[battlerId].imposterFlag && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_IMPOSTER && ctx->battleMons[battlerIdCopied].hp && ctx->battleMons[battlerIdCopied].ability != ABILITY_IMPOSTER && !ctx->battleMons[battlerIdCopied].illusionMon && !(ctx->battleMons[battlerIdCopied].status2 & (STATUS2_SUBSTITUTE | STATUS2_TRANSFORM)) && ((BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER) || ctx->battleMons[battlerId].species == SPECIES_DITTO || ctx->battleMons[battlerId].species == SPECIES_MEW)) {
-                    ctx->battleMons[battlerId].imposterFlag = TRUE;
+                if (GetBattlerAbility(ctx, battlerId) == ABILITY_IMPOSTER && ctx->battleMons[battlerIdCopied].hp && ctx->battleMons[battlerIdCopied].ability != ABILITY_IMPOSTER && !ctx->battleMons[battlerIdCopied].illusionMon && !(ctx->battleMons[battlerIdCopied].status2 & (STATUS2_SUBSTITUTE | STATUS2_TRANSFORM)) && ((BattleSystem_GetBattleType(battleSystem) & BATTLE_TYPE_TRAINER) || ctx->battleMons[battlerId].species == SPECIES_DITTO || ctx->battleMons[battlerId].species == SPECIES_MEW)) {
                     // Transform copies from the attacker to the target, and
                     // this is not a move: what those two were is put aside
                     // here and given back at the end of the subscript,

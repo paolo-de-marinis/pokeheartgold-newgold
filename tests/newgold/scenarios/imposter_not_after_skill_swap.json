@@ -1,0 +1,13 @@
+{
+  "about": "Imposter acts at the first entry check after its Pokemon comes in, or never: a Pokemon given it by Skill Swap does not transform (Showdown's gen-9 imposter, a switch-in handler: it does not activate when Skill Swapped or when Neutralizing Gas leaves; Pokemon Central, Sosia: it acts as its Pokemon comes in). A level-10 Pikachu is given Imposter (set:) and Skill Swap (teach:) against a forced wild Ditto, its own ability Limber, that knows only Splash: the Pikachu swaps abilities, and the Ditto, Imposter now, does not transform. Before, its flag still unspent, the entry check after the move turned it into the Pikachu. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=132", "LEFT", "fight:1:0",
+            "set:0,ability,ABILITY_IMPOSTER",
+            "teach:0,0,MOVE_SKILL_SWAP", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1"],
+  "expect": {"lines": ["Pikachu used Skill Swap!", "swapped", "The wild Ditto used Splash!"],
+             "no_lines": ["transformed"], "battler1.species": "SPECIES_DITTO"}
+}

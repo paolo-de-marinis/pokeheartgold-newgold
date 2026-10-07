@@ -1828,7 +1828,20 @@ class TransformTests(unittest.TestCase):
         body = function(COMMANDS.read_text(), "BtlCmd_Transform")
         self.assertIn("ctx->battleMons[ctx->battlerIdAttacker].imposterFlag = TRUE;", body)
         entry = function(OVERLAY.read_text(), "TryAbilityOnEntry")
-        self.assertIn("if (!ctx->battleMons[battlerId].imposterFlag && ", entry)
+        self.assertIn("if (ctx->battleMons[battlerId].imposterFlag || !ctx->battleMons[battlerId].hp) {\n                    continue;", entry)
+
+    def test_imposter_has_the_first_entry_check_alone(self):
+        # Showdown's gen-9 imposter "does not activate when Skill Swapped or
+        # when Neutralizing Gas leaves the field", and Pokemon Central's Sosia
+        # fails it with the place opposite empty: the flag is spent at the
+        # first entry check a Pokemon stands in, before its ability is asked.
+        entry = function(OVERLAY.read_text(), "TryAbilityOnEntry")
+        case = entry[entry.index("case 18: // Imposter"):entry.index("case 19:")]
+        spent = case.index("ctx->battleMons[battlerId].imposterFlag = TRUE;")
+        self.assertLess(case.index("continue;"), spent)
+        self.assertLess(spent, case.index("GetBattlerAbility(ctx, battlerId) == ABILITY_IMPOSTER"))
+        self.assertLess(spent, case.index("ctx->battleMons[battlerIdCopied].hp"))
+        self.assertEqual(case.count("imposterFlag = TRUE"), 1)
 
 
 class Conversion2Tests(unittest.TestCase):
