@@ -141,4 +141,8 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Your Photo Album is full.\rAccess your PC to delete\nsome pictures.</language>
 	</row>
+	<row id="msg_0597_T25R1006_00035" index="35">
+		<attribute name="window_context_name">used</attribute>
+		<language name="English">Oh my...\nYou already have this TM.\rThen we’ll refund you the money.\r</language>
+	</row>
 </body>

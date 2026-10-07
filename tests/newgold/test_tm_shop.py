@@ -389,6 +389,42 @@ class PrizeCounterTests(unittest.TestCase):
                 said = re.search(rf"\n{held}:\n\tNPCMsg (\w+)", source).group(1)
                 self.assertEqual(rows[said], "You already have this!\\r", tm)
 
+    def held_refusal(self, script, bank, block):
+        """Where a script with its prize in x8004 refuses one with no room:
+        the refusal asks ItemIsTMOrHM first and, for a TM, says a row of its
+        own bank, then goes on at a label. The row and that label's text up
+        to its End."""
+        source = (ROOT / "files/fielddata/script/scr_seq" / script).read_text()
+        rows = dict(re.findall(r'<row id="(\w+)".*?<language name="English">(.*?)</language>',
+                               (ROOT / f"files/msgdata/msg/{bank}.gmm").read_text(), re.S))
+        label = re.search(r"\tHasSpaceForItem VAR_SPECIAL_x8004, VAR_SPECIAL_x8005, VAR_SPECIAL_RESULT\n"
+                          r"\tCompare VAR_SPECIAL_RESULT, 0\n\tGoToIfEq (\w+)\n", block).group(1)
+        held = re.match(rf"\n{label}:\n(?:\t//.*\n)?\tItemIsTMOrHM VAR_SPECIAL_x8004, VAR_SPECIAL_RESULT\n"
+                        r"\tCompare VAR_SPECIAL_RESULT, 1\n\tGoToIfEq (\w+)\n", source[source.index(f"\n{label}:\n"):])
+        self.assertIsNotNone(held, f"{script}: the refusal does not ask whether the prize is a TM")
+        said, back = re.search(rf"\n{held.group(1)}:\n\tNPCMsg (\w+)\n\tGoTo (\w+)\n", source).groups()
+        for part in re.split(r"\\[rnf]", rows[said]):
+            self.assertLessEqual(width(part, 0), 216, part)     # the box's 27 tiles
+        after = source[source.index(f"\n{back}:\n") + 1:]
+        return rows[said], after[:min(after.index("\tEnd\n"), after.index("\n\n"))]
+
+    def test_the_daily_drawing_refunds_a_held_tm_and_says_so(self):
+        """Paolo's decision of 2026-10-08: Goldenrod's Daily Drawing (the
+        Department Store's rooftop) gives a TM as its first prize, one each
+        weekday, and a TM held already does not fit the bag, which takes one
+        of each. It keeps the $300 refund, but its line says the TM is held,
+        from a row of its own bank, not "Your Bag is full"."""
+        source = (ROOT / "files/fielddata/script/scr_seq/scr_seq_0904_T25R1006.s").read_text()
+        tms = {int(n) for n in re.findall(r"#define ITEM_TM\d+\s+(\d+)", (ROOT / "include/constants/items.h").read_text())}
+        first = source[source.index("\n_03AC:\n"):source.index("\n_04A3:\n")]
+        prizes = [int(n) for n in re.findall(r"SetVar VAR_SPECIAL_x8004, (\d+)\n", first)]
+        self.assertEqual(len(prizes), 7)
+        self.assertTrue(set(prizes) <= tms, prizes)
+        line, after = self.held_refusal("scr_seq_0904_T25R1006.s", "msg_0597_T25R1006", first)
+        self.assertEqual(line, "Oh my...\\nYou already have this TM.\\rThen we’ll refund you the money.\\r")
+        self.assertIn("\tAddMoney 300\n", after)
+        self.assertNotIn("NPCMsg msg_0597_T25R1006_00015", after)      # "Your Bag is full."
+
 
 class GiftTests(unittest.TestCase):
     # Paid for, not given: their refusals are the shops' own (PrizeCounterTests,

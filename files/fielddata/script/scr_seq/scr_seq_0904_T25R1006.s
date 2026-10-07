@@ -309,7 +309,12 @@ _04A3:
 	End
 
 _04B0:
+	// A TM is held once: a first prize that does not fit is one already held.
+	ItemIsTMOrHM VAR_SPECIAL_x8004, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TMAlreadyHeld
 	NPCMsg msg_0597_T25R1006_00015
+_Refund:
 	CloseMsg
 	AddMoney 300
 	UpdateMoneyBox
@@ -328,6 +333,11 @@ _04D2:
 	CloseMsg
 	HideMoneyBox
 	ReleaseAll
+	End
+
+_TMAlreadyHeld:
+	NPCMsg msg_0597_T25R1006_00035
+	GoTo _Refund
 	End
 
 scr_seq_T25R1006_005:

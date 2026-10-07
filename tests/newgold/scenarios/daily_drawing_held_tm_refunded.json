@@ -1,0 +1,67 @@
+{
+  "about": "Goldenrod's Daily Drawing (the Department Store's 6F) with its first prize held already (Paolo, 2026-10-08): route29-official.sav with TM91 in the bag and 1000, across the counter from the clerk (21, 7, facing her at 23, 7). The harness's clock is a Tuesday, whose first prize is TM91 (row 20); the field RNG is held at a state whose next four rolls are all under 4 of 100, so the draw is the first prize. YES: 300 paid (700), 'Wow! You've got yourself the no. 1 prize!' (msg_0597_T25R1006 row 12), then where the bag's room check said 'Oh my... Your Bag is full.' (row 15), row 35: 'Oh my... You already have this TM. Then we'll refund you the money.', still 700 and one TM91; then 'Please come again.' (row 17) with the 300 back, 1000. Without the held-TM line the first expectation finds row 15 up, not 35.",
+  "save": "route29-official.sav",
+  "edit": [
+    "--tm",
+    "91",
+    "--money",
+    "1000",
+    "--where",
+    "196:20:7:0"
+  ],
+  "steps": [
+    "field",
+    "goto:MAP_GOLDENROD_DEPARTMENT_STORE_6F,21,7",
+    "RIGHT",
+    "hold:sLCRNG_State=1814580563",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    {
+      "expect": {
+        "gDiagFieldMessage": 39125004,
+        "money": 700
+      }
+    },
+    "A",
+    "wait:200",
+    {
+      "expect": {
+        "gDiagFieldMessage": 39125027,
+        "money": 700,
+        "bag:ITEM_TM91": 1
+      }
+    },
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    {
+      "expect": {
+        "gDiagFieldMessage": 39125009,
+        "money": 1000
+      }
+    },
+    "hold:sLCRNG_State=0",
+    "A",
+    "wait:100",
+    "field"
+  ],
+  "expect": {
+    "money": 1000,
+    "bag:ITEM_TM91": 1
+  }
+}
