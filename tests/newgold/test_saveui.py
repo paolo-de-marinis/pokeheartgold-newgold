@@ -819,6 +819,18 @@ class SaveUiTests(unittest.TestCase):
         plan = page[page.index("function placePlan("):page.index("function drawNeeds(")]
         self.assertIn("cap = capAfter(ticked.flatMap(x => x.undo || []), ticked.flatMap(x => x.run || []))", plan)
 
+    def test_unsaved_changes_are_asked_about_before_playing(self):
+        """The staged changes of the open save (a pocket, the machines, the
+        Dex) are asked about before it is played or loaded as it is on disk
+        -- the library card's Gioca, Carica and the slot's own Gioca, Sposta e
+        gioca -- and before the open slot is overwritten: the review got
+        straight to melonDS with a Potion staged."""
+        page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
+        action = page[page.index("async function libraryAction("):page.index("async function browseFor(")]
+        self.assertIn('["play", "load", "resume"].includes(act) && f === S.f && !await mayDrop(', action)
+        self.assertEqual(action.count('S.f === "emu:" + r.data.slot && !await mayDrop('), 2)
+        self.assertIn('if (play && !await mayDrop(', page[page.index("const go = async play =>"):])
+
     def test_a_plan_says_what_the_editor_does_not_do(self):
         """A place's plan names, in a tick's line, what its story steps do
         that the editor does not (an egg given: savedit's "other" writes),

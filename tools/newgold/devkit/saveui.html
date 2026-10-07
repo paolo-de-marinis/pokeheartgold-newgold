@@ -647,6 +647,8 @@ async function toSlot(path, f, slot, done) {
 }
 async function libraryAction(act, f, t) {
   if (act === "open") return openSave(f);
+  // Played or loaded as it is on disk: the open save's staged changes would be left behind, so they are asked about.
+  if (["play", "load", "resume"].includes(act) && f === S.f && !await mayDrop("Giocare questo salvataggio così com'è su disco")) return;
   if (act === "resume") {
     toast("Apro melonDS…");
     await run(() => api("/api/play", {f, slot: f.slice(4)}), "melonDS è aperto");
@@ -656,7 +658,7 @@ async function libraryAction(act, f, t) {
     const r = await ask("Gioca", `<p>Il salvataggio <strong>${esc(f)}</strong> viene copiato nello slot scelto (quello che c'era finisce nei backup), poi si apre melonDS.</p>
       ${slotChoice(S.lib.playable)}`,
       [["go", "Carica e avvia melonDS", "primary"], ["", "Annulla"]]);
-    if (r.value !== "go") return;
+    if (r.value !== "go" || (S.f === "emu:" + r.data.slot && !await mayDrop("Sovrascrivere lo slot aperto"))) return;
     toast("Carico il salvataggio e apro melonDS…");
     await toSlot("/api/play", f, r.data.slot, "melonDS è aperto");
     if (S.f === "emu:" + r.data.slot) await openSave(S.f);   // shown as it now is, not as "changed on disk"
@@ -666,7 +668,7 @@ async function libraryAction(act, f, t) {
     const r = await ask("Carica nell'emulatore", `<p>Copia <strong>${esc(f)}</strong> nello slot scelto. Quello che c'è ora nello slot viene salvato nei backup.</p>
       ${slotChoice(usableSlots())}`,
       [["go", "Carica", "primary"], ["", "Annulla"]]);
-    if (r.value !== "go") return;
+    if (r.value !== "go" || (S.f === "emu:" + r.data.slot && !await mayDrop("Sovrascrivere lo slot aperto"))) return;
     await toSlot("/api/load", f, r.data.slot, "Caricato nello slot");
     if (S.f === "emu:" + r.data.slot) await openSave(S.f);
     return loadLibrary();
@@ -852,7 +854,8 @@ async function showHistory(f) {
 
 // ---- the open save -------------------------------------------------------
 // The lists whose changes wait for "Salva modifiche" -- the bag's pockets, the machines, the Pokédex -- are not
-// thrown away without asking: opening another save, reloading, undoing, or leaving the page.
+// thrown away without asking: opening another save, reloading, undoing, playing or loading the open save as it is on
+// disk (Gioca, Carica, Sposta e gioca), overwriting the open slot, or leaving the page.
 function clearStaged() { S.dex.changes.clear(); S.tm.changes.clear(); S.bagch.clear(); }
 async function mayDrop(doing) {
   const n = unsaved();
@@ -861,6 +864,7 @@ async function mayDrop(doing) {
     ${esc(doing)} li butta via.</p>`, [["", "Torna indietro"], ["drop", "Buttali via e continua", "danger"]]);
   if (r.value !== "drop") return false;
   clearStaged();
+  if (S.save) renderTabs();      // no row left marked as changed
   return true;
 }
 window.addEventListener("beforeunload", ev => { if (unsaved()) { ev.preventDefault(); ev.returnValue = ""; } });
@@ -937,10 +941,7 @@ $("#undo").addEventListener("click", async () => {
   } finally { S.busy--; }
 });
 $("#history").addEventListener("click", () => S.f && showHistory(S.f));
-$("#playopen").addEventListener("click", async () => {
-  if (!S.f || !await mayDrop("Giocare questo salvataggio così com'è su disco")) return;
-  libraryAction(S.save?.slot ? "resume" : "play", S.f);
-});
+$("#playopen").addEventListener("click", () => { if (S.f) libraryAction(S.save?.slot ? "resume" : "play", S.f); });
 $("#reload").addEventListener("click", async () => { if (S.f && await mayDrop("Ricaricare il salvataggio")) { clearStaged(); openSave(S.f); } });
 
 function renderTabs() {
@@ -2289,6 +2290,7 @@ function renderPosition() {
   $("#leaderchips").onclick = ev => { const b = ev.target.closest("[data-place]"); if (b) pickPlace(+b.dataset.place); };
   const go = async play => {
     const f = $("#posform").elements;
+    if (play && !await mayDrop("Spostare e giocare il salvataggio così com'è su disco")) return;
     if (!f.x.reportValidity() || !f.y.reportValidity()) return;
     if (S.pos.map === null) return toast("Scegli la mappa dall'elenco o sulla minimappa", true);
     const args = {map: S.pos.map, x: +f.x.value, y: +f.y.value, direction: +f.dir.value};

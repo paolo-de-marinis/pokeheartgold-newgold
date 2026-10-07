@@ -297,7 +297,9 @@ ticks (every one the game has, the key items a script gives first, tagged
 with where), the small pockets list all their items with a count each, and
 the Items pocket lists what it holds and adds through the picker over its
 own items. Unsaved changes are not thrown away without asking: another save
-opened, the last change undone, the page closed. A held item is only one
+opened, the last change undone, the open save played or loaded as it is on
+disk (Gioca, Carica, Sposta e gioca), the open slot overwritten, the page
+closed. A held item is only one
 the bag's GIVE offers (no key item, no machine, no Apricorn), and no Mail
 for a box Pokemon; a Plate held by Arceus, a Memory by Silvally, the
 Griseous Orb by Giratina set the form as the party menu does. An item taken
