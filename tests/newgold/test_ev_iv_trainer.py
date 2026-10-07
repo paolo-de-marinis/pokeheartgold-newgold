@@ -345,6 +345,20 @@ class RulesTests(unittest.TestCase):
         own = re.findall(r"RGB\((\d+), (\d+), (\d+)\)", own[:own.index("};")])
         self.assertEqual(own[9:11], [("23", "23", "20"), ("9", "8", "7")])
 
+    def test_the_developer_page_lights_the_sets_tab(self):
+        """The diagnostics build's developer page, reached from the Sets by
+        SELECT, has no tab of its own: it keeps the Sets' plates, whose Sets
+        tab is lit, and the Sets' label white, where it had the EV page's
+        plates, the EV tab lit and every label dark."""
+        app = read("src/ev_iv_trainer_app.c")
+        table = app[app.index("static const u16 sPagePlates[TRAINER_PAGES][2] = {"):]
+        table = table[:table.index("};")]
+        plain, diag = table.split("#ifdef NEWGOLD_DIAG")
+        rows = re.findall(r"\{ (\d+), (\d+) \}", plain)
+        self.assertEqual(re.findall(r"\{ (\d+), (\d+) \}", diag), [rows[2]])   # PAGE_SETS's
+        self.assertIn("#define TAB_LIT(app)  ((app)->page == PAGE_DEV ? PAGE_SETS : (app)->page)", app)
+        self.assertIn("t == TAB_LIT(app) ? TEXT_WHITE : TEXT_DARK", function(app, "DrawTabs"))
+
     def test_the_app_writes_only_what_was_confirmed(self):
         """The Pokemon is written in one place, after the YES, and the money
         and the caps are spent there too."""

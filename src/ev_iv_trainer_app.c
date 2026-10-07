@@ -69,8 +69,10 @@ enum TrainerPage {
 // City's bank; his EV presets are the Sets page's.
 #define PAGE_DEV      PAGE_COUNT
 #define TRAINER_PAGES (PAGE_COUNT + 1)
+#define TAB_LIT(app)  ((app)->page == PAGE_DEV ? PAGE_SETS : (app)->page)
 #else
 #define TRAINER_PAGES PAGE_COUNT
+#define TAB_LIT(app)  ((app)->page)
 #endif
 
 enum TrainerState {
@@ -161,7 +163,9 @@ static const u16 sPagePlates[TRAINER_PAGES][2] = {
     { 19, 17 },
     { 10, 9 },
 #ifdef NEWGOLD_DIAG
-    { 13, 12 },
+    // The developer page, which SELECT reaches from the Sets, keeps their
+    // plates and their tab lit (TAB_LIT).
+    { 10, 9 },
 #endif
 };
 static const u16 sPageTitles[PAGE_COUNT] = { msg_0829_00001, msg_0829_00002, msg_0829_00003 };
@@ -846,7 +850,7 @@ static void DrawTabs(EvIvTrainer *app, Window *win) {
         for (y = TAB_TOP; y <= TAB_BOTTOM; y++) {
             Rect(win, box->rect.left + 4, y, box->rect.right - 4, y, PlatePixel(app, 1, box->rect.left + 4, y));
         }
-        PrintRow(app, win, sTabLabels[t], 0, (box->rect.left + box->rect.right) / 2 + 1, 169, t == app->page ? TEXT_WHITE : TEXT_DARK, ALIGN_CENTER);
+        PrintRow(app, win, sTabLabels[t], 0, (box->rect.left + box->rect.right) / 2 + 1, 169, t == TAB_LIT(app) ? TEXT_WHITE : TEXT_DARK, ALIGN_CENTER);
     }
     PrintRow(app, win, msg_0829_00029, 0, 221, 169, TEXT_WHITE, ALIGN_CENTER);
 }
