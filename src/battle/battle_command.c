@@ -1244,6 +1244,54 @@ BOOL BtlCmd_BufferLocalMessage(BattleSystem *battleSystem, BattleContext *ctx) {
     return FALSE;
 }
 
+// What Secret Power and Camouflage go by: the ground the battle is fought on
+// (BattleSystem_GetTerrainId), the League's and the Frontier's rooms all
+// TERRAIN_OTHERS, and past it the terrain laid over the field, which comes
+// first -- their tables' index.
+static int SecretPowerGround(BattleSystem *battleSystem, BattleContext *ctx) {
+    int terrain = BattleSystem_GetTerrainId(battleSystem);
+
+    if (terrain > TERRAIN_OTHERS) {
+        terrain = TERRAIN_OTHERS;
+    }
+    if (ctx->terrainOverlayType != TERRAIN_NONE) {
+        terrain = TERRAIN_OTHERS + ctx->terrainOverlayType;
+    }
+    return terrain;
+}
+
+// The move whose animation Secret Power shows, by the same ground as its
+// effect (sSecretPowerEffectTable): the seventh generation's, the last the
+// move can be chosen in (Pokemon Central, Forzasegreta). Spit Up on plain
+// ground, in buildings and in the League's and the Frontier's rooms,
+// Mud-Slap on sand and rock, Needle Arm in grass and Grassy Terrain, Rock
+// Throw in a cave, Ice Shard on snow and ice, Water Pulse on water, Thunder
+// Shock in Electric Terrain, Fairy Wind in Misty, Confusion in Psychic.
+// Puddles and mud, which the seventh has not got, show the sixth's Mud Shot
+// ("pozzanghera", "palude"), and the unknown ground nothing here uses keeps
+// Secret Power's own. That one, retail's, is the fourth generation's: Body
+// Slam in a building, Mud-Slap on plain ground, Rock Throw on rock,
+// Avalanche on snow, and no terrain.
+static const u16 sSecretPowerAnimations[TERRAIN_OTHERS + PSYCHIC_TERRAIN + 1] = {
+    [TERRAIN_PLAIN] = MOVE_SPIT_UP,
+    [TERRAIN_SAND] = MOVE_MUD_SLAP,
+    [TERRAIN_GRASS] = MOVE_NEEDLE_ARM,
+    [TERRAIN_PUDDLE] = MOVE_MUD_SHOT,
+    [TERRAIN_MOUNTAIN] = MOVE_MUD_SLAP,
+    [TERRAIN_CAVE] = MOVE_ROCK_THROW,
+    [TERRAIN_SNOW] = MOVE_ICE_SHARD,
+    [TERRAIN_WATER] = MOVE_WATER_PULSE,
+    [TERRAIN_ICE] = MOVE_ICE_SHARD,
+    [TERRAIN_BUILDING] = MOVE_SPIT_UP,
+    [TERRAIN_GREAT_MARSH] = MOVE_MUD_SHOT,
+    [TERRAIN_UNKNOWN] = MOVE_SECRET_POWER,
+    [TERRAIN_OTHERS] = MOVE_SPIT_UP,
+    [TERRAIN_OTHERS + GRASSY_TERRAIN] = MOVE_NEEDLE_ARM,
+    [TERRAIN_OTHERS + MISTY_TERRAIN] = MOVE_FAIRY_WIND,
+    [TERRAIN_OTHERS + ELECTRIC_TERRAIN] = MOVE_THUNDER_SHOCK,
+    [TERRAIN_OTHERS + PSYCHIC_TERRAIN] = MOVE_CONFUSION,
+};
+
 // The animation archive stops where retail's moves stopped, so an added move
 // borrows one. Which one is a judgement about what the move looks like, kept
 // here beside the only place that asks.
@@ -1727,10 +1775,14 @@ BOOL BtlCmd_PlayMoveAnimation(BattleSystem *battleSystem, BattleContext *ctx) {
 
     if ((!(ctx->battleStatus & BATTLE_STATUS_MOVE_ANIMATIONS_OFF) && BattleSystem_AreBattleAnimationsOn(battleSystem) == TRUE) || move == MOVE_TRANSFORM) {
         ctx->battleStatus |= BATTLE_STATUS_MOVE_ANIMATIONS_OFF;
-        BattleController_SetMoveAnimation(battleSystem, ctx, MoveAnimationFor(move));
+        if (move == MOVE_SECRET_POWER) {
+            move = sSecretPowerAnimations[SecretPowerGround(battleSystem, ctx)];
+        }
+        move = MoveAnimationFor(move);
+        BattleController_SetMoveAnimation(battleSystem, ctx, move);
 #ifdef NEWGOLD_DIAG
         gDiagMoveAnimationCount++;
-        gDiagMoveAnimation = MoveAnimationFor(move);
+        gDiagMoveAnimation = move;
 #endif
     }
 
@@ -6421,14 +6473,7 @@ BOOL BtlCmd_TryCamouflage(BattleSystem *battleSystem, BattleContext *ctx) {
         return FALSE;
     }
 
-    int terrain = BattleSystem_GetTerrainId(battleSystem);
-    if (terrain > TERRAIN_OTHERS) {
-        terrain = TERRAIN_OTHERS;
-    }
-    if (ctx->terrainOverlayType != TERRAIN_NONE) {
-        terrain = TERRAIN_OTHERS + ctx->terrainOverlayType;
-    }
-    int type = sCamouflageTypeTable[terrain];
+    int type = sCamouflageTypeTable[SecretPowerGround(battleSystem, ctx)];
 
     // The user becomes that type and nothing else, an added third type
     // included, as with every move that sets a Pokemon's type. It fails only
@@ -6507,14 +6552,7 @@ BOOL BtlCmd_GetTerrainMove(BattleSystem *battleSystem, BattleContext *ctx) {
 BOOL BtlCmd_GetTerrainSecondaryEffect(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
-    int terrain = BattleSystem_GetTerrainId(battleSystem);
-    if (terrain > TERRAIN_OTHERS) {
-        terrain = TERRAIN_OTHERS;
-    }
-    if (ctx->terrainOverlayType != TERRAIN_NONE) {
-        terrain = TERRAIN_OTHERS + ctx->terrainOverlayType;
-    }
-    ctx->unk_2174 = MOVE_SIDE_EFFECT_TO_DEFENDER | sSecretPowerEffectTable[terrain];
+    ctx->unk_2174 = MOVE_SIDE_EFFECT_TO_DEFENDER | sSecretPowerEffectTable[SecretPowerGround(battleSystem, ctx)];
 
     return FALSE;
 }

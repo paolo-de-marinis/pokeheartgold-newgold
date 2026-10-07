@@ -371,6 +371,47 @@ int main(void) {
 """
 
 
+# The move whose animation Secret Power shows, by the ground and the terrain.
+SECRET_POWER_ANIMATION = r"""
+#include <assert.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+#include "constants/battle.h"
+#include "constants/moves.h"
+typedef struct { int terrain; } BattleSystem;
+typedef struct { u8 terrainOverlayType; } BattleContext;
+static int BattleSystem_GetTerrainId(BattleSystem *bs) { return bs->terrain; }
+@FUNCTIONS@
+static int shown(int ground, int overlay) {
+    BattleSystem bs = { ground };
+    BattleContext ctx = { overlay };
+    return sSecretPowerAnimations[SecretPowerGround(&bs, &ctx)];
+}
+int main(void) {
+    assert(shown(TERRAIN_PLAIN, TERRAIN_NONE) == MOVE_SPIT_UP);
+    assert(shown(TERRAIN_BUILDING, TERRAIN_NONE) == MOVE_SPIT_UP);
+    assert(shown(TERRAIN_BATTLE_HALL, TERRAIN_NONE) == MOVE_SPIT_UP);
+    assert(shown(TERRAIN_SAND, TERRAIN_NONE) == MOVE_MUD_SLAP);
+    assert(shown(TERRAIN_MOUNTAIN, TERRAIN_NONE) == MOVE_MUD_SLAP);
+    assert(shown(TERRAIN_GRASS, TERRAIN_NONE) == MOVE_NEEDLE_ARM);
+    assert(shown(TERRAIN_CAVE, TERRAIN_NONE) == MOVE_ROCK_THROW);
+    assert(shown(TERRAIN_SNOW, TERRAIN_NONE) == MOVE_ICE_SHARD);
+    assert(shown(TERRAIN_ICE, TERRAIN_NONE) == MOVE_ICE_SHARD);
+    assert(shown(TERRAIN_WATER, TERRAIN_NONE) == MOVE_WATER_PULSE);
+    assert(shown(TERRAIN_PUDDLE, TERRAIN_NONE) == MOVE_MUD_SHOT);
+    assert(shown(TERRAIN_GREAT_MARSH, TERRAIN_NONE) == MOVE_MUD_SHOT);
+    assert(shown(TERRAIN_UNKNOWN, TERRAIN_NONE) == MOVE_SECRET_POWER);
+    // A terrain comes first, wherever the battle is.
+    assert(shown(TERRAIN_CAVE, ELECTRIC_TERRAIN) == MOVE_THUNDER_SHOCK);
+    assert(shown(TERRAIN_WATER, GRASSY_TERRAIN) == MOVE_NEEDLE_ARM);
+    assert(shown(TERRAIN_PLAIN, MISTY_TERRAIN) == MOVE_FAIRY_WIND);
+    assert(shown(TERRAIN_BATTLE_TOWER, PSYCHIC_TERRAIN) == MOVE_CONFUSION);
+    return 0;
+}
+"""
+
+
 # BtlCmd_TryCamouflage on the host, with its table: the type it gives a
 # Bulbasaur (Grass/Poison) by the ground and the terrain over it, and when it
 # fails: only on a user of that type alone.
@@ -464,7 +505,19 @@ class TerrainMoveTests(unittest.TestCase):
         # eighth generation, so the seventh's table is the last.
         commands = (ROOT / "src/battle/battle_command.c").read_text()
         run_c(SECRET_POWER.replace("@FUNCTIONS@", table("src/battle/overlay_12_0226C3E8.c", "sSecretPowerEffectTable")
+                                   + function(commands, "SecretPowerGround")
                                    + function(commands, "BtlCmd_GetTerrainSecondaryEffect")))
+
+    def test_secret_power_s_animation_is_the_seventh_generation_s(self):
+        # Pokemon Central, Forzasegreta: the animation of a move a ground,
+        # the seventh generation's, by the same ground as the effect.
+        commands = (ROOT / "src/battle/battle_command.c").read_text()
+        run_c(SECRET_POWER_ANIMATION.replace("@FUNCTIONS@", function(commands, "SecretPowerGround")
+                                             + table("src/battle/battle_command.c", "sSecretPowerAnimations")))
+        play = function(commands, "BtlCmd_PlayMoveAnimation")
+        self.assertIn("if (move == MOVE_SECRET_POWER) {\n            move = sSecretPowerAnimations[SecretPowerGround(battleSystem, ctx)];\n        }\n"
+                      "        move = MoveAnimationFor(move);\n"
+                      "        BattleController_SetMoveAnimation(battleSystem, ctx, move);", play)
 
 
     def test_camouflage_s_type_is_the_seventh_generation_s(self):
@@ -472,6 +525,7 @@ class TerrainMoveTests(unittest.TestCase):
         # eighth generation, so the seventh's table is the last.
         commands = (ROOT / "src/battle/battle_command.c").read_text()
         run_c(CAMOUFLAGE.replace("@FUNCTIONS@", table("src/battle/overlay_12_0226CA4C.c", "sCamouflageTypeTable")
+                                 + function(commands, "SecretPowerGround")
                                  + function(commands, "BtlCmd_TryCamouflage")))
 
 
