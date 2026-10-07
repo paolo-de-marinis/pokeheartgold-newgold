@@ -394,12 +394,19 @@ class SaveUiTests(unittest.TestCase):
         self.assertIn("sei", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "party_add",
                                                         "args": {"species": 1, "level": 5}}))
 
-    def test_where_a_pokemon_may_go(self):
-        """The PC's rules hold for the buttons as for dragging: a Mail
-        holder does not go in a box, and the party keeps one Pokémon that
-        can battle. savedit's refusals arrive in Italian."""
+    def test_what_a_pokemon_may_hold_and_where_it_may_go(self):
+        """A held item is one the bag's GIVE offers -- no key item, no
+        machine -- and no Mail in a box, which the PC refuses; the PC's
+        rules hold for the buttons as for dragging: a Mail holder does not
+        go in a box, and the party keeps one Pokémon that can battle.
+        savedit's refusals arrive in Italian."""
         items = {row["const"]: row["id"] for row in sv.item_table().values()}
         refused = lambda op, args: self.refused("/api/edit", {"f": "gyms/test.sav", "op": op, "args": args})  # noqa: E731
+        self.assertIn("non si dà", refused("party_edit", {"slot": 0, "item": items["ITEM_BICYCLE"]}))
+        self.assertIn("non si dà", refused("party_edit", {"slot": 0, "item": items["ITEM_TM01"]}))
+        self.assertIn("Lettere", refused("box_edit", {"box": 2, "slot": 5, "item": items["ITEM_GRASS_MAIL"]}))
+        self.assertIn("Lettere", refused("box_add", {"box": 0, "slot": 0, "species": 1, "level": 5,
+                                                     "item": items["ITEM_GRASS_MAIL"]}))
         out = self.edit("party_edit", {"slot": 0, "item": items["ITEM_GRASS_MAIL"]})
         self.assertEqual(out["party"][0]["item"], items["ITEM_GRASS_MAIL"], "a party Pokémon may hold one")
         self.assertIn("togli prima la Lettera", refused("deposit", {"slot": 0, "box": 0}))

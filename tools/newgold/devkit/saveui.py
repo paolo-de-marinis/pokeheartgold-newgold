@@ -863,7 +863,7 @@ class Library:
     def op_party_edit(self, save, a):
         slot = number(a["slot"], 0, sv.PARTY_SIZE - 1, "posto")
         raw = sv.party_raw(save)[slot]
-        changes = storable(changed(checked_mon(a), sv.describe_mon(raw)))
+        changes = holdable(storable(changed(checked_mon(a), sv.describe_mon(raw))), party=True)
         sv.set_party_mon(save, slot, sv.edit_mon(raw, **changes))     # with none, PP down to the maximum
 
     def op_party_add(self, save, a):
@@ -884,7 +884,7 @@ class Library:
     def op_box_edit(self, save, a):
         box, slot = number(a["box"], 0, sv.NUM_BOXES - 1, "box"), number(a["slot"], 0, sv.MONS_PER_BOX - 1, "posto")
         raw = sv.box_raw(save, box, slot)
-        changes = storable(changed(checked_mon(a), sv.describe_mon(raw)))
+        changes = holdable(storable(changed(checked_mon(a), sv.describe_mon(raw))), party=False)
         sv.set_box_mon(save, box, slot, sv.edit_mon(raw, **changes))     # with none, PP down to the maximum
 
     def op_box_add(self, save, a):
@@ -1280,6 +1280,22 @@ def storable(fields):
     return fields
 
 
+def holdable(fields, party):
+    """An item a Pokemon is given here only as the bag gives one (savedit's
+    "give": GIVE is offered for no key item, no machine, no Apricorn), and
+    no Mail in a box: the PC takes no Pokemon holding one. One it holds
+    already is not sent again (changed)."""
+    item = fields.get("item")
+    if item:
+        entry = sv.item_table()[item]
+        if not entry["give"]:
+            raise Refused(f"{entry['name']}: nel gioco non si dà da tenere a un Pokémon (la Borsa non offre DAI "
+                          "per gli strumenti chiave, le MT e MN e le Ghicocche)")
+        if not party and sv.FIRST_MAIL <= item <= sv.LAST_MAIL:
+            raise Refused(f"{entry['name']}: un Pokémon nel box non tiene Lettere (il PC non lo accetta)")
+    return fields
+
+
 # savedit's refusals, in the page's Italian; one not here is shown as it is.
 ITALIAN = [
     (r"the party has no slot (\d+)", r"la squadra non ha il posto \1"),
@@ -1315,7 +1331,7 @@ def italian(message):
 def created(save, a, party):
     """A new Pokemon; with no moves given, the ones the species knows at
     that level."""
-    fields = storable(checked_mon({k: v for k, v in a.items() if k != "moves" or v}))
+    fields = holdable(storable(checked_mon({k: v for k, v in a.items() if k != "moves" or v})), party)
     if "species" not in fields or "level" not in fields:
         raise Refused("servono specie e livello")
     if sv.EOS not in sv.owner(save)["codes"]:
