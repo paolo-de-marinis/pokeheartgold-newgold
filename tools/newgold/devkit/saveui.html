@@ -563,6 +563,8 @@ function combo(input, {rows, onPick, empty = "Nessun risultato", clearable = fal
     list.style.width = `${width}px`;
     list.style.left = `${Math.max(edge.left + 16, Math.min(field.left, edge.right - 16 - width)) - field.left}px`;
     list.hidden = false;
+    // A field low in the dialog (or on a phone's page): the dialog's body or the page scrolls as far as the whole list.
+    list.scrollIntoView({block: "nearest"});
     if (at < 0) list.scrollTop = 0;     // a new search starts at its top, not where the last list was scrolled
     input.setAttribute("aria-expanded", "true");
     active = -1;
