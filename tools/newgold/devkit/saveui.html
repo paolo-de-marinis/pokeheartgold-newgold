@@ -657,19 +657,22 @@ async function loadLibrary() {
   S.lib = lib;
   $("#libpath").textContent = lib.library;
   // The blocks' sizes are measured from the build, the fields in them read from the headers: a header
-  // saved after the build was linked may have changed what make has not built yet.
-  const behind = lib.behind || [];
-  $("#buildbanner").hidden = !lib.build && !behind.length;
+  // saved after the build was linked may have changed what make has not built yet. A clone, with no
+  // build, has the sizes from save_layout.json, which has to be written again when a block changes.
+  const behind = lib.behind || [], kept = lib.layout_file || [];
+  $("#buildbanner").hidden = !lib.build && !behind.length && !kept.length;
   $("#buildbanner").textContent = lib.build ? `I salvataggi non si possono leggere: ${lib.build}`
     : behind.length ? `La build è più vecchia di ${behind.length === 1 ? "un header" : behind.length + " header"} da cui leggo il formato del salvataggio `
       + `(${behind.slice(0, 3).join(", ")}${behind.length > 3 ? "…" : ""}): le dimensioni dei blocchi vengono dalla build, i campi dagli header. `
-      + `Se hai cambiato una struttura del salvataggio, ricompila (make) prima di modificare.` : "";
+      + `Se hai cambiato una struttura del salvataggio, ricompila (make) prima di modificare.`
+    : kept.length ? `save_layout.json non corrisponde alla build (${kept.join(", ")}), e chi clona il repository senza `
+      + `compilare legge da lì le dimensioni dei blocchi: rigeneralo con python3 tools/newgold/devkit/harness/save_budget.py --write.` : "";
   setMelon(lib.melonds);
   renderLibrary();
 }
 function entryLine(e) {
   if (e.exists === false) return `${e.problem ? `<div class="meta invalid">Non usabile: ${esc(e.problem)}</div>` : ""}<div class="meta">Nessun salvataggio in questo slot.</div>`;
-  if (e.valid === null) return `<div class="meta">Non letto: manca la build (vedi sopra).</div>`;
+  if (e.valid === null) return `<div class="meta">Non letto: il formato del salvataggio non si legge (vedi sopra).</div>`;
   if (!e.valid) return `<div class="meta"><span class="invalid">Non è un salvataggio valido</span> · ${esc(e.error)}</div>`;
   const party = (e.party || []).map(m => iconImg(m)).join("");
   return `${e.problem ? `<div class="meta invalid">Non usabile: ${esc(e.problem)}</div>` : ""}<div class="icons">${party || `<span class="meta">Squadra vuota</span>`}</div>

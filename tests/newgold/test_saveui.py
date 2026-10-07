@@ -254,15 +254,26 @@ class SaveUiTests(unittest.TestCase):
         n = sv.species_numbers()["CHIKORITA"]
         self.assertEqual(self.ok(f"/api/species?species={n}&level=20")["preset"], sv.preset_moves(n, 20))
 
-    def test_no_build_is_not_a_bad_save(self):
-        """With no build to measure the layout from (a make clean, a wrong
-        --build) no file can be read: the library says so once, rather
-        than calling every save invalid."""
+    def test_a_clone_reads_the_saves(self):
+        """A clone has no build: the blocks' sizes are save_layout.json's, so
+        every save reads as with one, nothing is said of a build, and with no
+        ROM there is no emulator slot."""
+        listing = saveui.Library(self.library, Path(tempfile.mkdtemp(dir=self.tmp.name))).listing()
+        self.assertEqual((listing["build"], listing["behind"], listing["layout_file"], listing["slots"]),
+                         (None, [], [], []))
+        self.assertTrue(next(e for e in listing["files"] if e["f"] == "gyms/test.sav")["valid"])
+
+    def test_a_build_that_does_not_read_is_not_a_bad_save(self):
+        """A build that cannot be measured (make writing it) lets no file be
+        read: the library says so once, rather than calling every save
+        invalid."""
         empty = Path(tempfile.mkdtemp(dir=self.tmp.name))
         (empty / "heartgold.us").mkdir()
+        for name in ("main.sbin", "main.elf"):
+            (empty / "heartgold.us" / name).write_bytes(b"")
         library = saveui.Library(self.library, empty, roms=[])
         listing = library.listing()
-        self.assertIn("non trovo la build", listing["build"])
+        self.assertIn("non si legge", listing["build"])
         self.assertEqual({e["valid"] for e in listing["files"]}, {None})
         with self.assertRaises(saveui.Refused) as refused:
             library.detail("gyms/test.sav")

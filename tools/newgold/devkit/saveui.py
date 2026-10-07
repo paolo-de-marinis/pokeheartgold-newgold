@@ -10,8 +10,8 @@ e ROM") and kept in ~/.config/newgold-saveui/settings.json (SAVEUI_CONFIG
 elsewhere); until something is chosen the library is ~/hgss-saves and the ROMs
 are the ones built under --build (this tree's build/). --library on the command
 line wins over the settings for that run. --build also says where the save's
-layout is measured (build/heartgold.us). Everything is read and written
-through savedit.py.
+layout is measured (build/heartgold.us; with no build there, a clone, it is
+save_layout.json's). Everything is read and written through savedit.py.
 
 Nothing is ever deleted. Before any write the file is copied to
 LIBRARY/.backups/<its path>/<timestamp>.sav (an emulator slot to
@@ -654,19 +654,15 @@ class Library:
             os.rename(self.backups / key, self.backups / to)
 
     def layout_problem(self):
-        """Why the save's layout cannot be measured from the build, None when
-        it can: without it no file can be read, which is not the files'
-        fault (a make clean, a rebuild under way, a wrong --build)."""
-        missing = [name for name in ("main.sbin", "main.elf") if not (self.layout / name).is_file()]
-        if missing:
-            return (f"non trovo la build in {self.layout} (manca {' e '.join(missing)}): senza, i salvataggi non si "
-                    f"possono leggere. Se make la sta ricostruendo aspetta che finisca; altrimenti avvia l'editor "
-                    f"con --build sulla cartella build giusta.")
+        """Why the save's layout cannot be read -- from the build, or with
+        none (a clone) from save_layout.json -- None when it can: without it
+        no file can be read, which is not the files' fault (a rebuild under
+        way)."""
         try:
             sv.blocks(self.layout)
         except (Exception, SystemExit) as e:
-            return (f"la build in {self.layout} non si legge ({type(e).__name__}: {e}): forse make la sta "
-                    f"ricostruendo. Riprova quando ha finito.")
+            return (f"il formato del salvataggio non si legge da {sv.linked(self.layout) or sv.save_budget.LAYOUT} "
+                    f"({type(e).__name__}: {e}): se make sta ricostruendo la build, riprova quando ha finito.")
         return None
 
     def open(self, path):
@@ -732,6 +728,7 @@ class Library:
         return {"library": str(self.root), "files": files, "slots": slots, "trash": trash,
                 "build": problem, "missing": not self.root.is_dir(),
                 "behind": [] if problem else sv.build_behind(self.layout),
+                "layout_file": [] if problem else sv.layout_file_differs(self.layout),
                 "playable": [s["slot"] for s in slots if not s["problem"] and self.playable(s["slot"])],
                 "configured": CONFIG.exists(),
                 "melonds": melonds_running()}
