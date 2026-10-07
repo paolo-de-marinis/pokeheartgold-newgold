@@ -393,6 +393,11 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(out["party"][0]["species_name"], "Pidgey")
         self.assertIn("sei", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "party_add",
                                                         "args": {"species": 1, "level": 5}}))
+        # Squadra's "Porta la squadra al livello massimo": every one at the cap, its moves kept.
+        moves = [[mv["id"] for mv in m["moves"]] for m in out["party"]]
+        out = self.edit("party_cap", {})
+        self.assertEqual({m["level"] for m in out["party"]}, {out["given"]["level_cap"]})
+        self.assertEqual([[mv["id"] for mv in m["moves"]] for m in out["party"]], moves)
 
     def test_what_a_pokemon_may_hold_and_where_it_may_go(self):
         """A held item is one the bag's GIVE offers -- no key item, no
@@ -905,10 +910,10 @@ class SaveUiTests(unittest.TestCase):
         never from every item -- Paolo's Potion among the Poké Balls -- and
         the held item's from what the bag's GIVE offers."""
         page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
-        for native in ("<datalist", ' list="'):
+        for native in ("<datalist", "<select", ' list="'):
             self.assertFalse(native in page, native)
         for picker in ("combo(form.elements.species", "combo(form.elements.nature", "combo(form.elements.held",
-                       "inputs.map(el => combo(el", "combo($(\"#boxsel\")",
+                       "inputs.map(el => combo(el", "combo($(\"#boxsel\")", "return combo(el, {",
                        "const input = $(\"#additem\");\n    combo(input,"):
             self.assertTrue(picker in page, picker)
         self.assertTrue(re.search(r"rows: \(\) => \[\.\.\.pocket\.items, \.\.\.\(view\.others \? pocket\.others : \[\]\)\]", page),

@@ -291,6 +291,7 @@ details summary { cursor: pointer; }
           <button type="button" id="undo" title="Rimette il file com'era prima dell'ultima modifica">Annulla ultima modifica</button>
           <button type="button" id="history">Cronologia</button>
           <button type="button" id="reload">Ricarica</button>
+          <button type="button" class="primary" id="playopen" title="Apre melonDS con questo salvataggio">Gioca</button>
         </div>
       </div>
       <div class="lock" id="lock" hidden>Questo è uno slot dell'emulatore e melonDS è aperto: le modifiche verranno rifiutate finché non lo chiudi.</div>
@@ -904,6 +905,9 @@ function lockEditor() {
   $("#lock").hidden = !locked;
   $("#tab").inert = locked;
   $("#undo").disabled = locked || !S.save?.backups.some(b => b.undo);
+  // Gioca: a library file into a slot melonDS plays, or the slot itself; never while melonDS runs.
+  $("#playopen").hidden = !S.lib || !(S.save?.slot ? S.lib.playable.includes(S.f?.slice(4)) : S.lib.playable.length);
+  $("#playopen").disabled = S.melon;
 }
 async function edit(op, args, ok = "Salvato (backup fatto)", version = S.save.version) {
   S.busy++;
@@ -931,7 +935,11 @@ $("#undo").addEventListener("click", async () => {
   } finally { S.busy--; }
 });
 $("#history").addEventListener("click", () => S.f && showHistory(S.f));
-$("#reload").addEventListener("click", () => S.f && openSave(S.f));
+$("#playopen").addEventListener("click", async () => {
+  if (!S.f || !await mayDrop("Giocare questo salvataggio così com'è su disco")) return;
+  libraryAction(S.save?.slot ? "resume" : "play", S.f);
+});
+$("#reload").addEventListener("click", async () => { if (S.f && await mayDrop("Ricaricare il salvataggio")) { clearStaged(); openSave(S.f); } });
 
 function renderTabs() {
   $("#tabs").innerHTML = TABS.map(([k, label]) => `<button type="button" role="tab" data-tab="${k}" class="${S.tab === k ? "on" : ""}" aria-selected="${S.tab === k}">${label}</button>`).join("");
@@ -1239,9 +1247,11 @@ function renderTrainer() {
   const badge = b => {
     const chain = S.data.chains[b.const] || [], moves = (S.data.field_moves[b.const] || []).map(m => S.moves.get(m)?.name ?? m);
     const has = (p[b.field] >> b.bit) & 1, uses = usedBy(b.const);
+    const before = S.data.places.map((p, i) => [p, i]).filter(([p]) => p.badge === b.const && isLeader(p));
     return `<div class="badge"><label class="sw"><input type="checkbox" data-badge="${b.const}" ${has ? "checked" : ""}>
         <span><strong>Medaglia ${esc(badgeName(b.const))}</strong>
         <span class="muted">${moves.length ? `in campo: ${esc(moves.join(", "))}` : ""}${capOf(b.const) ? `${moves.length ? " · " : ""}livello massimo ${capOf(b.const)}` : ""}</span></span></label>
+      ${before.map(([p, i]) => `<button type="button" class="small" data-place="${i}" title="Apre Posizione con il giocatore davanti, e quello che serve">Mettimi davanti ${p.kind === "badge" ? "a chi dà la medaglia" : `a ${esc(p.trainer)}`}</button>`).join(" ")}
       ${chain.length ? `<div class="chain">${chain.map(x => stepRow(x)).join("")}</div>` : ""}
       ${uses.length ? `<p class="note">Il gioco la controlla anche per:</p><div class="chain">${uses.map(s => `<label class="plan"><input type="checkbox" data-step="${s.id}" ${done.has(s.id) ? "checked" : ""}>
         <span>${esc(stepLabel(s.id))} <span class="muted">(${esc(s.section)})</span></span></label>`).join("")}</div>` : ""}</div>`;
@@ -1351,7 +1361,9 @@ function monCard(m, i, count) {
 function renderParty() {
   const party = S.save.party;
   const addable = party.length < S.data.limits.party;
-  $("#tab").innerHTML = `<div class="zonehead" style="margin-top:0"><h3>Squadra</h3><span class="muted">${party.length} di ${S.data.limits.party}</span></div>
+  const cap = S.save.given.level_cap, below = party.filter(m => m?.ok && !m.egg && m.level !== cap).length;
+  $("#tab").innerHTML = `<div class="zonehead" style="margin-top:0"><h3>Squadra</h3><span class="muted">${party.length} di ${S.data.limits.party}</span>
+      <span style="flex:1"></span><button type="button" class="small" id="tocap" ${below ? "" : "disabled"} title="Ogni Pokémon della squadra (non le uova) a quel livello, le mosse come sono">Porta la squadra al livello massimo (${cap})</button></div>
     <div class="grid" id="partyzone">${party.map((m, i) => monCard(m, i, party.length)).join("")}
       ${addable ? `<div class="addmon" data-pos="party:${party.length}"><button type="button" class="primary" id="addparty">Aggiungi un Pokémon</button></div>` : ""}</div>
     <p class="note">Trascina un Pokémon per spostarlo: su un altro, nella squadra o nei box, i due si scambiano; su un posto vuoto del box
@@ -1359,6 +1371,7 @@ function renderParty() {
       giocatore (allenatore originale, ID e genere), così obbedisce.</p>
     <div id="boxarea"></div>`;
   renderBoxArea();
+  $("#tocap").onclick = () => edit("party_cap", {}, `Squadra al livello ${S.save.given.level_cap}`);
   $("#partyzone").onclick = ev => {
     if (DRAG.suppress) return;
     const b = ev.target.closest("button");
@@ -2014,7 +2027,7 @@ function renderDex() {
 const REGION_NAMES = {MAP_REGION_JOHTO: "Johto", MAP_REGION_KANTO: "Kanto"};
 // Italian for words of the maps' constants, so the search finds "centro" in MAP_VIOLET_POKECENTER_1F.
 const MAP_WORDS_IT = {POKECENTER: "centro pokémon", GYM: "palestra", POKEMART: "market negozio", HOUSE: "casa",
-  TOWER: "torre", GATEHOUSE: "casello", CAVE: "grotta", ROOM: "stanza"};
+  TOWER: "torre", GATEHOUSE: "casello", CAVE: "grotta", ROOM: "stanza", LEAGUE: "lega", FOREST: "bosco", ISLAND: "isola", ISLANDS: "isole"};
 const MAP_TYPE_NAMES = {MAP_TYPE_CITY_TOWN: "città", MAP_TYPE_ROUTE: "percorso", MAP_TYPE_CAVE: "grotta",
   MAP_TYPE_INTERIOR: "interno", MAP_TYPE_POKEMON_CENTER: "Centro Pokémon", MAP_TYPE_UNDERGROUND: "sotterraneo"};
 const regionName = named(REGION_NAMES, "MAP_REGION_"), mapTypeName = named(MAP_TYPE_NAMES, "MAP_TYPE_");
@@ -2060,60 +2073,176 @@ function mapAtTile(key) {
   return (S.townAt.get(key) || []).slice().sort((a, b) => rank(a) - rank(b) || a - b)[0];
 }
 // Picking a map -- in the list or on the town map -- puts in the place the game itself puts the player there.
-async function pickMap(id) {
+async function pickMap(id, keepPlace = false) {
   S.pos.map = id;
+  if (!keepPlace) { S.pos.place = null; drawNeeds(); }
   const f = $("#posform").elements, note = $("#presetnote"), asked = ++S.pos.asked;
-  f.map.value = mapTitle(S.maps.get(id));
+  S.pos.box.set(id);
   drawTown();
+  if (keepPlace) return;
   const r = await run(() => api(`/api/place?map=${id}`));
   if (!r || asked !== S.pos.asked) return;      // another map was picked meanwhile
   note.hidden = false;
   if (r.preset) {
-    f.x.value = r.preset.x; f.y.value = r.preset.y; f.dir.value = r.preset.direction;
+    f.x.value = r.preset.x; f.y.value = r.preset.y; setDir(r.preset.direction);
     note.textContent = `Messa la posizione in cui il gioco porta il giocatore: (${r.preset.x}, ${r.preset.y}), ${r.preset.said}. Puoi cambiarla a mano.`;
-    for (const el of [f.x, f.y, f.dir]) { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
+    for (const el of [f.x, f.y]) { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
   } else {      // no stale numbers from the map picked before: the fields are required, so Sposta waits for them
     f.x.value = f.y.value = "";
     note.textContent = `Il gioco non ha un punto d'arrivo noto su questa mappa: scrivi x e y a mano (la mappa sta tra x ${r.x[0]}–${r.x[1]} e y ${r.y[0]}–${r.y[1]}).`;
   }
+  // A gym the save keeps closed: Continue would put the player straight back outside.
+  const gated = S.data.places.findIndex((p, i) => p.map === id && S.save.places?.[i]?.gate);
+  if (gated >= 0) note.textContent += ` Attenzione: il salvataggio tiene chiusa questa palestra e il gioco rimanderebbe fuori il giocatore;`
+    + ` scegli "${placeName(S.data.places[gated])}" nell'elenco per aprirla nello stesso momento.`;
 }
+// ---- the places of the story: "Davanti a…" ----------------------------------
+// savedit.story_places, read from the zone events and the scripts: the people who run a scripted battle or give
+// a badge, the tile before them; /api/save says, for this save, who is hidden, beaten, or behind a closed gate.
+const isLeader = p => p.badge && (p.kind === "badge" || (p.trainer_const || "").startsWith("TRAINER_LEADER_"));
+const isLeague = p => /^TRAINER_(ELITE_FOUR|CHAMPION)_/.test(p.trainer_const || "");
+const placeWho = p => p.kind === "badge" ? `Medaglia ${badgeName(p.key)}` : p.trainer || p.key;
+const placeName = p => p.kind === "badge" ? `Davanti a chi dà la Medaglia ${badgeName(p.key)}` : `Davanti a ${placeWho(p)}`;
+const badgeOrder = p => S.data.badges.findIndex(b => b.const === p.badge);
+const PLACE_VIA = {bg: "prima la leva: A qui, poi da lui", coord: "un passo avanti e parte la scena", frame: "la scena parte entrando"};
+function placeTags(i) {
+  const p = S.data.places[i], st = S.save.places?.[i] || {}, step = p.step && S.steps.get(p.step);
+  return [mapTitle(S.maps.get(p.map)),
+    p.step && S.save.story.done.includes(p.step) || st.beaten ? {text: p.kind === "badge" ? "medaglia già data" : "già battuto", cls: "warn"} : "",
+    st.hidden ? {text: "non c'è: nascosto", cls: "warn", title: p.hide.join(", ")} : "",
+    st.gate ? {text: "il gioco ti rimanda fuori", cls: "bad", title: "la palestra è chiusa: fai prima il passo che la apre"} : "",
+    p.walked ? {text: "entrando ti porta lui", title: "il gioco porta il giocatore davanti alla persona appena entra"} : "",
+    PLACE_VIA[p.via] ? {text: PLACE_VIA[p.via]} : "", isLeague(p) ? "Superquattro" : isLeader(p) ? "capopalestra" : ""];
+}
+function placeRows() {
+  const places = S.data.places.map((p, i) => [p, i]);
+  const group = (title, list) => list.map(([p, i]) => comboRow(`p${i}`, placeName(p), {group: title, label: `${placeName(p)} · ${mapTitle(S.maps.get(p.map))}`,
+    before: `<span class="star">★</span>`, tags: placeTags(i), words: `${p.key} ${p.trainer_const || ""} ${p.trainer} capopalestra davanti`}));
+  return [...group("★ Capipalestra", places.filter(([p]) => isLeader(p)).sort((a, b) => badgeOrder(a[0]) - badgeOrder(b[0]))),
+          ...group("★ Lega Pokémon", places.filter(([p]) => isLeague(p))),
+          ...group("★ Altri momenti della storia", places.filter(([p]) => !isLeader(p) && !isLeague(p)))];
+}
+// What a place needs, offered as ticks beside Sposta: the person shown, the gym opened, the story put just
+// before the battle, the party at the level cap. Sposta does it all in one change, with one backup.
+function placePlan(i) {
+  const p = S.data.places[i], st = S.save.places?.[i] || {}, done = new Set(S.save.story.done), plan = [];
+  if (st.hidden && p.hide.length === 1)
+    plan.push({key: "show", on: true, text: `Fai tornare ${placeWho(p)}`, why: `ora è nascosto: spegne ${p.hide[0]}`});
+  if (st.hidden && p.hide.length > 1)
+    plan.push({key: "", text: `${placeWho(p)} ora non c'è`, why: `${p.hide.join(" e ")}: due versioni della stessa persona, il gioco ne mostra una per volta`});
+  if (st.gate && S.steps.has(st.gate)) {
+    const before = earlierSteps(st.gate);
+    plan.push({key: "gate", on: true, run: [...before, st.gate], text: `Apri la palestra: ${stepLabel(st.gate)}`,
+               why: `${S.steps.get(st.gate).section}${before.length ? `, con i ${before.length} passi prima` : ""}: senza, il gioco rimanda fuori il giocatore`});
+  }
+  if (p.step && S.steps.has(p.step)) {
+    if (done.has(p.step)) {
+      const after = laterSteps(p.step);
+      plan.push({key: "story", on: true, undo: [...after.reverse(), p.step], text: `Riporta la storia a subito prima della lotta`,
+                 why: `toglie "${stepLabel(p.step)}"${after.length ? ` e i ${after.length} passi dopo` : ""}: già fatto, ${placeWho(p)} non lotterebbe`});
+    } else {
+      const opened = new Set(plan.find(x => x.key === "gate")?.run || []), before = earlierSteps(p.step).filter(x => !opened.has(x));
+      if (before.length) plan.push({key: "story", on: true, run: before, text: `Fai prima i passi che vengono prima (${before.length})`,
+                                    why: before.map(stepLabel).join(" · ")});
+    }
+  }
+  if (S.save.party.length) plan.push({key: "cap", on: false, text: `Porta la squadra al livello massimo (${S.save.given.level_cap})`,
+                                      why: "ogni Pokémon della squadra a quel livello, mosse come sono"});
+  return plan;
+}
+function drawNeeds() {
+  const box = $("#placeneeds");
+  if (!box) return;
+  const i = S.pos.place;
+  if (i === null || i === undefined) { box.hidden = true; box.innerHTML = ""; return; }
+  const p = S.data.places[i], plan = placePlan(i);
+  S.pos.plan = plan;
+  box.hidden = false;
+  box.innerHTML = `<h3 style="margin:0 0 6px">${esc(placeName(p))} <span class="muted">${esc(mapTitle(S.maps.get(p.map)))}</span></h3>
+    <p class="note" style="margin:0 0 6px">${p.walked ? "Il giocatore entra nella stanza: il gioco stesso lo porta davanti alla persona. "
+      : p.via === "bg" ? "Qui c'è la leva che la lotta vuole girata (la rimette ferma ogni volta che si entra): A, poi vai dalla persona. "
+      : p.via === "coord" ? "Un passo avanti e parte la scena. " : p.via === "frame" ? "La scena parte appena si entra. "
+      : "Rivolto verso la persona: premi A e parla. "}${p.step ? `Il passo della storia: ${esc(stepLabel(p.step))}.` : ""}</p>
+    ${plan.map((x, k) => x.key ? `<label class="plan"><input type="checkbox" data-plan="${k}" ${x.on ? "checked" : ""}><span><strong>${esc(x.text)}</strong>
+      <span class="muted">${esc(x.why)}</span></span></label>` : `<p class="note">${esc(x.text)}: ${esc(x.why)}</p>`).join("")}`;
+  box.onchange = ev => { const k = ev.target.dataset.plan; if (k !== undefined) plan[+k].on = ev.target.checked; };
+}
+function pickPlace(i) {
+  const p = S.data.places[i], f = $("#posform").elements;
+  S.pos.place = i;
+  pickMap(p.map, true);
+  S.pos.box.set(`p${i}`);
+  f.x.value = p.x; f.y.value = p.y; setDir(p.direction);
+  $("#presetnote").hidden = false;
+  $("#presetnote").textContent = `Messo davanti a ${placeWho(p)}: (${p.x}, ${p.y}), rivolto ${dirName(S.data.directions.find(x => x.value === p.direction)?.const ?? "")}.`;
+  for (const el of [f.x, f.y]) { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
+  drawNeeds();
+}
+function setDir(v) {
+  const f = $("#posform").elements;
+  f.dir.value = v;
+  $$("#dirs [data-v]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v === +v)));
+}
+const DIR_ARROWS = {DIR_NORTH: "↑", DIR_SOUTH: "↓", DIR_WEST: "←", DIR_EAST: "→"};
 function renderPosition() {
   const pos = S.save.position, c = pos.current, here = S.maps.get(c.map), w = S.data.world;
-  S.pos = {map: here ? c.map : null, hover: null, asked: 0};
+  S.pos = {map: here ? c.map : null, hover: null, asked: 0, place: null};
+  const leaders = S.data.places.map((p, i) => [p, i]).filter(([p]) => isLeader(p)).sort((a, b) => badgeOrder(a[0]) - badgeOrder(b[0]));
   $("#tab").innerHTML = `<dl class="kv" style="font-size:14px">
-      <dt>Mappa</dt><dd><strong>${esc(here?.name || "?")}</strong> <span class="muted">${esc(here ? mapWords(here) : "")} · id ${c.map}</span></dd>
+      <dt>Mappa</dt><dd><strong>${esc(here ? mapTitle(here) : "?")}</strong> <span class="muted">id ${c.map}</span></dd>
       <dt>Coordinate</dt><dd>x ${c.x}, y ${c.y}, rivolto ${esc(dirName(S.data.directions.find(x => x.value === c.direction)?.const ?? String(c.direction)))}</dd>
-      <dt>Continua con warp</dt><dd>${pos.by_warp ? `sì, verso ${esc(S.maps.get(pos.warp.map)?.name || pos.warp.map)} (${pos.warp.x}, ${pos.warp.y})` : "no"}</dd>
+      <dt>Continua con warp</dt><dd>${pos.by_warp ? `sì, verso ${esc(mapTitle(S.maps.get(pos.warp.map)) || pos.warp.map)} (${pos.warp.x}, ${pos.warp.y})` : "no"}</dd>
     </dl>
     <form id="posform" class="box">
       <h3>Sposta il giocatore</h3>
       <div class="townbox"><div class="townscroll"><canvas id="town" width="${w.cols * 8 * TOWN_SCALE}" height="${w.rows * 8 * TOWN_SCALE}" aria-label="Mappa di Johto e Kanto: clic su un luogo per sceglierlo"></canvas></div>
         <div class="note" id="townlabel"></div></div>
       <div class="form" style="margin-top:12px">
-        <label class="f" style="grid-column:1/-1">Mappa<span class="mvin" style="display:block"><input name="map" id="mapin" value="${esc(mapTitle(here))}" placeholder="Cerca: città, percorso, grotta, interno, centro, palestra…"
-          autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="maplist"></span></label>
+        <label class="f" style="grid-column:1/-1">Mappa, o davanti a chi<span class="mvin"><input id="mapin" placeholder="Cerca: Whitney, capopalestra, lega, città, percorso, centro, palestra…"></span></label>
+        <div style="grid-column:1/-1"><span class="hint">Davanti al capopalestra:</span><div class="chips" id="leaderchips">${leaders.map(([p, i]) =>
+          `<button type="button" class="small" data-place="${i}" title="${esc(mapTitle(S.maps.get(p.map)))}">${esc(p.kind === "badge" ? `Medaglia ${badgeName(p.key)}` : p.trainer)}</button>`).join("")}</div></div>
         <label class="f">x<input type="number" name="x" min="0" max="65535" required value="${c.x}"></label>
         <label class="f">y<input type="number" name="y" min="0" max="65535" required value="${c.y}"></label>
-        <label class="f">Rivolto verso<select name="dir">${S.data.directions.map(x => `<option value="${x.value}" ${x.value === c.direction ? "selected" : ""}>${esc(dirName(x.const))}</option>`).join("")}</select></label>
+        <div class="f"><span class="hint">Rivolto verso</span>${segButtons("dirs", S.data.directions.map(x => [String(x.value), DIR_ARROWS[x.const] ?? dirName(x.const)]), String(c.direction), "Rivolto verso")}
+          <input type="hidden" name="dir" value="${c.direction}"></div>
       </div>
       <p class="note" id="presetnote" hidden></p>
+      <div class="box" id="placeneeds" hidden></div>
       <p class="note">Scegliendo una mappa (dall'elenco o con un clic sulla minimappa) x, y e direzione diventano il punto in cui il gioco stesso porta il
-        giocatore: dove si atterra col Volo, dove si ricompare dopo una sconfitta, all'arrivo da una porta o da una scala. Si possono cambiare a mano:
+        giocatore: dove si atterra col Volo, dove si ricompare dopo una sconfitta, all'arrivo da una porta o da una scala. Scegliendo "Davanti a…"
+        diventano la casella davanti a quella persona, rivolti verso di lei, letta dagli eventi della mappa e dagli script. Si possono cambiare a mano:
         una casella dove non si può stare (fuori dalla mappa, un muro, l'acqua, una persona, o, in un edificio, fuori dalle stanze) viene rifiutata.
         Scrive la posizione come <span class="mono">savedit.py --where</span>: la posizione attuale e il warp dinamico, con FLAG_UNK_966, così Continua entra
         con un warp e il gioco ricostruisce giocatore, follower e persone della mappa dai dati di zona. Le coordinate sono in caselle, contate dall'angolo
-        della matrice della mappa.</p>
-      <div class="bar"><button type="submit" class="primary">Sposta</button></div>
+        della matrice della mappa. Non ci sono i luoghi dove il gioco non salva mai (Union Room, Zona Safari, Parco Amici, la gara di cattura).</p>
+      <div class="bar"><button type="submit" class="primary">Sposta</button> <button type="button" id="playhere" ${S.lib?.playable.length ? "" : "hidden"}>Sposta e gioca</button></div>
     </form>`;
   if (!w.cols) $(".townbox").hidden = true;      // the town map did not read: the list alone
   else placeTown(pos, w);
-  mapCombo($("#mapin"));
-  $("#posform").onsubmit = ev => {
-    ev.preventDefault();
-    const f = ev.target.elements;
+  S.pos.box = mapCombo($("#mapin"));
+  S.pos.box.set(here ? c.map : "");
+  $$("#dirs [data-v]").forEach(b => { const d = S.data.directions.find(x => String(x.value) === b.dataset.v); b.title = dirName(d.const); b.setAttribute("aria-label", dirName(d.const)); });
+  $("#dirs").onclick = ev => { const b = ev.target.closest("[data-v]"); if (b) setDir(+b.dataset.v); };
+  $("#leaderchips").onclick = ev => { const b = ev.target.closest("[data-place]"); if (b) pickPlace(+b.dataset.place); };
+  const go = async play => {
+    const f = $("#posform").elements;
+    if (!f.x.reportValidity() || !f.y.reportValidity()) return;
     if (S.pos.map === null) return toast("Scegli la mappa dall'elenco o sulla minimappa", true);
-    edit("position", {map: S.pos.map, x: +f.x.value, y: +f.y.value, direction: +f.dir.value}, "Posizione scritta");
+    const args = {map: S.pos.map, x: +f.x.value, y: +f.y.value, direction: +f.dir.value};
+    for (const x of S.pos.place !== null ? S.pos.plan || [] : []) {
+      if (!x.on) continue;
+      if (x.key === "show") args.show = S.data.places[S.pos.place].hide;
+      if (x.run) args.run = [...(args.run || []), ...x.run.filter(id => !(args.run || []).includes(id))];
+      if (x.undo) args.undo = x.undo;
+      if (x.key === "cap") args.cap = true;
+    }
+    const out = await edit("position", args, S.pos.place !== null ? `Davanti a ${placeWho(S.data.places[S.pos.place])} (backup fatto)` : "Posizione scritta");
+    if (out) storyToast(out);
+    if (out && play) libraryAction(S.lib.slots.some(x => x.f === S.f) ? "resume" : "play", S.f);
   };
+  $("#posform").onsubmit = ev => { ev.preventDefault(); go(false); };
+  $("#playhere").onclick = () => go(true);
+  if (S.pendingPlace !== undefined) { const i = S.pendingPlace; delete S.pendingPlace; pickPlace(i); $("#posform").scrollIntoView({block: "start"}); }
 }
 function placeTown(pos, w) {
   if (!S.townImg || S.townImg.dataset.tree !== String(S.data.tree)) {
@@ -2139,57 +2268,19 @@ function placeTown(pos, w) {
     if (id !== undefined) pickMap(id);
   };
 }
-// The map field: a search over every map, grouped by section, a row a map with its kind -- as a move field is.
+// The map field: the places before someone first, then every map, grouped by section, a row a map with its kind.
 function mapCombo(el) {
-  const list = Object.assign(document.createElement("div"), {id: "maplist", className: "mvlist", hidden: true});
-  list.setAttribute("role", "listbox");
-  el.parentElement.append(list);
-  let shown = [], active = -1;
-  const close = () => { list.hidden = true; el.setAttribute("aria-expanded", "false"); el.removeAttribute("aria-activedescendant"); active = -1; };
-  const open = q => {
-    const words = (q || "").toLowerCase().split(/\s+/).filter(Boolean);
-    const has = text => words.every(x => text.toLowerCase().includes(x));
-    const italian = r => r.const.split("_").map(w => MAP_WORDS_IT[w] ?? "").join(" ");
-    shown = S.mapOrder.filter(r => has(`${r.name} ${mapWords(r)} ${r.const} ${regionName(r.region)} ${mapTypeName(r.type)} ${italian(r)}`));
-    shown.sort((a, b) => has(b.name) - has(a.name));     // the places named so first: "violet" is Violet City before its gatehouses
-    let section = null;
-    list.innerHTML = shown.map((r, i) => {
-      const head = r.section !== section ? `<div class="mvhead">${esc(r.name || r.section)} <span class="muted">${esc(regionName(r.region))}</span></div>` : "";
-      section = r.section;
-      return `${head}<div class="mvopt" role="option" id="mapopt${i}" data-i="${i}"><span class="nm">${esc(mapWords(r))}</span><span class="tag">${esc(mapTypeName(r.type))}</span>${S.heals.has(r.id) ? `<span class="tag" title="Il gioco ti rimanda qui dopo una sconfitta">si ricompare qui</span>` : ""}${!(S.data.world.tiles[r.id] || []).length ? `<span class="tag" title="Non ha un posto sulla mappa della Pokégear">fuori mappa</span>` : ""}</div>`;
-    }).join("") || `<div class="mvopt muted">Nessuna mappa con questo nome</div>`;
-    active = -1;
-    list.hidden = false;
-    el.setAttribute("aria-expanded", "true");
-  };
-  const mark = i => {
-    $$(".mvopt.on", list).forEach(o => o.classList.remove("on"));
-    active = i;
-    const o = $(`#mapopt${i}`, list);
-    if (!o) return;
-    o.classList.add("on"); o.scrollIntoView({block: "nearest"});
-    el.setAttribute("aria-activedescendant", o.id);
-  };
-  const pick = i => { close(); pickMap(shown[i].id); };
-  list.addEventListener("mousedown", ev => { ev.preventDefault(); const o = ev.target.closest("[data-i]"); if (o) pick(+o.dataset.i); });
-  el.addEventListener("focus", () => { el.select(); open(""); });
-  el.addEventListener("input", () => open(el.value));
-  // Left without a pick, the field shows again the map that will be written.
-  el.addEventListener("blur", () => { close(); el.value = mapTitle(S.maps.get(S.pos.map)); });
-  el.addEventListener("keydown", ev => {
-    if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
-      ev.preventDefault();
-      if (list.hidden) open(el.value);
-      const step = ev.key === "ArrowDown" ? 1 : -1;
-      if (shown.length) mark(((active < 0 && step < 0 ? 0 : active) + step + shown.length) % shown.length);
-    } else if (ev.key === "Enter") {     // never the form's submit from here
-      ev.preventDefault();
-      if (!list.hidden && (active >= 0 || shown.length === 1)) pick(Math.max(active, 0));
-      else close();
-    } else if (ev.key === "Escape" && !list.hidden) {
-      ev.preventDefault(); close();
-    }
-  });
+  const italian = r => r.const.split("_").map(w => MAP_WORDS_IT[w] ?? "").join(" ");
+  const who = new Map();          // the people a map's places are before: "falkner" finds Violet Gym
+  S.data.places.forEach(p => who.set(p.map, `${who.get(p.map) || ""} ${p.trainer} ${isLeader(p) ? "capopalestra" : ""} ${isLeague(p) ? "superquattro lega" : ""}`));
+  const maps = S.mapOrder.map(r => comboRow(r.id, mapWords(r), {group: `${esc(r.name || r.section)} <span class="muted">${esc(regionName(r.region))}</span>`,
+    label: mapTitle(r), words: `${r.name} ${r.const} ${regionName(r.region)} ${italian(r)} ${who.get(r.id) || ""}`,
+    tags: [mapTypeName(r.type), S.heals.has(r.id) ? {text: "si ricompare qui", title: "Il gioco ti rimanda qui dopo una sconfitta"} : "",
+           !(S.data.world.tiles[r.id] || []).length ? {text: "fuori mappa", title: "Non ha un posto sulla mappa della Pokégear"} : ""]}));
+  return combo(el, {empty: "Nessuna mappa e nessuno con questo nome", rows: () => [...placeRows(), ...maps], onPick: r => {
+    if (String(r.id).startsWith("p")) pickPlace(+String(r.id).slice(1));
+    else pickMap(+r.id);
+  }});
 }
 
 // ---- Flag e variabili ------------------------------------------------------

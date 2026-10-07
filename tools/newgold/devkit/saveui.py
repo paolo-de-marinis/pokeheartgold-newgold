@@ -1014,7 +1014,18 @@ class Library:
                 raise Refused(f"{flag} non è il flag che nasconde una persona davanti a cui mettersi")
             sv.write_flag(save, names[flag], False)
         self.put(save, a)
+        if a.get("cap"):
+            self.op_party_cap(save, {})
         return report
+
+    def op_party_cap(self, save, a):
+        """Every Pokemon of the party (not an Egg) to the level cap the save's
+        badges and story make (savedit.level_cap), its moves kept."""
+        cap = sv.level_cap(save)
+        for slot, raw in enumerate(sv.party_raw(save)):
+            mon = sv.describe_mon(raw)
+            if mon and mon["ok"] and not mon["egg"] and mon["level"] != cap:
+                sv.set_party_mon(save, slot, sv.edit_mon(raw, level=cap))
 
     def put(self, save, a):
         where = number(a["map"], 0, 0xFFFF, "mappa")
