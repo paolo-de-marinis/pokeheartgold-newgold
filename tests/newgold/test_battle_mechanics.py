@@ -1808,6 +1808,19 @@ class TransformTests(unittest.TestCase):
         for flag in sorted(flags):
             self.assertIn(f"ctx->battleMons[ctx->battlerIdAttacker].{flag} = 0;", body)
 
+    def test_the_same_ability_copied_does_not_start_again(self):
+        # Showdown's setAbility for a transformation starts the ability only
+        # when it differs from the old one, from the fifth generation: an
+        # Intimidate Pokemon transformed into another intimidates once.
+        body = function(COMMANDS.read_text(), "BtlCmd_Transform")
+        self.assertIn("u16 ability = ctx->battleMons[ctx->battlerIdAttacker].ability;", body)
+        start = body.index("if (ctx->battleMons[ctx->battlerIdAttacker].ability != ability) {")
+        self.assertLess(body.index("ctx->battleMons[ctx->battlerIdAttacker].ability = ctx->battleMons[ctx->battlerIdTarget].ability;"), start)
+        block = body[start:body.index("\n    }\n", start)]
+        for flag in ("sendOutFlag", "intimidateFlag", "abilityActivatedFlag", "hospitalityFlag", "slowStartFlag"):
+            self.assertIn(f"ctx->battleMons[ctx->battlerIdAttacker].{flag} = 0;", block)
+            self.assertEqual(body.count(f"ctx->battleMons[ctx->battlerIdAttacker].{flag} = 0;"), 1)
+
     def test_a_copied_imposter_does_not_act(self):
         # Imposter acts on entry only (Pokemon Central, Sosia; Showdown's
         # gen-9 Imposter is a switch-in handler): Transform spends it, as the

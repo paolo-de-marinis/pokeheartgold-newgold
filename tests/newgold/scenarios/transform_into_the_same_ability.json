@@ -1,0 +1,39 @@
+{
+  "about": "A Pokemon that transforms into one with the same ability does not start it again (Showdown's setAbility for a transformation starts the ability only when it differs, from the fifth generation): a Gyarados with Intimidate that transforms into an Intimidate Gyarados intimidates once, as it comes in. A level-20 Gyarados is given Transform (teach:) against a forced wild Gyarados that knows only Splash. \"The wild Gyarados’s Attack fell!\" once, as the two come in. Before, every entry flag cleared, it intimidated the wild one a second time after the Transform. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": [
+    "--party",
+    "GYARADOS:20"
+  ],
+  "hold": {
+    "gDiagBattleSeed": 1,
+    "gDiagForceEffect": 2,
+    "gDiagForceHit": 1,
+    "gDiagForceCritical": 2
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "poke:gDiagForceBattleSpecies=130",
+    "LEFT",
+    "fight:1:0",
+    "teach:0,0,MOVE_TRANSFORM",
+    "teach:0,1,0,0",
+    "teach:0,2,0,0",
+    "teach:0,3,0,0",
+    "teach:1,0,MOVE_SPLASH",
+    "teach:1,1,0,0",
+    "teach:1,2,0,0",
+    "teach:1,3,0,0",
+    "fight:1:1"
+  ],
+  "expect": {
+    "lines": [
+      "Gyarados used Transform!",
+      "Gyarados transformed into Gyarados!"
+    ],
+    "once_lines": [
+      "The wild Gyarados’s Attack fell!"
+    ]
+  }
+}

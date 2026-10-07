@@ -4500,6 +4500,7 @@ BOOL BtlCmd_TryWhirlwind(BattleSystem *battleSystem, BattleContext *ctx) {
 BOOL BtlCmd_Transform(BattleSystem *battleSystem, BattleContext *ctx) {
     u32 i;
     u8 *src, *dest;
+    u16 ability = ctx->battleMons[ctx->battlerIdAttacker].ability;
 
     BattleScriptIncrementPointer(ctx, 1);
 
@@ -4529,31 +4530,37 @@ BOOL BtlCmd_Transform(BattleSystem *battleSystem, BattleContext *ctx) {
     // stages came with the copy above.
     CopyStatStagesAndCriticalRises(ctx, ctx->battlerIdAttacker, ctx->battlerIdTarget);
 
-    ctx->battleMons[ctx->battlerIdAttacker].sendOutFlag = 0;
-    ctx->battleMons[ctx->battlerIdAttacker].intimidateFlag = 0;
-    ctx->battleMons[ctx->battlerIdAttacker].traceFlag = 0;
-    ctx->battleMons[ctx->battlerIdAttacker].downloadFlag = 0;
-    ctx->battleMons[ctx->battlerIdAttacker].anticipationFlag = 0;
-    ctx->battleMons[ctx->battlerIdAttacker].forewarnFlag = 0;
-    ctx->battleMons[ctx->battlerIdAttacker].friskFlag = 0;
-    ctx->battleMons[ctx->battlerIdAttacker].moldBreakerFlag = 0;
-    ctx->battleMons[ctx->battlerIdAttacker].pressureFlag = 0;
-    ctx->battleMons[ctx->battlerIdAttacker].unk88.truantFlag = ctx->totalTurns & 1;
-    ctx->battleMons[ctx->battlerIdAttacker].unk88.slowStartTurns = ctx->totalTurns + 1;
-    ctx->battleMons[ctx->battlerIdAttacker].slowStartFlag = 0;
-    ctx->battleMons[ctx->battlerIdAttacker].slowStartEnded = 0;
-    // The copied ability acts as if the Pokemon had come in with it, as the
-    // retail ones cleared above do (Pokemon Central, Prepotenza: from the
-    // fourth generation it acts when gained in battle too; Showdown's gen-9
-    // transformInto starts the new ability): the later games' abilities
-    // that act on entry -- a Surge, Hadron Engine, Unnerve, Screen Cleaner,
-    // Hospitality -- and Protean's once an appearance, which these flags
-    // keep. The reference clears ability_activated_flag, which gates them
-    // all there.
-    ctx->battleMons[ctx->battlerIdAttacker].abilityActivatedFlag = 0;
-    ctx->battleMons[ctx->battlerIdAttacker].unnerveFlag = 0;
-    ctx->battleMons[ctx->battlerIdAttacker].screenCleanerFlag = 0;
-    ctx->battleMons[ctx->battlerIdAttacker].hospitalityFlag = 0;
+    // The copied ability acts as if the Pokemon had come in with it (Pokemon
+    // Central, Prepotenza: from the fourth generation it acts when gained in
+    // battle too; Showdown's gen-9 transformInto starts the new ability):
+    // retail's entry abilities, the later games' -- a Surge, Hadron Engine,
+    // Unnerve, Screen Cleaner, Hospitality -- and Protean's once an
+    // appearance, which these flags keep. The reference clears
+    // ability_activated_flag, which gates the later ones there. Only an
+    // ability that differs from the one the Pokemon had: from the fifth
+    // generation the same one is not started again (Showdown's setAbility
+    // for a transformation, oldAbility.id !== ability.id past gen 4), so an
+    // Intimidate Pokemon that transforms into another does not intimidate
+    // twice. Retail and the reference clear the flags either way.
+    if (ctx->battleMons[ctx->battlerIdAttacker].ability != ability) {
+        ctx->battleMons[ctx->battlerIdAttacker].sendOutFlag = 0;
+        ctx->battleMons[ctx->battlerIdAttacker].intimidateFlag = 0;
+        ctx->battleMons[ctx->battlerIdAttacker].traceFlag = 0;
+        ctx->battleMons[ctx->battlerIdAttacker].downloadFlag = 0;
+        ctx->battleMons[ctx->battlerIdAttacker].anticipationFlag = 0;
+        ctx->battleMons[ctx->battlerIdAttacker].forewarnFlag = 0;
+        ctx->battleMons[ctx->battlerIdAttacker].friskFlag = 0;
+        ctx->battleMons[ctx->battlerIdAttacker].moldBreakerFlag = 0;
+        ctx->battleMons[ctx->battlerIdAttacker].pressureFlag = 0;
+        ctx->battleMons[ctx->battlerIdAttacker].unk88.truantFlag = ctx->totalTurns & 1;
+        ctx->battleMons[ctx->battlerIdAttacker].unk88.slowStartTurns = ctx->totalTurns + 1;
+        ctx->battleMons[ctx->battlerIdAttacker].slowStartFlag = 0;
+        ctx->battleMons[ctx->battlerIdAttacker].slowStartEnded = 0;
+        ctx->battleMons[ctx->battlerIdAttacker].abilityActivatedFlag = 0;
+        ctx->battleMons[ctx->battlerIdAttacker].unnerveFlag = 0;
+        ctx->battleMons[ctx->battlerIdAttacker].screenCleanerFlag = 0;
+        ctx->battleMons[ctx->battlerIdAttacker].hospitalityFlag = 0;
+    }
     // Imposter acts as its Pokemon comes in and at no other time (Pokemon
     // Central, Sosia; Showdown's gen-9 Imposter is a switch-in handler), and
     // a transformed Pokemon transforms no more: one that copied Imposter is
