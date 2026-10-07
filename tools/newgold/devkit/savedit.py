@@ -1550,8 +1550,15 @@ def item_table():
                      "give": const in rows and rows[const]["prevent_toss"] != "true"
                      and rows[const]["fieldPocket"] != "POCKET_TMHMS",
                      "price": price(rows.get(const)),
-                     "desc": " ".join(re.sub(r"\\[nrf]", " ", descs[number]).split()) if number < len(descs) else ""}
+                     "desc": one_line(descs[number]) if number < len(descs) else ""}
             for number, const in sorted(by_id.items())}
+
+
+def one_line(text):
+    """A message's lines joined: by a space, but a word the line broke at
+    its hyphen ("flame-\\ncovered") whole again; "Dragon-\\nand Steel-type"
+    keeps its space."""
+    return " ".join(re.sub(r"\\[nrf]", " ", re.sub(r"-\\[nrf](?!(?:and|or)\b)", "-", text)).split())
 
 
 @tree_cache

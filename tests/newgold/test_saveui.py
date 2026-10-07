@@ -360,6 +360,8 @@ class SaveUiTests(unittest.TestCase):
                          [300, 10000, 500000, 0], "the Ability Patch's price needs price_high")
         self.assertIn("restore 20 HP to a Pokémon", items["ITEM_POTION"]["desc"])
         self.assertNotIn("\\n", items["ITEM_POTION"]["desc"])
+        self.assertIn("its flame-covered body", items["ITEM_TR88"]["desc"], "a word the line broke at its hyphen, whole")
+        self.assertIn("Dragon- and Steel-type", items["ITEM_ADAMANT_ORB"]["desc"])
         cell = {c: items[c]["icon"] for c in ("ITEM_NONE", "ITEM_POTION", "ITEM_SUPER_POTION", "ITEM_ABSORB_BULB", "ITEM_TERA_ORB")}
         self.assertEqual(cell["ITEM_TERA_ORB"], cell["ITEM_NONE"], "sImportedItemIcons' 0: the blank pair")
         self.assertEqual(len(set(cell.values())), 4, "the Super Potion: the Potion's tiles in its own palette")
