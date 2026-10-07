@@ -258,24 +258,75 @@ On the right, the open save, in tabs: Allenatore (name, ids, money, gender,
 coins, play time, and the story), Squadra and Box (every Pokemon, a
 slot editor for species, level, nature, ability, held item, moves, IVs, EVs
 and friendship; adding, removing, reordering, moving between box and
-party), Borsa (the machines as a checklist, the Pokedex's way: every TM
-and HM with its move and type and "ce l'ho"; searched by "MT 45" as by
-"TM045"; written as the game keeps the
-pocket, 156 slots, one for each machine; an older save's as the game will
-read it, above), Pokedex (per
+party; "Porta la squadra al livello massimo" puts the party at the level
+cap, its moves kept), Borsa, Pokedex (per
 species, all at once, and the two switches; then the forms the Dex records
 on their own, a Galarian Slowpoke seen or caught, its species with it, for
 a save of the layout that has the record), Posizione (the `--where`
-write, the map picked from a list or on the town map), Flag e variabili (by
-name) and Info (the two halves and the block table). The name can only be written in letters and digits: that is all
+write, the map picked from a list or on the town map, or a place before
+someone), Flag e variabili (by name or by number, hex as shown or decimal)
+and Info (the two halves and the block table). The name can only be written in letters and digits: that is all
 `savedit.charcode` knows, although the game's character set has more. The
 species list leaves out what a Pokemon cannot be (the egg, the retail form
-rows 496-507, the forms only a battle has).
+rows 496-507, the forms only a battle has). The open save's header has
+"Gioca" too.
 
-Posizione: the map field is a search over every map, grouped by its section
-(the name the game shows) with its region and kind, as a move field is --
-Italian words for its constant's words match too ("centro", "palestra"),
-and a map a blackout sends the player to is tagged; above it the
+Every list the page picks from is one picker (`combo()` in the page): the
+move field's list under the field, filtered by every word typed (the name,
+the tags, the number), with the arrows, Page Up and Down, Home and End on
+the list, Enter and Esc, the current value marked; the field shows the name,
+selected on focus, and goes back to its value when left without a pick. It
+serves the species (icon, form as "Slowpoke · Galar", types, Dex number),
+the moves (every source as a tag), the held item, the nature (its raised and
+lowered stat), the maps and places, a pocket's items and the boxes; the few
+choices (gender, the abilities, the filters, the direction, the Pokégear
+map's level) are buttons, and the emulator slot to load into a card each.
+There is no native select or datalist left.
+
+Borsa: each pocket shows and offers only its own items, as `/api/data`
+gives them from the tree's `fieldPocket` -- this game's (`savedit`'s
+"game": HeartGold's own, anything with a hold effect or a use, anything the
+game's code or data names; no TR, no TM outside `sMachineRuns`, nothing
+without a pocket) and, behind a switch, the other games' that hg-engine's
+table also names. op "item" and op "pocket" refuse an item of another pocket.
+Every pocket is a list whose changes wait for "Salva modifiche", in a bar
+that stays at the bottom of the screen: the machines and the key items are
+ticks (every one the game has, the key items a script gives first, tagged
+with where), the small pockets list all their items with a count each, and
+the Items pocket lists what it holds and adds through the picker over its
+own items. Unsaved changes are not thrown away without asking: another save
+opened, the last change undone, the page closed. A held item is only one
+the bag's GIVE offers (no key item, no machine, no Apricorn), and no Mail
+for a box Pokemon; a Plate held by Arceus, a Memory by Silvally, the
+Griseous Orb by Giratina set the form as the party menu does. An item taken
+out of the bag is unregistered from Y. The PC's rules hold for the dialog's
+buttons as for dragging: no Mail holder into a box, and a party that keeps
+one Pokemon able to battle.
+
+Posizione: the map field lists first the places before someone
+(`savedit.story_places`: every person of a map's zone events whose talk
+script runs a scripted battle or gives a badge, and the trigger tiles and
+map scenes that start one -- the sixteen gym leaders, the Elite Four and
+Lance, Red, Elder Li, Proton, the rival, the Rocket executives, the
+leaders' rematches), each tagged, for the open save, as beaten, hidden or
+behind a closed gym; the leaders also as buttons under the field and, in
+Allenatore, beside their badge. A place puts the player on the tile the
+person faces, turned to them (Cianwood's before the winch Chuck needs
+turned; the League's at the room's arrival, as the game walks the player
+in), and offers, ticked, what the battle needs: the person shown again
+(their hide flag cleared), the gym's gate step, the story put just before
+the battle (the earlier steps run, or a battle won taken back with the
+steps after it), and, unticked, the party at the level cap; Sposta does it
+all in one change. `savedit.py --before TRAINER_OR_BADGE` does the
+position and the hide flag from the command line (the scenario
+`editor_place_before_jasmine.json`). Then every map, grouped by its section
+(the name the game shows) with its region and kind --
+Italian words for its constant's words match too ("centro", "palestra",
+"lega"), and a person's name finds their map ("falkner") -- and a map a
+blackout sends the player to is tagged; the maps where the game never saves
+(`savedit.nosave_maps`: the Union Room, the Battle Tower's partner room, the
+Safari Zone, Pal Park, the Bug Contest's park) and the unused ones are not
+offered. Above it the
 Pokégear's town map, both regions, with the player marked and the player's
 section lit. Hovering names the places under the pointer and the one a
 click picks (the town, the route), which fills the field; on a phone the
@@ -293,8 +344,9 @@ the Pokédex and the Pokégear (each card on its own, as
 each with its gym's steps beside it, and every other step by place, with a
 search that also matches the constants a step writes and tests (`squirt`
 finds the Flower Shop's bottle and the Sudowoodo that wants it). A step
-another of its place shares a name with, or named only by a constant, says
-what tells it apart. Ticking a step runs it as the game does and offers the
+whose marker is a bare constant is named by the first line the game says in
+its scene (`savedit._said`), the constant in its tooltip; one another of its
+place shares a name with says what tells it apart. Ticking a step runs it as the game does and offers the
 steps before it (in its gym, or the ones giving what it tests), or those
 alone ("Solo i passi prima"), which leaves the save just before it, to play
 it; unticking takes it back and offers the ones after it. What a run here
