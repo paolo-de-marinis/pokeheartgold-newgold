@@ -31,7 +31,7 @@ Each part is converted when its pictures are given:
             palettes nearest its colours, and that palette's number in
             sPokemonPalNoBySpeciesAndForm; a redraw at 32x32 pixels a frame
             given with --grid comes through pixel for pixel.
-  follower  --follower F --shiny-follower SF [--rows down,up,left]
+  follower  --follower F --shiny-follower SF [--rows down,up,left] [--paired]
             the species' mmodel texture, built by import_followers.nsbtx:
             eight 32x32 frames up, up, down, down, left, left, right, right.
             The sheet's rows are named by --rows, two steps a row; a right
@@ -39,7 +39,11 @@ Each part is converted when its pictures are given:
             HeartGold's are. One scale for every frame, the down frame as
             tall as HeartGold's 32x32 followers of about the species' Dex
             height are drawn (follower_height), each frame's feet on row 29,
-            centred at x 16; two 16-colour palettes, normal and shiny.
+            centred at x 16; two 16-colour palettes, normal and shiny. The
+            shiny sheet votes each index's colour; with --paired, for a
+            shiny sheet drawn shape for shape as the normal one, each
+            pixel's (normal, shiny) pair is an index, as --grid's battle
+            pictures' are.
 
 The species has to be in tools/newgold/import/own_art.py first, or the next
 import would put the reference's pictures back over these. --preview DIR
@@ -342,13 +346,29 @@ def jasc(palette):
     return ("JASC-PAL\r\n0100\r\n16\r\n" + "".join(f"{r} {g} {b}\r\n" for r, g, b in [MAGENTA] + list(palette))).encode()
 
 
-def follower(normal, shiny, rows, height):
+def follower(normal, shiny, rows, height, pairs=False):
     """(the texture, the 32x256 picture it is built from with the normal
-    palette, the same with the shiny one)."""
+    palette, the same with the shiny one). With pairs, each sheet is brought
+    to 15 colours of its own first and paired() makes the indices from the
+    pairs; a pixel only the normal sheet draws takes the shiny colour its
+    normal colour has most."""
     if not {"down", "up", "left"} <= set(rows):
         raise SystemExit("--rows has to name the down, up and left rows")
-    indices, palette = quantize(follower_frames(normal, rows, height))
-    shiny_colours = shiny_palette(indices, follower_frames(shiny, rows, height), palette)
+    normals, shinies = follower_frames(normal, rows, height), follower_frames(shiny, rows, height)
+    if pairs:
+        (qn, pn), (qs, ps) = quantize(normals), quantize(shinies)
+        normals = [{p: pn[i - 1] for p, i in frame.items()} for frame in qn]
+        shinies = [{p: ps[i - 1] for p, i in frame.items()} for frame in qs]
+        votes = collections.defaultdict(collections.Counter)
+        for n, s in zip(normals, shinies):
+            for p in n.keys() & s.keys():
+                votes[n[p]][s[p]] += 1
+        shinies = [{p: s[p] if p in s else votes[c].most_common(1)[0][0] for p, c in n.items()}
+                   for n, s in zip(normals, shinies)]
+        indices, palette, shiny_colours, _merged = paired(normals, shinies)
+    else:
+        indices, palette = quantize(normals)
+        shiny_colours = shiny_palette(indices, shinies, palette)
     indices += [{(FRAME - 1 - x, y): i for (x, y), i in left.items()} for left in indices[4:6]]
     frames = [((0, FRAME * k), m) for k, m in enumerate(indices)]
     picture = indexed((FRAME, 8 * FRAME), frames, palette)
@@ -384,6 +404,8 @@ def main():
     parser.add_argument("--width", type=int, help="the battle picture's width")
     parser.add_argument("--grid", type=float, help="the pictures are pixel art, this many screen pixels a pixel")
     parser.add_argument("--rows", default="down,up,left", help="the follower sheet's rows, top to bottom")
+    parser.add_argument("--paired", action="store_true",
+                        help="the shiny follower sheet is the normal one's shape: colour pairs are the indices")
     parser.add_argument("--preview", type=Path)
     args = parser.parse_args()
     name = args.species.upper().removeprefix("SPECIES_")
@@ -431,7 +453,7 @@ def main():
             raise SystemExit("the follower needs --follower and --shiny-follower")
         dex = json.loads((ROOT / "files/application/zukanlist/zkn_data/zukan_data.json").read_text())["mon_stats"]
         height = follower_height(dex[number]["height"])
-        data, picture, shiny = follower(args.follower, args.shiny_follower, args.rows.split(","), height)
+        data, picture, shiny = follower(args.follower, args.shiny_follower, args.rows.split(","), height, args.paired)
         member = re.search(rf"^#define MMODEL_FOLLOWER_MON_{name}\s+(\d+)",
                            import_followers.MMODEL_H.read_text(), re.M)
         if not member:

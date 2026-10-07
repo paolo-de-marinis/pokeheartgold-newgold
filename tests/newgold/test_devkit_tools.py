@@ -287,9 +287,10 @@ class ConvertChatgptTests(unittest.TestCase):
     def tearDownClass(cls):
         cls.tmp.cleanup()
 
-    def sheet(self, name, rows, light=0):
-        """A 2-column sheet of 64x64 cells, rows tall ovals of two colours,
-        each row's drawn off-centre its own way."""
+    def sheet(self, name, rows, light=0, mark=None):
+        """A 2-column sheet of 64x64 cells, rows tall ovals of two colours
+        (the mark's given or the default), each row's drawn off-centre its
+        own way."""
         from PIL import Image, ImageDraw
         im = Image.new("RGB", (128, 64 * rows), (255, 0, 255))
         draw = ImageDraw.Draw(im)
@@ -297,7 +298,7 @@ class ConvertChatgptTests(unittest.TestCase):
             for c in range(2):
                 x, y = 64 * c + 10 + 4 * r, 64 * r + 8
                 draw.ellipse((x, y, x + 30 + 2 * r, y + 48), fill=(40 + light, 90 + light, 20 + light))
-                draw.rectangle((x + 4, y + 10, x + 12, y + 20), fill=(200, 60 + light, 30))
+                draw.rectangle((x + 4, y + 10, x + 12, y + 20), fill=mark or (200, 60 + light, 30))
         path = Path(self.tmp.name) / name
         im.save(path)
         return path
@@ -326,6 +327,22 @@ class ConvertChatgptTests(unittest.TestCase):
         self.assertNotEqual(frame(0).tobytes(), frame(2).tobytes())
         self.assertEqual(self.palette_entries(self.c.png(picture)), 16)
         self.assertNotEqual(picture.getpalette()[3:48], shiny_picture.getpalette()[3:48])
+
+    def test_a_paired_follower_keeps_a_shiny_part_the_normal_colours_alike(self):
+        """The normal sheet draws the mark in the oval's green, the shiny
+        one in yellow: voted, the green's one shiny colour is the oval's;
+        paired, the mark keeps its yellow."""
+        normal = self.sheet("follower.png", 3, mark=(40, 90, 20))
+        shiny = self.sheet("shiny.png", 3, light=60, mark=(232, 200, 24))
+
+        def yellow(picture):
+            return any(abs(r - 232) + abs(g - 200) + abs(b - 24) < 24 for _n, (r, g, b) in
+                       picture.convert("RGB").getcolors())
+        self.assertFalse(yellow(self.c.follower(normal, shiny, ["down", "up", "left"], 17)[2]))
+        data, picture, shiny_picture = self.c.follower(normal, shiny, ["down", "up", "left"], 17, pairs=True)
+        self.assertTrue(yellow(shiny_picture))
+        self.assertFalse(yellow(picture))
+        self.assertEqual(self.c.drawn_height(data), 17)
 
     def test_battle_pictures_have_sixteen_colours_and_the_back_the_shiny_ones(self):
         normal, shiny = self.sheet("front.png", 1), self.sheet("front_shiny.png", 1, light=60)
