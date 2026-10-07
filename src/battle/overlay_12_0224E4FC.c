@@ -3983,19 +3983,25 @@ BOOL CheckBattlerAbilityIfNotIgnored(BattleContext *ctx, int battlerIdAttacker, 
 }
 
 // Whether Flower Gift lifts the side battlerIdSide stands on: a standing
-// Cherrim of its own has it -- where the attacker's move does not ignore it
-// (CheckBattlerAbilityIfNotIgnored), for the target's side (breakable). A
-// Pokemon given the ability by Skill Swap, or one transformed into Cherrim,
-// lifts nothing: Showdown's gen-9 Flower Gift does nothing unless the
-// holder's base species is Cherrim (Pokemon Central's Regalfiore does not
-// say). Retail asked for the ability alone.
-static BOOL SideHasFlowerGift(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, int battlerIdSide, BOOL breakable) {
+// Cherrim of its own has it, where the attacker's move does not ignore it
+// (CheckBattlerAbilityIfNotIgnored) -- on either side: from the fifth
+// generation Mold Breaker passes by the abilities of every Pokemon on the
+// field (Pokemon Central, Rompiforma; Regalfiore: an ally Mold Breaker
+// attacking the Cherrim passes its Flower Gift by, which the fourth
+// generation did not), and Showdown's gen-9 suppressingAbility leaves out the
+// attacker alone, so a Mold Breaker attacker's Attack has no lift from its
+// ally Cherrim either. The attacker's own ability is always heard. A Pokemon
+// given the ability by Skill Swap, or one transformed into Cherrim, lifts
+// nothing: Showdown's gen-9 Flower Gift does nothing unless the holder's base
+// species is Cherrim (Pokemon Central's Regalfiore does not say). Retail
+// asked for the ability alone.
+static BOOL SideHasFlowerGift(BattleSystem *battleSystem, BattleContext *ctx, int battlerIdAttacker, int battlerIdSide) {
     int maxBattlers = BattleSystem_GetMaxBattlers(battleSystem);
 
     for (int i = 0; i < maxBattlers; i++) {
         if (BattleSystem_GetFieldSide(battleSystem, i) == BattleSystem_GetFieldSide(battleSystem, battlerIdSide) && ctx->battleMons[i].hp
             && ctx->battleMons[i].species == SPECIES_CHERRIM && !(ctx->battleMons[i].status2 & STATUS2_TRANSFORM)
-            && (breakable ? CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, i, ABILITY_FLOWER_GIFT) == TRUE : GetBattlerAbility(ctx, i) == ABILITY_FLOWER_GIFT)) {
+            && CheckBattlerAbilityIfNotIgnored(ctx, battlerIdAttacker, i, ABILITY_FLOWER_GIFT) == TRUE) {
             return TRUE;
         }
     }
@@ -11784,13 +11790,16 @@ int CalcMoveDamage(BattleSystem *battleSystem, BattleContext *ctx, u32 moveNo, u
     if ((weather & FIELD_CONDITION_SNOW_ALL) && (calcTarget.type1 == TYPE_ICE || calcTarget.type2 == TYPE_ICE)) {
         monDef = monDef * 15 / 10;
     }
-    if ((weather & FIELD_CONDITION_SUN_ALL) && SideHasFlowerGift(battleSystem, ctx, battlerIdAttacker, battlerIdAttacker, FALSE)) {
+    // An ally's Flower Gift is lost on its Mold Breaker, Teravolt or
+    // Turboblaze attacker too, which the reference does not ask
+    // (CalcBaseDamage.c at d0380a487 asks only the target's side).
+    if ((weather & FIELD_CONDITION_SUN_ALL) && SideHasFlowerGift(battleSystem, ctx, battlerIdAttacker, battlerIdAttacker)) {
         monAtk = monAtk * 15 / 10;
     }
     // The target's side's Flower Gift is lost on Mold Breaker, Teravolt and
     // Turboblaze alike, as the reference asks it (MoldBreakerAbilityCheck,
     // CalcBaseDamage.c:1435 at d0380a487).
-    if ((weatherOnTarget & FIELD_CONDITION_SUN_ALL) && SideHasFlowerGift(battleSystem, ctx, battlerIdAttacker, battlerIdTarget, TRUE)) {
+    if ((weatherOnTarget & FIELD_CONDITION_SUN_ALL) && SideHasFlowerGift(battleSystem, ctx, battlerIdAttacker, battlerIdTarget)) {
         monSpDef = monSpDef * 15 / 10;
     }
 

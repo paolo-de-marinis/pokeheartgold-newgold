@@ -3,8 +3,7 @@
 
 CheckBattlerAbilityIfNotIgnored answers whether a target's ability counts
 against the attacker's move; the redirection by Lightning Rod and Storm Drain
-(ov12_02250A18) and the target's side's Flower Gift (SideHasFlowerGift)
-ask it, so that Teravolt and Turboblaze pass them by as Mold Breaker does
+(ov12_02250A18) and either side's Flower Gift (SideHasFlowerGift) ask it, so that Teravolt and Turboblaze pass them by as Mold Breaker does
 (the reference's CLIENT_HAS_MOLD_BREAKER_VARIATION and MoldBreakerAbilityCheck).
 """
 
@@ -98,21 +97,25 @@ int main(void) {
         assert(ctx.battlerIdTarget == 1);
         assert(!redirected(breakers[i], TYPE_WATER, ABILITY_STORM_DRAIN));
         assert(ctx.battlerIdTarget == 1);
-        // The target's side's Flower Gift is ignored too; the attacker's own
-        // side's is not the question.
+        // The target's side's Flower Gift is ignored too.
         reset();
         S.ability[0] = breakers[i];
         S.ability[3] = ABILITY_FLOWER_GIFT;
         ctx.battleMons[3].species = SPECIES_CHERRIM;
-        assert(!SideHasFlowerGift(&bs, &ctx, 0, 1, TRUE));
-        // The breaker's own side keeps its flowers.
+        assert(!SideHasFlowerGift(&bs, &ctx, 0, 1));
+        // And its own ally's: from the fifth generation the breaker passes by
+        // every Pokemon's ability but its own (Pokemon Central, Rompiforma;
+        // Showdown's gen-9 suppressingAbility), so its Attack has no lift.
         S.ability[2] = ABILITY_FLOWER_GIFT;
         ctx.battleMons[2].species = SPECIES_CHERRIM;
-        assert(SideHasFlowerGift(&bs, &ctx, 0, 0, FALSE));
+        assert(!SideHasFlowerGift(&bs, &ctx, 0, 0));
+        // The ally's own move, or any other attacker's, still blooms.
+        assert(SideHasFlowerGift(&bs, &ctx, 2, 0));
         S.ability[0] = ABILITY_NONE;
-        assert(SideHasFlowerGift(&bs, &ctx, 0, 1, TRUE));
+        assert(SideHasFlowerGift(&bs, &ctx, 0, 0));
+        assert(SideHasFlowerGift(&bs, &ctx, 0, 1));
         ctx.battleMons[3].hp = 0;
-        assert(!SideHasFlowerGift(&bs, &ctx, 0, 1, TRUE));
+        assert(!SideHasFlowerGift(&bs, &ctx, 0, 1));
     }
     // Only a Cherrim of its own: one that took the ability by Skill Swap, or
     // a Ditto transformed into Cherrim, lifts nothing (Showdown's gen-9
@@ -120,12 +123,12 @@ int main(void) {
     reset();
     S.ability[3] = ABILITY_FLOWER_GIFT;
     ctx.battleMons[3].species = SPECIES_CHERRIM;
-    assert(SideHasFlowerGift(&bs, &ctx, 0, 1, TRUE) && SideHasFlowerGift(&bs, &ctx, 1, 1, FALSE));
+    assert(SideHasFlowerGift(&bs, &ctx, 0, 1) && SideHasFlowerGift(&bs, &ctx, 1, 1));
     ctx.battleMons[3].status2 = STATUS2_TRANSFORM;
-    assert(!SideHasFlowerGift(&bs, &ctx, 0, 1, TRUE) && !SideHasFlowerGift(&bs, &ctx, 1, 1, FALSE));
+    assert(!SideHasFlowerGift(&bs, &ctx, 0, 1) && !SideHasFlowerGift(&bs, &ctx, 1, 1));
     ctx.battleMons[3].status2 = 0;
     ctx.battleMons[3].species = SPECIES_DITTO;
-    assert(!SideHasFlowerGift(&bs, &ctx, 0, 1, TRUE) && !SideHasFlowerGift(&bs, &ctx, 1, 1, FALSE));
+    assert(!SideHasFlowerGift(&bs, &ctx, 0, 1) && !SideHasFlowerGift(&bs, &ctx, 1, 1));
     // A move never passes its own user's ability by: Sunsteel Strike's user
     // keeps its Contrary for itself, while the target's is passed.
     reset();
@@ -179,7 +182,7 @@ int main(void) {
         S.ability[3] = ABILITY_FLOWER_GIFT;
         ctx.battleMons[3].species = SPECIES_CHERRIM;
         ctx.battleMons[3].item = HOLD_EFFECT_PREVENT_ABILITY_CHANGES;
-        assert(SideHasFlowerGift(&bs, &ctx, 0, 1, TRUE));
+        assert(SideHasFlowerGift(&bs, &ctx, 0, 1));
     }
     return 0;
 }
@@ -232,11 +235,11 @@ class MoldBreakerTests(unittest.TestCase):
             self.assertIn("if ((!AbilityBreaksMolds(abilityAttacker) || item == HOLD_EFFECT_PREVENT_ABILITY_CHANGES) && abilityTarget == ABILITY_" + ability, body)
 
     def test_the_damage_asks_the_side_s_flower_gift_so(self):
-        # The target's side's for its Sp. Def, which the move may pass by;
-        # the attacker's own side's for its Attack, which it may not.
+        # The target's side's for its Sp. Def, the attacker's own side's for
+        # its Attack; the move may pass either by.
         body = function(OVERLAY, "CalcMoveDamage")
-        self.assertIn("(weatherOnTarget & FIELD_CONDITION_SUN_ALL) && SideHasFlowerGift(battleSystem, ctx, battlerIdAttacker, battlerIdTarget, TRUE)", body)
-        self.assertIn("(weather & FIELD_CONDITION_SUN_ALL) && SideHasFlowerGift(battleSystem, ctx, battlerIdAttacker, battlerIdAttacker, FALSE)", body)
+        self.assertIn("(weatherOnTarget & FIELD_CONDITION_SUN_ALL) && SideHasFlowerGift(battleSystem, ctx, battlerIdAttacker, battlerIdTarget)", body)
+        self.assertIn("(weather & FIELD_CONDITION_SUN_ALL) && SideHasFlowerGift(battleSystem, ctx, battlerIdAttacker, battlerIdAttacker)", body)
         self.assertEqual(body.count("ABILITY_FLOWER_GIFT"), 0)
 
 

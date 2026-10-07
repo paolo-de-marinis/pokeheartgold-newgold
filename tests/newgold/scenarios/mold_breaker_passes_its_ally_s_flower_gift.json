@@ -1,0 +1,67 @@
+{
+  "about": "A Mold Breaker attacker has no lift from its ally Cherrim's Flower Gift: from the fifth generation Mold Breaker passes by the abilities of every Pokemon on the field but its own (Pokemon Central, Rompiforma; Regalfiore: its ally's Flower Gift is ignored as it attacks; Showdown's gen-9 suppressingAbility). Twins Amy & Mimi in the Azalea Gym against a scratch copy of Paolo's Bugsy save with a level-30 Cherrim and a level-30 Machop given Mold Breaker (set:) on the twins' platform: the Cherrim's Sunny Day, then, under the sun, the Machop's Tackle into the Spinarak (gym.py's choice), everyone else using Splash (teach:). The damage roll is pinned high, the critical hit off: the Spinarak goes from 47 to 17. Before, the attacker's own side's Flower Gift was always heard, the Tackle took 1.5 times the Attack, and left the Spinarak at 2.",
+  "save": "gyms/bugsy.sav",
+  "edit": [
+    "--party",
+    "CHERRIM:30,MACHOP:30",
+    "--where",
+    "180:3:8:0"
+  ],
+  "hold": {
+    "gDiagBattleSeed": 1,
+    "gDiagForceHit": 1,
+    "gDiagForceCritical": 2,
+    "gDiagForceEffect": 2,
+    "gDiagForceDamageRoll": 2
+  },
+  "steps": [
+    "field",
+    "A",
+    "fight:1:0",
+    "set:2,ability,ABILITY_MOLD_BREAKER",
+    "teach:0,0,MOVE_SUNNY_DAY",
+    "teach:0,1,0,0",
+    "teach:0,2,0,0",
+    "teach:0,3,0,0",
+    "teach:2,0,MOVE_SPLASH",
+    "teach:2,1,0,0",
+    "teach:2,2,0,0",
+    "teach:2,3,0,0",
+    "teach:1,0,MOVE_SPLASH",
+    "teach:1,1,0,0",
+    "teach:1,2,0,0",
+    "teach:1,3,0,0",
+    "teach:3,0,MOVE_SPLASH",
+    "teach:3,1,0,0",
+    "teach:3,2,0,0",
+    "teach:3,3,0,0",
+    "fight:1:1",
+    {
+      "expect": {
+        "lines": [
+          "Cherrim used Sunny Day!"
+        ],
+        "battler3.species": "SPECIES_LEDYBA"
+      }
+    },
+    {
+      "expect": {
+        "lines": [
+          "Cherrim used Sunny Day!",
+          "Machop breaks the mold!"
+        ],
+        "battler1.species": "SPECIES_SPINARAK",
+        "battler1.hp": 47
+      }
+    },
+    "teach:2,0,MOVE_TACKLE",
+    "fight:1:1"
+  ],
+  "expect": {
+    "new_lines": [
+      "Machop used Tackle!"
+    ],
+    "battler1.hp": 17,
+    "battler1.maxHp": 47
+  }
+}
