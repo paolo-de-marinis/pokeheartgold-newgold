@@ -59,11 +59,15 @@ The game has no shiny icons: one picture serves both.
 
 ```text
 Pixel art overworld walking sprite sheet of the Pokémon <NAME>, in the exact style of the Pokémon HeartGold/SoulSilver walking Pokémon that follow the player.
-A grid of 8 frames, each exactly 32x32 pixels (or 128x128 with clean 4x4 pixel blocks): row 1 facing DOWN (toward the viewer) step A and step B, row 2 facing UP (back to the viewer) step A and step B, row 3 facing LEFT step A and step B, row 4 facing RIGHT step A and step B.
+A grid of 6 frames, each exactly 32x32 pixels (or 128x128 with clean 4x4 pixel blocks): row 1 facing DOWN (toward the viewer) step A and step B, row 2 facing UP (back to the viewer) step A and step B, row 3 facing LEFT, seen exactly from the side, step A and step B.
 Top-down three-quarter view as in the DS overworld, dark 1-pixel outline, at most 15 colours shared by all frames, no anti-aliasing, flat pure magenta (#FF00FF) background, the body centred in each frame with its feet on the bottom rows. Faithful to <NAME>'s official design.
 ```
 
 And the same sheet again in the official shiny colours, shape for shape.
+
+No right-facing row: HeartGold draws a follower's right-facing frames as the exact mirror of
+its left-facing ones (checked on Pikachu's), so the conversion mirrors row 3. ChatGPT's own
+right-facing rows came out turned wrong (Lugia, 2026-10-08), and a mirror is always right.
 
 ## Item icon
 
@@ -100,7 +104,7 @@ and in the bag).
   `sPokemonPalNoBySpeciesAndForm` (src/pokemon_icon_idx.c): the conversion
   picks the palette closest to the picture's colours and sets the number.
 - **Following Pokemon:** `overworld.png` 32x256, eight 32x32 frames in the
-  game's order **up, up, down, down, left, left, right, right**, two 16-colour
+  game's order **up, up, down, down, left, left, right, right** (right = left mirrored), two 16-colour
   palettes (normal, shiny), built into the species' mmodel texture
   (`import_followers.nsbtx`). **Size, HeartGold's rule measured on its own
   followers:** the drawn height is the median of retail's 32x32 followers whose
