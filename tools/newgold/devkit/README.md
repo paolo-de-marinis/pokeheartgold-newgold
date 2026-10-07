@@ -141,8 +141,9 @@ scene). `run_step` runs a step on a save as the game would, each jump decided
 on the save (Chuck's badge starts the Rocket takeover only as the third
 midgame badge; a gift the bag has no room for, `GoToIfNoItemSpace`, is not
 given), taking what `TakeItem` takes and the money `SubMoneyImmediate` does,
-and naming what it does not do itself (a Pokemon or an egg given, a roamer
-let loose); noting what each thing it writes held before (`record`), and
+letting a roamer loose as `CreateRoamer` does (the Burned Tower's Raikou and
+Entei: species, level, IVs, full HP, a random route of theirs), and naming
+what it does not do itself (a Pokemon or an egg given); noting what each thing it writes held before (`record`), and
 `undo_step` takes one back: given that record, each thing
 the run left untouched since goes back to what it found; the rest -- a
 step done by playing -- by what the step writes: undone, a flag it only
@@ -357,7 +358,7 @@ so a save can stand between two steps -- Whitney beaten, the badge not
 given. A badge ticked on its own asks: as the game (its step, with what the
 script writes with it) or the bit alone, which says the counters it leaves.
 Each step shows what it writes -- and what the editor does not do, an egg
-given, a roamer -- and what the game tests before it, met or not, and the
+given -- and what the game tests before it, met or not, and the
 step giving it: the Sudowoodo wants the SquirtBottle, which the Flower Shop
 gives only with the Plain Badge; under a badge, the steps outside its gym
 that test it can be ticked there too. A tick keeps what was typed in the

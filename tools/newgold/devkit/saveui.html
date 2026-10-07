@@ -1076,6 +1076,7 @@ function writeText(w) {
     case "card": return `scheda ${value} del Pokégear`;
     case "map": return `mappa del Pokégear al livello ${value}`;
     case "natdex": return "Pokédex Nazionale";
+    case "roamer": return `${S.species.get(S.data.roamers?.[name])?.name ?? "un Pokémon"} comincia a vagare`;
   }
   return `${kind} ${name} ${value}`;
 }

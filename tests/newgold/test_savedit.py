@@ -1558,6 +1558,36 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertTrue(sv.flag_is_set(save, flags["FLAG_HIDE_BURNED_TOWER_B1F_RAIKOU"]))
         self.assertIn(gate["id"], sv.story_state(save)["done"])
 
+    def test_the_beasts_run_off_as_the_game_lets_them(self):
+        """The Burned Tower's step hides Raikou and Entei and lets them
+        loose (CreateRoamer 0 and 1): each roamer's record as
+        Save_CreateRoamerByID makes it -- active, Lv. 40, full HP for its
+        IVs, on a Johto route -- and taken back, none again (Paolo's Morty
+        place had them vanish from the tower and never roam)."""
+        gate = next(s for s in sv.story() if s["id"] == sv.badge_chains()["BADGE_FOG"][0])
+        self.assertIn(["roamer", "0", 1, False], gate["writes"])
+        self.assertIn(["roamer", "1", 1, False], gate["writes"])
+        rules, numbers, maps = sv.roamer_rules(), sv.species_numbers(), sv.constants("include/constants/maps.h", "MAP_")
+        save, found = self.open(), {}
+        before = save.image()
+        sv.run_step(save, gate["id"], found)
+        f = rules["fields"]
+        for which, species in ((0, "RAIKOU"), (1, "ENTEI")):
+            raw = sv.roamer(save, which)
+            ivs = struct.unpack_from("<I", raw, f["ivs"])[0]
+            self.assertEqual((struct.unpack_from("<H", raw, f["species"])[0], raw[f["level"]], raw[f["active"]]),
+                             (numbers[species], 40, 1))
+            self.assertEqual(struct.unpack_from("<H", raw, f["hp"])[0], sv.stat_line(
+                sv.personal_records()[numbers[species]], 40, [ivs >> 5 * i & 31 for i in range(6)], 0, 0)[0])
+            self.assertEqual(struct.unpack_from("<I", raw, f["met_location"])[0], rules["places"][raw[-1]])
+            self.assertIn(rules["places"][raw[-1]], range(maps["MAP_ROUTE_29"], maps["MAP_ROUTE_46"] + 1), "a Johto route")
+        self.assertEqual(sv.roamer(save, 2), bytes(rules["size"] + 1), "Latias is no Johto beast")
+        sv.undo_step(save, gate["id"], sv.record(save, found))
+        self.assertEqual(save.image(), before)
+        sv.run_step(save, gate["id"])
+        sv.undo_step(save, gate["id"])
+        self.assertEqual(sv.roamer(save, 0), bytes(rules["size"] + 1), "undone as the game had done it: none")
+
     def test_a_step_takes_and_pays_as_the_script_does(self):
         """TakeItem and TakeItemNoCheck take the item (the Exp. Share for
         the Red Scale), SubMoneyImmediate takes the money, a gift the bag

@@ -3689,16 +3689,87 @@ def _write(op, args):
         return "item", args[0], -(_number(args[1]) or 1)
     if op in ("SubMoneyImmediate", "AddMoney") and _number(args[0]) is not None:
         return "money", "", _number(args[0]) * (-1 if op == "SubMoneyImmediate" else 1)
+    if op == "CreateRoamer" and _number(args[0]) in roamer_rules()["kinds"]:
+        return "roamer", str(_number(args[0])), 1
     if op in _NOT_DONE or op in ("GiveItem", "TakeItem"):
         return "other", f"{op} {', '.join(args)}".strip(), 0
     return None
 
 
 # What a script does to the save that the editor does not do -- a Pokemon or
-# an egg given, a roamer let loose, coins or points moved, money by a
-# variable -- named among a step's writes so the page can say so.
+# an egg given, coins or points moved, money by a variable -- named among a
+# step's writes so the page can say so.
 _NOT_DONE = ("GiveMon", "GiveEgg", "GiveTogepiEgg", "GiveSpikyEarPichu", "GiveLoanMon", "GiveDaycareEgg", "CreateRoamer",
              "GiveCoins", "TakeCoins", "SubMoneyVar", "GiveAthletePoints", "TakeAthletePoints", "GiveRibbon", "SetMonMove")
+
+
+@tree_cache
+def roamer_rules():
+    """Save_CreateRoamerByID (src/field_roamer.c) and the save's
+    RoamerSaveData (include/roamer.h): each roamer's species and level by
+    its index ("kinds"); where the player's location history, the Roamer
+    records and their locations sit in the block, and each Roamer field;
+    the map of each location (sRoamerLocations); and the locations each
+    roamer is put in (RoamerLocationSetRandom: Johto's for the ones it
+    names, Kanto's for the rest)."""
+    index = constants("include/constants/roamer.h", "ROAMER_")
+    kinds = {index[r]: (species_numbers()[s[len("SPECIES_"):]], int(level)) for r, s, level in re.findall(
+        r"case (ROAMER_\w+):\s*species = (SPECIES_\w+);\s*level = (\d+);",
+        c_function("src/field_roamer.c", "void Save_CreateRoamerByID("))}
+    maps = constants("include/constants/maps.h", "MAP_")
+    places = [maps[m] for m in re.findall(r"MAP_\w+", c_table("src/field_roamer.c", "sRoamerLocations"))]
+    johto = {index[r] for r in re.findall(r"roamer_idx == (ROAMER_\w+)",
+                                          c_function("src/field_roamer.c", "static void RoamerLocationSetRandom("))}
+    fields = ("met_location", "ivs", "personality", "species", "hp", "level", "status", "active")
+    values, _ = compile_c(("__builtin_offsetof(RoamerSaveData, playerLocationHistory)",
+                           "__builtin_offsetof(RoamerSaveData, data)", "sizeof(Roamer)",
+                           "__builtin_offsetof(RoamerSaveData, locations)",
+                           "ROAMER_LOC_JOHTO_START", "ROAMER_LOC_JOHTO_COUNT",
+                           "ROAMER_LOC_KANTO_START", "ROAMER_LOC_KANTO_COUNT")
+                          + tuple(f"__builtin_offsetof(Roamer, {f})" for f in fields),
+                          headers=LAYOUT_HEADERS + ("roamer.h",))
+    history, data, size, locations, js, jc, ks, kc = values[:8]
+    return {"kinds": kinds, "history": history, "data": data, "size": size, "locations": locations,
+            "fields": dict(zip(fields, values[8:])), "places": places,
+            "roams": {i: range(js, js + jc) if i in johto else range(ks, ks + kc) for i in kinds}}
+
+
+def roamer(save, which):
+    """A roamer's record (Roamer) and its location, as bytes."""
+    rules, block = roamer_rules(), save.block("SAVE_ROAMER")
+    at = rules["data"] + which * rules["size"]
+    return bytes(block[at:at + rules["size"]]) + bytes([block[rules["locations"] + which]])
+
+
+def set_roamer(save, which, raw):
+    """roamer()'s bytes put back."""
+    rules, block = roamer_rules(), save.block("SAVE_ROAMER")
+    at = rules["data"] + which * rules["size"]
+    block[at:at + rules["size"]] = raw[:rules["size"]]
+    block[rules["locations"] + which] = raw[rules["size"]]
+
+
+def create_roamer(save, which):
+    """Save_CreateRoamerByID: the roamer's species and level, a new
+    Pokemon's personality and IVs (CreateMon's: random), its HP full (no
+    EVs), active, and put at random on one of its locations that is
+    neither the one it had nor the player's location before the last
+    (RoamerLocationSetRandom)."""
+    rules, block = roamer_rules(), save.block("SAVE_ROAMER")
+    species, level = rules["kinds"][which]
+    ivs = [random.randrange(MAX_IV + 1) for _ in range(NUM_STATS)]
+    hp = stat_line(personal_records()[species], level, ivs, 0, 0)[0]
+    f, raw = rules["fields"], bytearray(rules["size"])
+    struct.pack_into("<I", raw, f["ivs"], sum(iv << 5 * i for i, iv in enumerate(ivs)))   # MON_DATA_COMBINED_IVS
+    struct.pack_into("<I", raw, f["personality"], random.getrandbits(32))
+    struct.pack_into("<H", raw, f["species"], species)
+    struct.pack_into("<H", raw, f["hp"], hp)
+    raw[f["level"]], raw[f["status"]], raw[f["active"]] = level, 0, 1
+    was = rules["places"][block[rules["locations"] + which]]
+    before = struct.unpack_from("<I", block, rules["history"] + 4)[0]
+    location = random.choice([i for i in rules["roams"][which] if rules["places"][i] not in (was, before)])
+    struct.pack_into("<I", raw, f["met_location"], rules["places"][location])
+    set_roamer(save, which, bytes(raw) + bytes([location]))
 
 
 def _subject(name, subjects):
@@ -3985,6 +4056,8 @@ def _apply(save, write, undo=False):
             set_item(save, names[name], wanted)
     elif kind == "money":
         set_profile(save, money=max(0, min(profile(save)["money"] + (-value if undo else value), MAX_MONEY)))
+    elif kind == "roamer":      # taken back: the record as a new game has it, none
+        create_roamer(save, int(name)) if not undo else set_roamer(save, int(name), bytes(roamer_rules()["size"] + 1))
 
 
 def _key(write):
@@ -3996,7 +4069,7 @@ def _key(write):
 def _value(save, key):
     """What the save holds of a write's key (_key): a flag, badge, trainer,
     the shoes, the Dex's switches as 0 or 1, a variable, the cards, the
-    map's level, how many of an item."""
+    map's level, how many of an item, a roamer's record (hex)."""
     kind, name = key.split(":", 1)
     names = _script_names()[0]
     if kind in ("flag", "trainer", "badge"):
@@ -4009,6 +4082,8 @@ def _value(save, key):
         return profile(save)["money"]
     if kind == "other":
         return None         # what the editor does not do, it does not take back
+    if kind == "roamer":
+        return roamer(save, int(name)).hex()
     return {"shoes": lambda: int(running_shoes(save)), "dex": lambda: save.block("SAVE_POKEDEX")[DEX_ENABLED],
             "card": lambda: pokegear(save)["cards"], "map": lambda: pokegear(save)["map_level"],
             "natdex": lambda: save.block("SAVE_POKEDEX")[DEX_NATIONAL]}[kind]()
@@ -4032,6 +4107,8 @@ def _restore(save, key, value):
         save.block("SAVE_POKEDEX")[DEX_ENABLED] = value
     elif kind == "money":
         set_profile(save, money=value)
+    elif kind == "roamer":
+        set_roamer(save, int(name), bytes.fromhex(value))
     else:
         _apply(save, (kind, name, 1), undo=not value)
 

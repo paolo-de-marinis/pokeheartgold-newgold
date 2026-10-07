@@ -1535,6 +1535,7 @@ def tables():
             "field_moves": part(errors, "field_moves", field_moves, {}),
             "machines": part(errors, "machines", sv.machine_table, []),
             "places": part(errors, "places", sv.story_places, []),
+            "roamers": part(errors, "roamers", lambda: {i: kind[0] for i, kind in sv.roamer_rules()["kinds"].items()}, {}),
             "limits": {"party": sv.PARTY_SIZE, "boxes": sv.NUM_BOXES, "box_slots": sv.MONS_PER_BOX,
                        "name": sv.PLAYER_NAME_LENGTH, "money": sv.MAX_MONEY, "coins": sv.MAX_COINS,
                        "hours": sv.MAX_PLAY_HOURS, "level": sv.MAX_LEVEL, "moves": sv.MAX_MON_MOVES,
