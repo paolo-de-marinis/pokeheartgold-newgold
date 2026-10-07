@@ -579,7 +579,12 @@ _0A24:
 	GoTo _0F76
 
 _0A85:
+	// A TM is held once: one that does not fit is one already held.
+	ItemIsTMOrHM VAR_SPECIAL_x8004, VAR_SPECIAL_RESULT
+	Compare VAR_SPECIAL_RESULT, 1
+	GoToIfEq _TMAlreadyHeld
 	NPCMsg msg_0100_D32_00029
+_BackToTheList:
 	Compare VAR_SPECIAL_x8000, 0
 	GoToIfEq _0AB1
 	GoTo _0F76
@@ -589,6 +594,11 @@ _0A9B:
 	Compare VAR_SPECIAL_x8000, 0
 	GoToIfEq _0AB1
 	GoTo _0F76
+
+_TMAlreadyHeld:
+	NPCMsg msg_0100_D32_00042
+	GoTo _BackToTheList
+	End
 
 _0AB1:
 	Compare VAR_SPECIAL_x8007, 0

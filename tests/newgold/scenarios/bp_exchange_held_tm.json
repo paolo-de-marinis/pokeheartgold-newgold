@@ -1,0 +1,75 @@
+{
+  "about": "The Battle Frontier's Exchange Service Corner with a TM held already (Paolo, 2026-10-08, as the mart and the Game Corners answer one): route29-official.sav with TM40 and 100 BP (savedit --bp) across the counter from the TM clerk (50, 43, facing her at 52, 43). YES, the first page, Aerial Ace, 'will cost 40 BP. Is that OK?', YES: where the bag's room check said 'I'm sorry, but your Bag is full.' (msg_0100_D32 row 29), row 42 'You already have this!', the BP still 100 and TM40 still one; back on the list. Then U-turn, not held, beside it: 'You put away the TM89...' (row 26) with 60 BP, the TM in the bag -- the BP read are the ones the exchange spends. Without the held-TM line the first expectation finds row 29 up, not 42.",
+  "save": "route29-official.sav",
+  "edit": [
+    "--tm",
+    "40",
+    "--bp",
+    "100",
+    "--where",
+    "272:49:46:0"
+  ],
+  "steps": [
+    "field",
+    "goto:MAP_BATTLE_FRONTIER,50,43",
+    "RIGHT",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    {
+      "expect": {
+        "gDiagFieldMessage": 6553642,
+        "bp": 100,
+        "bag:ITEM_TM40": 1
+      }
+    },
+    "A",
+    "wait:200",
+    "DOWN",
+    "wait:30",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    "A",
+    "wait:200",
+    {
+      "expect": {
+        "gDiagFieldMessage": 6553626,
+        "bp": 60
+      }
+    },
+    "A",
+    "wait:200",
+    {
+      "expect": {
+        "bag:ITEM_TM89": 1
+      }
+    },
+    "B",
+    "wait:200",
+    "B",
+    "wait:200",
+    "A",
+    "wait:100",
+    "field"
+  ],
+  "expect": {
+    "bp": 60,
+    "bag:ITEM_TM40": 1,
+    "bag:ITEM_TM89": 1
+  }
+}

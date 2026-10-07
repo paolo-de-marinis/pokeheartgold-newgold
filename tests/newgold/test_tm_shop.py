@@ -425,6 +425,27 @@ class PrizeCounterTests(unittest.TestCase):
         self.assertIn("\tAddMoney 300\n", after)
         self.assertNotIn("NPCMsg msg_0597_T25R1006_00015", after)      # "Your Bag is full."
 
+    def test_the_bp_exchange_says_a_held_tm_and_takes_no_bp(self):
+        """Paolo's decision of 2026-10-08: the Battle Frontier's Exchange
+        Service Corner answers a TM held already as the mart and the Game
+        Corners do, "You already have this!", not that the bag is full, and
+        takes no BP: they are spent (ScrCmd_556) only past the room check,
+        and the refusal goes back to the TM list as the full bag's did."""
+        source = (ROOT / "files/fielddata/script/scr_seq/scr_seq_0076_D32.s").read_text()
+        tms = {int(n) for n in re.findall(r"#define ITEM_TM\d+\s+(\d+)", (ROOT / "include/constants/items.h").read_text())}
+        clerk = source[source.index("\nscr_seq_D32_024:\n"):source.index("\nscr_seq_D32_023:\n")]
+        prizes = {int(n) for n in re.findall(r"SetVar VAR_SPECIAL_x8004, (\d+)\n", clerk)}
+        self.assertEqual(len(prizes), 16)
+        self.assertTrue(prizes <= tms, prizes)
+        exchange = source[source.index("\n_0A24:\n"):]
+        exchange = exchange[:exchange.index("\tGiveItem ")]
+        self.assertLess(exchange.index("\tHasSpaceForItem "), exchange.index("\tScrCmd_556 VAR_SPECIAL_x8006\n"))
+        line, after = self.held_refusal("scr_seq_0076_D32.s", "msg_0100_D32", exchange)
+        self.assertEqual(line, "You already have this!\\r")
+        self.assertNotIn("ScrCmd_556", after)
+        self.assertNotIn("NPCMsg msg_0100_D32_00029", after)       # "your Bag is full."
+        self.assertTrue(after.endswith("\tGoTo _0F76"), after)
+
 
 class GiftTests(unittest.TestCase):
     # Paid for, not given: their refusals are the shops' own (PrizeCounterTests,
