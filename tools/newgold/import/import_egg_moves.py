@@ -30,6 +30,7 @@ ARCHIVE = ROOT / "files/fielddata/sodateya/kowaza_list.narc"
 HEADER = ROOT / "include/constants/daycare.h"
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import own_species  # noqa: E402
 import wotbl  # noqa: E402
 
 ENGINE_REVISION = "d0380a487"
@@ -56,7 +57,7 @@ def main():
     moves = wotbl.move_names()
     member, listed = b"", 0
     for number in range(max(names) + 1):
-        key = "SPECIES_" + names[number]
+        key = "SPECIES_" + own_species.like(names[number])
         wanted = learnsets.get(key, {}).get("EggMoves", [])
         if not wanted and key in bases:
             wanted = learnsets.get(bases[key], {}).get("EggMoves", [])

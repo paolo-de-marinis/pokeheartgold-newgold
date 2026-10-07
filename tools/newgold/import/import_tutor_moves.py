@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[3]
 TUTOR = ROOT / "files/fielddata/wazaoshie/waza_oshie.json"
 
 import import_species  # noqa: E402
+import own_species  # noqa: E402
 
 
 def tutor_slots():
@@ -55,9 +56,14 @@ def main():
         full = "SPECIES_" + name
         if full in written:
             continue
-        source = theirs.get(full) or theirs.get("SPECIES_" + bases.get(name, ""), {})
-        moves = sorted("TUTOR_" + move[len("MOVE_"):] for move in source.get("TutorMoves", [])
-                       if move[len("MOVE_"):] in slots)
+        if name in own_species.SPECIES:
+            # New Gold's own species is taught what the tree teaches its like.
+            like = "SPECIES_" + own_species.like(name)
+            moves = next(entry["moves"] for entry in kept if entry["mon"] == like)
+        else:
+            source = theirs.get(full) or theirs.get("SPECIES_" + bases.get(name, ""), {})
+            moves = sorted("TUTOR_" + move[len("MOVE_"):] for move in source.get("TutorMoves", [])
+                           if move[len("MOVE_"):] in slots)
         added.append({"mon": full, "moves": moves})
 
     taught = sum(1 for entry in added if entry["moves"])

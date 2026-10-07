@@ -23,6 +23,7 @@ PERSONAL = ROOT / "files/poketool/personal/personal.json"
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import import_species  # noqa: E402
+import own_species  # noqa: E402
 
 
 def main():
@@ -40,7 +41,7 @@ def main():
 
     given, missing = 0, collections.Counter()
     for entry in data["baseStats"]:
-        wanted = table.get("SPECIES_" + entry["species"], "ABILITY_NONE")
+        wanted = table.get("SPECIES_" + own_species.like(entry["species"]), "ABILITY_NONE")
         if wanted not in known:
             missing[wanted] += 1
             wanted = "ABILITY_NONE"

@@ -30,6 +30,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 ARCHIVE = ROOT / "files/poketool/personal/wotbl.narc"
 
+import own_species  # noqa: E402
+
 # The hg-engine commit New Gold was forked from. Everything the reference's
 # learnsets say that this does not is konefr's own work.
 ENGINE_BASE = "d0380a487"
@@ -235,6 +237,17 @@ def species_names():
     return byId
 
 
+def follow_likes(files):
+    """The learnsets, each of New Gold's own species (own_species.py) given
+    its like's as the archive has it: Lugia's is the engine's and konefr's,
+    not the reference's file's."""
+    numbers = {name: index for index, name in species_names().items()}
+    for name in own_species.SPECIES:
+        if numbers.get(name, len(files)) < len(files):
+            files[numbers[name]] = files[numbers[own_species.like(name)]]
+    return files
+
+
 def main():
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
@@ -337,7 +350,7 @@ def engine(args, files):
     if not args.write:
         print("nothing written; pass --write")
         return
-    ARCHIVE.write_bytes(build_narc(files))
+    ARCHIVE.write_bytes(build_narc(follow_likes(files)))
     print(f"wrote {ARCHIVE.relative_to(ROOT)}")
 
 
@@ -387,7 +400,7 @@ def konefr(args, files):
     if not args.write:
         print("nothing written; pass --write")
         return
-    ARCHIVE.write_bytes(build_narc(files))
+    ARCHIVE.write_bytes(build_narc(follow_likes(files)))
     print(f"wrote {ARCHIVE.relative_to(ROOT)}")
 
 
@@ -415,6 +428,9 @@ def extend(args, files, rebuild=False):
         name = names.get(index)
         if name is None:
             raise SystemExit(f"no species is defined at identifier {index}")
+        if name in own_species.SPECIES:
+            added.append(b"")  # its like's, by follow_likes
+            continue
         entry = reference.get("SPECIES_" + name)
         if entry is None and name in bases:
             entry = reference.get("SPECIES_" + bases[name])  # a form learns what its base learns
@@ -461,7 +477,7 @@ def extend(args, files, rebuild=False):
             print(f"  {name}: {byNumber.get(move, move)}")
     if not args.write:
         return
-    ARCHIVE.write_bytes(build_narc(files[:first] + added))
+    ARCHIVE.write_bytes(build_narc(follow_likes(files[:first] + added)))
     print(f"wrote {ARCHIVE.relative_to(ROOT)} with {first + len(added)} learnsets")
 
 

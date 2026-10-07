@@ -18,6 +18,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 
+import own_species  # noqa: E402
+
 # Every species the reference defines that this repository has not got, in
 # National Dex order.
 #
@@ -114,15 +116,18 @@ def dex_species_of(reference):
 def write_form_bases(reference):
     """Write the table src/pokedex.c credits a form to its base species with.
 
-    Every species past the last Dex species is a form here. The reference
-    stores a form as its base species and a form number, so its Dex credits
-    and numbers the base; the table is what lets this one do the same.
+    Every species past the last Dex species is a form here, but New Gold's
+    own (own_species.py), which src/pokedex.c credits to itself. The
+    reference stores a form as its base species and a form number, so its
+    Dex credits and numbers the base; the table is what lets this one do the
+    same.
     """
     header = (ROOT / "include/constants/species.h").read_text()
     numbered = {name: int(number) for name, number in
                 re.findall(r"#define SPECIES_([A-Z0-9_]+)\s+(\d+)", header)}
     last = numbered[re.search(r"#define LAST_DEX_SPECIES\s+SPECIES_([A-Z0-9_]+)", header).group(1)]
-    forms = sorted((number, name) for name, number in numbered.items() if number > last)
+    forms = sorted((number, name) for name, number in numbered.items()
+                   if number > last and name not in own_species.SPECIES)
     dex = dex_species_of(reference)
     wrong = [name for _, name in forms if numbered.get(dex.get(name), last + 1) > last]
     if wrong:
@@ -187,10 +192,12 @@ def write_national_numbers(reference):
 
 def species_to_add(reference):
     """Those of them this repository has not got yet: the base species first,
-    then the forms, each in the reference's order."""
+    then the forms, each in the reference's order, then New Gold's own
+    (own_species.py)."""
     have = set(re.findall(r"#define SPECIES_([A-Z0-9_]+)",
                           (ROOT / "include/constants/species.h").read_text()))
-    return [name for name in reference_species(reference) + reference_forms(reference) if name not in have]
+    return [name for name in reference_species(reference) + reference_forms(reference) + list(own_species.SPECIES)
+            if name not in have]
 
 # GENDER_RATIO(frac) stores (u8)(frac * 254.75), and a fraction above one means
 # genderless. Every ratio the games use is a multiple of an eighth, so the
@@ -432,12 +439,14 @@ def main():
     for name in wanted:
         if name in existing:
             continue
-        if name not in blocks:
+        # New Gold's own species is its like's record (own_species.py).
+        source = own_species.like(name)
+        if source not in blocks:
             absent.append(name)
             continue
-        entry = record(name, blocks[name], yields.get(name, 0), learnsets.get(name, set()), tms, hms, machines)
-        if yields.get(name, 0) > MAX_STORED_EXP_YIELD:
-            clamped.append((name, yields[name]))
+        entry = record(name, blocks[source], yields.get(source, 0), learnsets.get(source, set()), tms, hms, machines)
+        if yields.get(source, 0) > MAX_STORED_EXP_YIELD:
+            clamped.append((name, yields[source]))
         added.append(entry)
     if absent:
         print(f"{len(absent)} named in the reference's header with no block in "
@@ -449,9 +458,10 @@ def main():
     refreshed = 0
     for entry in personal["baseStats"]:
         name = entry["species"]
-        if name in wanted_all and name in learnsets:
-            fresh = (sorted(tms[m] for m in learnsets[name] if m in tms), sorted(hms[m] for m in learnsets[name] if m in hms),
-                     machines_past_hm08(learnsets[name], machines))
+        source = own_species.like(name)
+        if name in wanted_all and source in learnsets:
+            fresh = (sorted(tms[m] for m in learnsets[source] if m in tms), sorted(hms[m] for m in learnsets[source] if m in hms),
+                     machines_past_hm08(learnsets[source], machines))
             if (entry["tms"], entry["hms"], entry.get("machines")) != fresh:
                 entry["tms"], entry["hms"], entry["machines"] = fresh
                 refreshed += 1

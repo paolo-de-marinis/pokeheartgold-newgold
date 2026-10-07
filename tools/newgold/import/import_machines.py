@@ -23,6 +23,7 @@ import json
 from pathlib import Path
 
 import import_species
+import own_species
 
 ROOT = Path(__file__).resolve().parents[3]
 PERSONAL = ROOT / "files/poketool/personal/personal.json"
@@ -36,7 +37,7 @@ def wanted(reference, records):
     result = []
     for index, record in enumerate(records):
         name = str(index) if index in NUMBERED_FORMS else record["species"]
-        taught = learnsets.get(name, set())
+        taught = learnsets.get(own_species.like(name), set())
         result.append(import_species.machines_past_hm08(taught, machine_list))
     return result
 

@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[3]
 PERSONAL = ROOT / "files/poketool/personal/personal.json"
 
 import import_species  # noqa: E402
+import own_species  # noqa: E402
 
 # HGSS's own species, leaving the egg, the bad egg and the alternate forms
 # alone: those records are not species.
@@ -55,10 +56,14 @@ def pending(reference):
     records = personal["baseStats"]
     updates, skipped = [], []
 
-    for index in range(1, LAST_VANILLA + 1):
+    # New Gold's own species (own_species.py) follow their like's record, so
+    # a rebalance of Lugia reaches Baby Lugia too.
+    own = [index for index, record in enumerate(records) if record["species"] in own_species.SPECIES]
+    for index in list(range(1, LAST_VANILLA + 1)) + own:
         record = records[index]
         name = record["species"]
-        if name not in blocks:
+        source = own_species.like(name)
+        if source not in blocks:
             skipped.append(name)
             continue
         # The hidden ability is not in the reference's species block but in
@@ -66,8 +71,8 @@ def pending(reference):
         # record's is passed through, or --write would reset 451 of them.
         try:
             wanted = import_species.record(
-                name, blocks[name], yields.get(name, record["expYieldFull"]),
-                learnsets.get(name, set()), tms, hms, machine_list, record["hiddenAbility"])
+                name, blocks[source], yields.get(source, record["expYieldFull"]),
+                learnsets.get(source, set()), tms, hms, machine_list, record["hiddenAbility"])
         except ValueError as error:
             skipped.append(f"{name} ({error})")
             continue

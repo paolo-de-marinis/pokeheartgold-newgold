@@ -52,6 +52,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import gmm  # noqa: E402
+import own_species  # noqa: E402
 
 FIELDS = {237: "name", 238: "name", 817: "name", 803: "pokedexEntry",
           816: "classification", 823: "classification",
@@ -101,6 +102,10 @@ def text_data(revision):
         m = TEXT_FIELD.match(line)
         if m and current is not None and m.group(1) not in current:
             current[m.group(1)] = unescape(m.group(2))
+    # New Gold's own species says what its like says, but its name and size.
+    for name, own in own_species.SPECIES.items():
+        found[name] = {**found[own["like"]], "name": own["name"],
+                       "height": own["height_text"], "weight": own["weight_text"]}
     return found
 
 

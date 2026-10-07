@@ -31,6 +31,7 @@ INDEX = ROOT / "src/pokemon_icon_idx.c"
 
 import import_species  # noqa: E402
 import own_art  # noqa: E402
+import own_species  # noqa: E402
 
 FIRST_ADDED_SPECIES = 508
 
@@ -82,10 +83,13 @@ def plan(reference):
     for form, base in import_species.base_species_of(reference).items():
         if form not in palettes and base in palettes:
             palettes[form] = palettes[base]
+    for name in own_species.SPECIES:
+        if own_species.like(name) in palettes:
+            palettes[name] = palettes[own_species.like(name)]
     first = first_added_icon()
     added = import_species.added_species()
     pictures = {name: ICONS / f"poke_icon_{first + offset:08d}.png" if name in own_art.SPECIES
-                else sprites / name.lower() / "icon.png" for offset, name in enumerate(added)}
+                else sprites / own_species.like(name).lower() / "icon.png" for offset, name in enumerate(added)}
 
     missing = [name for name in added if not pictures[name].exists()]
     if missing:

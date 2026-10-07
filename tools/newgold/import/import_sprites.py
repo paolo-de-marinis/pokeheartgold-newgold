@@ -28,6 +28,7 @@ SPRITES = ROOT / "files/poketool/pokegra/pokegra"
 
 import import_species  # noqa: E402
 import own_art  # noqa: E402
+import own_species  # noqa: E402
 
 # The pictures the padding slots borrow. Only their size matters: a palette is
 # built from whichever of the two genders has a picture, and a slot with none
@@ -112,7 +113,7 @@ def main():
     personal = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
     names = species_to_copy()
     for name, identifier in names.items():
-        source = reference / name.lower()
+        source = reference / own_species.like(name).lower()
         if not source.is_dir():
             raise SystemExit(f"the reference has no sprites for {name}")
         # genderRatio is a fraction: 0 is male only, 1 female only, above one genderless.

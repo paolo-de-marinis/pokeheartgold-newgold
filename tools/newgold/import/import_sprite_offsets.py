@@ -95,6 +95,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from heights import SPRITES, png_rows  # noqa: E402
 from wotbl import build_narc, read_narc  # noqa: E402
 import own_art  # noqa: E402
+import own_species  # noqa: E402
 
 
 def reference_records(reference):
@@ -176,7 +177,7 @@ def records(reference):
     drawn_first = {}
     out = []
     for number, name in enumerate(names):
-        record = theirs.get(name) or theirs.get(f"SPECIES_{number}")
+        record = theirs.get("SPECIES_" + own_species.like(name[len("SPECIES_"):])) or theirs.get(f"SPECIES_{number}")
         if record is None:
             raise ValueError(f"{name}: no record in the reference")
         picture = front_picture(number) if number else None

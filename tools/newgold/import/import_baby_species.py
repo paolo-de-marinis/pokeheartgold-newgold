@@ -24,6 +24,8 @@ import struct
 import subprocess
 from pathlib import Path
 
+import own_species
+
 ROOT = Path(__file__).resolve().parents[3]
 TABLE = ROOT / "files/poketool/personal/pms.narc"
 
@@ -50,6 +52,8 @@ def egg_species(reference):
         theirs = forms.get(baby, [])
         for number, form in enumerate(listed):
             babies.setdefault(form, theirs[number] if number < len(theirs) else baby)
+    # New Gold's own species hatches as itself.
+    babies.update({name: name for name in own_species.SPECIES})
     return babies
 
 

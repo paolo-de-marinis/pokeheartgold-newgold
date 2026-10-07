@@ -34,6 +34,7 @@ import re
 from pathlib import Path
 
 import gmm
+import own_species
 from body_shapes import styles as shape_styles
 from import_species import national_numbers
 
@@ -106,6 +107,10 @@ def metrics(reference, styles):
             else:
                 entry[ours] = int(raw, 0)
         out[name] = entry
+    # New Gold's own species is its like's but its size and size page; its
+    # body style is its like's too, never body_shapes.csv's.
+    for name, own in own_species.SPECIES.items():
+        out[name] = {**out[own["like"]], **{field: own[field] for field in FIELDS if field in own}}
     return out
 
 

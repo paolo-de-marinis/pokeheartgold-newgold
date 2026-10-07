@@ -31,6 +31,7 @@ GFX = ROOT / "tools/nitrogfx/nitrogfx"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import import_dex_text  # noqa: E402
 import import_species  # noqa: E402
+import own_species  # noqa: E402
 
 # Member 3 holds species 1.
 MEMBER_OFFSET = 2
@@ -111,6 +112,10 @@ def main():
     added = {}
     for offset, name in enumerate(import_species.added_species()):
         species = import_dex_text.FIRST_ADDED + offset
+        if name in own_species.SPECIES:
+            # New Gold's own species leaves its like's footprint.
+            wanted[species] = FOOTPRINTS / f"pokefoot_{ours[own_species.like(name)] + MEMBER_OFFSET:08d}.png"
+            continue
         number = theirs.get(name)
         if number is None:
             raise SystemExit(f"the reference has no number for SPECIES_{name}")

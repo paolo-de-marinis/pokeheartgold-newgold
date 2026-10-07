@@ -59,6 +59,7 @@ MMODEL_H = ROOT / "include/constants/mmodel.h"
 SPRITES_H = ROOT / "include/constants/sprites.h"
 
 import own_art  # noqa: E402
+import own_species  # noqa: E402
 
 FIRST_ADDED = 508               # SPECIES_LILLIPUP, after the egg and the alternate forms
 RETAIL_MODELS = 566             # FOLLOWER_MON_BULBASAUR .. FOLLOWER_MON_ARCEUS_DARK
@@ -263,6 +264,7 @@ def plan(reference=REFERENCE):
     """(models, lut): the added models in order, as (name, directory, size,
     bounce, sprite parameter), and the model constant of every added species."""
     table, properties, bases = reference_tables(reference)
+    bases.update({name: own_species.like(name) for name in own_species.SPECIES})
     retail = retail_models()
     species = port_species()
     number = {name: n for n, name in species}

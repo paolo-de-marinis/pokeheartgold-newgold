@@ -32,6 +32,7 @@ ARCHIVE = ROOT / "files/data/sound/gs_sound_data.sdat"
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import import_species  # noqa: E402
+import own_species  # noqa: E402
 import sdat  # noqa: E402
 
 # The rate HeartGold's own cries are recorded at, and the timer the hardware
@@ -109,6 +110,14 @@ def wave_archive(pcm, rate=CRY_RATE):
     return bytes(out)
 
 
+def raised(war, semitones):
+    """A cry's wave archive that many semitones higher: the same samples,
+    played quicker (the rate raised and the timer with it), so it is as large
+    as it was and fits wherever the cry did."""
+    rate = struct.unpack_from("<H", war, 0x42)[0]
+    return wave_archive(war[0x4C:], round(rate * 2 ** (semitones / 12)))
+
+
 def cry_room(archive):
     """The most a cry's bank and wave archive may weigh together: HeartGold's
     largest, Jynx's. A cry plays from the heap of the player sequence 2 runs
@@ -174,11 +183,17 @@ def main():
 
     mapping, bytesAdded = {}, 0
     for offset, name in enumerate(added):
-        number = theirs.get(name)
-        path = args.reference / "sound/cries" / f"{number:03d}.wav" if number else None
-        if path is None or not path.exists():
-            raise SystemExit(f"the reference has no cry for {name}")
-        war = fitted_cry(path, room, len(bankBytes))
+        if name in own_species.SPECIES:
+            # New Gold's own species cries as its like does, higher.
+            like = own_species.like(name)
+            record = archive.records["SWAR"][mapping.get(like, ours[like])]
+            war = raised(archive.files[struct.unpack("<H", record[:2])[0]], own_species.SPECIES[name]["cry_semitones"])
+        else:
+            number = theirs.get(name)
+            path = args.reference / "sound/cries" / f"{number:03d}.wav" if number else None
+            if path is None or not path.exists():
+                raise SystemExit(f"the reference has no cry for {name}")
+            war = fitted_cry(path, room, len(bankBytes))
         bytesAdded += len(war)
 
         warFile = len(archive.files)
