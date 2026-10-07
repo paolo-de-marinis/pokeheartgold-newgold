@@ -1730,6 +1730,7 @@ BOOL BtlCmd_PlayMoveAnimation(BattleSystem *battleSystem, BattleContext *ctx) {
         BattleController_SetMoveAnimation(battleSystem, ctx, MoveAnimationFor(move));
 #ifdef NEWGOLD_DIAG
         gDiagMoveAnimationCount++;
+        gDiagMoveAnimation = MoveAnimationFor(move);
 #endif
     }
 

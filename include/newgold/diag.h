@@ -171,6 +171,9 @@ extern unsigned long gDiagHealthBoxesHiddenBy;
 // How many move animations PlayMoveAnimation has sent the display
 // (BtlCmd_PlayMoveAnimation): one a move, a borrowed one too.
 extern unsigned long gDiagMoveAnimationCount;
+// The move whose animation PlayMoveAnimation sent last: the move's own, or
+// the one it borrows (MoveAnimationFor). 0 until the first.
+extern unsigned long gDiagMoveAnimation;
 
 // The last battle animation PlayBattleAnimationOnMons sent the display
 // (BtlCmd_PlayBattleAnimationOnMons), a BATTLE_ANIMATION_* number: a

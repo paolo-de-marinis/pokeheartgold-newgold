@@ -72,6 +72,7 @@ u32 gDiagBattleBackground;
 u32 gDiagBackgroundTilesLine;
 u32 gDiagBattleAnimation;
 u32 gDiagMoveAnimationCount;
+u32 gDiagMoveAnimation;
 u32 gDiagHealthBoxesHiddenBy;
 u32 gDiagDexShown;
 u32 gDiagDexFormShown;
