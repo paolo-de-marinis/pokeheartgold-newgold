@@ -740,8 +740,14 @@ class SaveUiTests(unittest.TestCase):
         chuck = next(p for p in places if p["trainer_const"] == "TRAINER_LEADER_CHUCK_CHUCK")
         self.assertEqual((chuck["map"], chuck["via"]), (maps["MAP_CIANWOOD_GYM"], "bg"))
         will = next(p for p in places if (p["trainer_const"] or "").startswith("TRAINER_ELITE_FOUR_WILL"))
-        self.assertTrue(will["walked"])
         self.assertEqual((will["x"], will["y"]), (sv.preset(will["map"])["x"], sv.preset(will["map"])["y"]))
+        # The walk-in (WalkNormalNorth 6) stops short of Will: the steps left end a tile before him (Paolo saw no talk).
+        self.assertEqual((will["walked"]["x"], will["walked"]["y"]), (will["x"], will["y"] - 6))
+        self.assertEqual((will["walked"]["x"], will["walked"]["y"] - will["walked"]["steps"] - 1), tuple(will["at"]))
+        lance = next(p for p in places if p["map"] == maps["MAP_POKEMON_LEAGUE_LANCE_ROOM"])
+        self.assertEqual((lance["via"], lance["walked"]["y"] - lance["walked"]["steps"]), ("coord", lance["at"][1]),
+                         "Lance's room: the steps up to the trigger's row")
+        self.assertIsNone(chuck["walked"])
         self.assertTrue(any(p["key"] == "TRAINER_ELDER_LI" for p in places))
         # Jasmine: hidden in a new game's save, shown by the place's "show".
         jasmine = next(p for p in places if p["trainer_const"] == "TRAINER_LEADER_JASMINE_JASMINE")

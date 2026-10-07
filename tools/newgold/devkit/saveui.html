@@ -2111,14 +2111,17 @@ const placeWho = p => p.kind === "badge" ? `Medaglia ${badgeName(p.key)}` : p.tr
 const placeName = p => p.kind === "badge" ? `Davanti a chi dà la Medaglia ${badgeName(p.key)}` : `Davanti a ${placeWho(p)}`;
 const badgeOrder = p => S.data.badges.findIndex(b => b.const === p.badge);
 const PLACE_VIA = {bg: "prima la leva: A qui, poi da lui", coord: "un passo avanti e parte la scena", frame: "la scena parte entrando"};
+// A room the game walks the player into (the Elite Four's, Lance's): the walk stops short of the person, the player does the rest.
+const walkedText = p => `Entrando, il gioco fa camminare il giocatore fino a (${p.walked.x}, ${p.walked.y}); da lì ${p.walked.steps} ${p.walked.steps === 1 ? "passo" : "passi"} in avanti ${
+  p.via === "coord" ? "e parte la scena" : `fino a ${placeWho(p)}, poi A`}.`;
 function placeTags(i) {
   const p = S.data.places[i], st = S.save.places?.[i] || {}, step = p.step && S.steps.get(p.step);
   return [mapTitle(S.maps.get(p.map)),
     p.step && S.save.story.done.includes(p.step) || st.beaten ? {text: p.kind === "badge" ? "medaglia già data" : "già battuto", cls: "warn"} : "",
     st.hidden ? {text: "non c'è: nascosto", cls: "warn", title: p.hide.join(", ")} : "",
     st.gate ? {text: "il gioco ti rimanda fuori", cls: "bad", title: "la palestra è chiusa: fai prima il passo che la apre"} : "",
-    p.walked ? {text: "entrando ti porta lui", title: "il gioco porta il giocatore davanti alla persona appena entra"} : "",
-    PLACE_VIA[p.via] ? {text: PLACE_VIA[p.via]} : "", isLeague(p) ? "Superquattro" : isLeader(p) ? "capopalestra" : ""];
+    p.walked ? {text: `entrando, poi ${p.walked.steps} ${p.walked.steps === 1 ? "passo" : "passi"}`, title: walkedText(p)} : PLACE_VIA[p.via] ? {text: PLACE_VIA[p.via]} : "",
+    isLeague(p) ? "Superquattro" : isLeader(p) ? "capopalestra" : ""];
 }
 function placeRows() {
   const places = S.data.places.map((p, i) => [p, i]);
@@ -2165,7 +2168,7 @@ function drawNeeds() {
   S.pos.plan = plan;
   box.hidden = false;
   box.innerHTML = `<h3 style="margin:0 0 6px">${esc(placeName(p))} <span class="muted">${esc(mapTitle(S.maps.get(p.map)))}</span></h3>
-    <p class="note" style="margin:0 0 6px">${p.walked ? "Il giocatore entra nella stanza: il gioco stesso lo porta davanti alla persona. "
+    <p class="note" style="margin:0 0 6px">${p.walked ? `${walkedText(p)} `
       : p.via === "bg" ? "Qui c'è la leva che la lotta vuole girata (la rimette ferma ogni volta che si entra): A, poi vai dalla persona. "
       : p.via === "coord" ? "Un passo avanti e parte la scena. " : p.via === "frame" ? "La scena parte appena si entra. "
       : "Rivolto verso la persona: premi A e parla. "}${p.step ? `Il passo della storia: ${esc(stepLabel(p.step))}.` : ""}</p>
@@ -2180,7 +2183,8 @@ function pickPlace(i) {
   S.pos.box.set(`p${i}`);
   f.x.value = p.x; f.y.value = p.y; setDir(p.direction);
   $("#presetnote").hidden = false;
-  $("#presetnote").textContent = `Messo davanti a ${placeWho(p)}: (${p.x}, ${p.y}), rivolto ${dirName(S.data.directions.find(x => x.value === p.direction)?.const ?? "")}.`;
+  $("#presetnote").textContent = `${p.walked ? "Messo all'ingresso della stanza" : p.via === "bg" ? "Messo davanti alla leva" : p.via === "frame" ? "Messo all'ingresso: la scena parte entrando"
+    : p.via === "coord" ? "Messo accanto al punto in cui parte la scena" : `Messo ${placeName(p).replace(/^Davanti/, "davanti")}`}: (${p.x}, ${p.y}), rivolto ${dirName(S.data.directions.find(x => x.value === p.direction)?.const ?? "")}.`;
   for (const el of [f.x, f.y]) { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
   drawNeeds();
 }

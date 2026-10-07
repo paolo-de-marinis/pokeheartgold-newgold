@@ -313,8 +313,9 @@ leaders' rematches), each tagged, for the open save, as beaten, hidden or
 behind a closed gym; the leaders also as buttons under the field and, in
 Allenatore, beside their badge. A place puts the player on the tile the
 person faces, turned to them (Cianwood's before the winch Chuck needs
-turned; the League's at the room's arrival, as the game walks the player
-in), and offers, ticked, what the battle needs: the person shown again
+turned; the League's at the room's arrival: entering, the game walks the
+player six tiles in, and the place says where that stops and how many steps
+are left to the person, or to Lance's trigger), and offers, ticked, what the battle needs: the person shown again
 (their hide flag cleared), the gym's gate step, the story put just before
 the battle (the earlier steps run, or a battle won taken back with the
 steps after it), and, unticked, the party at the level cap; Sposta does it

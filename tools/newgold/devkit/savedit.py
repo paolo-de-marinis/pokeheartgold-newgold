@@ -4550,12 +4550,13 @@ def _marker(op, args):
 def _walked_in(const):
     """Whether entering the map runs a frame-table script before the player
     can move -- a temporary variable at 0, as every entry leaves it, or one
-    the map's OnTransition script sets to the value -- that is no gate: the
-    Elite Four's rooms walk the player up to the member, Lance's to the
-    middle. A place there is the map's arrival, and the game does the rest."""
+    the map's OnTransition script sets to the value -- that is no gate, and
+    where it walks the player, (dx, dy) from the arrival: the Elite Four's
+    rooms and Lance's walk the player six tiles in, short of the person,
+    and the player walks the rest. None for a map with no such scene."""
     hdr = _bank_file(map_headers()[const], "scriptHeaderBank", "scr_seq_", SCRIPTS, ".s")
     if not hdr or not (ROOT / hdr).exists():
-        return False
+        return None
     text = source(hdr).read_text()
     stem = re.fullmatch(r"NARC_scr_seq_(scr_seq_\w+)_bin", map_headers()[const].get("scriptsBank", ""))
     gates = _gates()[0]
@@ -4565,12 +4566,32 @@ def _walked_in(const):
             script = _script(stem.group(1))
             set_on_entry |= {(a[0], _number(a[1])) for j in _reach(stem.group(1), script["labels"][label], zero=False)
                              for op, a in [script["lines"][j]] if op == "SetVar" and len(a) == 2}
-    for var, value in re.findall(r"InitScriptGoToIfEqual (VAR_\w+), (\w+), _EV_\w+ \+ 1", text):
+    for var, value, label in re.findall(r"InitScriptGoToIfEqual (VAR_\w+), (\w+), _EV_(\w+) \+ 1", text):
         if var in gates:
             continue
         if (var.startswith("VAR_TEMP_") and _number(value) == 0) or (var, _number(value)) in set_on_entry:
-            return True
-    return False
+            return _player_walk(stem.group(1), label) if stem else (0, 0)
+    return None
+
+
+def _player_walk(stem, label):
+    """Where a script's ApplyMovement obj_player moves the player, (dx, dy):
+    each Walk or Run step of the movements it applies, to EndMovement."""
+    script, dx, dy = _script(stem), 0, 0
+    lines, labels = script["lines"], script["labels"]
+    for j in sorted(_reach(stem, labels[label], zero=False)) if label in labels else ():
+        op, args = lines[j]
+        if op != "ApplyMovement" or args[:1] != ("obj_player",) or args[1] not in labels:
+            continue
+        k = labels[args[1]]
+        while k < len(lines) and lines[k][0] != "EndMovement":
+            way = re.fullmatch(r"(?:Walk|Run)\w*?(North|South|West|East)", lines[k][0])
+            if way:
+                n = int(lines[k][1][0]) if lines[k][1] else 1
+                step = {"North": (0, -1), "South": (0, 1), "West": (-1, 0), "East": (1, 0)}[way.group(1)]
+                dx, dy = dx + step[0] * n, dy + step[1] * n
+            k += 1
+    return dx, dy
 
 
 @tree_cache
@@ -4643,7 +4664,9 @@ def story_places():
     "map", "x", "y", "direction" -- the free tile the person faces (another
     free side, else), the player turned to them; before a trigger, the free
     tile beside it, turned onto it; on a map the game walks the player into
-    (_walked_in), the map's arrival -- "kind" (battle or badge), "key" (the
+    (_walked_in), the map's arrival, with "walked": the tile the game walks
+    the player to and the steps from there to the person (to the trigger)
+    -- "kind" (battle or badge), "key" (the
     trainer or the badge), "trainer" (its name), "step" (the story step
     whose marker it is, if one), "badge" (the gym's, if in one), "hide"
     (the flag that hides the person, if any), "first": where a temporary
@@ -4663,7 +4686,7 @@ def story_places():
         if not events:
             continue
         free = lambda x, y: tile_problem(map_id, x, y) is None   # noqa: E731
-        walked = None
+        walked = ...
 
         def place(x, y, sides, facing=None):
             """The first free side of (x, y), as (x, y, the way the player faces)."""
@@ -4706,7 +4729,7 @@ def story_places():
                         break
                 if first is None:
                     continue
-            if walked is None:
+            if walked is ...:
                 walked = _walked_in(row["const"])
             x, y = ev["x"], ev["z"]
             if walked or kind == "frame":
@@ -4723,6 +4746,17 @@ def story_places():
                     or next((s for s in (place(x + i, y, (0,), facing=1) for i in range(width)) if s), None)
             if not spot:
                 continue
+            walk = None
+            if walked:
+                end = (spot[0] + walked[0], spot[1] + walked[1])
+                if kind == "object":
+                    left = abs(end[0] - x) + abs(end[1] - y) - 1
+                elif kind == "coord":
+                    left = max(0, x - end[0], end[0] - (x + ev.get("w", 1) - 1)) \
+                        + max(0, y - end[1], end[1] - (y + ev.get("h", 1) - 1))
+                else:
+                    left = 0
+                walk = {"x": end[0], "y": end[1], "steps": left}
             trainer = key if what == "battle" else (step or {}).get("battle")
             hide = [ev["eventFlag"]] if kind == "object" and ev.get("eventFlag") not in (None, "FLAG_NOTHING", "0", 0) else []
             same = next((p for p in out if (p["map"], p["x"], p["y"], p["key"]) == (map_id, spot[0], spot[1], key)), None)
@@ -4732,7 +4766,7 @@ def story_places():
             out.append({"map": map_id, "x": spot[0], "y": spot[1], "direction": spot[2], "kind": what, "key": key,
                         "trainer": names[trainers[trainer]] if trainer in trainers and trainers[trainer] < len(names) else "",
                         "trainer_const": trainer, "step": step["id"] if step else None,
-                        "badge": (step or {}).get("badge"), "hide": hide, "walked": walked,
+                        "badge": (step or {}).get("badge"), "hide": hide, "walked": walk,
                         "via": via if first is not None else kind if kind in ("coord", "frame") else None,
                         "at": [x, y] if first is None else [first["x"], first["z"]]})
     return out
