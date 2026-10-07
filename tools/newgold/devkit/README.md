@@ -318,8 +318,9 @@ player six tiles in, and the place says where that stops and how many steps
 are left to the person, or to Lance's trigger), and offers, ticked, what the battle needs: the person shown again
 (their hide flag cleared), the gym's gate step, the story put just before
 the battle (the earlier steps run, or a battle won taken back with the
-steps after it), and, unticked, the party at the level cap; Sposta does it
-all in one change. `savedit.py --before TRAINER_OR_BADGE` does the
+steps after it), and, unticked, the map's sight trainers given as beaten
+(the walk from Cianwood's winch to Chuck passes Black Belt Nob) and the
+party at the level cap; Sposta does it all in one change. `savedit.py --before TRAINER_OR_BADGE` does the
 position and the hide flag from the command line (the scenario
 `editor_place_before_jasmine.json`). Then every map, grouped by its section
 (the name the game shows) with its region and kind --

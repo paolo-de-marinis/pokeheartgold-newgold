@@ -4672,7 +4672,9 @@ def story_places():
     (the flag that hides the person, if any), "first": where a temporary
     variable the battle needs is set first on a fresh entry (Cianwood's
     winch), the place before that instead, and "via": what the player does
-    there first ("bg": a sign or switch, "coord": a step onto a trigger)."""
+    there first ("bg": a sign or switch, "coord": a step onto a trigger),
+    and "trainers": the sight trainers on the map (std_trainer), whom the
+    walk to the person may run into, [constant, name]."""
     steps = {(s["script"], s["line"]): s for s in story()}
     trainers, names = constants("include/constants/trainers.h", "TRAINER_"), trainer_names()
     out = []
@@ -4687,6 +4689,8 @@ def story_places():
             continue
         free = lambda x, y: tile_problem(map_id, x, y) is None   # noqa: E731
         walked = ...
+        sight = sorted({t for o in events.get("objects", [])
+                        for t in re.findall(r"std_trainer\((TRAINER_\w+)\)", str(o.get("scriptId", "")))})
 
         def place(x, y, sides, facing=None):
             """The first free side of (x, y), as (x, y, the way the player faces)."""
@@ -4767,6 +4771,8 @@ def story_places():
                         "trainer": names[trainers[trainer]] if trainer in trainers and trainers[trainer] < len(names) else "",
                         "trainer_const": trainer, "step": step["id"] if step else None,
                         "badge": (step or {}).get("badge"), "hide": hide, "walked": walk,
+                        "trainers": [[t, names[trainers[t]] if trainers[t] < len(names) else t] for t in sight
+                                     if t != trainer and t in trainers],
                         "via": via if first is not None else kind if kind in ("coord", "frame") else None,
                         "at": [x, y] if first is None else [first["x"], first["z"]]})
     return out
@@ -4774,12 +4780,13 @@ def story_places():
 
 def place_state(save, place):
     """Where the save stands for a place: whether its person is hidden
-    (their flag set), its trainer beaten, and the gate keeping the player
-    out of its map, if the save holds it closed (the gate step's id)."""
+    (their flag set), its trainer beaten, the map's sight trainers not
+    beaten yet ("left"), and the gate keeping the player out of its map, if
+    the save holds it closed (the gate step's id)."""
     names, _, _, trainer_base = _script_names()
     hidden = bool(place["hide"]) and all(h in names and flag_is_set(save, names[h]) for h in place["hide"])
-    beaten = bool(place["trainer_const"] and place["trainer_const"] in names
-                  and flag_is_set(save, trainer_base + names[place["trainer_const"]]))
+    won = lambda t: bool(t and t in names and flag_is_set(save, trainer_base + names[t]))  # noqa: E731
+    beaten = won(place["trainer_const"])
     gate = None
     const = map_table()[place["map"]]["const"]
     gates, _ = _gates()
@@ -4788,7 +4795,8 @@ def place_state(save, place):
         for var, value in re.findall(r"InitScriptGoToIfEqual (VAR_\w+), (\w+), _EV_\w+ \+ 1", source(hdr).read_text()):
             if var in gates and var in names and var_value(save, names[var]) == _number(value):
                 gate = next((s["id"] for s in story() if s["kind"] == "gate" and s["key"] == var), None) or var
-    return {"hidden": hidden, "beaten": beaten, "gate": gate}
+    return {"hidden": hidden, "beaten": beaten, "gate": gate,
+            "left": [t for t, _ in place.get("trainers", []) if t in names and not won(t)]}
 
 
 def _step(step_id):

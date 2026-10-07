@@ -1005,14 +1005,22 @@ class Library:
     def op_position(self, save, a):
         """The player put on a map. With a place of the story (Posizione's
         "Davanti a…"), in the same change: the story steps to run or take
-        back first ("run", "undo", as op "story"), and the flag that hides
-        the person there cleared ("show": a place's own hide flag)."""
+        back first ("run", "undo", as op "story"), the flag that hides the
+        person there cleared ("show": a place's own hide flag), and the
+        map's sight trainers given as beaten ("beat": a place's
+        "trainers" on that map), so that the walk to the person is no
+        battle on the way."""
         report = self.op_story(save, a) if a.get("run") or a.get("undo") else None
         names = sv._script_names()[0]
         for flag in a.get("show", []):
             if not any(p["hide"] == [flag] for p in sv.story_places()):
                 raise Refused(f"{flag} non è il flag che nasconde una persona davanti a cui mettersi")
             sv.write_flag(save, names[flag], False)
+        sight = {t for p in sv.story_places() if p["map"] == a.get("map") for t, _ in p["trainers"]}
+        for trainer in a.get("beat", []):
+            if trainer not in sight:
+                raise Refused(f"{trainer} non è un allenatore di questa mappa")
+            sv._apply(save, ("trainer", trainer, 1))
         self.put(save, a)
         if a.get("cap"):
             self.op_party_cap(save, {})

@@ -2132,7 +2132,7 @@ function placeRows() {
           ...group("★ Altri momenti della storia", places.filter(([p]) => !isLeader(p) && !isLeague(p)))];
 }
 // What a place needs, offered as ticks beside Sposta: the person shown, the gym opened, the story put just
-// before the battle, the party at the level cap. Sposta does it all in one change, with one backup. A step that
+// before the battle, the map's trainers beaten, the party at the level cap. Sposta does it all in one change, with one backup. A step that
 // does what the editor cannot is named in its tick's line, and the tick is off.
 function placePlan(i) {
   const p = S.data.places[i], st = S.save.places?.[i] || {}, done = new Set(S.save.story.done), plan = [];
@@ -2155,6 +2155,12 @@ function placePlan(i) {
       if (before.length) plan.push({key: "story", on: true, run: before, text: `Fai prima i passi che vengono prima (${before.length})`,
                                     why: before.map(stepLabel).join(" · ")});
     }
+  }
+  // The map's sight trainers not beaten yet, who would stop the walk to the person (Cianwood's Nob, on the way from the winch).
+  if (st.left?.length) {
+    const who = new Map(p.trainers);
+    plan.push({key: "beat", on: false, beat: st.left, text: `Dai per battuti gli allenatori di questa mappa (${st.left.length})`,
+               why: `${st.left.map(t => who.get(t) || t).join(", ")}: andando da ${placeWho(p)} nessuno ti ferma per lottare`});
   }
   // What a step does that the editor does not (a Pokémon or an egg given) is said, and its tick left off.
   for (const x of plan) {
@@ -2250,6 +2256,7 @@ function renderPosition() {
     for (const x of S.pos.place !== null ? S.pos.plan || [] : []) {
       if (!x.on) continue;
       if (x.key === "show") args.show = S.data.places[S.pos.place].hide;
+      if (x.beat) args.beat = x.beat;
       if (x.run) args.run = [...(args.run || []), ...x.run.filter(id => !(args.run || []).includes(id))];
       if (x.undo) args.undo = x.undo;
       if (x.key === "cap") args.cap = true;

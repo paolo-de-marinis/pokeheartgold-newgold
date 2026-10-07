@@ -769,6 +769,27 @@ class SaveUiTests(unittest.TestCase):
         self.assertIn("non è un luogo", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "position",
                                                                    "args": {"map": maps["MAP_UNION"], "x": 8, "y": 14}}))
 
+    def test_a_place_can_clear_the_way(self):
+        """A place lists the map's sight trainers (std_trainer) and, for
+        the save, those not beaten yet; op "position" with "beat" gives them
+        as beaten in the same change -- Cianwood's place is at the winch,
+        and the review's walk to Chuck ran into Black Belt Nob -- and
+        refuses a trainer of another map. The page's plan sends them."""
+        places = self.ok("/api/data")["places"]
+        i, chuck = next((i, p) for i, p in enumerate(places) if p["trainer_const"] == "TRAINER_LEADER_CHUCK_CHUCK")
+        self.assertIn("TRAINER_BLACK_BELT_NOB", [t for t, _ in chuck["trainers"]])
+        self.assertNotIn("TRAINER_LEADER_CHUCK_CHUCK", [t for t, _ in chuck["trainers"]])
+        self.assertIn("TRAINER_BLACK_BELT_NOB", self.ok("/api/save?f=gyms/test.sav")["places"][i]["left"])
+        out = self.edit("position", {"map": chuck["map"], "x": chuck["x"], "y": chuck["y"], "direction": chuck["direction"],
+                                     "beat": ["TRAINER_BLACK_BELT_NOB"]})
+        self.assertNotIn("TRAINER_BLACK_BELT_NOB", out["places"][i]["left"])
+        names, _, _, base = sv._script_names()
+        self.assertTrue(sv.flag_is_set(sv.Save(self.save), base + names["TRAINER_BLACK_BELT_NOB"]))
+        self.assertIn("non è un allenatore di questa mappa", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "position", "args": {
+            "map": chuck["map"], "x": chuck["x"], "y": chuck["y"], "beat": ["TRAINER_LEADER_FALKNER_FALKNER"]}}))
+        page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
+        self.assertIn("if (x.beat) args.beat = x.beat;", page)
+
     def test_a_plan_says_what_the_editor_does_not_do(self):
         """A place's plan names, in a tick's line, what its story steps do
         that the editor does not (an egg given: savedit's "other" writes),
