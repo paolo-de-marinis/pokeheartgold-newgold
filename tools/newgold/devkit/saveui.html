@@ -8,7 +8,7 @@
 :root {
   --bg: #f4f2ee; --panel: #ffffff; --sunk: #f8f7f4; --text: #1f1d1a; --muted: #6b665e; --border: #e2ddd4;
   --accent: #a15c07; --accent-soft: #fbf0dc; --accent-text: #ffffff; --danger: #b42318; --danger-soft: #fdecea;
-  --ok: #15803d; --ok-soft: #e7f5ec; --warn-soft: #fff4d6; --warn-border: #e8c46a; --focus: #d18a1c;
+  --ok: #15803d; --ok-soft: #e7f5ec; --warn-soft: #fff4d6; --warn-border: #e8c46a; --focus: #d18a1c; --cool: #2b62b8; --cool-soft: #e7eefa;
   --shadow: 0 1px 2px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.04);
   color-scheme: light;
 }
@@ -16,7 +16,7 @@
   :root {
     --bg: #171614; --panel: #211f1c; --sunk: #1b1a17; --text: #ece8e1; --muted: #a39d93; --border: #37332d;
     --accent: #e0a043; --accent-soft: #3a2c16; --accent-text: #1b1406; --danger: #f07a6c; --danger-soft: #3b1f1b;
-    --ok: #5fcf8a; --ok-soft: #173024; --warn-soft: #3a3119; --warn-border: #7a6224; --focus: #e0a043;
+    --ok: #5fcf8a; --ok-soft: #173024; --warn-soft: #3a3119; --warn-border: #7a6224; --focus: #e0a043; --cool: #86b2f2; --cool-soft: #1b2738;
     --shadow: none;
     color-scheme: dark;
   }
@@ -182,17 +182,30 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
 .mvin { position: relative; }
 .mvin input { width: 100%; }
 .mvtags { display: flex; flex-wrap: wrap; gap: 3px; min-height: 18px; }
-.mvlist { min-width: min(320px, 86vw); position: absolute; top: calc(100% + 2px); left: 0; right: 0; z-index: 5; max-height: 280px; overflow: auto;
-          background: var(--panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
-.mvopt { padding: 5px 8px; cursor: pointer; display: flex; flex-wrap: wrap; gap: 3px; align-items: baseline; }
+/* Every picker's list and row alike, wherever its field is (a label's muted small text included): the width is set by
+   combo() -- the field's, at least COMBO_WIDTH, inside the dialog or the page -- and a row is an icon's slot, the name with
+   its badges and tags, the numbers on the right, and a second line for what more there is to say. */
+.mvlist { position: absolute; top: calc(100% + 2px); left: 0; width: 100%; z-index: 5; max-height: min(380px, 60vh); overflow: auto;
+          background: var(--panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.18);
+          color: var(--text); font-size: 14px; font-weight: 400; text-align: left; }
+.mvopt { padding: 4px 10px 4px 6px; cursor: pointer; display: flex; align-items: center; gap: 8px; min-height: 40px; }
+.mvopt > .ico { flex: none; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+.mvopt > .body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+/* The numbers keep to the right of the name, or go under it where the two do not fit (a phone). */
+.mvopt .line { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; }
+.mvopt .main { flex: 1 1 auto; display: flex; flex-wrap: wrap; gap: 3px; align-items: center; min-width: 0; }
+.mvopt .side { flex: none; margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mvopt .sub { display: flex; flex-wrap: wrap; gap: 3px; min-width: 0; font-size: 12px; color: var(--muted); }
+.mvopt .desc { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mvopt:hover { background: var(--accent-soft); }
 .mvopt.cur .nm::before { content: "✓ "; color: var(--accent); }
-.mvopt img.ic { align-self: center; margin: -4px 2px -4px -2px; }
-.mvmore { padding: 6px 8px; font-size: 12.5px; }
+.mvmore { padding: 6px 10px; font-size: 12.5px; }
 .mvin { position: relative; }
 .mvopt.on { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
 .mvopt .nm { font-weight: 600; margin-right: 4px; }
-.mvhead { padding: 6px 8px 2px; font-size: 12px; font-weight: 650; color: var(--muted); border-top: 1px solid var(--border); position: sticky; top: 0; background: var(--panel); }
+.mvhead { padding: 6px 10px 3px; font-size: 12px; font-weight: 650; color: var(--muted); border-top: 1px solid var(--border); position: sticky; top: 0;
+          z-index: 1; background: var(--panel); display: flex; align-items: center; gap: 6px; }
+.mvhead .dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 .townbox canvas { display: block; width: 100%; max-width: 752px; height: auto; image-rendering: pixelated; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; }
 .townbox { max-width: 752px; }
 .townscroll { overflow-x: auto; }
@@ -201,6 +214,9 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
 .tag.pre { border-style: dashed; }
 .tag.warn { background: var(--warn-soft); border-color: var(--warn-border); color: var(--text); }
 .tag.bad { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+/* A nature's raised stat and its lowered one, red and blue as the summary screen colours them. */
+.tag.up { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+.tag.down { background: var(--cool-soft); border-color: var(--cool); color: var(--cool); }
 .flash { animation: flash 1.8s ease-out; }
 @keyframes flash { from { background: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent); } to { box-shadow: 0 0 0 0 transparent; } }
 .monsum { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
@@ -448,8 +464,8 @@ function buildLists() {
   // The species a Pokemon may be made as, each with its icon, its form, its types and its Dex number.
   S.speciesRows = d.species.filter(r => r.pick).map(r => comboRow(r.id, speciesLabel(r.id), {
     before: iconImg({species: r.id, form: 0}, 32), after: typeBadges(r.types),
-    tags: [`n. ${S.speciesByName.get(r.name)?.id ?? r.id}`, formWords(r) ? {text: "forma", cls: "pre"} : ""],
-    words: `${r.const} ${r.id} ${typeNames(r.types)} ${r.name}`}));
+    tags: [formWords(r) ? {text: "forma", cls: "pre"} : ""], side: `n. ${S.speciesByName.get(r.name)?.id ?? r.id}`,
+    words: `n. ${S.speciesByName.get(r.name)?.id ?? r.id} ${r.const} ${r.id} ${typeNames(r.types)} ${r.name}`}));
 }
 // A map's own words, out of its constant: MAP_VIOLET_POKECENTER_1F is "Violet Pokecenter 1F".
 const mapWords = r => r.const.replace(/^MAP_/, "").split("_").map(w => /\d/.test(w) ? w : w[0] + w.slice(1).toLowerCase()).join(" ");
@@ -463,6 +479,7 @@ const mapTitle = r => !r ? "" : !r.name || r.name.toLowerCase() === mapWords(r).
 // goes under}. The field shows the label alone, its id in input.dataset.id; left without a pick it shows again the
 // value it had -- emptied, when `clearable`, it is none. The current value is marked and in view when the list opens.
 const COMBO_ROWS = 150;     // rows drawn at once: typing narrows the rest
+const COMBO_WIDTH = 560;    // a list is as wide as its field, and never narrower than this where there is room
 let comboCount = 0;
 function combo(input, {rows, onPick, empty = "Nessun risultato", clearable = false}) {
   const id = `combo${++comboCount}`;
@@ -496,10 +513,17 @@ function combo(input, {rows, onPick, empty = "Nessun risultato", clearable = fal
     list.innerHTML = (from ? `<div class="mvmore muted">… ${from} prima: scrivi per restringere</div>` : "") + shown.map((r, i) => {
       const head = r.group !== undefined && r.group !== group ? `<div class="mvhead">${r.group}</div>` : "";
       group = r.group;
-      return `${head}<div class="mvopt${same(r.id, input.dataset.id) ? " cur" : ""}" role="option" id="${id}-${i}" data-i="${i}">${r.html}</div>`;
+      return `${head}<div class="mvopt${same(r.id, input.dataset.id) ? " cur" : ""}" role="option" id="${id}-${i}" data-i="${i}"${
+        r.title ? ` title="${esc(r.title)}"` : ""}>${r.html}</div>`;
     }).join("") + (rest > 0 ? `<div class="mvmore muted">… e altri ${rest}: scrivi per restringere</div>` : "")
-      || `<div class="mvopt muted">${esc(typeof empty === "function" ? empty() : empty)}</div>`;
+      || `<div class="mvmore muted">${esc(typeof empty === "function" ? empty() : empty)}</div>`;
+    // One width for every list: its field's, at least COMBO_WIDTH, moved left rather than past the dialog's or the page's edge.
+    const field = list.parentElement.getBoundingClientRect(), edge = (input.closest(".dbody") || document.body).getBoundingClientRect();
+    const width = Math.min(Math.max(field.width, COMBO_WIDTH), edge.width - 32);
+    list.style.width = `${width}px`;
+    list.style.left = `${Math.max(edge.left + 16, Math.min(field.left, edge.right - 16 - width)) - field.left}px`;
     list.hidden = false;
+    if (at < 0) list.scrollTop = 0;     // a new search starts at its top, not where the last list was scrolled
     input.setAttribute("aria-expanded", "true");
     active = -1;
     if (at >= 0) mark(at - from, "center");
@@ -544,10 +568,15 @@ function combo(input, {rows, onPick, empty = "Nessun risultato", clearable = fal
   return {open, close, set(v) { input.dataset.id = v ?? ""; input.value = labelOf(v ?? ""); }};
 }
 // A row's tags, and the text the search reads: the name, the tags, any other words.
-const tagHtml = tags => tags.filter(Boolean).map(t => typeof t === "string" ? `<span class="tag">${esc(t)}</span>` : `<span class="tag ${t.cls || ""}" ${t.title ? `title="${esc(t.title)}"` : ""}>${esc(t.text)}</span>`).join("");
-const comboRow = (id, name, {tags = [], before = "", after = "", group, words = "", label} = {}) => ({id, group, label: label ?? name,
+const tagHtml = tags => tags.filter(Boolean).map(t => typeof t === "string" ? `<span class="tag">${esc(t)}</span>`
+  : `<span class="tag ${t.cls || ""}"${t.title ? ` title="${esc(t.title)}"` : ""}${t.style ? ` style="${esc(t.style)}"` : ""}>${esc(t.text)}</span>`).join("");
+// Every picker's row is the same: `before` in the icon's slot (an icon, a mark, or nothing), the name and `after` (badges)
+// and the tags, `side` (numbers, HTML) on the right, `sub` (HTML) a second line, `title` on hover.
+const comboRow = (id, name, {tags = [], before = "", after = "", side = "", sub = "", title = "", group, words = "", label} = {}) => ({id, group, title,
+  label: label ?? name,
   text: `${name} ${tags.filter(Boolean).map(t => typeof t === "string" ? t : t.text).join(" ")} ${words}`.toLowerCase(),
-  html: `${before}<span class="nm">${esc(name)}</span>${after}${tagHtml(tags)}`});
+  html: `<span class="ico">${before}</span><span class="body"><span class="line"><span class="main"><span class="nm">${esc(name)}</span>${after}${tagHtml(tags)}</span>${
+    side ? `<span class="side">${side}</span>` : ""}</span>${sub ? `<span class="sub">${sub}</span>` : ""}</span>`});
 
 // ---- library -----------------------------------------------------------
 async function loadLibrary() {
@@ -1430,8 +1459,10 @@ function renderBoxArea() {
     <div class="pc">${mons.map((m, s) => `<button type="button" class="${m ? "full" : ""}" data-slot="${s}" data-pos="box:${S.box}:${s}" ${m ? "data-mon" : ""}
       title="${m ? (m.ok ? esc(`${m.nickname || m.species_name} · Lv. ${m.level}${m.egg ? "" : " · " + typeNames(m.types)}${unlearnt(m)}`) : "Checksum errato") : `Posto ${s + 1}, vuoto: clic per aggiungere, o trascina qui un Pokémon`}">${m ? iconImg(m, 48) : ""}</button>`).join("")}</div>
     <p class="note">Clic su un posto occupato per modificarlo; su uno vuoto per aggiungere un Pokémon.</p>`;
-  combo($("#boxsel"), {rows: () => boxes.names.map((n, b) => comboRow(b, `${b + 1}. ${n}`, {tags: [`${count(b)}/${boxes.mons[b].length}`,
-    b === boxes.current ? "aperto nel gioco" : ""]})), onPick: r => goBox(+r.id)}).set(S.box);
+  // A box's row: its first Pokemon's icon, its name, how full it is.
+  combo($("#boxsel"), {rows: () => boxes.names.map((n, b) => comboRow(b, `${b + 1}. ${n}`, {before: (m => m ? iconImg(m) : "")(boxes.mons[b].find(m => m?.ok)),
+    side: `${count(b)}/${boxes.mons[b].length}`, words: `${count(b)}/${boxes.mons[b].length}`, tags: [b === boxes.current ? "aperto nel gioco" : ""]})),
+    onPick: r => goBox(+r.id)}).set(S.box);
   $("#boxarea").onclick = ev => {
     if (DRAG.suppress) return;
     const nav = ev.target.closest("[data-boxnav]");
@@ -1588,7 +1619,7 @@ function heldRows(box, others, holding) {
 }
 const natureRows = () => S.data.natures.map((name, n) => {
   const mods = S.data.nature_mods[n] || [], after = stats().slice(1), up = mods.indexOf(1), down = mods.indexOf(-1);
-  return comboRow(n, name, {label: natureLabel(n), tags: up < 0 ? ["neutra"] : [`+${after[up]}`, `−${after[down]}`]});
+  return comboRow(n, name, {label: natureLabel(n), tags: up < 0 ? ["neutra"] : [{text: `+${after[up]}`, cls: "up"}, {text: `−${after[down]}`, cls: "down"}]});
 });
 
 // `typed` holds the values entered when the dialog was turned down (ids, not text):
@@ -1725,9 +1756,8 @@ function monDialog(where, m, typed = null, version = S.save.version, why = "") {
     const moveCombos = inputs.map(el => combo(el, {clearable: true, empty: () => st.species ? "Nessuna mossa della specie ha questo nome" : "Scegli prima la specie",
       rows: () => {
         const taken = new Set(inputs.filter(x => x !== el).map(x => +x.dataset.id).filter(Boolean));
-        return st.moves.filter(x => !taken.has(x.id)).map(x => ({id: x.id, label: S.moves.get(x.id)?.name ?? `#${x.id}`,
-          text: `${S.moves.get(x.id)?.name ?? ""} ${x.sources.map(sourceTag).join(" ")}`.toLowerCase(),
-          html: `<span class="nm">${esc(S.moves.get(x.id)?.name ?? `#${x.id}`)}</span>${sourceTags(x.sources)}`}))
+        return st.moves.filter(x => !taken.has(x.id)).map(x => comboRow(x.id, S.moves.get(x.id)?.name ?? `#${x.id}`, {
+          sub: sourceTags(x.sources), words: x.sources.map(sourceTag).join(" ")}))
           .concat(st.known.has(+el.dataset.id) && !st.legal.has(+el.dataset.id)
             ? [comboRow(+el.dataset.id, S.moves.get(+el.dataset.id)?.name ?? "", {tags: [{text: "la conosce già", cls: "warn"}]})] : []);
       },

@@ -1135,6 +1135,13 @@ class SaveUiTests(unittest.TestCase):
         self.assertNotIn("`max ${limit(id)}`", page)
         self.assertIn(".qty input { appearance: textfield;", page)
         self.assertRegex(page, r"\.qty button \{[^}]*min-width: 36px; height: 36px;")
+        # Paolo: the items' list was not the Pokemon's. Every row is comboRow's -- the icon's slot, the name with its
+        # badges and tags, the numbers on the right, a second line -- in the list's own font and colour wherever its
+        # field is (inside a label, the species' and the held item's were small and grey), and every list is as wide.
+        self.assertEqual(len(re.findall(r'html: `<span class="ico">', page)), 1)
+        self.assertNotIn('html: `<span class="nm">', page, "the move field's rows were its own")
+        self.assertRegex(page, r"\.mvlist \{[^}]*color: var\(--text\); font-size: 14px;")
+        self.assertIn("const width = Math.min(Math.max(field.width, COMBO_WIDTH), edge.width - 32);", page)
 
     def test_files(self):
         self.edit("trainer", {"money": 1})
