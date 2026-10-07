@@ -1825,16 +1825,19 @@ function renderPocket(pocket) {
   const count = id => ch.has(id) ? ch.get(id) : held.get(id) || 0;
   const limit = id => S.items.get(id)?.limit ?? 0;
   const label = id => S.items.get(id)?.label ?? `#${id}`;
-  // Who gives a key item in the story; the others say what kind of item they are.
+  // Where a key item is given: by a story step (ticked in Allenatore, it is given as the game does), else by any script
+  // of a map's (the Super Rod's fisherman); one this game has that no script gives says so.
+  const giver = id => kind === "tick" ? S.givenBy.get(S.items.get(id)?.const) || S.data.givers?.[S.items.get(id)?.const] : null;
   const tags = id => {
-    const by = kind === "tick" && S.givenBy.get(S.items.get(id)?.const);
-    return [by ? {text: `si riceve: ${S.steps.get(by)?.section || "script comuni"}`, title: `${stepLabel(by)} — spunta il passo in Allenatore per farlo come nel gioco`} : "",
-            notGiven(S.items.get(id))];
+    const r = S.items.get(id), by = giver(id), where = list => list.map(w => w || "script comuni").join(", ");
+    return [typeof by === "string" ? {text: `si riceve: ${S.steps.get(by)?.section || "script comuni"}`, title: `${stepLabel(by)} — spunta il passo in Allenatore per farlo come nel gioco`}
+            : by ? {text: `si riceve: ${where(by)}`, title: "Lo dà uno script di questo luogo"} : kind === "tick" && r?.game ? {text: "nessuno script lo dà", cls: "warn"} : "",
+            notGiven(r)];
   };
   const own = new Set([...pocket.items, ...pocket.others]);
   const extra = [...held.keys()].filter(id => !own.has(id));     // in the pocket, though the tree files it elsewhere now
-  // The key items a script gives first: the ones the story hands over, then those only the code uses.
-  const given = id => kind === "tick" && S.givenBy.has(S.items.get(id)?.const) ? 0 : 1;
+  // The key items the story hands over first, then those another script gives, then those only the code uses.
+  const given = id => { const by = giver(id); return typeof by === "string" ? 0 : by ? 1 : 2; };
   const listed = kind === "pick" ? [...new Set([...held.keys(), ...ch.keys()])].filter(id => count(id) || held.has(id))
                                  : [...pocket.items.slice().sort((a, b) => given(a) - given(b)), ...extra, ...(view.others ? pocket.others : []), ...[...ch.keys(), ...held.keys()].filter(id => pocket.others.includes(id) && !view.others)];
   const q = view.q.trim().toLowerCase();

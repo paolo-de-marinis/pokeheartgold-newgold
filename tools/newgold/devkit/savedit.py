@@ -1547,6 +1547,23 @@ def item_table():
 
 
 @tree_cache
+def item_givers():
+    """Where the scripts give each item, by its constant: the names of the
+    places (map_table's) whose scripts give it -- GiveItemNoCheck, the item
+    GoToIfNoItemSpace makes room for before a give, a std give's item set in
+    VAR_SPECIAL_x8004 -- and "" for a script no map runs (the common ones)."""
+    maps, out = constants("include/constants/maps.h", "MAP_"), {}
+    for stem in _script_stems():
+        where = list(dict.fromkeys(map_table()[maps[c]]["name"] for c in _map_of_scripts().get(stem, []) if c in maps)) or [""]
+        for op, args in _script(stem)["lines"]:
+            item = args[0] if op in ("GiveItemNoCheck", "GoToIfNoItemSpace") and args else \
+                args[1] if op == "SetVar" and len(args) == 2 and args[0] == "VAR_SPECIAL_x8004" else ""
+            if item.startswith("ITEM_"):
+                out[item] = list(dict.fromkeys(out.get(item, []) + where))
+    return out
+
+
+@tree_cache
 def _item_references():
     """Every ITEM_ constant the game's code and data name -- the C, the
     scripts, the JSON the build packs (trainers, wild held items,

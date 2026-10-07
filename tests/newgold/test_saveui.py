@@ -846,6 +846,22 @@ class SaveUiTests(unittest.TestCase):
         self.assertIn("shown = hits.slice(from, from + COMBO_ROWS);", body)
         self.assertIn('if (at >= 0) mark(at - from, "center");', body)
 
+    def test_where_a_key_item_is_given(self):
+        """/api/data's "givers": the places whose scripts give each item --
+        GiveItemNoCheck (the Super Rod on Route 12), GoToIfNoItemSpace
+        before a give (the Blue Card), a std give's VAR_SPECIAL_x8004 (the
+        Basement Key) -- which the key items' checklist tags and sorts by,
+        after the story's steps; none for the Poké Radar, which no script
+        gives."""
+        givers = self.ok("/api/data")["givers"]
+        self.assertEqual(givers["ITEM_SUPER_ROD"], ["Route 12"])
+        self.assertIn("Radio Tower", givers["ITEM_BLUE_CARD"])
+        self.assertIn("Radio Tower", givers["ITEM_BASEMENT_KEY"])
+        self.assertIn("Celadon City", givers["ITEM_GB_SOUNDS"])
+        self.assertNotIn("ITEM_POKE_RADAR", givers)
+        page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
+        self.assertIn("S.givenBy.get(S.items.get(id)?.const) || S.data.givers?.[S.items.get(id)?.const]", page)
+
     def test_a_plan_says_what_the_editor_does_not_do(self):
         """A place's plan names, in a tick's line, what its story steps do
         that the editor does not (an egg given: savedit's "other" writes),

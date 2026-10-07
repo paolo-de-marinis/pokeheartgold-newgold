@@ -297,8 +297,10 @@ the other games' that hg-engine's table also names (never its 84 nameless
 "nel gioco non si ottiene". op "item" and op "pocket" refuse an item of another pocket.
 Every pocket is a list whose changes wait for "Salva modifiche", in a bar
 that stays at the bottom of the screen: the machines and the key items are
-ticks (every one the game has, the key items a script gives first, tagged
-with where), the small pockets list all their items with a count each, and
+ticks (every one the game has; the key items the story gives first, then
+those any map's script gives -- `savedit.item_givers`: GiveItemNoCheck, the
+item GoToIfNoItemSpace makes room for, a std give's VAR_SPECIAL_x8004 --
+each tagged with where, then the ones no script gives, tagged so), the small pockets list all their items with a count each, and
 the Items pocket lists what it holds and adds through the picker over its
 own items. Unsaved changes are not thrown away without asking: another save
 opened, the last change undone, the open save played or loaded as it is on
