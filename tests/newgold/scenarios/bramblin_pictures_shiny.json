@@ -1,0 +1,9 @@
+{
+  "about": "Bramblin's shiny colours are Paolo's own (2026-10-08): the same wild Bramblin as bramblin_pictures.json, its personality the same from the pinned RNG, comes out shiny under the trainer ID 462822871 (0x1b961dd7: the save's own ID 0x1dd7 with the secret ID that makes its 0x0bc00d81 pass SHINY_CHECK), and front1.lift finds its front in the shiny colours its back's PNG carries, one row over the ground line as the normal one stands. The save is a scratch copy of Paolo's Route 29 save put on Route 30 with a Bramblin leading.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "BRAMBLIN:15,CYNDAQUIL:15", "--where", "34:552:329", "--trainer-id", "462822871"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=967", "UP", "fight:0:0",
+            {"expect": {"battler1.species": "SPECIES_BRAMBLIN", "battler1.shiny": 1, "front1.lift": 1}}],
+  "expect": {"lines": ["wild Bramblin"]}
+}

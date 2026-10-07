@@ -1,0 +1,10 @@
+{
+  "about": "Bramblin's battle pictures are Paolo's own (2026-10-08), where the reference drew Bulbasaur's: a wild Bramblin on Route 30 against the player's Bramblin, and front1.lift finds Paolo's front on the screen in its PNG's colours, standing one row over the ground line -- its clearance, the record import_sprite_offsets.py places for his picture as the converter drew it in its frame. On the reference's placeholder the front was Bulbasaur's and stood where Bulbasaur stands, 1 under the line. The save is a scratch copy of Paolo's Route 29 save put on Route 30 with a Bramblin leading.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "BRAMBLIN:15,CYNDAQUIL:15", "--where", "34:552:329"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=967", "UP", "fight:0:0",
+            {"expect": {"battler0.species": "SPECIES_BRAMBLIN", "battler1.species": "SPECIES_BRAMBLIN",
+                        "battler1.shiny": 0, "front1.lift": 1}}],
+  "expect": {"lines": ["wild Bramblin"]}
+}

@@ -1108,7 +1108,7 @@ static const u8 sPokemonPalNoBySpeciesAndForm[] = {
     0, // MABOSSTIFF,
     0, // SHROODLE,
     0, // GRAFAIAI,
-    1, // BRAMBLIN,
+    2, // BRAMBLIN,
     2, // BRAMBLEGHAST,
     0, // TOEDSCOOL,
     0, // TOEDSCRUEL,

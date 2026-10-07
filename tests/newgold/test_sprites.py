@@ -14,14 +14,19 @@ drawn (docs/newgold/DEVKIT-PROMPTS.md) where the reference has a
 placeholder, written into the tree by convert_chatgpt.py. Every importer
 that writes those files has to keep the tree's for it: one that copied the
 reference's again would put Bulbasaur's battle pictures back on Bramblin.
+And each of his pictures is the size and palette the game reads it in.
 """
 
 import json
 import os
 import re
+import struct
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
+
+from PIL import Image, ImageOps
 
 from test_level_cap import ROOT, function
 
@@ -147,6 +152,133 @@ class OwnArtImportTests(unittest.TestCase):
         for name in own_art.SPECIES:
             kept = (import_followers.MMODEL_DIR / f"mmodel_{member_of(name):08d}.NSBTX").read_bytes()
             self.assertEqual(import_followers.texture(name, f"data/graphics/sprites/{name.lower()}"), kept, name)
+
+
+def number_of(name):
+    header = (ROOT / "include/constants/species.h").read_text()
+    return int(re.search(rf"^#define SPECIES_{name}\s+(\d+)", header, re.M).group(1))
+
+
+def palette_entries(path):
+    """How many colours a PNG's PLTE chunk holds."""
+    data, at = path.read_bytes(), 8
+    while at < len(data):
+        length, kind = struct.unpack(">I4s", data[at:at + 8])
+        if kind == b"PLTE":
+            return length // 3
+        at += 12 + length
+
+
+def battle_pictures(name):
+    """{(gender, picture): path} of the genders the species is drawn as."""
+    folder = import_sprites.SPRITES / f"{number_of(name):04d}"
+    return {(gender, picture): folder / gender / picture for gender in ("male", "female")
+            for picture in ("front.png", "back.png") if (folder / gender / "front.png").stat().st_size}
+
+
+class OwnPicturesTests(unittest.TestCase):
+    """Bramblin's pictures are Paolo's (2026-10-08), each the size and the
+    palette the game reads it in: a PNG palette of 256 entries garbled the
+    whole battle, and a female picture left alone showed the placeholder."""
+
+    def test_the_pictures_are_not_the_reference_s(self):
+        if not REFERENCE.exists():
+            self.skipTest("no reference checkout")
+        for name in own_art.SPECIES:
+            folder = f"data/graphics/sprites/{name.lower()}"
+            for (gender, picture), path in battle_pictures(name).items():
+                self.assertNotEqual(path.read_bytes(), import_followers.show(f"{folder}/male/{picture}", REFERENCE),
+                                    f"{name} {gender} {picture}")
+            self.assertNotEqual(icon_of(name).read_bytes(), import_followers.show(f"{folder}/icon.png", REFERENCE), name)
+            kept = (import_followers.MMODEL_DIR / f"mmodel_{member_of(name):08d}.NSBTX").read_bytes()
+            self.assertNotEqual(kept, import_followers.nsbtx(folder, REFERENCE), name)
+
+    def test_the_battle_pictures_are_two_frames_in_sixteen_colours(self):
+        """160x80, index 0 transparent, a 16-entry palette; every gender's
+        alike; the back's palette the shiny one over the front's indices."""
+        for name in own_art.SPECIES:
+            pictures = battle_pictures(name)
+            self.assertTrue(pictures, name)
+            for (gender, picture), path in pictures.items():
+                im = Image.open(path)
+                self.assertEqual((im.size, im.mode, im.info.get("transparency")), ((160, 80), "P", 0), path)
+                self.assertEqual(palette_entries(path), 16, path)
+                self.assertLess(max(im.tobytes()), 16, path)
+                self.assertEqual(im.crop((0, 0, 80, 80)).tobytes(), im.crop((80, 0, 160, 80)).tobytes(), path)
+                self.assertEqual(path.read_bytes(), pictures[next(iter(pictures))[0], picture].read_bytes(), path)
+            front, back = (Image.open(pictures[next(iter(pictures))[0], p]) for p in ("front.png", "back.png"))
+            self.assertNotEqual(front.getpalette()[3:48], back.getpalette()[3:48], name)
+
+    def test_the_icon_is_two_frames_in_a_shared_palette(self):
+        for name in own_art.SPECIES:
+            im = Image.open(icon_of(name))
+            self.assertEqual((im.size, im.mode), ((32, 64), "P"), name)
+            self.assertEqual(palette_entries(icon_of(name)), 16, name)
+            self.assertIsNotNone(import_icons.drawn_in(icon_of(name), import_icons.shared_palettes()), name)
+
+    def test_the_follower_is_heartgold_s_size_its_right_frames_mirrored(self):
+        """Eight 32x32 frames, the first down one as tall as HeartGold's
+        followers of the species' Dex height are (0.6 m: 17 rows), its feet
+        on row 29 and centred; the right frames the left ones mirrored; a
+        normal and a shiny palette."""
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/sprites"))
+        import convert_chatgpt
+        dex = json.loads((ROOT / "files/application/zukanlist/zkn_data/zukan_data.json").read_text())["mon_stats"]
+        for name in own_art.SPECIES:
+            data = (import_followers.MMODEL_DIR / f"mmodel_{member_of(name):08d}.NSBTX").read_bytes()
+            self.assertEqual(import_followers.texture_width(data), 32, name)
+            frames = convert_chatgpt.texture_pixels(data)
+            frame = lambda k: frames.crop((0, 32 * k, 32, 32 * k + 32))  # noqa: E731
+            for left, right in ((4, 6), (5, 7)):
+                self.assertEqual(ImageOps.mirror(frame(left)).tobytes(), frame(right).tobytes(), name)
+            box = convert_chatgpt.drawn_box(data)
+            self.assertEqual(box[3] - box[1], convert_chatgpt.follower_height(dex[number_of(name)]["height"]), name)
+            self.assertEqual(box[3], 30, name)
+            self.assertLessEqual(abs(box[0] + box[2] - 32), 1, name)
+            # Two palettes of sixteen BGR555 colours at the end of the TEX0 block, normal and shiny.
+            tex = 0x14
+            palettes = data[tex + int.from_bytes(data[tex + 0x38:tex + 0x3C], "little"):]
+            self.assertEqual(len(palettes), 2 * 32, name)
+            self.assertNotEqual(palettes[2:32], palettes[34:64], name)
+
+    def test_the_front_stands_where_it_is_drawn(self):
+        """The reference never placed a record for Paolo's picture: its front
+        stands as drawn in its frame (the Y offset its clearance, one row),
+        over a shadow centred and sized by the picture (small)."""
+        import heights
+        import import_sprite_offsets as offsets
+        from wotbl import read_narc
+        member = read_narc(offsets.ARCHIVE.read_bytes())[0][0]
+        for name in own_art.SPECIES:
+            n = number_of(name)
+            tail = struct.unpack_from("<bbB", member, n * offsets.RECORD + offsets.Y_OFFSET)
+            clearance = heights.height_of(import_sprites.SPRITES / f"{n:04d}/male/front.png")[0]
+            self.assertEqual(tail, (clearance, 0, offsets.shadow_size(offsets.front_picture(n))), name)
+        self.assertEqual(struct.unpack_from("<bbB", member, number_of("BRAMBLIN") * offsets.RECORD + offsets.Y_OFFSET),
+                         (1, 0, 1))
+
+    def test_a_record_the_reference_placed_does_not_move_the_picture(self):
+        """The reference's record for Bramblin was never placed, and the path
+        for those gives the same bytes today; one it placed for its
+        placeholder (a made-up 20 rows up, 4 across, a large shadow) must not
+        move Paolo's picture either."""
+        if not REFERENCE.exists():
+            self.skipTest("no reference checkout")
+        import import_sprite_offsets as offsets
+        from wotbl import read_narc
+        real = offsets.reference_records
+
+        def placed(reference):
+            records = real(reference)
+            for name in own_art.SPECIES:
+                records[f"SPECIES_{name}"] = records[f"SPECIES_{name}"][:offsets.Y_OFFSET] + struct.pack("<bbB", 20, 4, 3)
+            return records
+        with mock.patch.object(offsets, "reference_records", placed):
+            records = offsets.records(REFERENCE)
+        member = read_narc(offsets.ARCHIVE.read_bytes())[0][0]
+        for name in own_art.SPECIES:
+            n = number_of(name)
+            self.assertEqual(records[n], member[n * offsets.RECORD:(n + 1) * offsets.RECORD], name)
 
 
 if __name__ == "__main__":
