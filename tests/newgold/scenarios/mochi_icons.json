@@ -1,0 +1,11 @@
+{
+  "about": "The Mochi's own bag icons (Paolo's art, drawn by ChatGPT 2026-10-08): route29-official.sav given all seven Mochi (savedit --item), the start menu's BAG, the Items pocket: its first page shows the Health, Muscle, Resist, Genius, Clever and Swift Mochi, each drawn with its own icon -- every opaque pixel of its PNG, in its colours, found on the bottom screen (icon:) -- and not yet the Fresh-Start Mochi's; the page after shows the Fresh-Start Mochi's. konefr's art for all seven is a copy of none.png: with sImportedItemIcons at 0 for them they draw ITEM_NONE's question mark and every icon: expectation fails.",
+  "save": "route29-official.sav",
+  "edit": ["--item", "HEALTH_MOCHI:3,MUSCLE_MOCHI:2,RESIST_MOCHI:1,GENIUS_MOCHI:1,CLEVER_MOCHI:1,SWIFT_MOCHI:2,FRESH_START_MOCHI:1"],
+  "steps": ["field", "X", "wait:60", "touch:42,118", "wait:200", "touch:16,15", "wait:60",
+            {"expect": {"icon:ITEM_HEALTH_MOCHI": 1, "icon:ITEM_MUSCLE_MOCHI": 1, "icon:ITEM_RESIST_MOCHI": 1,
+                        "icon:ITEM_GENIUS_MOCHI": 1, "icon:ITEM_CLEVER_MOCHI": 1, "icon:ITEM_SWIFT_MOCHI": 1,
+                        "icon:ITEM_FRESH_START_MOCHI": 0}},
+            "touch:59,175", "wait:60"],
+  "expect": {"icon:ITEM_FRESH_START_MOCHI": 1, "bag:ITEM_FRESH_START_MOCHI": 1}
+}

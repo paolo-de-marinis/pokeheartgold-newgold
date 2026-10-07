@@ -9,6 +9,7 @@ them nothing to do.
 """
 
 import csv
+import re
 import unittest
 
 from test_form_dex import run
@@ -75,6 +76,28 @@ int main(void) {
         # Reset from 252 and 129; nothing to do at 0; a Berry's -10 and a
         # vitamin's +10 as before (the latter to 252).
         self.assertEqual(run(program, "newgold-mochi-reset-"), "0 0 -1 90 252")
+
+    def test_each_mochi_draws_its_own_icon(self):
+        """konefr's PNG for every Mochi is a copy of none.png, so all seven drew
+        ITEM_NONE's "?" in the EV/IV trainer's shop and in the bag. Paolo had
+        them drawn (ChatGPT, 2026-10-08); the importer knows they are his art."""
+        from PIL import Image
+        from test_items import ICON_DIR, ITEM_MK, import_items, narc_rows
+        built = {int(tiles): png for tiles, png in
+                 re.findall(r"ITEMICON_FROM_PNG,(\d+),\d+,(\w+)\)", ITEM_MK.read_text())}
+        rows = narc_rows()
+        mochi = [*STATS, "ITEM_FRESH_START_MOCHI"]
+        tiles = [rows[item][1] for item in mochi]
+        self.assertEqual(len(set(tiles) - {rows["ITEM_NONE"][1]}), len(mochi), tiles)
+        for item, member in zip(mochi, tiles):
+            png = built.get(member)
+            self.assertEqual(png, import_items.OWN_ICONS[item], item)
+            icon = Image.open(ICON_DIR / f"{png}.png")
+            # 4bpp with a palette of exactly 16 (DEVKIT-PROMPTS.md's trap), and
+            # inside the top-left 24x24, where HeartGold draws every item icon.
+            self.assertEqual((icon.size, icon.mode, len(icon.getpalette())), ((32, 32), "P", 48), png)
+            box = Image.frombytes("L", icon.size, icon.tobytes()).getbbox()
+            self.assertTrue(box[2] <= 24 and box[3] <= 24, (png, box))
 
 
 if __name__ == "__main__":

@@ -51,7 +51,8 @@ An icon is resolved by ARCHIVE MEMBER, never by name: data/graphics/itemgra.mk
 keys a PNG by the member, which is the item's id plus two, and 1634 of those
 PNGs are byte-identical to none.png -- snowball_pla.png is not the Snowball's.
 An item whose art is the blank one is given ITEM_NONE's icon here knowingly,
-rather than 1610 more copies of the same empty square.
+rather than 1603 more copies of the same empty square -- unless OWN_ICONS has
+Paolo's own art for it, which is committed here and never comes from there.
 
 Every run rewrites its own generated blocks rather than appending to them, so
 running it twice is running it once.
@@ -101,6 +102,22 @@ EMPTY_SLOT = re.compile(r"ITEM_(UNUSED|UNKNOWN)_[0-9A-F]+$")
 # with no picture. Every imported item whose art is konefr's blank placeholder
 # points at it.
 BLANK_ICON = (793, 794)
+
+# Icons that are Paolo's art, not the reference's: konefr's PNG for each of
+# these is a copy of none.png, so they would take the "?" above. The PNG is
+# committed in item_icon/ under this name (drawn by ChatGPT for Paolo,
+# 2026-10-08, converted by tools/newgold/devkit/sprites/convert_item_icons.py),
+# never copied from the reference, and numbered after every icon the reference
+# brings.
+OWN_ICONS = {
+    "ITEM_HEALTH_MOCHI": "health_mochi",
+    "ITEM_MUSCLE_MOCHI": "muscle_mochi",
+    "ITEM_RESIST_MOCHI": "resist_mochi",
+    "ITEM_GENIUS_MOCHI": "genius_mochi",
+    "ITEM_CLEVER_MOCHI": "clever_mochi",
+    "ITEM_SWIFT_MOCHI": "swift_mochi",
+    "ITEM_FRESH_START_MOCHI": "fresh_start_mochi",
+}
 
 # Spellings this tree writes differently from the reference. Every one of these
 # is also derivable from the id pairing below -- they are written down because a
@@ -704,7 +721,9 @@ def main():
 
         member = reference.ids[name] + 2
         png, is_blank = reference.icons[member]
-        if is_blank:
+        if name in OWN_ICONS:
+            tiles = palette = None              # numbered after the loop
+        elif is_blank:
             blank_art += 1
             tiles, palette = BLANK_ICON
         else:
@@ -720,6 +739,13 @@ def main():
             unnamed += 1
         mapping.append((reference.ids[name], name, item_id, name))
 
+    own_rules = []
+    for k, (name, data_member, tiles, palette) in enumerate(narc_rows):
+        if name in OWN_ICONS:
+            narc_rows[k] = (name, data_member, next_icon, next_icon + 1)
+            own_rules.append((next_icon, next_icon + 1, OWN_ICONS[name]))
+            next_icon += 2
+
     for theirs, ours in sorted(pairs.items(), key=lambda pair: reference.ids[pair[0]]):
         mapping.append((reference.ids[theirs], theirs, here[ours], ours))
     mapping.sort()
@@ -728,6 +754,7 @@ def main():
     report["items taking the blank icon"] = blank_art
     report["items the reference leaves unnamed"] = unnamed
     report["item icons built from a PNG"] = len(icon_rules)
+    report["item icons that are Paolo's art"] = len(own_rules)
     if narc_rows:
         here_after = dict(here, **dict(constants))
         by_id = sorted(narc_rows, key=lambda r: here_after[r[0]])
@@ -805,8 +832,13 @@ def main():
                  "# name is not evidence. The blank ones are not here: they take ITEM_NONE's.", ""]
         lines += [f"$(eval $(call ITEMICON_FROM_PNG,{tiles},{palette},{stem}))"
                   for tiles, palette, stem in icon_rules]
+        if own_rules:
+            lines += ["", "# Paolo's own art for items whose reference icon is the blank one: OWN_ICONS",
+                      "# in tools/newgold/import/import_items.py."]
+            lines += [f"$(eval $(call ITEMICON_FROM_PNG,{tiles},{palette},{stem}))"
+                      for tiles, palette, stem in own_rules]
         lines.append("")
-        makefile = makefile.replace("\n$(ITEMICON_NARC)", "\n" + "\n".join(lines) + "\n$(ITEMICON_NARC)", 1)
+        makefile =makefile.replace("\n$(ITEMICON_NARC)", "\n" + "\n".join(lines) + "\n$(ITEMICON_NARC)", 1)
     ITEM_MK.write_text(makefile)
     write_icon_order(makefile)
 

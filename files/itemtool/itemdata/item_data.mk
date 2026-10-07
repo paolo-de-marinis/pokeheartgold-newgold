@@ -571,6 +571,16 @@ $(eval $(call ITEMICON_FROM_PNG,1863,1864,baxcalibrite))
 $(eval $(call ITEMICON_FROM_PNG,1865,1866,tatsugirinite))
 $(eval $(call ITEMICON_FROM_PNG,1867,1868,glimmoranite))
 
+# Paolo's own art for items whose reference icon is the blank one: OWN_ICONS
+# in tools/newgold/import/import_items.py.
+$(eval $(call ITEMICON_FROM_PNG,1869,1870,health_mochi))
+$(eval $(call ITEMICON_FROM_PNG,1871,1872,muscle_mochi))
+$(eval $(call ITEMICON_FROM_PNG,1873,1874,resist_mochi))
+$(eval $(call ITEMICON_FROM_PNG,1875,1876,genius_mochi))
+$(eval $(call ITEMICON_FROM_PNG,1877,1878,clever_mochi))
+$(eval $(call ITEMICON_FROM_PNG,1879,1880,swift_mochi))
+$(eval $(call ITEMICON_FROM_PNG,1881,1882,fresh_start_mochi))
+
 $(ITEMICON_NARC): $(wildcard files/itemtool/itemdata/item_icon/*.{NANR,NCLR,NCGR,NCER}) $(ITEMICON_OBJS) $(ITEMICON_DIR)/.narcorder
 # The members go in the order .narcorder lists them, which is their numbers':
 # nitroarc's own order is by name, and item_icon_1000 sorts before item_icon_101.
