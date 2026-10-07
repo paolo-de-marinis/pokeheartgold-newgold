@@ -1,0 +1,42 @@
+{
+  "about": "The Fresh-Start Mochi used from the bag, as the ninth generation's (Pokemon Central, Mochi del ripristino: it sets all of a Pokemon's EVs to zero): route29-official.sav's Chikorita, no EVs, given thirteen Health Mochi, a Swift Mochi and a Fresh-Start Mochi (savedit --item). use: gives it the thirteen Health Mochi, 130 HP EVs -- more than the 128 hg-engine's -128 took away, which left 2 before TryModEV read -128 as a reset -- and the Swift Mochi, 10 Speed EVs; then the Fresh-Start Mochi, \"CHIKORITA's base points were all reset to zero!\": all six EVs 0, the Mochi spent.",
+  "save": "route29-official.sav",
+  "edit": [
+    "--item",
+    "HEALTH_MOCHI:13,SWIFT_MOCHI:1,FRESH_START_MOCHI:1"
+  ],
+  "steps": [
+    "field",
+    "use:ITEM_HEALTH_MOCHI,0",
+    "use:ITEM_HEALTH_MOCHI,0",
+    "use:ITEM_HEALTH_MOCHI,0",
+    "use:ITEM_HEALTH_MOCHI,0",
+    "use:ITEM_HEALTH_MOCHI,0",
+    "use:ITEM_HEALTH_MOCHI,0",
+    "use:ITEM_HEALTH_MOCHI,0",
+    "use:ITEM_HEALTH_MOCHI,0",
+    "use:ITEM_HEALTH_MOCHI,0",
+    "use:ITEM_HEALTH_MOCHI,0",
+    "use:ITEM_HEALTH_MOCHI,0",
+    "use:ITEM_HEALTH_MOCHI,0",
+    "use:ITEM_HEALTH_MOCHI,0",
+    "use:ITEM_SWIFT_MOCHI,0",
+    {
+      "expect": {
+        "party0.ev0": 130,
+        "party0.ev3": 10
+      }
+    },
+    "use:ITEM_FRESH_START_MOCHI,0"
+  ],
+  "expect": {
+    "party0.ev0": 0,
+    "party0.ev1": 0,
+    "party0.ev2": 0,
+    "party0.ev3": 0,
+    "party0.ev4": 0,
+    "party0.ev5": 0,
+    "bag:ITEM_FRESH_START_MOCHI": 0,
+    "bag:ITEM_HEALTH_MOCHI": 0
+  }
+}

@@ -584,6 +584,9 @@ s32 TryModEV(s32 ev, s32 evSum, s32 by) {
     if (ev == 0 && by < 0) {
         return -1;
     }
+    if (by == ITEM_EV_PARAM_RESET) {
+        by = -ev;
+    }
 
     if (ev >= MAX_EV_VITAMINS && by > 0) {
         return -1;

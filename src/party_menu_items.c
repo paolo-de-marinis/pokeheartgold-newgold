@@ -49,6 +49,7 @@ typedef enum PartyMenuItemType {
     PARTY_MENU_ITEM_TYPE_PP_UP,
     PARTY_MENU_ITEM_TYPE_PP_MAX,
     PARTY_MENU_ITEM_TYPE_PP_RESTORE,
+    PARTY_MENU_ITEM_TYPE_EV_RESET,
     PARTY_MENU_ITEM_TYPE_OTHER,
 } PartyMenuItemType;
 
@@ -139,7 +140,10 @@ static PartyMenuItemType ItemId_GetPartyUseType(u16 itemId) {
     }
 
     param = GetItemAttr_PreloadedItemData(itemData, ITEMATTR_HP_EV_UP_PARAM);
-    if (param > 0) {
+    if (param == ITEM_EV_PARAM_RESET) {
+        Heap_Free(itemData);
+        return PARTY_MENU_ITEM_TYPE_EV_RESET;
+    } else if (param > 0) {
         Heap_Free(itemData);
         return PARTY_MENU_ITEM_TYPE_HP_EV_UP;
     } else if (param < 0) {
@@ -282,6 +286,11 @@ static void PartyMenu_GetItemUseMessage(PartyMenu *partyMenu, u16 itemId, int pa
         StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
         String_Delete(string);
         break;
+    case PARTY_MENU_ITEM_TYPE_EV_RESET:
+        string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00228);
+        StringExpandPlaceholders(partyMenu->msgFormat, partyMenu->formattedStrBuf, string);
+        String_Delete(string);
+        break;
     case PARTY_MENU_ITEM_TYPE_PP_UP:
     case PARTY_MENU_ITEM_TYPE_PP_MAX:
         string = NewString_ReadMsgData(partyMenu->msgData, msg_0300_00073);
@@ -325,6 +334,7 @@ void PartyMenu_SetItemUseFuncFromBagSelection(PartyMenu *partyMenu) {
     case PARTY_MENU_ITEM_TYPE_PP_UP:
     case PARTY_MENU_ITEM_TYPE_PP_MAX:
     case PARTY_MENU_ITEM_TYPE_PP_RESTORE:
+    case PARTY_MENU_ITEM_TYPE_EV_RESET:
         partyMenu->itemUseCallback = PartyMenu_ItemUseFunc_StatusHealEtc;
         break;
     case PARTY_MENU_ITEM_TYPE_HP_EV_DOWN:
