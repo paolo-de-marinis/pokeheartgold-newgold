@@ -10144,7 +10144,12 @@ BOOL BtlCmd_DivideVarByValueRoundUp(BattleSystem *battleSystem, BattleContext *c
 // Tailwind is already a move this game has: the turns sit in the side's
 // condition flags, the end-of-turn handler counts them down and announces the
 // end, and the Speed is applied where Swift Swim's is. These two only have to
-// read and write what is already there.
+// read and write what is already there. The wind starting is what a Wind
+// Power Pokemon on that side charges at, then and only then (Pokemon Central,
+// Energia Eolica: "quando Ventoincoda viene attivata sul proprio lato";
+// Showdown's gen-9 windpower, onSideConditionStart and no onStart), so both
+// places on that side, a side's battlers being its number and its number
+// plus two, are told for the entry check after the move (TryAbilityOnEntry).
 BOOL BtlCmd_SetTailwindCounter(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
@@ -10152,6 +10157,7 @@ BOOL BtlCmd_SetTailwindCounter(BattleSystem *battleSystem, BattleContext *ctx) {
     int fieldSide = BattleSystem_GetFieldSide(battleSystem, BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side));
 
     ctx->fieldSideConditionFlags[fieldSide] |= SIDE_CONDITION_TAILWIND;
+    ctx->tailwindStarted |= 0x5 << fieldSide;
 
     return FALSE;
 }

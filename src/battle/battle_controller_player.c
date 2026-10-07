@@ -207,6 +207,9 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // handed-over byte (0x325F), grew it by 24 (0x3288), the spare byte still
 // there, before the added moves' data at 0x3288. The items lost went, the
 // marks of the taken taking their place, and shrank it by eight (0x3280).
+// The battlers a Tailwind has just started for went into the byte of padding
+// after roundUsers (0x325F) and grew it by nothing (measured with the
+// compiler).
 typedef char BattleContextSizeCheck[
     sizeof(BattleContext) == 0x3280 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
@@ -1339,14 +1342,6 @@ static void BattleControllerPlayer_UpdateFieldCondition(BattleSystem *battleSyst
                         ctx->commandNext = ctx->command;
                         ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                         ctx->battlerIdTemp = ov12_02257E98(battleSystem, ctx, side);
-                        // Wind Power charges once while a Tailwind blows, and
-                        // the flag is what remembers that; the wind dropping
-                        // is what lets it charge again next time.
-                        for (int battlerId = 0; battlerId < BattleSystem_GetMaxBattlers(battleSystem); battlerId++) {
-                            if (BattleSystem_GetFieldSide(battleSystem, battlerId) == side && GetBattlerAbility(ctx, battlerId) == ABILITY_WIND_POWER) {
-                                ctx->battleMons[battlerId].abilityActivatedFlag = FALSE;
-                            }
-                        }
                         flag = 1;
                     }
                 }

@@ -1,0 +1,15 @@
+{
+  "about": "Wind Power charges as Tailwind starts on its side and only then (Pokemon Central, Energia Eolica: when Tailwind is activated on its side; Showdown's gen-9 windpower has onSideConditionStart and no onStart): not as it comes in under a Tailwind already blowing. A level-20 Pikachu and a level-20 Wattrel of nature 0, its first ability Wind Power (savedit's personality), against a forced wild Chansey that knows only Splash: the Pikachu raises Tailwind, then leaves by Parting Shot, and the Wattrel comes in under the wind without charging; its own Tailwind then fails, the wind already blowing, and charges nothing either. Before, the entry check charged the Wattrel as it came in. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:20,WATTREL:20:0"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_TAILWIND", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1",
+            {"expect": {"lines": ["Pikachu used Tailwind!", "A tailwind started blowing on your side!"]}},
+            "teach:0,0,MOVE_PARTING_SHOT", "fight:1:1",
+            {"expect": {"new_lines": ["Pikachu used Parting Shot!", "Go! Wattrel!"], "battler0.species": "SPECIES_WATTREL"}},
+            "teach:0,0,MOVE_TAILWIND", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0", "fight:1:1"],
+  "expect": {"new_lines": ["Wattrel used Tailwind!", "But it failed!"], "no_lines": ["charging power"]}
+}

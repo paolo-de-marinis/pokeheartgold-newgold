@@ -1844,6 +1844,69 @@ class TransformTests(unittest.TestCase):
         self.assertEqual(case.count("imposterFlag = TRUE"), 1)
 
 
+class WindPowerTests(unittest.TestCase):
+    # Pokemon Central, Energia Eolica: it charges "quando Ventoincoda viene
+    # attivata sul proprio lato", and Showdown's gen-9 windpower has an
+    # onSideConditionStart and no onStart: not as it comes in under a
+    # Tailwind already blowing.
+    def test_the_wind_starting_tells_its_side(self):
+        from test_hold_effects import run_c
+        program = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <string.h>
+typedef uint8_t u8;
+typedef uint32_t u32;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#include "constants/battle.h"
+typedef struct { int unused; } BattleSystem;
+typedef struct { u32 fieldSideConditionFlags[2]; u8 tailwindStarted; int attacker; } BattleContext;
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { (void)ctx; assert(n == 1); }
+static int BattleScriptReadWord(BattleContext *ctx) { (void)ctx; return BATTLER_CATEGORY_ATTACKER; }
+static int BattleSystem_GetBattlerIDBySide(BattleSystem *bs, BattleContext *ctx, int side) { (void)bs; assert(side == BATTLER_CATEGORY_ATTACKER); return ctx->attacker; }
+static int BattleSystem_GetFieldSide(BattleSystem *bs, int battlerId) { (void)bs; return battlerId & 1; }
+""" + function(COMMANDS.read_text(), "BtlCmd_SetTailwindCounter") + r"""
+int main(void) {
+    BattleSystem bs;
+    BattleContext ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    // The foe on the right raises it: both places on its side are told.
+    ctx.attacker = 3;
+    BtlCmd_SetTailwindCounter(&bs, &ctx);
+    assert((ctx.fieldSideConditionFlags[1] & SIDE_CONDITION_TAILWIND) == SIDE_CONDITION_TAILWIND);
+    assert(ctx.fieldSideConditionFlags[0] == 0);
+    assert(ctx.tailwindStarted == ((1 << 1) | (1 << 3)));
+    ctx.attacker = 0;
+    BtlCmd_SetTailwindCounter(&bs, &ctx);
+    assert(ctx.tailwindStarted == 0xF);
+    return 0;
+}
+"""
+        run_c(program)
+        self.assertIn("SetTailwindCounter BATTLER_CATEGORY_ATTACKER", subscript("TailwindStart"))
+
+    def test_it_charges_at_the_start_alone(self):
+        entry = function(OVERLAY.read_text(), "TryAbilityOnEntry")
+        case = entry[entry.index("case 21:"):entry.index("case 22:")]
+        self.assertIn("(ctx->tailwindStarted & MaskOfFlagNo(battlerId)) && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_WIND_POWER", case)
+        self.assertIn("ctx->tailwindStarted &= ~MaskOfFlagNo(battlerId);", case)
+        # Emptied once every Pokemon has been asked: a Pokemon in a place told
+        # that gains Wind Power later does not charge for this Tailwind.
+        self.assertIn("if (i == maxBattlers) {\n                ctx->tailwindStarted = 0;", case)
+        self.assertNotIn("SIDE_CONDITION_TAILWIND", case)
+        self.assertNotIn("abilityActivatedFlag", case)
+        # The Pokemon charged is the one with the ability, not the move's
+        # target: in a double battle the ally whose Tailwind it was.
+        self.assertIn("ctx->battlerIdTemp = battlerId;\n                    script = BATTLE_SUBSCRIPT_CHARGE_FROM_HIT;", case)
+        charge = subscript("ChargeFromHit")
+        self.assertNotIn("BATTLER_CATEGORY_DEFENDER", charge)
+        self.assertEqual(charge.count("BATTLER_CATEGORY_MSG_BATTLER_TEMP"), 3)
+        hits = function(OVERLAY.read_text(), "CheckAbilityEffectOnHit")
+        self.assertEqual(len(re.findall(r"ctx->battlerIdTemp = ctx->battlerIdTarget;\n\s*\*script = BATTLE_SUBSCRIPT_CHARGE_FROM_HIT;", hits)), 2)
+
+
 class Conversion2Tests(unittest.TestCase):
     def test_it_reads_the_move_its_target_last_used(self):
         # Pokemon Central, Conversione2, from Generation V: the target's last

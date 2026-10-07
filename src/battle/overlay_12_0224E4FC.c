@@ -6833,14 +6833,15 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 ctx->sendOutState++;
             }
             break;
-        case 21: // Wind Power, when Tailwind is already blowing
+        case 21: // Wind Power, as Tailwind starts on its side
+            // Not as it comes in under a Tailwind already blowing, nor as it
+            // gains the ability under one: the reference charges it then
+            // (SwitchInAbilityCheck.c:738 at d0380a487), which neither
+            // Pokemon Central nor Showdown has (BtlCmd_SetTailwindCounter).
             for (i = 0; i < maxBattlers; i++) {
                 battlerId = ctx->turnOrder[i];
-                if (!ctx->battleMons[battlerId].abilityActivatedFlag && ctx->battleMons[battlerId].hp && (ctx->fieldSideConditionFlags[BattleSystem_GetFieldSide(battleSystem, battlerId)] & SIDE_CONDITION_TAILWIND) && GetBattlerAbility(ctx, battlerId) == ABILITY_WIND_POWER) {
-                    // The flag is what stops it charging again every send-out
-                    // while the same Tailwind blows; the field condition
-                    // running out clears it.
-                    ctx->battleMons[battlerId].abilityActivatedFlag = TRUE;
+                if ((ctx->tailwindStarted & MaskOfFlagNo(battlerId)) && ctx->battleMons[battlerId].hp && GetBattlerAbility(ctx, battlerId) == ABILITY_WIND_POWER) {
+                    ctx->tailwindStarted &= ~MaskOfFlagNo(battlerId);
                     ctx->battlerIdTemp = battlerId;
                     script = BATTLE_SUBSCRIPT_CHARGE_FROM_HIT;
                     flag = TRUE;
@@ -6848,6 +6849,7 @@ int TryAbilityOnEntry(BattleSystem *battleSystem, BattleContext *ctx) {
                 }
             }
             if (i == maxBattlers) {
+                ctx->tailwindStarted = 0;
                 ctx->sendOutState++;
             }
             break;
@@ -7971,6 +7973,7 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         break;
     case ABILITY_ELECTROMORPHOSIS:
         if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage)) {
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
             *script = BATTLE_SUBSCRIPT_CHARGE_FROM_HIT;
             ret = TRUE;
         }
@@ -7979,6 +7982,7 @@ BOOL CheckAbilityEffectOnHit(BattleSystem *battleSystem, BattleContext *ctx, int
         // The holder need not survive: the reference comments out its own
         // hp test rather than deleting it, and says so.
         if (!(ctx->moveStatusFlag & MOVE_STATUS_FAIL) && !(ctx->battleStatus & BATTLE_STATUS_CHARGE_TURN) && !(ctx->battleStatus2 & BATTLE_STATUS2_UTURN) && (ctx->selfTurnData[ctx->battlerIdTarget].physicalDamage || ctx->selfTurnData[ctx->battlerIdTarget].specialDamage) && MoveIsInList(ctx->moveNoCur, sWindMoves, NELEMS(sWindMoves)) == TRUE) {
+            ctx->battlerIdTemp = ctx->battlerIdTarget;
             *script = BATTLE_SUBSCRIPT_CHARGE_FROM_HIT;
             ret = TRUE;
         }

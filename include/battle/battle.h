@@ -704,6 +704,11 @@ typedef struct BattleContext {
     // Round: the battlers that have used it this turn, a bit each. Every
     // Round after the first in a turn has twice the power.
     u8 roundUsers;
+    // The battlers on a side Tailwind has just started on, a bit each, for a
+    // Wind Power among them to charge at the entry check after the move
+    // (BtlCmd_SetTailwindCounter, TryAbilityOnEntry), which empties it. In
+    // the byte of padding after roundUsers.
+    u8 tailwindStarted;
     // The last move used this turn and the one before it, by anyone: Fusion
     // Flare and Fusion Bolt double straight after each other. MOVE_NONE when
     // the turn has had none.
