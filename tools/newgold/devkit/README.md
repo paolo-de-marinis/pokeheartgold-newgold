@@ -276,7 +276,8 @@ rows 496-507, the forms only a battle has). The open save's header has
 Every list the page picks from is one picker (`combo()` in the page): the
 move field's list under the field, filtered by every word typed (the name,
 the tags, the number), with the arrows, Page Up and Down, Home and End on
-the list, Enter and Esc, the current value marked; the field shows the name,
+the list, Enter and Esc, the current value marked and in view, however far
+down the list it is (the rows around it are drawn); the field shows the name,
 selected on focus, and goes back to its value when left without a pick. It
 serves the species (icon, form as "Slowpoke · Galar", types, Dex number),
 the moves (every source as a tag), the held item, the nature (its raised and

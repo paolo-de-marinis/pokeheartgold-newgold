@@ -831,6 +831,17 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(action.count('S.f === "emu:" + r.data.slot && !await mayDrop('), 2)
         self.assertIn('if (play && !await mayDrop(', page[page.index("const go = async play =>"):])
 
+    def test_a_picker_opens_on_its_value_however_far_down(self):
+        """combo() draws COMBO_ROWS rows at once; opened with nothing typed
+        on a value further down (Misdreavus, row 199 of the species), it
+        draws the rows around it, marks it and starts the arrows there --
+        the review's ArrowDown and Enter took Bulbasaur."""
+        page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
+        body = page[page.index("function combo("):page.index("const tagHtml =")]
+        self.assertIn("const from = at >= COMBO_ROWS ? Math.max(0, Math.min(at - COMBO_ROWS / 2, hits.length - COMBO_ROWS)) : 0;", body)
+        self.assertIn("shown = hits.slice(from, from + COMBO_ROWS);", body)
+        self.assertIn('if (at >= 0) mark(at - from, "center");', body)
+
     def test_a_plan_says_what_the_editor_does_not_do(self):
         """A place's plan names, in a tick's line, what its story steps do
         that the editor does not (an egg given: savedit's "other" writes),
