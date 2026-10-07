@@ -1,5 +1,5 @@
 {
-  "about": "Hyper Training at Cherrygrove's EV/IV trainer: route29-official.sav's Chikorita raised to Lv. 50, the player given 30000. She sells a Bottle Cap at its price (Buy Bottle Caps, the game's mart: 20000); then Train a Pokemon, Chikorita, the IV page (SELECT), Attack (DOWN: its IV 13, Decent), Train, Done and YES to 'Hyper train it with a Bottle Cap?': the cap is spent, the bit set (STAT_ATK's, mask 2), the Attack worked out from 31 (54 to 62), and the IV itself still 13, for Hidden Power and breeding.",
+  "about": "Hyper Training at Cherrygrove's EV/IV trainer: route29-official.sav's Chikorita raised to Lv. 50, the player given 30000. She sells a Bottle Cap at its price (Buy Mochi and Caps, the game's mart: 20000); then Train a Pokemon, Chikorita, the IV page (SELECT), Attack (DOWN: its IV 13, Decent), Train, Done and YES to 'Hyper train it with a Bottle Cap?': the cap is spent, the bit set (STAT_ATK's, mask 2), the Attack worked out from 31 (54 to 62), and the IV itself still 13, for Hidden Power and breeding.",
   "save": "route29-official.sav",
   "edit": [
     "--money",
@@ -22,7 +22,7 @@
     "wait:250",
     "DOWN",
     "A",
-    "wait:250",
+    "wait:400",
     "A",
     "wait:150",
     "A",

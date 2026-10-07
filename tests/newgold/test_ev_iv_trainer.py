@@ -445,6 +445,26 @@ class TextTests(unittest.TestCase):
 
 
 class ShopTests(unittest.TestCase):
+    def test_her_shop_sells_the_mochi_beside_the_caps(self):
+        """Paolo's decision of 2026-10-08: her shop (SpecialMartBuy 30) sells
+        the seven Mochi after the two Bottle Caps, at their item records'
+        prices: 500 for each that adds ten EVs, what her app charges for ten
+        EVs in a stat, and 300 for the Fresh-Start Mochi -- the ninth
+        generation's own (it sells them for a quarter, 125 and 75: Pokemon
+        Central, Mochi della salute), as Scarlet and Violet sell none."""
+        mart = read("src/scrcmd_mart.c")
+        script = read("files/fielddata/script/scr_seq/scr_seq_0852_T21PC0101.s")
+        which = int(re.search(r"SpecialMartBuy (\d+)", script).group(1))
+        table = mart[mart.index("const u16 *_0210FA3C[] = {"):]
+        name = re.findall(r"^    (\w+),$", table[:table.index("};")], re.M)[which]
+        items = mart[mart.index(f"const u16 {name}[] = {{"):]
+        items = re.findall(r"ITEM_\w+", items[:items.index("};")])
+        mochi = [f"ITEM_{stat}_MOCHI" for stat in ("HEALTH", "MUSCLE", "RESIST", "GENIUS", "CLEVER", "SWIFT")]
+        self.assertEqual(items, ["ITEM_BOTTLE_CAP", "ITEM_GOLD_BOTTLE_CAP", *mochi, "ITEM_FRESH_START_MOCHI"])
+        prices = {row[0]: int(row[1]) for row in (line.split(",")[:2] for line in
+                  read("files/itemtool/itemdata/item_data.csv").splitlines()[1:])}
+        self.assertEqual([prices[item] for item in items], [20000, 60000] + [500] * 6 + [300])
+
     def test_a_mart_opens_with_the_script_s_box_let_go(self):
         """The mart clears the rows of the box (MartData_InitCamera), so a
         script lets its box go first, HoldMsg or CloseMsg, as every retail

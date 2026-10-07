@@ -1,0 +1,57 @@
+{
+  "about": "Cherrygrove's EV/IV trainer sells the Mochi beside her Bottle Caps (Paolo, 2026-10-08): route29-official.sav, no Mochi, given 30000, opens her shop (Buy Mochi and Caps, then her line 'Mochi raise EVs, and Bottle Caps are for Hyper Training.'); the mart's grid has the two caps on its first row and the Health and Muscle Mochi on the second: DOWN to the Health Mochi, A, x1, YES, 'Here you are.', back to the list with 29500 -- the Mochi's item price, 500, what her app charges for ten EVs -- and the Health Mochi in the bag; then her 'Come back anytime!' and the field. Without the Mochi on her list there is no Health Mochi to buy and both expectations fail.",
+  "save": "route29-official.sav",
+  "edit": [
+    "--money",
+    "30000",
+    "--where",
+    "69:12:15:0"
+  ],
+  "steps": [
+    "field",
+    "goto:MAP_CHERRYGROVE_POKECENTER_1F,12,12",
+    "A",
+    "wait:250",
+    "A",
+    "wait:250",
+    "A",
+    "wait:250",
+    "A",
+    "wait:250",
+    "DOWN",
+    "A",
+    "wait:400",
+    "A",
+    "wait:300",
+    "DOWN",
+    "wait:30",
+    "A",
+    "wait:150",
+    "A",
+    "wait:150",
+    "A",
+    "wait:150",
+    "A",
+    "wait:150",
+    "B",
+    "wait:150",
+    "B",
+    "wait:150",
+    {
+      "expect": {
+        "money": 29500,
+        "bag:ITEM_HEALTH_MOCHI": 1
+      }
+    },
+    "B",
+    "wait:250",
+    "B",
+    "wait:150",
+    "field"
+  ],
+  "expect": {
+    "money": 29500,
+    "bag:ITEM_HEALTH_MOCHI": 1,
+    "bag:ITEM_BOTTLE_CAP": 0
+  }
+}

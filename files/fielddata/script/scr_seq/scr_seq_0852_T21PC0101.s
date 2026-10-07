@@ -53,7 +53,7 @@ scr_seq_T21PC0101_002:
 	End
 
 ; New Gold's EV/IV trainer: the trainer app for a Pokemon of the party, and
-; the Bottle Caps Hyper Training takes, at their price.
+; the Bottle Caps Hyper Training takes and the seven Mochi, at their price.
 scr_seq_T21PC0101_006:
 	PlaySE SEQ_SE_DP_SELECT
 	LockAll
