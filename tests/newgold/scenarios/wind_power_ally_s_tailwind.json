@@ -1,14 +1,49 @@
 {
   "about": "Wind Power charges as Tailwind starts on its side, and the Pokemon that charges is the one with the ability, not the move's target: in a double battle a Wattrel beside the Pikachu that raises the Tailwind (Pokemon Central, Energia Eolica; Showdown's gen-9 windpower, onSideConditionStart). Twins Amy & Mimi in the Azalea Gym against a scratch copy of Paolo's Bugsy save with a level-30 Pikachu and a level-30 Wattrel of nature 0, its first ability Wind Power (savedit's personality), on the twins' platform; the Pikachu knows only Tailwind, everyone else only Splash (teach:): \"Wattrel began charging power!\". Before, the charge subscript named and charged the move's target, the Pikachu.",
   "save": "gyms/bugsy.sav",
-  "edit": ["--party", "PIKACHU:30,WATTREL:30:0", "--where", "180:3:8:0"],
-  "hold": {"gDiagBattleSeed": 1, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceEffect": 2, "gDiagForceDamageRoll": 2},
-  "steps": ["field", "A", "fight:1:0",
-            "teach:0,0,MOVE_TAILWIND", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
-            "teach:2,0,MOVE_SPLASH", "teach:2,1,0,0", "teach:2,2,0,0", "teach:2,3,0,0",
-            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
-            "teach:3,0,MOVE_SPLASH", "teach:3,1,0,0", "teach:3,2,0,0", "teach:3,3,0,0",
-            "fight:1:1"],
-  "expect": {"lines": ["Pikachu used Tailwind!", "A tailwind started blowing on your side!", "Wattrel began charging power!"],
-             "no_lines": ["Pikachu began charging power!"], "battler2.species": "SPECIES_WATTREL"}
+  "edit": [
+    "--party",
+    "PIKACHU:30,WATTREL:30:0",
+    "--where",
+    "180:3:8:0"
+  ],
+  "hold": {
+    "gDiagBattleSeed": 1,
+    "gDiagForceHit": 1,
+    "gDiagForceCritical": 2,
+    "gDiagForceEffect": 2,
+    "gDiagForceDamageRoll": 2
+  },
+  "steps": [
+    "field",
+    "fight:1:0",
+    "teach:0,0,MOVE_TAILWIND",
+    "teach:0,1,0,0",
+    "teach:0,2,0,0",
+    "teach:0,3,0,0",
+    "teach:2,0,MOVE_SPLASH",
+    "teach:2,1,0,0",
+    "teach:2,2,0,0",
+    "teach:2,3,0,0",
+    "teach:1,0,MOVE_SPLASH",
+    "teach:1,1,0,0",
+    "teach:1,2,0,0",
+    "teach:1,3,0,0",
+    "teach:3,0,MOVE_SPLASH",
+    "teach:3,1,0,0",
+    "teach:3,2,0,0",
+    "teach:3,3,0,0",
+    "fight:1:1"
+  ],
+  "expect": {
+    "lines": [
+      "Pikachu used Tailwind!",
+      "A tailwind started blowing on your side!",
+      "Wattrel began charging power!"
+    ],
+    "no_lines": [
+      "Pikachu began charging power!"
+    ],
+    "battler2.species": "SPECIES_WATTREL"
+  }
 }

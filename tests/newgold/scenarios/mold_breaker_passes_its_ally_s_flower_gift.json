@@ -16,7 +16,6 @@
   },
   "steps": [
     "field",
-    "A",
     "fight:1:0",
     "set:2,ability,ABILITY_MOLD_BREAKER",
     "teach:0,0,MOVE_SUNNY_DAY",
