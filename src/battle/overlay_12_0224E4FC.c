@@ -1854,10 +1854,12 @@ BOOL TryRetreatAbility(BattleSystem *battleSystem, BattleContext *ctx, int *scri
 // and a White Herb the lowered stats -- neither when the Fling misses or hits
 // a substitute. A Berry flung at a Cud Chew Pokemon is kept for the turn
 // after (Pokemon Central, Ruminante: Lancio); the Berry itself left the
-// thrower's hand through RemoveItem, which kept it in recycleItem.
+// thrower's hand through RemoveItem, which kept it in recycleItem, by the
+// thrower's party slot.
 static void FlungItemLands(BattleSystem *battleSystem, BattleContext *ctx) {
     int battlerId = ctx->battlerIdStatChange;
     int stat;
+    u16 item;
 
     if (!ctx->flingScript || !ctx->battleMons[battlerId].hp) {
         return;
@@ -1879,10 +1881,11 @@ static void FlungItemLands(BattleSystem *battleSystem, BattleContext *ctx) {
         }
         break;
     }
-    CudChewKeepsBerry(ctx, battlerId, ctx->recycleItem[ctx->battlerIdAttacker]);
+    item = ctx->recycleItem[Battler_PartySlot(battleSystem, ctx, ctx->battlerIdAttacker)];
+    CudChewKeepsBerry(ctx, battlerId, item);
     // A Berry that lands is eaten by the Pokemon it lands on, which Belch
     // counts (Pokemon Central, Rutto); not by the thrower (BtlCmd_RemoveItem).
-    if (BattleItemIsBerry(ctx->recycleItem[ctx->battlerIdAttacker]) == TRUE) {
+    if (BattleItemIsBerry(item) == TRUE) {
         RememberBerryEaten(battleSystem, ctx, battlerId);
     }
 }
@@ -5534,17 +5537,20 @@ BOOL ov12_02253068(BattleSystem *battleSystem, BattleContext *ctx, int battlerId
     // Sun makes it certain, and Cloud Nine and Air Lock take that certainty
     // away again, the way they do at every other weather read here. The hand
     // is filled by the script, so the party copy is filled with it.
-    case ABILITY_HARVEST:
-        if (ctx->battleMons[battlerId].hp && BattleItemIsBerry(ctx->recycleItem[battlerId]) == TRUE
+    case ABILITY_HARVEST: {
+        int slot = Battler_PartySlot(battleSystem, ctx, battlerId);
+
+        if (ctx->battleMons[battlerId].hp && BattleItemIsBerry(ctx->recycleItem[slot]) == TRUE
             && (((WeatherUnderUmbrella(ctx, ctx->fieldCondition, battlerId) & FIELD_CONDITION_SUN_ALL) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_CLOUD_NINE) && !CheckAbilityActive(battleSystem, ctx, CHECK_ABILITY_ALL_HP, 0, ABILITY_AIR_LOCK))
                 || (BattleSystem_Random(battleSystem) % 2) == 0)) {
-            ctx->itemTemp = ctx->recycleItem[battlerId];
-            ctx->recycleItem[battlerId] = 0;
+            ctx->itemTemp = ctx->recycleItem[slot];
+            ctx->recycleItem[slot] = 0;
             ctx->battlerIdTemp = battlerId;
             script = BATTLE_SUBSCRIPT_HARVEST;
             ret = TRUE;
         }
         break;
+    }
     // Cud Chew eats the Berry again, whatever the moment: the Berry is put
     // back in the mouth only long enough for Pluck's routine, which applies a
     // Berry whether or not it was called for, to read it, and the Pokemon is

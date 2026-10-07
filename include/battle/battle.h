@@ -544,7 +544,9 @@ typedef struct BattleContext {
     u8 magnitude;
     u8 weatherCheckFlag;
     s16 hpTemp;
-    u16 recycleItem[4];
+    // Retail's recycleItem, by battler, which recycleItem below replaces;
+    // kept for the offsets after it, which the assembly still reads.
+    u16 unusedRecycleItem[4];
     u8 unk_312C[4][6];
     int unk_3144;
     int queueTimeout;
@@ -617,6 +619,13 @@ typedef struct BattleContext {
     // the party, a Pokemon being free to come back in the other position of
     // a single trainer's pair (RememberBerryEaten).
     u8 berryEaten[BATTLER_MAX][PARTY_SIZE];
+    // The item Recycle and Harvest bring back: the last each Pokemon used up
+    // (BtlCmd_RemoveItem), by party slot (Battler_PartySlot), so it goes out
+    // and comes back in with the Pokemon and no other in its place has it
+    // (Pokemon Central, Riciclo: from the fifth generation the move belongs
+    // to the Pokemon, not to its place; Coglibacche). Retail's, and the
+    // reference's recycle_item[CLIENT_MAX], were by battler.
+    u16 recycleItem[BATTLER_MAX * PARTY_SIZE];
     // Which battlers saw hail or snow the last time their forms were checked,
     // a bit each: an Ice Face comes back when the weather begins, or on the
     // way in while it lasts, not on every check it goes on. Cleared when the

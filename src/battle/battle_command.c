@@ -7093,7 +7093,7 @@ BOOL BtlCmd_RemoveItem(BattleSystem *battleSystem, BattleContext *ctx) {
     int side = BattleScriptReadWord(ctx);
     int battlerId = BattleSystem_GetBattlerIDBySide(battleSystem, ctx, side);
 
-    ctx->recycleItem[battlerId] = ctx->battleMons[battlerId].item;
+    ctx->recycleItem[Battler_PartySlot(battleSystem, ctx, battlerId)] = ctx->battleMons[battlerId].item;
 
     // Every Berry a Pokemon eats from its own hand leaves through here -- the
     // held-item scripts all end by calling BATTLE_SUBSCRIPT_PLUCK_CHECK, which
@@ -7126,10 +7126,11 @@ BOOL BtlCmd_TryRecycle(BattleSystem *battleSystem, BattleContext *ctx) {
     BattleScriptIncrementPointer(ctx, 1);
 
     int adrs = BattleScriptReadWord(ctx);
+    int slot = Battler_PartySlot(battleSystem, ctx, ctx->battlerIdAttacker);
 
-    if (ctx->recycleItem[ctx->battlerIdAttacker]) {
-        ctx->itemTemp = ctx->recycleItem[ctx->battlerIdAttacker];
-        ctx->recycleItem[ctx->battlerIdAttacker] = 0;
+    if (ctx->recycleItem[slot]) {
+        ctx->itemTemp = ctx->recycleItem[slot];
+        ctx->recycleItem[slot] = 0;
     } else {
         BattleScriptIncrementPointer(ctx, adrs);
     }

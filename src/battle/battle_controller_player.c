@@ -209,9 +209,11 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // marks of the taken taking their place, and shrank it by eight (0x3280).
 // The battlers a Tailwind has just started for went into the byte of padding
 // after roundUsers (0x325F) and grew it by nothing (measured with the
-// compiler).
+// compiler). The item Recycle brings back, by party slot rather than by
+// battler, after Belch's Berries (0x31BC), grew it by 48 (0x32B0): retail's
+// four by battler stay where they were, unused, for the offsets after them.
 typedef char BattleContextSizeCheck[
-    sizeof(BattleContext) == 0x3280 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
+    sizeof(BattleContext) == 0x32B0 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
 // A Focus Sash or a herb used in battle is gone for the rest of it, but not
 // for good: what the party was holding is written down at the start and given

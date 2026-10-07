@@ -1,4 +1,5 @@
 #include "battle/battle_system.h"
+#include "battle/overlay_12_0224E4FC.h"
 #include "battle/trainer_ai.h"
 
 #include "error_handling.h"
@@ -85,5 +86,5 @@ void ov10_0221EB00(BattleSystem *battleSystem, BattleContext *ctx) {
 // Loads the item the battler's Recycle would bring back.
 void ov10_0221EB18(BattleSystem *battleSystem, BattleContext *ctx) {
     ov10_0221EF24(ctx, 1);
-    ctx->trainerAIData.unk8 = ctx->recycleItem[ov10_0221EF34(ctx, ov10_0221EEF0(ctx))];
+    ctx->trainerAIData.unk8 = ctx->recycleItem[Battler_PartySlot(battleSystem, ctx, ov10_0221EF34(ctx, ov10_0221EEF0(ctx)))];
 }

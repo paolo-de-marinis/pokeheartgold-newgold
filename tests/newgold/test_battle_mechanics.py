@@ -1441,10 +1441,11 @@ typedef struct {
     struct { u32 unk14; } selfTurnData[4];
     int battlerIdAttacker, battlerIdStatChange, flingScript, flingData, infiltrator, copied;
     u16 moveTemp;
-    u16 recycleItem[4];
+    u16 recycleItem[4 * 6];
     int kept[4];
     int ate[4];
 } BattleContext;
+static int Battler_PartySlot(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; (void)ctx; return battlerId * 6 + 2; }
 static BOOL BattleItemIsBerry(u16 item) { return item == 149; }
 static void RememberBerryEaten(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; ctx->ate[battlerId] = 1; }
 static BOOL InfiltratorGoesRoundSubstitute(BattleContext *ctx, int battlerId) { (void)battlerId; return ctx->infiltrator; }
@@ -1465,7 +1466,7 @@ static int kept(int flingScript, int hp, u32 status2, int infiltrator) {
     ctx.battleMons[1].statChanges[2] = 4;
     ctx.battleMons[1].statChanges[5] = 9;
     ctx.infiltrator = infiltrator;
-    ctx.recycleItem[0] = 149;
+    ctx.recycleItem[2] = 149;
     ctx.moveTemp = 102;
     ctx.flingData = 10;
     FlungItemLands(&bs, &ctx);
@@ -1842,6 +1843,67 @@ class TransformTests(unittest.TestCase):
         self.assertLess(spent, case.index("GetBattlerAbility(ctx, battlerId) == ABILITY_IMPOSTER"))
         self.assertLess(spent, case.index("ctx->battleMons[battlerIdCopied].hp"))
         self.assertEqual(case.count("imposterFlag = TRUE"), 1)
+
+
+class RecycleTests(unittest.TestCase):
+    # Pokemon Central, Riciclo: from the fifth generation the move belongs to
+    # the Pokemon that uses it, not to its place, and brings back no ally's
+    # item; Coglibacche (Harvest) brings back the Berry its Pokemon ate.
+    def test_the_item_goes_with_the_pokemon(self):
+        from test_hold_effects import run_c
+        program = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <string.h>
+typedef uint16_t u16;
+typedef int BOOL;
+#define FALSE 0
+typedef struct { int unused; } BattleSystem;
+typedef struct { u16 recycleItem[4 * 6]; int slotOf[4]; int battlerIdAttacker; u16 itemTemp; int jumped; } BattleContext;
+static void BattleScriptIncrementPointer(BattleContext *ctx, int n) { ctx->jumped += n != 1; }
+static int BattleScriptReadWord(BattleContext *ctx) { (void)ctx; return 9; }
+static int Battler_PartySlot(BattleSystem *bs, BattleContext *ctx, int battlerId) { (void)bs; return ctx->slotOf[battlerId]; }
+""" + function(COMMANDS.read_text(), "BtlCmd_TryRecycle") + r"""
+static BattleSystem bs;
+static BattleContext ctx;
+static int recycle(int battlerId) {
+    ctx.battlerIdAttacker = battlerId;
+    ctx.jumped = 0;
+    ctx.itemTemp = 0;
+    BtlCmd_TryRecycle(&bs, &ctx);
+    return ctx.jumped ? -1 : ctx.itemTemp;
+}
+int main(void) {
+    // The party's first, in place 0, used up its Berry and went out; the
+    // second, sent into the same place, has nothing to bring back.
+    ctx.recycleItem[0] = 149;
+    ctx.slotOf[0] = 1;
+    assert(recycle(0) == -1);
+    // The first, back in the other place, has its own.
+    ctx.slotOf[2] = 0;
+    assert(recycle(2) == 149);
+    assert(ctx.recycleItem[0] == 0 && recycle(2) == -1);
+    return 0;
+}
+"""
+        run_c(program)
+
+    def test_every_reader_asks_by_party_slot(self):
+        self.assertIn("ctx->recycleItem[Battler_PartySlot(battleSystem, ctx, battlerId)] = ctx->battleMons[battlerId].item;",
+                      function(COMMANDS.read_text(), "BtlCmd_RemoveItem"))
+        harvest = function(OVERLAY.read_text(), "ov12_02253068")
+        harvest = harvest[harvest.index("case ABILITY_HARVEST: {"):]
+        harvest = harvest[:harvest.index("break;")]
+        self.assertIn("int slot = Battler_PartySlot(battleSystem, ctx, battlerId);", harvest)
+        self.assertEqual(harvest.count("ctx->recycleItem[slot]"), 3)
+        self.assertIn("ctx->recycleItem[Battler_PartySlot(battleSystem, ctx, ov10_0221EF34(ctx, ov10_0221EEF0(ctx)))]",
+                      (ROOT / "src/battle/trainer_ai_0221E9A4.c").read_text())
+        header = (ROOT / "include/battle/battle.h").read_text()
+        self.assertIn("u16 recycleItem[BATTLER_MAX * PARTY_SIZE];", header)
+        # Retail's by battler keeps its place for the offsets after it.
+        self.assertIn("u16 unusedRecycleItem[4];\n    u8 unk_312C[4][6];", header)
+        for path in (ROOT / "src/battle").glob("*.c"):
+            self.assertNotRegex(path.read_text(), r"recycleItem\[(battlerId|ctx->battlerIdAttacker)\]", path.name)
 
 
 class WindPowerTests(unittest.TestCase):
