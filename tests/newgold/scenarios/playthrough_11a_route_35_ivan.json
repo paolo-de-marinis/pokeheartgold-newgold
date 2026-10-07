@@ -12,7 +12,10 @@
     "swap:0,4",
     {
       "expect": {
-        "party0.species": "SPECIES_GEODUDE"
+        "party0.species": [
+          "SPECIES_GEODUDE",
+          "SPECIES_GRAVELER"
+        ]
       }
     },
     "goto:MAP_ROUTE_35,367,287,90000",
@@ -27,7 +30,10 @@
     "swap:0,2",
     {
       "expect": {
-        "party0.species": "SPECIES_NOCTOWL"
+        "party0.species": [
+          "SPECIES_HOOTHOOT",
+          "SPECIES_NOCTOWL"
+        ]
       }
     },
     "goto:MAP_ROUTE_35,361,286,90000",

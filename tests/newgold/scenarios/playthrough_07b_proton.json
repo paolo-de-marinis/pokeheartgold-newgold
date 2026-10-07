@@ -1,13 +1,73 @@
 {
   "about": "The playthrough's Slowpoke Well, from Azalea's Pokemon Center: down the well to Executive Proton and his five -- Ekans, Koffing, Gulpin, Murkrow and Houndour, 16 to 18; a loss sends the player to the nurse, and again: walks back and fights him again, each attempt a new battle (the battle seed one higher), four times more at most. After him Kurt's scene and the warp to his house, where his frame script (VAR_UNK_4080 2) gives the Fast Ball (FLAG_UNK_07C) and his granddaughter's phone number (VAR_UNK_4080 4); the nurse, and the game's save. The party is the bot's own as leg 07 left it, no edit: the Geodude leads, at 19 on round 14's merged tree (18 where the leg was written) -- Rock Throw and Smack Down for his Murkrow and Houndour, Bulldoze for his Ekans and Gulpin, Smack Down grounding his Levitating Koffing -- then the Cyndaquil, the Misdreavus, the Hoothoot, the Mareep and the egg. Where the leg was written the third attempt won, the Cyndaquil evolving into Quilava at 16 on the way (72,503 frames); on round 14's merged tree the third wins too, the Cyndaquil reaching 15 and evolving in the next leg (67,612 frames as the joined chain plays it). Here savedit --train had raised the team to 19 before: the old team, which a fifth move never reached, lost fifteen times in three orders. The field's RNG is pinned and the battle's seed fixed.",
   "from": "playthrough_07_azalea",
-  "hold": {"gDiagBattleSeed": 1},
-  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "flee:40",
-            {"expect": {"party": 6, "party0.species": "SPECIES_GEODUDE", "party1.species": "SPECIES_CYNDAQUIL", "party2.species": "SPECIES_MISDREAVUS", "party3.species": "SPECIES_HOOTHOOT", "party4.species": "SPECIES_MAREEP", "party5.species": "SPECIES_TOGEPI"}},
-            "goto:MAP_SLOWPOKE_WELL_B1F,27,3,40000", "A", "field", "again:3,flag:FLAG_BEAT_AZALEA_ROCKETS,1,4",
-            {"expect": {"flag:FLAG_BEAT_AZALEA_ROCKETS": 1, "map": "MAP_AZALEA_KURT_HOUSE"}}, "wait:30", "field",
-            {"expect": {"flag:FLAG_UNK_07C": 1, "bag:ITEM_FAST_BALL": 1, "var:VAR_UNK_4080": 4, "map": "MAP_AZALEA_KURT_HOUSE", "music": "SEQ_GS_T_HIWADA"}},
-            "goto:MAP_AZALEA_POKECENTER_1F,8,13", "UP", "A", "field", "save"],
-  "expect": {"map": "MAP_AZALEA_POKECENTER_1F", "x": 8, "y": 13, "badges": 1, "party": 6, "music": "SEQ_GS_POKESEN",
-             "lines": ["You are challenged by Executive Proton!", "You defeated Executive Proton!"]}
+  "hold": {
+    "gDiagBattleSeed": 1
+  },
+  "steps": [
+    "field",
+    "poke:sLCRNG_State=0xbb160215",
+    "flee:40",
+    {
+      "expect": {
+        "party": 6,
+        "party0.species": [
+          "SPECIES_GEODUDE",
+          "SPECIES_GRAVELER"
+        ],
+        "party1.species": [
+          "SPECIES_CYNDAQUIL",
+          "SPECIES_TYPHLOSION"
+        ],
+        "party2.species": "SPECIES_MISDREAVUS",
+        "party3.species": [
+          "SPECIES_HOOTHOOT",
+          "SPECIES_NOCTOWL"
+        ],
+        "party4.species": [
+          "SPECIES_MAREEP",
+          "SPECIES_AMPHAROS"
+        ],
+        "party5.species": "SPECIES_TOGEPI"
+      }
+    },
+    "goto:MAP_SLOWPOKE_WELL_B1F,27,3,40000",
+    "A",
+    "field",
+    "again:3,flag:FLAG_BEAT_AZALEA_ROCKETS,1,4",
+    {
+      "expect": {
+        "flag:FLAG_BEAT_AZALEA_ROCKETS": 1,
+        "map": "MAP_AZALEA_KURT_HOUSE"
+      }
+    },
+    "wait:30",
+    "field",
+    {
+      "expect": {
+        "flag:FLAG_UNK_07C": 1,
+        "bag:ITEM_FAST_BALL": 1,
+        "var:VAR_UNK_4080": 4,
+        "map": "MAP_AZALEA_KURT_HOUSE",
+        "music": "SEQ_GS_T_HIWADA"
+      }
+    },
+    "goto:MAP_AZALEA_POKECENTER_1F,8,13",
+    "UP",
+    "A",
+    "field",
+    "save"
+  ],
+  "expect": {
+    "map": "MAP_AZALEA_POKECENTER_1F",
+    "x": 8,
+    "y": 13,
+    "badges": 1,
+    "party": 6,
+    "music": "SEQ_GS_POKESEN",
+    "lines": [
+      "You are challenged by Executive Proton!",
+      "You defeated Executive Proton!"
+    ]
+  }
 }

@@ -23,17 +23,26 @@
     "x": 8,
     "y": 13,
     "party": 4,
-    "party0.species": "SPECIES_GEODUDE",
+    "party0.species": [
+      "SPECIES_GEODUDE",
+      "SPECIES_GRAVELER"
+    ],
     "party0.level": [
       10,
       13
     ],
     "party1.species": "SPECIES_MISDREAVUS",
-    "party2.species": "SPECIES_HOOTHOOT",
+    "party2.species": [
+      "SPECIES_HOOTHOOT",
+      "SPECIES_NOCTOWL"
+    ],
     "music": "SEQ_GS_POKESEN",
     "lines": [
       "Geodude learned Rollout!"
     ],
-    "party3.species": "SPECIES_CYNDAQUIL"
+    "party3.species": [
+      "SPECIES_CYNDAQUIL",
+      "SPECIES_TYPHLOSION"
+    ]
   }
 }

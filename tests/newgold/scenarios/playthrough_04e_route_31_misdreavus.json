@@ -24,14 +24,23 @@
     "x": 8,
     "y": 13,
     "party": 4,
-    "party0.species": "SPECIES_CYNDAQUIL",
+    "party0.species": [
+      "SPECIES_CYNDAQUIL",
+      "SPECIES_TYPHLOSION"
+    ],
     "party1.species": "SPECIES_MISDREAVUS",
     "party1.level": [
       8,
       10
     ],
-    "party2.species": "SPECIES_HOOTHOOT",
-    "party3.species": "SPECIES_GEODUDE",
+    "party2.species": [
+      "SPECIES_HOOTHOOT",
+      "SPECIES_NOCTOWL"
+    ],
+    "party3.species": [
+      "SPECIES_GEODUDE",
+      "SPECIES_GRAVELER"
+    ],
     "music": "SEQ_GS_POKESEN"
   }
 }

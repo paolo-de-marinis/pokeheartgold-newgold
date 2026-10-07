@@ -11,8 +11,14 @@
     "heal:MAP_AZALEA_POKECENTER_1F,8,13",
     {
       "expect": {
-        "party0.species": "SPECIES_HOOTHOOT",
-        "party4.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"]
+        "party0.species": [
+          "SPECIES_HOOTHOOT",
+          "SPECIES_NOCTOWL"
+        ],
+        "party4.species": [
+          "SPECIES_CYNDAQUIL",
+          "SPECIES_TYPHLOSION"
+        ]
       }
     },
     "shift:4",
@@ -28,11 +34,23 @@
     "swap:2,3",
     {
       "expect": {
-        "party0.species": "SPECIES_GEODUDE",
-        "party1.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"],
-        "party2.species": "SPECIES_HOOTHOOT",
+        "party0.species": [
+          "SPECIES_GEODUDE",
+          "SPECIES_GRAVELER"
+        ],
+        "party1.species": [
+          "SPECIES_CYNDAQUIL",
+          "SPECIES_TYPHLOSION"
+        ],
+        "party2.species": [
+          "SPECIES_HOOTHOOT",
+          "SPECIES_NOCTOWL"
+        ],
         "party3.species": "SPECIES_MISDREAVUS",
-        "party4.species": "SPECIES_FLAAFFY"
+        "party4.species": [
+          "SPECIES_MAREEP",
+          "SPECIES_AMPHAROS"
+        ]
       }
     },
     "goto:MAP_AZALEA_POKECENTER_1F,8,13",

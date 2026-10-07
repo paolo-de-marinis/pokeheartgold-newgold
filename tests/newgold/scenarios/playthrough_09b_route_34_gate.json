@@ -10,7 +10,10 @@
     "flee:40",
     {
       "expect": {
-        "party1.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"],
+        "party1.species": [
+          "SPECIES_CYNDAQUIL",
+          "SPECIES_TYPHLOSION"
+        ],
         "bag:ITEM_HM01": 1
       }
     },

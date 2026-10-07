@@ -12,7 +12,10 @@
     "swap:0,4",
     {
       "expect": {
-        "party0.species": "SPECIES_FLAAFFY"
+        "party0.species": [
+          "SPECIES_MAREEP",
+          "SPECIES_AMPHAROS"
+        ]
       }
     },
     "goto:MAP_ROUTE_35,367,313,90000",

@@ -20,7 +20,10 @@
     "pace:MAP_ROUTE_32,475,292,475,296,party0.level,13,80000",
     {
       "expect": {
-        "party0.species": "SPECIES_CYNDAQUIL",
+        "party0.species": [
+          "SPECIES_CYNDAQUIL",
+          "SPECIES_TYPHLOSION"
+        ],
         "party0.level": 13,
         "party0.move2": "MOVE_QUICK_ATTACK"
       }
@@ -39,16 +42,25 @@
     "y": 13,
     "party": 4,
     "badges": 0,
-    "party0.species": "SPECIES_HOOTHOOT",
+    "party0.species": [
+      "SPECIES_HOOTHOOT",
+      "SPECIES_NOCTOWL"
+    ],
     "party0.level": [
       10,
       13
     ],
-    "party1.species": "SPECIES_CYNDAQUIL",
+    "party1.species": [
+      "SPECIES_CYNDAQUIL",
+      "SPECIES_TYPHLOSION"
+    ],
     "party1.level": 13,
     "party2.species": "SPECIES_MISDREAVUS",
     "party2.level": 13,
-    "party3.species": "SPECIES_GEODUDE",
+    "party3.species": [
+      "SPECIES_GEODUDE",
+      "SPECIES_GRAVELER"
+    ],
     "party3.level": 13,
     "music": "SEQ_GS_POKESEN"
   }

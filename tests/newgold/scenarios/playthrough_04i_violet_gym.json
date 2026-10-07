@@ -32,9 +32,18 @@
     "party": 4,
     "badges": 0,
     "party0.species": "SPECIES_MISDREAVUS",
-    "party1.species": "SPECIES_HOOTHOOT",
-    "party2.species": "SPECIES_CYNDAQUIL",
-    "party3.species": "SPECIES_GEODUDE",
+    "party1.species": [
+      "SPECIES_HOOTHOOT",
+      "SPECIES_NOCTOWL"
+    ],
+    "party2.species": [
+      "SPECIES_CYNDAQUIL",
+      "SPECIES_TYPHLOSION"
+    ],
+    "party3.species": [
+      "SPECIES_GEODUDE",
+      "SPECIES_GRAVELER"
+    ],
     "party3.level": 13,
     "music": "SEQ_GS_POKESEN",
     "lines": [

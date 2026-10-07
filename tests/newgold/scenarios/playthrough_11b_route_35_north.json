@@ -27,7 +27,10 @@
     "swap:0,2",
     {
       "expect": {
-        "party0.species": ["SPECIES_GEODUDE", "SPECIES_GRAVELER"]
+        "party0.species": [
+          "SPECIES_GEODUDE",
+          "SPECIES_GRAVELER"
+        ]
       }
     },
     "goto:MAP_ROUTE_35,361,275,90000",
@@ -47,7 +50,10 @@
     "swap:0,1",
     {
       "expect": {
-        "party0.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"]
+        "party0.species": [
+          "SPECIES_CYNDAQUIL",
+          "SPECIES_TYPHLOSION"
+        ]
       }
     },
     "goto:MAP_ROUTE_35,378,266,90000",

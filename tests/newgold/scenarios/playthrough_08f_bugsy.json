@@ -9,9 +9,18 @@
     "poke:sLCRNG_State=0xbb160215",
     {
       "expect": {
-        "party0.species": "SPECIES_GEODUDE",
-        "party1.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"],
-        "party2.species": "SPECIES_NOCTOWL",
+        "party0.species": [
+          "SPECIES_GEODUDE",
+          "SPECIES_GRAVELER"
+        ],
+        "party1.species": [
+          "SPECIES_CYNDAQUIL",
+          "SPECIES_TYPHLOSION"
+        ],
+        "party2.species": [
+          "SPECIES_HOOTHOOT",
+          "SPECIES_NOCTOWL"
+        ],
         "bag:ITEM_SUPER_POTION": [
           1,
           10

@@ -11,11 +11,23 @@
     {
       "expect": {
         "party": 6,
-        "party0.species": "SPECIES_HOOTHOOT",
-        "party1.species": ["SPECIES_CYNDAQUIL", "SPECIES_QUILAVA"],
+        "party0.species": [
+          "SPECIES_HOOTHOOT",
+          "SPECIES_NOCTOWL"
+        ],
+        "party1.species": [
+          "SPECIES_CYNDAQUIL",
+          "SPECIES_TYPHLOSION"
+        ],
         "party2.species": "SPECIES_MISDREAVUS",
-        "party3.species": "SPECIES_GEODUDE",
-        "party4.species": "SPECIES_MAREEP"
+        "party3.species": [
+          "SPECIES_GEODUDE",
+          "SPECIES_GRAVELER"
+        ],
+        "party4.species": [
+          "SPECIES_MAREEP",
+          "SPECIES_AMPHAROS"
+        ]
       }
     },
     "goto:MAP_AZALEA_GYM,9,33",
