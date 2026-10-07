@@ -334,8 +334,8 @@ def recolour(png, colours):
 
 
 # ---------------------------------------------------------------------------
-# The items' icons: the game's pictures, one sheet the page asks for once
-# (an icon a cell of it).
+# The items' icons and the marks of the moves' classes: the game's pictures,
+# each set one sheet the page asks for once (an icon a cell of it).
 
 ITEM_ICONS = ROOT / "files/itemtool/itemdata/item_icon"
 SHEET_COLUMNS = 32      # the item sheet's cells a row
@@ -396,6 +396,24 @@ def _palette(nclr, number):
     return b"".join(bytes((c >> shift & 31) * 255 // 31 for shift in (0, 5, 10)) for c in colours)
 
 
+def _lz10(data):
+    """The game's LZ77 compression (type 0x10) undone."""
+    size, out, at = int.from_bytes(data[1:4], "little"), bytearray(), 4
+    while len(out) < size:
+        flags, at = data[at], at + 1
+        for bit in range(8):
+            if len(out) >= size:
+                break
+            if flags & 0x80 >> bit:
+                pair, at = data[at] << 8 | data[at + 1], at + 2
+                for _ in range((pair >> 12) + 3):
+                    out.append(out[-(pair & 0xFFF) - 1])
+            else:
+                out.append(data[at])
+                at += 1
+    return bytes(out)
+
+
 def item_icon(tiles, colours):
     """An item's icon as the bag draws it: 32 rows of 32 colour indices,
     and its palette as a PLTE -- the members' files, or the PNG item_data.mk
@@ -439,6 +457,31 @@ def item_icon_sheet():
         except (OSError, ValueError):
             return [], b""
     return sheet([drawn(pair) for pair in item_icon_cells()[0]], SHEET_COLUMNS, 32, 32)
+
+
+@sv.tree_cache
+def move_class_sheet():
+    """The marks the summary and the battle draw for a move's class, one
+    under the other in CATEGORY_'s order: sub_02077800's member of the
+    archive sub_02077830 names, in sub_02077818's palette of the member
+    sub_02077690 gives, as large as sub_02077694's cell draws it (its one
+    OAM's shape and size)."""
+    text = sv.source("src/unk_02077678.c").read_text()
+    table = lambda name: [int(n, 0) for n in re.search(rf"{name}\[\] = \{{([^}}]*)\}}", text).group(1).split(",") if n.strip()]  # noqa: E731
+    returns = lambda fn: re.search(rf"\b{fn}\(void\) \{{\s*return (\w+);", text).group(1)  # noqa: E731
+    sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+    import wotbl
+    members, _, _ = wotbl.read_narc(sv.source("files/" + returns("sub_02077830")[len("NARC_"):].replace("_", "/")).read_bytes())
+    unpack = lambda m: _lz10(members[m]) if members[m][0] == 0x10 else members[m]  # noqa: E731
+    cell = unpack(int(returns("sub_02077694"), 0))
+    at = cell.index(b"KBEC")
+    count, bounded, cells = struct.unpack_from("<HHI", cell, at + 8)
+    attr0, attr1 = struct.unpack_from("<HH", cell, at + 8 + cells + (16 if bounded else 8) * count)
+    width, height = {0: ((8, 8), (16, 16), (32, 32), (64, 64)), 1: ((16, 8), (32, 8), (32, 16), (64, 32)),
+                     2: ((8, 16), (8, 32), (16, 32), (32, 64))}[attr0 >> 14][attr1 >> 14]     # the DS's OAM sizes
+    nclr = unpack(int(returns("sub_02077690"), 0))
+    return sheet([(_ncgr(unpack(m), width // 8), _palette(nclr, p))
+                  for m, p in zip(table("sMoveSplitIconFiles"), table("sMoveSplitIconPalettes"))], 1, width, height)
 
 
 # ---------------------------------------------------------------------------
@@ -1649,7 +1692,9 @@ def tables():
     players = {"PLAYER_GENDER_MALE": sv.PLAYER_GENDER_MALE, "PLAYER_GENDER_FEMALE": sv.PLAYER_GENDER_FEMALE}
     types = lambda row: list(dict.fromkeys(t[len("TYPE_"):] for t in sv.personal_records()[row["id"]]["types"]))  # noqa: E731
     icons = part(errors, "item_icons", lambda: item_icon_cells()[1], {})
+    classes = sorted(sv.constants("include/constants/moves.h", "CATEGORY_").items(), key=lambda kv: kv[1])
     return {"species": [{**row, "types": types(row)} for row in sv.species_table()], "moves": sv.move_table(),
+            "move_classes": [const[len("CATEGORY_"):] for const, _ in classes],
             "items": [{**row, "icon": icons.get(row["id"]), **({"limit": sv.item_limit(row["id"])} if row["pocket"] else {})}
                       for row in sv.item_table().values()],
             "item_icons": {"columns": SHEET_COLUMNS},
@@ -1755,6 +1800,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self.image(sv.town_map()["png"])
             if url.path == "/api/itemicons.png":
                 return self.image(item_icon_sheet())
+            if url.path == "/api/moveclasses.png":
+                return self.image(move_class_sheet())
             if url.path == "/api/icon":
                 return self.image(icon(number(q.get("species"), 0, 0xFFFF, "specie"), number(q.get("form", 0), 0, 255, "forma"),
                                        q.get("egg") in ("1", "true")))

@@ -1613,9 +1613,16 @@ def _game_items(rows):
 @tree_cache
 def move_table():
     """Every move's name and base PP, the PP out of waza_tbl.narc where
-    GetMoveMaxPP's MOVEATTR_PP reads it."""
-    pp = move_attr("MOVEATTR_PP")
-    return [{"id": n, "name": name, "pp": pp[n] if n < len(pp) else 0} for n, name in enumerate(bank(MOVE_NAMES))]
+    GetMoveMaxPP's MOVEATTR_PP reads it; and, as LoadMoveEntry's record
+    has them, its type (TYPE_ without the prefix), its class (CATEGORY_
+    without it), its power (1: the battle works it out) and accuracy (0:
+    it never misses)."""
+    pp, power, accuracy = (move_attr(f"MOVEATTR_{a}") for a in ("PP", "POWER", "ACCURACY"))
+    types, kinds = move_attr("MOVEATTR_TYPE"), move_attr("MOVEATTR_CLASS")
+    type_name, classes = type_names(), {v: c[len("CATEGORY_"):] for c, v in constants("include/constants/moves.h", "CATEGORY_").items()}
+    return [{"id": n, "name": name, "pp": pp[n], "type": type_name.get(types[n], str(types[n])),
+             "class": classes.get(kinds[n], str(kinds[n])), "power": power[n], "accuracy": accuracy[n]} if n < len(pp)
+            else {"id": n, "name": name, "pp": 0} for n, name in enumerate(bank(MOVE_NAMES))]
 
 
 def max_pp(move, pp_ups):

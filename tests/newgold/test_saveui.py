@@ -309,6 +309,25 @@ class SaveUiTests(unittest.TestCase):
         with urllib.request.urlopen(urllib.request.Request(url, headers={"If-None-Match": '"0"'})) as response:
             self.assertEqual(response.read(), png, "another icon than the browser's: this one")
 
+    def test_a_move_as_its_record_has_it(self):
+        """/api/data's moves carry what LoadMoveEntry's record has beside
+        the PP: the type, the class (CATEGORY_, which the class marks'
+        sheet holds in its order), the power and the accuracy."""
+        data = self.ok("/api/data")
+        moves = {m["name"]: m for m in data["moves"]}
+        pick = lambda name: tuple(moves[name][k] for k in ("type", "class", "power", "accuracy", "pp"))  # noqa: E731
+        self.assertEqual(pick("Thunderbolt"), ("ELECTRIC", "SPECIAL", 90, 100, 15))
+        self.assertEqual(pick("Tackle")[:2], ("NORMAL", "PHYSICAL"))
+        self.assertEqual(pick("Growl")[1:3], ("STATUS", 0))
+        self.assertEqual(pick("Swift")[3], 0, "never misses")
+        self.assertEqual(pick("Seismic Toss")[2], 1, "the battle works it out")
+        self.assertEqual(data["move_classes"], ["PHYSICAL", "SPECIAL", "STATUS"])
+        status, png = self.call("/api/moveclasses.png")
+        self.assertEqual(status, 200)
+        self.assertEqual(struct.unpack(">II", png[16:24]), (32, 3 * 16), "sub_02077694's cell: one 32x16 OAM, a mark a class")
+        rows = rgba_rows(png)
+        self.assertNotEqual(rows[8], rows[16 + 8], "Physical's mark is not Special's")
+
     def test_an_item_has_its_price_description_and_icon(self):
         """/api/data's items carry ITEMATTR_PRICE (the two fields it puts
         together), the bag's description on one line and their icon's cell in
