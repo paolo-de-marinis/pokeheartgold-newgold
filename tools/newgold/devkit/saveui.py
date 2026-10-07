@@ -1324,13 +1324,17 @@ def storable(fields):
 
 def holdable(fields, party):
     """An item a Pokemon is given here only as the bag gives one (savedit's
-    "give": GIVE is offered for no key item, no machine, no Apricorn), and
-    no Mail in a box: the PC takes no Pokemon holding one. One it holds
-    already is not sent again (changed)."""
+    "give": GIVE is offered for no key item, no machine, no Apricorn) --
+    and never a key item, whatever another game's leaves in its
+    prevent_toss (the Teal Mask), nor an item with no name (hg-engine's
+    ITEM_NONE_ placeholders) -- and no Mail in a box: the PC takes no
+    Pokemon holding one. One it holds already is not sent again (changed)."""
     item = fields.get("item")
     if item:
         entry = sv.item_table()[item]
-        if not entry["give"]:
+        if not entry["name"].strip():
+            raise Refused(f"lo strumento {item} non ha nome: è un posto vuoto della tabella, non uno strumento")
+        if not entry["give"] or entry["pocket"] == key_pocket():
             raise Refused(f"{entry['name']}: nel gioco non si dà da tenere a un Pokémon (la Borsa non offre DAI "
                           "per gli strumenti chiave, le MT e MN e le Ghicocche)")
         if not party and sv.FIRST_MAIL <= item <= sv.LAST_MAIL:
@@ -1504,11 +1508,16 @@ def species_rules(q):
             "friendship": sv.personal_records()[sv.personal_row(species, form)]["friendship"]}
 
 
+def key_pocket():
+    return next(p["name"] for p in sv.pockets() if p["const"] == "POCKET_KEY_ITEMS")
+
+
 def offers(pocket):
     """What a pocket's lists offer: its own items only, by id -- those this
     game has ("items"), then the other games' ("others"), which the page
-    shows only when asked."""
-    rows = [row for row in sv.item_table().values() if row["pocket"] == pocket and row["id"]]
+    shows only when asked; never one with no name (the 84 ITEM_NONE_
+    placeholders of hg-engine's table)."""
+    rows = [row for row in sv.item_table().values() if row["pocket"] == pocket and row["id"] and row["name"].strip()]
     return {"items": [row["id"] for row in rows if row["game"]], "others": [row["id"] for row in rows if not row["game"]]}
 
 

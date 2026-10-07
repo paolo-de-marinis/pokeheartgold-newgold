@@ -291,7 +291,7 @@ gives them from the tree's `fieldPocket` -- this game's (`savedit`'s
 "game": HeartGold's own, anything with a hold effect or a use, anything the
 game's code or data names; no TR, no TM outside `sMachineRuns`, nothing
 without a pocket) and, behind a switch, the other games' that hg-engine's
-table also names. op "item" and op "pocket" refuse an item of another pocket.
+table also names -- never its 84 nameless `ITEM_NONE_` placeholders. op "item" and op "pocket" refuse an item of another pocket.
 Every pocket is a list whose changes wait for "Salva modifiche", in a bar
 that stays at the bottom of the screen: the machines and the key items are
 ticks (every one the game has, the key items a script gives first, tagged
@@ -301,8 +301,9 @@ own items. Unsaved changes are not thrown away without asking: another save
 opened, the last change undone, the open save played or loaded as it is on
 disk (Gioca, Carica, Sposta e gioca), the open slot overwritten, the page
 closed. A held item is only one
-the bag's GIVE offers (no key item, no machine, no Apricorn), and no Mail
-for a box Pokemon; a Plate held by Arceus, a Memory by Silvally, the
+the bag's GIVE offers (no key item, no machine, no Apricorn; no key item
+either whose other game's data leaves it tossable, the Teal Mask), and no
+Mail for a box Pokemon; a Plate held by Arceus, a Memory by Silvally, the
 Griseous Orb by Giratina set the form as the party menu does. An item taken
 out of the bag is unregistered from Y. The PC's rules hold for the dialog's
 buttons as for dragging: no Mail holder into a box, and a party that keeps

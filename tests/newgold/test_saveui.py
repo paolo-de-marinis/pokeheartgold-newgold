@@ -406,8 +406,9 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual([[mv["id"] for mv in m["moves"]] for m in out["party"]], moves)
 
     def test_what_a_pokemon_may_hold_and_where_it_may_go(self):
-        """A held item is one the bag's GIVE offers -- no key item, no
-        machine -- and no Mail in a box, which the PC refuses; the PC's
+        """A held item is one the bag's GIVE offers -- no key item, not
+        even another game's whose data would let it through, no machine,
+        no nameless placeholder -- and no Mail in a box, which the PC refuses; the PC's
         rules hold for the buttons as for dragging: a Mail holder does not
         go in a box, and the party keeps one Pokémon that can battle.
         savedit's refusals arrive in Italian."""
@@ -415,6 +416,9 @@ class SaveUiTests(unittest.TestCase):
         refused = lambda op, args: self.refused("/api/edit", {"f": "gyms/test.sav", "op": op, "args": args})  # noqa: E731
         self.assertIn("non si dà", refused("party_edit", {"slot": 0, "item": items["ITEM_BICYCLE"]}))
         self.assertIn("non si dà", refused("party_edit", {"slot": 0, "item": items["ITEM_TM01"]}))
+        self.assertTrue(sv.item_table()[items["ITEM_TEAL_MASK"]]["give"], "another game's key item, prevent_toss clear")
+        self.assertIn("non si dà", refused("party_edit", {"slot": 0, "item": items["ITEM_TEAL_MASK"]}))
+        self.assertIn("non ha nome", refused("party_edit", {"slot": 0, "item": items["ITEM_NONE_1823"]}))
         self.assertIn("Lettere", refused("box_edit", {"box": 2, "slot": 5, "item": items["ITEM_GRASS_MAIL"]}))
         self.assertIn("Lettere", refused("box_add", {"box": 0, "slot": 0, "species": 1, "level": 5,
                                                      "item": items["ITEM_GRASS_MAIL"]}))
@@ -973,6 +977,10 @@ class SaveUiTests(unittest.TestCase):
         for pocket in data["pockets"]:
             self.assertTrue(pocket["items"], pocket["name"])
             self.assertEqual({pocket_of[i] for i in pocket["items"] + pocket["others"]}, {pocket["name"]})
+        names = {row["id"]: row["name"] for row in data["items"]}
+        for pocket in data["pockets"]:
+            self.assertEqual([i for i in pocket["items"] + pocket["others"] if not names[i].strip()], [],
+                             f"{pocket['name']}: no nameless ITEM_NONE_ placeholder")
         offered = {p["name"]: set(p["items"]) for p in data["pockets"]}
         self.assertNotIn(items["ITEM_POTION"], offered["balls"], "Paolo: no Potion among the Poké Balls")
         self.assertIn(items["ITEM_POTION"], offered["medicine"])

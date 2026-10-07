@@ -1558,13 +1558,14 @@ function sourceTag(s) {
 const sourceTags = sources => sources.map(s => `<span class="tag src${s.from ? " pre" : ""}">${esc(sourceTag(s))}</span>`).join("");
 
 // The held-item picker's rows: "Nessuno", then what the bag's GIVE offers ("give": no key item, no machine, no
-// Apricorn), pocket by pocket, with how many the bag holds; never a Mail for a box Pokemon (the PC refuses it).
+// Apricorn; and no key item another game's data would let through), pocket by pocket, with how many the bag holds; never a Mail for a box Pokemon (the PC refuses it).
 // The other games' items only when asked; an item the Pokemon holds already is there whatever it is.
 function heldRows(box, others, holding) {
   const bag = new Map(Object.values(S.save.bag).flat().map(r => [r.item, r.quantity]));
   const mail = new Set(S.data.pockets.find(p => p.const === "POCKET_MAIL")?.items ?? []);
   const rows = [comboRow(0, "Nessuno", {label: "", words: "niente"})];
   for (const p of S.data.pockets) {
+    if (p.const === "POCKET_KEY_ITEMS") continue;       // never held, whatever another game's item says
     for (const id of [...p.items, ...(others ? p.others : [])]) {
       const r = S.items.get(id);
       if (id !== holding && (!r.give || (box && mail.has(id)))) continue;
