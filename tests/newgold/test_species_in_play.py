@@ -12,7 +12,7 @@ the data they index.
 
 That distinction is not pedantry. Five of the six are reached by arithmetic on
 the species number -- pokegra member species * 6, icon member species - 508 +
-551, cry bank sAddedCryBanks[species - 508], footprint member species + 2, Dex
+551, cry bank sAddedCryBanks[species - 508], footprint member species + 3, Dex
 row species -- and arithmetic fails one species at a time. A table that is the
 right length and starts one entry late passes every length check in the tree
 and makes Lillipup cry as Karrablast, which is exactly what happened.
@@ -289,7 +289,7 @@ class SpeciesInPlayTests(unittest.TestCase):
     def test_every_species_has_a_height_weight_entry_and_footprint(self):
         """The four things the Dex page is made of, per species.
 
-        The footprint is the one read by arithmetic -- member species + 2 --
+        The footprint is the one read by arithmetic -- member species + 3 --
         and the three texts are rows in three banks that each used to stop at
         Arceus. A missing row is not a crash: the Dex draws an empty page.
         """

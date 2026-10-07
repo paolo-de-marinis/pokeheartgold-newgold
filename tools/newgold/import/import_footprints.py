@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Give the added species their Dex footprints.
 
-The footprint archive is one member per species, in order, and it stops at the
-egg. A hole in it would not leave one species without a print: nothing indexes
-the archive by name, so every member after the hole would shift and every
-species after it would show the wrong footprint. The forms between Arceus and
-the added species therefore get filled too, from the species they are forms of.
+The footprint archive is one member per species, in order, and retail's stops
+at Arceus. A hole in it would not leave one species without a print: nothing
+indexes the archive by name, so every member after the hole would shift and
+every species after it would show the wrong footprint. The egg, the bad egg and
+the forms between Arceus and the added species therefore get filled too, the
+forms from the species they are forms of.
 
 The images are the reference's, which ships the archive extracted. They arrive
 already compressed in exactly the form this build produces, so the conversion
@@ -33,8 +34,12 @@ import import_dex_text  # noqa: E402
 import import_species  # noqa: E402
 import own_species  # noqa: E402
 
-# Member 3 holds species 1.
-MEMBER_OFFSET = 2
+# The Dex reads species N's print at member N + 3 (ov18_021E5904), after the
+# palette, the animation and the cells; species 0's is a copy of Bulbasaur's,
+# in retail's archive and the reference's alike. This was 2: every print went
+# in a member early, an added species read the one meant for the species
+# after it, and the last one read past the end of the archive, an assertion.
+MEMBER_OFFSET = 3
 
 # The reference's own archive stops before its regional forms, so these two
 # take the print of the species they are a form of. A Galarian Slowpoke leaves
@@ -99,17 +104,15 @@ def main():
     if not prints.is_dir():
         raise SystemExit(f"{prints} is not there")
 
-    # Every species between the egg and the first added one, by the species
+    # Every form between the egg and the first added species, by the species
     # whose footprint it should borrow.
     wanted = {}
     for species, base in import_dex_text.FORM_BASES.items():
         wanted[species] = FOOTPRINTS / f"pokefoot_{base + MEMBER_OFFSET:08d}.png"
-    for species in (495, 496, 497):
-        # The bad egg and the first forms: borrow the egg's own blank member,
-        # which is the last one the archive already has.
-        wanted.setdefault(species, FOOTPRINTS / f"pokefoot_{494 + MEMBER_OFFSET:08d}.png")
 
-    added = {}
+    # The egg and the bad egg take the reference's members for them, which it
+    # numbers as this game does.
+    added = {species: prints / f"a069_{species + MEMBER_OFFSET:04d}" for species in (494, 495)}
     for offset, name in enumerate(import_species.added_species()):
         species = import_dex_text.FIRST_ADDED + offset
         if name in own_species.SPECIES:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check the Dex footprint archive.
 
-Nothing indexes this archive by name: the game reads member `species + 2`. A
+Nothing indexes this archive by name: the game reads member `species + 3`. A
 missing member would not leave one species without a print — every member after
 it would shift, and every species after it would show the wrong footprint. So
 what is checked is that the members run unbroken from the first species to the
@@ -35,13 +35,24 @@ class FootprintTests(unittest.TestCase):
     def test_the_archive_has_no_holes(self):
         self.assertEqual(self.members, list(range(self.members[0], self.members[-1] + 1)))
 
+    def test_the_dex_reads_a_species_print_three_members_on(self):
+        """ov18_021E5904 gives the member of a species' print: the species
+        plus the first print's, 3, after the palette, the animation and the
+        cells. Species 0's is a copy of Bulbasaur's, in retail's archive as
+        in the reference's."""
+        source = (ROOT / "src/poketool/pokefoot.c").read_text()
+        self.assertIn("return a0 + NARC_pokefoot_pokefoot_00000003_NCGR_lz;", source)
+        self.assertEqual(import_footprints.MEMBER_OFFSET, 3)
+        self.assertEqual((FOOTPRINTS / "pokefoot_00000003.png").read_bytes(),
+                         (FOOTPRINTS / "pokefoot_00000004.png").read_bytes())
+
     def test_every_species_has_one(self):
         header = (ROOT / "include/constants/species.h").read_text()
         import re
         last = max(int(m) for m in re.findall(r"#define SPECIES_[A-Z0-9_]+\s+(\d+)\s*$", header, re.M))
         self.assertGreaterEqual(self.members[-1], last + import_footprints.MEMBER_OFFSET,
                                 "the archive stops before the last species")
-        print(f"PASS: {len(self.members)} footprints, species 1 to {self.members[-1] - import_footprints.MEMBER_OFFSET}.")
+        print(f"PASS: {len(self.members)} footprints, species 0 to {self.members[-1] - import_footprints.MEMBER_OFFSET}.")
 
     def test_a_footprint_converts_to_what_the_reference_ships(self):
         """The whole pipeline, both ways, on a species the reference has."""
