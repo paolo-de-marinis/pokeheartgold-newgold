@@ -229,6 +229,7 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
 .flash { animation: flash 1.8s ease-out; }
 @keyframes flash { from { background: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent); } to { box-shadow: 0 0 0 0 transparent; } }
 .monsum { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+.monsum > img.ic { flex: none; }     /* squeezed on a phone, its two frames showed one over the other */
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 13px; }
 .kv dt { color: var(--muted); }
 .kv dd { margin: 0; }
