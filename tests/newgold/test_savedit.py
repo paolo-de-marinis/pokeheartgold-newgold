@@ -1005,6 +1005,27 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual([i["name"] for i in sv.bag(save)["berries"]], ["Chesto Berry"])
         self.assert_only(save, ["SAVE_BAG"])
 
+    def test_the_items_this_game_has(self):
+        """item_table's "game": HeartGold's own, what does something, what
+        the code or data names -- not the 1,800 other games' items with no
+        data, no machine outside the TMs and HMs pocket's runs, nothing
+        without a pocket. "give": the bag's GIVE (prevent_toss clear, not a
+        machine)."""
+        rows = {row["const"]: row for row in sv.item_table().values()}
+        for kept in ("ITEM_POTION", "ITEM_MASTER_BALL", "ITEM_LEFTOVERS", "ITEM_ORAN_BERRY", "ITEM_GRASS_MAIL",
+                     "ITEM_X_ATTACK", "ITEM_BICYCLE", "ITEM_SQUIRTBOTTLE", "ITEM_TM01", "ITEM_TM101", "ITEM_HM08",
+                     "ITEM_NUGGET", "ITEM_BOTTLE_CAP", "ITEM_EVIOLITE", "ITEM_RED_SHARD"):
+            self.assertTrue(rows[kept]["game"], kept)
+        for other in ("ITEM_TERA_ORB", "ITEM_NORMALIUM_Z_HELD", "ITEM_BUG_TERA_SHARD", "ITEM_POTATO_TORTILLA",
+                      "ITEM_PARK_BALL", "ITEM_STRANGE_BALL", "ITEM_EXPLORER_KIT", "ITEM_TR00", "ITEM_TM00",
+                      "ITEM_GALACTIC_KEY", "ITEM_VENUSAURITE", "ITEM_ROTOM_PHONE"):
+            self.assertFalse(rows[other]["game"], other)
+        self.assertEqual({c for c, r in rows.items() if r["game"] and r["pocket"] == "TMsHMs"},
+                         {sv.item_table()[m["item"]]["const"] for m in sv.machine_table()})
+        self.assertEqual([c for c in ("ITEM_POTION", "ITEM_LEFTOVERS", "ITEM_GRASS_MAIL", "ITEM_BICYCLE", "ITEM_TM01",
+                                      "ITEM_HM01", "ITEM_RED_APRICORN", "ITEM_ORAN_BERRY") if rows[c]["give"]],
+                         ["ITEM_POTION", "ITEM_LEFTOVERS", "ITEM_GRASS_MAIL", "ITEM_ORAN_BERRY"])
+
     def test_the_dex(self):
         save = self.open()
         n = sv.species_numbers()

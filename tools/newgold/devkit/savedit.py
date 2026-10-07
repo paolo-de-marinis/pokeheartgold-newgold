@@ -1486,18 +1486,63 @@ def species_table():
 
 @tree_cache
 def item_table():
-    """Every item: its name, its constant, and the pocket it goes in
-    (fieldPocket, which the csv gives by the item's name)."""
+    """Every item: its name, its constant, the pocket it goes in
+    (fieldPocket, which the csv gives by the item's name), whether this
+    game has it ("game", _game_items) and whether the bag lets a Pokemon
+    hold it ("give": overlay 15's item menu offers GIVE when the item's
+    prevent_toss is clear and its pocket is not POCKET_TMHMS)."""
     names = bank(ITEM_NAMES)
     with source("files/itemtool/itemdata/item_data.csv").open() as f:
-        pocket_of = {p["const"]: p["name"] for p in pockets()}
-        filed = {row["item"]: pocket_of.get(row["fieldPocket"]) for row in csv.DictReader(f)}
+        rows = {row["item"]: row for row in csv.DictReader(f)}
+    pocket_of = {p["const"]: p["name"] for p in pockets()}
     by_id = {}
     for const, number in constants("include/constants/items.h", "ITEM_").items():
         by_id.setdefault(number, const)
-    return {number: {"id": number, "const": const, "pocket": filed.get(const),
-                     "name": names[number] if number < len(names) else const}
+    game = _game_items(rows)
+    return {number: {"id": number, "const": const, "pocket": pocket_of.get(rows.get(const, {}).get("fieldPocket")),
+                     "name": names[number] if number < len(names) else const, "game": const in game,
+                     "give": const in rows and rows[const]["prevent_toss"] != "true"
+                     and rows[const]["fieldPocket"] != "POCKET_TMHMS"}
             for number, const in sorted(by_id.items())}
+
+
+@tree_cache
+def _item_references():
+    """Every ITEM_ constant the game's code and data name -- the C, the
+    scripts, the JSON the build packs (trainers, wild held items,
+    evolutions, the Frontier's sets) -- but the tables that list every item
+    (src/item.c, the constants, the item data), which say nothing of
+    whether the game uses one."""
+    found = set()
+    for folder in ("src", "files"):
+        for path in sorted((ROOT / folder).rglob("*")):
+            if path.suffix in (".c", ".h", ".s", ".json") and path != ROOT / "src/item.c" and path.is_file():
+                found.update(re.findall(r"\bITEM_\w+", source(path.relative_to(ROOT)).read_text(errors="replace")))
+    return frozenset(found)
+
+
+def _game_items(rows):
+    """The items this game has, of the 2,600 hg-engine's table names --
+    most of them other games' picnic food, Z-Crystals, Tera Shards, Data
+    Cards and keys with no data at all. An item counts when it is one of
+    HeartGold's own with a price (FIRST_IMPORTED_ITEM: the retail ones),
+    or it does something (a hold effect, a field or battle use), or the
+    game's code or data names it (_item_references); a machine only when
+    the TMs and HMs pocket holds it (machine_runs); never one with no
+    pocket."""
+    first = constants("include/constants/items.h", "FIRST_IMPORTED_")["FIRST_IMPORTED_ITEM"]
+    numbers, named, machine = constants("include/constants/items.h", "ITEM_"), _item_references(), \
+        {item for first_, last, _, _, _ in machine_runs() for item in range(first_, last + 1)}
+    out = set()
+    for const, row in rows.items():
+        if const not in numbers or row["fieldPocket"] not in {p["const"] for p in _pockets()} or not numbers[const]:
+            continue
+        if (row["fieldPocket"] == "POCKET_TMHMS") != (numbers[const] in machine):
+            continue
+        does = row["holdEffect"] != "HOLD_EFFECT_NONE" or row["fieldUseFunc"] != "0" or row["battleUseFunc"] != "0"
+        if does or const in named or (numbers[const] < first and row["price"] != "0"):
+            out.add(const)
+    return frozenset(out)
 
 
 @tree_cache
