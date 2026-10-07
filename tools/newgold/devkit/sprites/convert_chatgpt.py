@@ -3,24 +3,34 @@
 
 docs/newgold/DEVKIT-PROMPTS.md's flow, first run for Bramblin (2026-10-07).
 The pictures have a flat magenta background (made transparent) and are
-reduced by area average from the subject's own pixels. Each part is
-converted when its pictures are given:
+reduced by area average from the subject's own pixels. Pixel art drawn at
+PX screen pixels a pixel (--grid PX) is read back at its own pixels
+instead: one pixel a cell, the colour most of the cell has (a cell's stray
+pixels at its edges dropped), the cells placed where the colour edges are.
+Each part is converted when its pictures are given:
 
-  battle    --front F --back B --shiny-front SF --shiny-back SB --width W
+  battle    --front F --back B --shiny-front SF --shiny-back SB (--width W | --grid PX)
             files/poketool/pokegra/pokegra/NNNN/<gender>/{front,back}.png for
             each gender the species has a picture for: 160x80, two 80x80
-            frames alike, the subject cropped to its pixels and scaled to W
-            wide (the width of the species' community sprite), centred, its
-            lowest row on row 78. Front and back share 15 colours, index 0
-            transparent; the front's PNG carries the normal palette and the
-            back's the shiny one on the same indices (the shiny pictures vote
-            each index's colour). heights.py and import_sprite_offsets.py
-            then write the height and the record that follow the pictures.
-  icon      --icon I
+            frames alike, the subject cropped to its pixels, centred, its
+            lowest row on row 78: scaled to W wide (the width of the
+            species' community sprite), or with --grid at its own size.
+            Front and back share 15 colours, index 0 transparent; the
+            front's PNG carries the normal palette and the back's the shiny
+            one on the same indices. The shiny pictures vote each index's
+            colour; with --grid each pixel's (normal, shiny) pair is an
+            index, and past 15 pairs the one cheapest to merge (its pixels
+            times its distance, normal plus shiny) becomes its nearest,
+            until 15 are left: each merge is printed, and the preview's
+            merged.png draws the cells it moved green. heights.py and
+            import_sprite_offsets.py then write the height and the record
+            that follow the pictures.
+  icon      --icon I [--grid PX]
             poke_icon_N.png, 32x64: the picture's two frames side by side,
             each scaled whole to 32x32, in the one of the three shared icon
             palettes nearest its colours, and that palette's number in
-            sPokemonPalNoBySpeciesAndForm.
+            sPokemonPalNoBySpeciesAndForm; a redraw at 32x32 pixels a frame
+            given with --grid comes through pixel for pixel.
   follower  --follower F --shiny-follower SF [--rows down,up,left]
             the species' mmodel texture, built by import_followers.nsbtx:
             eight 32x32 frames up, up, down, down, left, left, right, right.
@@ -47,9 +57,11 @@ Bramblin, from Paolo's eight pictures (img1 shiny follower, 2 shiny icon,
         --follower img3.png --shiny-follower img1.png --rows down,up,left,right
 """
 import argparse
+import cmath
 import collections
 import io
 import json
+import math
 import re
 import subprocess
 import sys
@@ -79,8 +91,39 @@ def number_of(name):
     return int(found.group(1))
 
 
-def load(path):
-    return Image.open(path).convert("RGB")
+def load(path, grid=None):
+    """The picture in RGB; pixel art drawn grid screen pixels a pixel at one
+    pixel a cell, the colour most of the cell has, in 15-bit colour, and
+    magenta where an indexed picture has index 0."""
+    im = Image.open(path)
+    if not grid:
+        return im.convert("RGB")
+    if im.mode != "P":
+        im = im.convert("RGB")
+    palette = im.getpalette() if im.mode == "P" else None
+    px, (x0, y0) = im.load(), phase(im, grid)
+    out = Image.new("RGB", (int((im.width - x0) // grid), int((im.height - y0) // grid)))
+    for row in range(out.height):
+        for col in range(out.width):
+            cell = collections.Counter(px[x, y] for y in range(round(y0 + row * grid), round(y0 + (row + 1) * grid))
+                                       for x in range(round(x0 + col * grid), round(x0 + (col + 1) * grid)))
+            v = cell.most_common(1)[0][0]
+            if palette and v == 0:
+                out.putpixel((col, row), MAGENTA)
+            else:
+                out.putpixel((col, row), tuple(c & 0xF8 for c in (palette[3 * v:3 * v + 3] if palette else v)))
+    return out
+
+
+def phase(im, grid):
+    """Where pixel art's cells start, across and down: its colour edges'
+    positions modulo grid, averaged round the circle."""
+    px, out = im.load(), []
+    for dx, dy in ((1, 0), (0, 1)):
+        z = sum(cmath.exp(2j * math.pi * (x if dx else y) / grid)
+                for y in range(dy, im.height) for x in range(dx, im.width) if px[x, y] != px[x - dx, y - dy])
+        out.append(cmath.phase(z) / (2 * math.pi) * grid % grid)
+    return out
 
 
 def mask_of(im):
@@ -96,12 +139,13 @@ def shrink(im, size, crop=True):
     """{(x, y): colour} of the picture's opaque pixels scaled to size (w, h),
     each the average of the subject's own pixels it covers, in 15-bit colour;
     cropped to the subject first when crop, the height then following the
-    width (size (w, 0))."""
+    width (size (w, 0)), and w None keeping the subject's own size."""
     m = mask_of(im)
     if crop:
         box = m.getbbox()
         im, m = im.crop(box), m.crop(box)
-        size = (size[0], round(im.height * size[0] / im.width))
+        width = size[0] or im.width
+        size = (width, round(im.height * width / im.width))
     pre = ImageChops.multiply(im, Image.merge("RGB", (m,) * 3)).resize(size, Image.BOX)
     cov = m.resize(size, Image.BOX)
     pp, cv, out = pre.load(), cov.load(), {}
@@ -138,6 +182,33 @@ def shiny_palette(index_maps, shiny_pictures, normal):
     return [votes[i + 1].most_common(1)[0][0] if votes[i + 1] else normal[i] for i in range(len(normal))]
 
 
+def paired(normals, shinies, n=15):
+    """One index map for pictures drawn twice, normal and shiny, from each
+    pixel's (normal, shiny) colour pair: up to n pairs keep an index each;
+    past n, the pair cheapest to merge (its pixels times its distance, normal
+    plus shiny, to its nearest pair) becomes that one, until n are left.
+    Each picture as {(x, y): index 1..n}, the normal and the shiny palette,
+    and the merges as (pair, into, pixels)."""
+    if any(normal.keys() != shiny.keys() for normal, shiny in zip(normals, shinies)):
+        raise SystemExit("a shiny picture is not its normal one's shape")
+    pairs = [{p: (normal[p], shiny[p]) for p in normal} for normal, shiny in zip(normals, shinies)]
+    count = collections.Counter(pair for picture in pairs for pair in picture.values())
+    into, merges = {pair: pair for pair in count}, []
+
+    def distance(a, b):
+        return sum(abs(u - v) for x, y in zip(a, b) for u, v in zip(x, y))
+    while len(count) > n:
+        _cost, pair, nearest = min((count[a] * distance(a, b), a, b) for a in count for b in count if a != b)
+        merges.append((pair, nearest, count[pair]))
+        count[nearest] += count.pop(pair)
+        into = {k: nearest if v == pair else v for k, v in into.items()}
+    order = sorted(count)
+    index = {pair: i + 1 for i, pair in enumerate(order)}
+    pad = [(0, 0, 0)] * (n - len(order))
+    return ([{p: index[into[pair]] for p, pair in picture.items()} for picture in pairs],
+            [a for a, _ in order] + pad, [b for _, b in order] + pad, merges)
+
+
 def indexed(size, frames, palette):
     """A 16-colour indexed picture, index 0 the magenta of transparency;
     frames are ((x, y), {(x, y): index}), placed at their corner."""
@@ -155,22 +226,36 @@ def png(im, transparent=True):
     return out.getvalue()
 
 
-def battle(front, back, shiny_front, shiny_back, width):
-    """(front, back) sheets: the back's PNG carries the shiny palette."""
-    fr, bk, sfr, sbk = (shrink(load(p), (width, 0)) for p in (front, back, shiny_front, shiny_back))
-    (ifr, ibk), normal = quantize([fr, bk])
-    shiny = shiny_palette([ifr, ibk], [sfr, sbk], normal)
+def battle(front, back, shiny_front, shiny_back, width=None, grid=None):
+    """(front, back, merged, marked): the sheets, the back's PNG carrying the
+    shiny palette; with grid, the merged pairs, and the front's and the
+    back's first frames in the normal colours, the cells the merges moved
+    green. Without width, each picture at its own size."""
+    fr, bk, sfr, sbk = (shrink(load(p, grid), (width, 0)) for p in (front, back, shiny_front, shiny_back))
+    if grid:
+        (ifr, ibk), normal, shiny, merged = paired([fr, bk], [sfr, sbk])
+    else:
+        (ifr, ibk), normal = quantize([fr, bk])
+        shiny, merged = shiny_palette([ifr, ibk], [sfr, sbk], normal), []
+
+    def at(indices, across=0):
+        w, h = max(x for x, _ in indices) + 1, max(y for _, y in indices) + 1
+        return across + (80 - w) // 2, 79 - h
 
     def sheet(indices, palette):
-        w, h = max(x for x, _ in indices) + 1, max(y for _, y in indices) + 1
-        at = ((80 - w) // 2, 79 - h)
-        return indexed((160, 80), [(at, indices), ((at[0] + 80, at[1]), indices)], palette)
-    return sheet(ifr, normal), sheet(ibk, shiny)
+        return indexed((160, 80), [(at(indices), indices), (at(indices, 80), indices)], palette)
+    marked = indexed((160, 80), [(at(ifr), ifr), (at(ibk, 80), ibk)], normal).convert("RGB")
+    moved = {pair for pair, _into, _pixels in merged}
+    for (ox, oy), colours, shiny_colours in ((at(ifr), fr, sfr), (at(ibk, 80), bk, sbk)):
+        for (x, y), colour in colours.items():
+            if (colour, shiny_colours.get((x, y))) in moved:
+                marked.putpixel((ox + x, oy + y), (0, 255, 0))
+    return sheet(ifr, normal), sheet(ibk, shiny), merged, marked
 
 
-def icon(path):
+def icon(path, grid=None):
     """The 32x64 icon and the shared palette it is drawn in."""
-    im = load(path)
+    im = load(path, grid)
     cw = im.width // 2
     frames = [shrink(im.crop((k * cw, 0, k * cw + cw, im.height)), (32, 32), crop=False) for k in range(2)]
     shared = import_icons.shared_palettes()
@@ -297,6 +382,7 @@ def main():
     for part in ("front", "back", "shiny-front", "shiny-back", "icon", "follower", "shiny-follower"):
         parser.add_argument(f"--{part}", type=Path)
     parser.add_argument("--width", type=int, help="the battle picture's width")
+    parser.add_argument("--grid", type=float, help="the pictures are pixel art, this many screen pixels a pixel")
     parser.add_argument("--rows", default="down,up,left", help="the follower sheet's rows, top to bottom")
     parser.add_argument("--preview", type=Path)
     args = parser.parse_args()
@@ -308,9 +394,12 @@ def main():
 
     battle_parts = (args.front, args.back, args.shiny_front, args.shiny_back)
     if any(battle_parts):
-        if not all(battle_parts) or not args.width:
-            raise SystemExit("the battle pictures need --front, --back, --shiny-front, --shiny-back and --width")
-        front, back = battle(*battle_parts, args.width)
+        if not all(battle_parts) or not (args.width or args.grid):
+            raise SystemExit("the battle pictures need --front, --back, --shiny-front, --shiny-back "
+                             "and --width or --grid")
+        front, back, merged, marked = battle(*battle_parts, args.width, args.grid)
+        for pair, into, pixels in merged:
+            print(f"battle: the pair {pair} merged into {into}, {pixels} pixels")
         folder = SPRITES / f"{number:04d}"
         genders = [g for g in ("male", "female") if (folder / g / "front.png").stat().st_size]
         for gender in genders:
@@ -322,9 +411,11 @@ def main():
         if args.preview:
             preview(args.preview, "front", front)
             preview(args.preview, "back", back)
+            if merged:
+                preview(args.preview, "merged", marked)
 
     if args.icon:
-        picture, palette = icon(args.icon)
+        picture, palette = icon(args.icon, args.grid)
         path = ROOT / "files/poketool/icongra/poke_icon" / (
             f"poke_icon_{import_icons.first_added_icon() + import_species.added_species().index(name):08d}.png")
         path.write_bytes(png(picture, transparent=False))

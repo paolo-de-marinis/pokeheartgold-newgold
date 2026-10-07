@@ -17,6 +17,7 @@ reference's again would put Bulbasaur's battle pictures back on Bramblin.
 And each of his pictures is the size and palette the game reads it in.
 """
 
+import io
 import json
 import os
 import re
@@ -279,6 +280,56 @@ class OwnPicturesTests(unittest.TestCase):
         for name in own_art.SPECIES:
             n = number_of(name)
             self.assertEqual(records[n], member[n * offsets.RECORD:(n + 1) * offsets.RECORD], name)
+
+
+class PixelArtTests(unittest.TestCase):
+    """convert_chatgpt.py --grid reads pixel art drawn several screen pixels
+    a pixel back at its own pixels (Baby Lugia's are drawn 14 a pixel), and
+    a normal and a shiny picture keep their colour pairs, 15 at most."""
+
+    def setUp(self):
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/sprites"))
+        import convert_chatgpt
+        self.convert = convert_chatgpt
+
+    def test_pixel_art_comes_back_at_its_own_pixels(self):
+        """A picture drawn three pixels a pixel, its cells starting one pixel
+        across and two down, a stray pixel at the edge of some: each cell is
+        one pixel again, in its own colour in 15 bits, index 0 magenta."""
+        colours = [(255, 0, 255), (255, 255, 255), (24, 32, 55), (161, 172, 192), (255, 123, 156)]
+        small = Image.new("P", (7, 5))
+        small.putpalette([v for c in colours for v in c])
+        small.putdata([(x * y + x + 2 * y) % 5 for y in range(5) for x in range(7)])
+        big = Image.new("P", (23, 18))
+        big.putpalette(small.getpalette())
+        big.paste(small.resize((21, 15), Image.NEAREST), (1, 2))
+        for x, y in ((3, 2), (7, 10), (12, 8)):
+            big.putpixel((x, y), (big.getpixel((x, y)) + 1) % 5)
+        picture = io.BytesIO()
+        big.save(picture, "PNG")
+        read = self.convert.load(picture, 3)
+        for y in range(5):
+            for x in range(7):
+                i = small.getpixel((x, y))
+                self.assertEqual(read.getpixel((x, y)), (255, 0, 255) if i == 0 else tuple(v & 0xF8 for v in colours[i]))
+
+    def test_past_fifteen_pairs_the_cheapest_merge_into_their_nearest(self):
+        """Fifteen pairs far apart, a hundred pixels each, and two of one
+        pixel each 8 away from one of them: those two merge, into it."""
+        normal, shiny = {}, {}
+        pairs = [((16 * i, 0, 0), (0, 16 * i, 0)) for i in range(15)]
+        for i, (a, b) in enumerate(pairs):
+            for k in range(100):
+                normal[i, k], shiny[i, k] = a, b
+        normal[20, 0], shiny[20, 0] = (56, 0, 0), (0, 48, 0)
+        normal[21, 0], shiny[21, 0] = (160, 0, 8), (0, 160, 0)
+        (indices,), normals, shinies, merges = self.convert.paired([normal], [shiny])
+        self.assertEqual(sorted(merges), [(((56, 0, 0), (0, 48, 0)), pairs[3], 1),
+                                          (((160, 0, 8), (0, 160, 0)), pairs[10], 1)])
+        self.assertEqual((len(normals), len(shinies)), (15, 15))
+        self.assertEqual(indices[20, 0], indices[3, 0])
+        self.assertEqual(indices[21, 0], indices[10, 0])
+        self.assertEqual(sorted(zip(normals, shinies)), sorted(pairs))
 
 
 if __name__ == "__main__":
