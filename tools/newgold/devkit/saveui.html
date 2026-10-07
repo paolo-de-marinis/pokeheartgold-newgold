@@ -2231,8 +2231,10 @@ function placeRows() {
   const places = S.data.places.map((p, i) => [p, i]);
   // A scene that starts on entering is told apart from the person it is about (Kuni at the Dance Theater: both).
   const name = p => `${placeName(p)}${p.via === "frame" ? " (scena all'ingresso)" : ""}`;
-  const group = (title, list) => list.map(([p, i]) => comboRow(`p${i}`, name(p), {group: title, label: `${name(p)} · ${mapTitle(S.maps.get(p.map))}`,
-    before: `<span class="star">★</span>`, tags: placeTags(i), words: `${p.key} ${p.trainer_const || ""} ${p.trainer} capopalestra davanti`}));
+  // A place's row: the star, who, what the save has of them and how the scene starts, and the map under them.
+  const group = (title, list) => list.map(([p, i]) => { const [where, ...tags] = placeTags(i);
+    return comboRow(`p${i}`, name(p), {group: title, label: `${name(p)} · ${where}`, before: `<span class="star">★</span>`, tags, sub: esc(where),
+                                      words: `${where} ${p.key} ${p.trainer_const || ""} ${p.trainer} capopalestra davanti`}); });
   return [...group("★ Capipalestra", places.filter(([p]) => isLeader(p)).sort((a, b) => badgeOrder(a[0]) - badgeOrder(b[0]))),
           ...group("★ Lega Pokémon", places.filter(([p]) => isLeague(p))),
           ...group("★ Altri momenti della storia", places.filter(([p]) => !isLeader(p) && !isLeague(p) && !isGymTrainer(p) && !isRematch(p))),
