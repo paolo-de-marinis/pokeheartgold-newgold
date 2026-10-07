@@ -16,6 +16,12 @@ from pathlib import Path
 from test_level_cap import ROOT
 from test_repels import function
 
+
+def flat(text):
+    """The text with every run of whitespace one space."""
+    return re.sub(r"\s+", " ", text)
+
+
 OVERLAY = ROOT / "src/battle/overlay_12_0224E4FC.c"
 COMMANDS = ROOT / "src/battle/battle_command.c"
 CONTROLLER = ROOT / "src/battle/battle_controller_player.c"
@@ -345,11 +351,13 @@ class ParentalBondTests(unittest.TestCase):
         overlay, controller = OVERLAY.read_text(), CONTROLLER.read_text()
         run_c(AFTER_STRIKES.replace("@FUNCTIONS@", function(overlay, "Battler_ArmRetreat")
                                     + function(overlay, "CheckColorChangeAngerShellAndBerserk")))
-        on_hit = function(overlay, "CheckAbilityEffectOnHit")
-        case = on_hit[on_hit.index("case ABILITY_ANGER_SHELL:\n    case ABILITY_BERSERK: {"):]
+        # Compared with the indentation flattened: the switch sits in a step
+        # of its own (CheckAbilityEffectOnHit's hitAnswerStep).
+        on_hit = flat(function(overlay, "CheckAbilityEffectOnHit"))
+        case = on_hit[on_hit.index("case ABILITY_ANGER_SHELL: case ABILITY_BERSERK: {"):]
         case = case[:case.index("case ABILITY_GULP_MISSILE:")]
-        self.assertIn("if (ctx->multiHitCountTemp == 0 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {\n"
-                      "            ret = CheckColorChangeAngerShellAndBerserk(battleSystem, ctx, script);", case)
+        self.assertIn(flat("if (ctx->multiHitCountTemp == 0 && !(ctx->moveStatusFlag & MOVE_STATUS_FAIL)) {\n"
+                           "            ret = CheckColorChangeAngerShellAndBerserk(battleSystem, ctx, script);"), case)
         # The first of the post-move steps, before the recoil and the drag,
         # for a move that struck more than once.
         end = function(controller, "ov12_0224E1BC")
@@ -375,15 +383,15 @@ class ParentalBondTests(unittest.TestCase):
         # CheckItemEffectOnHit, before the thaw and the other held items; a
         # Sitrus Berry's holder, as before, where CheckAbilityEffectOnHit asks,
         # before the Berry (TryUseHeldItem). Color Change does not wait.
-        on_hit = function(OVERLAY.read_text(), "CheckAbilityEffectOnHit")
-        case = on_hit[on_hit.index("case ABILITY_ANGER_SHELL:\n    case ABILITY_BERSERK: {"):on_hit.index("case ABILITY_COLOR_CHANGE:")]
-        self.assertIn("if (ctx->multiHitCountTemp == 0\n"
-                      "            && ((item >= HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT && item <= HOLD_EFFECT_BOOST_ATK_ON_ICE_HIT)\n"
-                      "                || item == HOLD_EFFECT_BOOST_SPECIAL_DEFENSE_ON_WATER_HIT || item == HOLD_EFFECT_BOOST_ATK_AND_SPATK_ON_SE\n"
-                      "                || item == HOLD_EFFECT_RECOIL_PHYSICAL || item == HOLD_EFFECT_RECOIL_SPECIAL\n"
-                      "                || item == HOLD_EFFECT_DAMAGE_ON_CONTACT || item == HOLD_EFFECT_DMG_USER_CONTACT_XFR)) {\n"
-                      "            ctx->selfTurnData[ctx->battlerIdTarget].answerAfterItem = TRUE;\n"
-                      "            break;", case)
+        on_hit = flat(function(OVERLAY.read_text(), "CheckAbilityEffectOnHit"))
+        case = on_hit[on_hit.index("case ABILITY_ANGER_SHELL: case ABILITY_BERSERK: {"):on_hit.index("case ABILITY_COLOR_CHANGE:")]
+        self.assertIn(flat("if (ctx->multiHitCountTemp == 0\n"
+                           "            && ((item >= HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT && item <= HOLD_EFFECT_BOOST_ATK_ON_ICE_HIT)\n"
+                           "                || item == HOLD_EFFECT_BOOST_SPECIAL_DEFENSE_ON_WATER_HIT || item == HOLD_EFFECT_BOOST_ATK_AND_SPATK_ON_SE\n"
+                           "                || item == HOLD_EFFECT_RECOIL_PHYSICAL || item == HOLD_EFFECT_RECOIL_SPECIAL\n"
+                           "                || item == HOLD_EFFECT_DAMAGE_ON_CONTACT || item == HOLD_EFFECT_DMG_USER_CONTACT_XFR)) {\n"
+                           "            ctx->selfTurnData[ctx->battlerIdTarget].answerAfterItem = TRUE;\n"
+                           "            break;"), case)
         items = (ROOT / "include/constants/items.h").read_text()
         numbers = [int(re.search(rf"#define {name}\s+(\d+)", items).group(1)) for name in (
             "HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT", "HOLD_EFFECT_BOOST_SPECIAL_ATTACK_ON_WATER_HIT",

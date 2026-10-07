@@ -207,11 +207,13 @@ typedef char BattleContextAbilityCacheOffsetCheck[offsetof(BattleContext, traine
 // handed-over byte (0x325F), grew it by 24 (0x3288), the spare byte still
 // there, before the added moves' data at 0x3288. The items lost went, the
 // marks of the taken taking their place, and shrank it by eight (0x3280).
-// The battlers a Tailwind has just started for went into the byte of padding
-// after roundUsers (0x325F) and grew it by nothing (measured with the
-// compiler). The item Recycle brings back, by party slot rather than by
-// battler, after Belch's Berries (0x31BC), grew it by 48 (0x32B0): retail's
-// four by battler stay where they were, unused, for the offsets after them.
+// The item Recycle brings back, by party slot rather than by battler, after
+// Belch's Berries (0x31BC), grew it by 48 (0x32B0): retail's four by battler
+// stay where they were, unused, for the offsets after them. The battlers a
+// Tailwind has just started for (0x325F, after roundUsers) and the step a
+// hit's answers have reached (0x32AF, the spare byte before the added moves'
+// data) went into padding and grew it by nothing (measured with the
+// compiler).
 typedef char BattleContextSizeCheck[
     sizeof(BattleContext) == 0x32B0 + NUM_ADDED_MOVES * sizeof(MoveTbl) + BATTLE_SCRIPT_BUFFER_WORDS * 4 ? 1 : -1];
 
@@ -4645,13 +4647,15 @@ static void ov12_0224CAA4(BattleSystem *battleSystem, BattleContext *ctx) {
         case 6: {
             int script;
 
-            ctx->unk_3C++;
+            // Asked again after each script, until the hit has nothing left
+            // to answer (CheckAbilityEffectOnHit).
             if (CheckAbilityEffectOnHit(battleSystem, ctx, &script) == TRUE) {
                 ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
                 ctx->commandNext = ctx->command;
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                 return;
             }
+            ctx->unk_3C++;
         }
             // fallthrough
         case 7:
@@ -4707,13 +4711,15 @@ static void ov12_0224CAA4(BattleSystem *battleSystem, BattleContext *ctx) {
         case 5: {
             int script;
 
-            ctx->unk_3C++;
+            // Asked again after each script, until the hit has nothing left
+            // to answer (CheckAbilityEffectOnHit).
             if (CheckAbilityEffectOnHit(battleSystem, ctx, &script) == TRUE) {
                 ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);
                 ctx->commandNext = ctx->command;
                 ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;
                 return;
             }
+            ctx->unk_3C++;
         }
             // fallthrough
         case 6:

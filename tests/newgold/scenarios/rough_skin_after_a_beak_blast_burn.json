@@ -1,0 +1,13 @@
+{
+  "about": "A hit is answered by everything it sets off, one script after another: a heating beak's burn and the target's Rough Skin both answer a contact move (Showdown's gen-9 DamagingHit runs every handler). A level-20 Pikachu's Tackle hits a forced wild Chansey given Rough Skin (set:) that heats its beak for Beak Blast (teach:): the Pikachu is burned, then hurt by the Rough Skin. Before, the burn was the hit's only answer and the Rough Skin said nothing. The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIKACHU:20"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2, "gDiagForceDamageRoll": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "set:1,ability,ABILITY_ROUGH_SKIN",
+            "teach:0,0,MOVE_TACKLE", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_BEAK_BLAST", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1"],
+  "expect": {"lines": ["started heating", "Pikachu used Tackle!", "burned", "Rough Skin hurt Pikachu!"],
+             "battler0.status": "BRN"}
+}

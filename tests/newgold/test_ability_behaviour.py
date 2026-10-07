@@ -871,7 +871,7 @@ class AbilityShieldTests(unittest.TestCase):
 
     def test_the_abilities_that_change_an_ability_ask_it(self):
         hit = function(OVERLAY, "CheckAbilityEffectOnHit")
-        mummy = hit[hit.index("    case ABILITY_MUMMY:\n    case ABILITY_LINGERING_AROMA:"):]
+        mummy = hit[re.search(r"    case ABILITY_MUMMY:\n\s*case ABILITY_LINGERING_AROMA:", hit).start():]
         mummy = mummy[:mummy.index("break;")]
         self.assertIn("!BattlerHasAbilityShield(ctx, ctx->battlerIdAttacker)", mummy)
         entry = function(OVERLAY, "TryAbilityOnEntry")

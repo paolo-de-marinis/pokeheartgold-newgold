@@ -778,6 +778,10 @@ typedef struct BattleContext {
     // added moves are here, where nothing reads by offset. BattleMoveTbl picks
     // the right one.
     MoveConditions moveConditions[BATTLER_MAX];
+    // How far the answers to the hit being answered have got
+    // (CheckAbilityEffectOnHit): those before it are done, 0 between hits.
+    // In the byte of padding before the added moves' data.
+    u8 hitAnswerStep;
     MoveTbl addedMoveData[NUM_ADDED_MOVES];
     // hg-engine's SkillSeqWork[650] (d0380a487, include/battle.h), which it
     // moved to the end of the structure and grew for the same reason: its

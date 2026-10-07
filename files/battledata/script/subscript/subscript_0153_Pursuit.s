@@ -38,8 +38,12 @@ _060:
     Call BATTLE_SUBSCRIPT_CRITICAL_HIT
     Call BATTLE_SUBSCRIPT_MOVE_FOLLOWUP_MESSAGE
     CompareMonDataToValue OPCODE_EQU, BATTLER_CATEGORY_DEFENDER, BMON_DATA_HP, 0, _166
+
+_AbilityOnHit:
+    // Every answer the hit has, one at a time (CheckAbilityEffectOnHit).
     TriggerAbilityOnHit _090
     CallFromVar BSCRIPT_VAR_TEMP_DATA
+    GoTo _AbilityOnHit
 
 _090:
     TriggerHeldItemOnHit _094
@@ -84,8 +88,10 @@ _158:
 
 _166:
     Call BATTLE_SUBSCRIPT_FAINT_CHECK_DESTINY_BOND
+_AbilityOnFaintingHit:
     TriggerAbilityOnHit _172
     CallFromVar BSCRIPT_VAR_TEMP_DATA
+    GoTo _AbilityOnFaintingHit
 
 _172:
     TriggerHeldItemOnHit _176

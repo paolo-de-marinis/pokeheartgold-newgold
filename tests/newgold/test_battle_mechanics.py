@@ -1906,6 +1906,44 @@ int main(void) {
             self.assertNotRegex(path.read_text(), r"recycleItem\[(battlerId|ctx->battlerIdAttacker)\]", path.name)
 
 
+class HitAnswerTests(unittest.TestCase):
+    # In Showdown gen 9 a hit's DamagingHit runs every handler: the
+    # attacker's Poison Touch (onSourceDamagingHit), a heating beak's burn,
+    # the target's Rough Skin or Static (onDamagingHit), and the attacker's
+    # Moxie after a knockout (onSourceAfterFaint). CheckAbilityEffectOnHit
+    # answers them one script at a time, in steps it keeps (hitAnswerStep),
+    # and its callers ask again until it has none left.
+    def test_every_step_is_asked_once(self):
+        body = function(OVERLAY.read_text(), "CheckAbilityEffectOnHit")
+        steps = [body.index("step = ctx->hitAnswerStep;")] + [body.index(f"if (step < {n})") for n in (1, 2, 3, 4)] \
+            + [body.index("if (step < 5 && ctx->battlerIdTarget == ctx->battlerIdFainted")]
+        self.assertEqual(steps, sorted(steps))
+        for n, (first, last) in enumerate(zip(steps[1:], steps[2:] + [len(body)]), 1):
+            self.assertIn(f"step = {n};\n", body[first:last])
+            self.assertNotIn(f"step = {n + 1};\n", body[first:last])
+        # The guards before the steps, the end, and the one way out with an
+        # answer, which keeps the step reached.
+        self.assertEqual(body.count("return ret;"), 3)
+        self.assertEqual(body.count("return TRUE;"), 1)
+        self.assertTrue(body.rstrip().endswith("ctx->hitAnswerStep = 0;\n    return FALSE;\n\nanswered:\n"
+                                               "    ctx->hitAnswerStep = step;\n    return TRUE;\n}"))
+
+    def test_the_callers_ask_until_nothing_is_left(self):
+        steps = function(CONTROLLER.read_text(), "ov12_0224CAA4")
+        ask = ("if (CheckAbilityEffectOnHit(battleSystem, ctx, &script) == TRUE) {\n"
+               "                ReadBattleScriptFromNarc(ctx, NARC_a_0_0_1, script);\n"
+               "                ctx->commandNext = ctx->command;\n"
+               "                ctx->command = CONTROLLER_COMMAND_RUN_SCRIPT;\n"
+               "                return;\n"
+               "            }\n"
+               "            ctx->unk_3C++;\n")
+        self.assertEqual(steps.count(ask), 2)
+        pursuit = subscript("Pursuit")
+        for label, out in (("_AbilityOnHit", "_090"), ("_AbilityOnFaintingHit", "_172")):
+            loop = pursuit[pursuit.index(f"{label}:"):pursuit.index(f"{out}:")]
+            self.assertIn(f"TriggerAbilityOnHit {out}\n    CallFromVar BSCRIPT_VAR_TEMP_DATA\n    GoTo {label}\n", loop)
+
+
 class WindPowerTests(unittest.TestCase):
     # Pokemon Central, Energia Eolica: it charges "quando Ventoincoda viene
     # attivata sul proprio lato", and Showdown's gen-9 windpower has an
