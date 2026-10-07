@@ -14,16 +14,16 @@ the unmodified upstream base, not the modified ROMs.
 ```
 Overall                                                                    96%
   done, seen running   ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  11%
-  done, never played   ████████████████████████████████░░░░░░░░░░░░░░░░░░  65%
+  done, never played   █████████████████████████████████░░░░░░░░░░░░░░░░░  66%
   partial              ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   6%
   still to do          ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
   deferred / no scope  ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%
 
 Implementation         ██████████████████████████████████████████████████  99%
-Verified in play       ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  15%
+Verified in play       ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  14%
 Audit rows closed      ████████████████████████████████████████████████░░  97%
 
-Audit: 27 of 775 rows in docs/newgold/AUDIT-*.md still open.
+Audit: 27 of 776 rows in docs/newgold/AUDIT-*.md still open.
 The port is finished when none is, or each is closed with a reason.
 Overall and Implementation: done 1, partial a half, deferred rows
 out of the denominator. Verified in play: of the rows that are done,

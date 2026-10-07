@@ -11,24 +11,24 @@ argument.
 | | |
 | --- | --- |
 | base | `e97c7fc9` — pret/pokeheartgold |
-| reference | `a477c662f` — konefr/hg-engine-newgold, `heartgold-modern` |
-| port | 1799 commits |
-| generated | 2026-10-07 04:00 |
+| reference | `8fe483d5a` — konefr/hg-engine-newgold, `heartgold-modern` |
+| port | 1809 commits |
+| generated | 2026-10-07 09:43 |
 
 <!-- LEDGER:SUMMARY:START -->
 ```
 Overall                                                                    96%
   done, seen running   ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  11%
-  done, never played   ████████████████████████████████░░░░░░░░░░░░░░░░░░  65%
+  done, never played   █████████████████████████████████░░░░░░░░░░░░░░░░░  66%
   partial              ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   6%
   still to do          ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
   deferred / no scope  ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%
 
 Implementation         ██████████████████████████████████████████████████  99%
-Verified in play       ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  15%
+Verified in play       ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  14%
 Audit rows closed      ████████████████████████████████████████████████░░  97%
 
-Audit: 27 of 775 rows in docs/newgold/AUDIT-*.md still open.
+Audit: 27 of 776 rows in docs/newgold/AUDIT-*.md still open.
 The port is finished when none is, or each is closed with a reason.
 Overall and Implementation: done 1, partial a half, deferred rows
 out of the denominator. Verified in play: of the rows that are done,
@@ -60,6 +60,7 @@ that carry behaviour.
 | Fairy type and the effectiveness chart | type 18, the twelve chart rows, Sylveon and 66 species, 30 moves, its name in `msg_0735` and its icon in the battle graphics archive. The Dex's type search has it since the seventh round (ff4204d23, and 4c4f631ee for konefr's Fairy Meganium and Mismagius), which the reference never gave its lists. Since the fourteenth round the Battle Hall has a Fairy rank, in the eighteenth rank slot retail left unused, so a save keeps its layout, and offers its opponents under the types this game gives them, form by form, where retail baked the fourth generation's (912d5cd58, 24ef4532a, Paolo's decision of 2026-10-02), seen in `battle_hall_fairy_rank.json`, whose pick fields a Cleffa only a Fairy pick brings. Since the fifteenth its opponents include 45 sets of the later generations' Fairies, Sylveon, Florges, Tinkaton, the four Tapu and Iron Valiant among them, its sets built from a JSON (3dbc382b3, c2cdf2706), and its search goes round the whole stretch, where retail's could hang (58c7cbf71); `battle_hall_fairy_new_set.json` fields a Spritzee | ✅ done |
 | Story level cap | wired in C to badges and flags 118/123/454 — 10→13→19→22→30→34→36→100, the same NPCs as konefr's `GetLevelCap`: Elder Li, Falkner, Proton, Bugsy, Whitney, Silver at the Burned Tower, Morty. It acts as his build does: a Pokemon at the cap wins no experience from a battle, so its bar does not move, and still gets the effort values; experience past the cap's threshold is cut back for whoever carries it; and, as his `config.h` keeps `UNCAP_CANDIES_FROM_LEVEL_CAP` and `ALLOW_LEVEL_CAP_EVOLVE`, a Rare Candy still levels past the cap and can evolve a Pokemon that has reached it. For an hour on 2026-09-22 the candy was refused here; it is not. Seen in play since the eleventh round: `level_cap_10` to `level_cap_100` hold each step's cap and raise it at each badge (01a8187df), each pinning the cap itself since c882037f0 -- a Ditto one level under it with Exp. Share reaches it and no further -- and after Falkner's badge a Raichu at the old cap of 13 grew to 14 (a run, not a suite scenario). The Rare Candy past the cap and the effort values at it are host tests only | ✅ done |
 | Hidden abilities | `TRPOKE_ABILITY_OVERRIDE_HIDDEN`; eleven trainer Pokémon ask for one | ✅ done |
+| Shiny-locked trainer Pokémon | `TRAINER_DATA_TYPE_SHINY_LOCK`: a party entry's `TRPOKE_SHINY` makes it shiny through its OT ID, its personality left as the entry gives it (3cfe091dd), and the importer reads it (cef4b14c6); konefr's tip locks five, and Grunt 18's Venomoth is seen shiny in the Rocket HQ (620a38587) | ✅ done |
 | Ability field past one byte | save, battle record, AI memory, PC box, summary — and the personal record, whose three ability bytes now have their full values past the end of it | ✅ done |
 | Reusable TMs, deletable HMs | `REUSABLE_TMS`, `DELETABLE_HMS`, plus the machine badge in the bag; since the fifth round the 240 machines past HM08 teach their moves too, every species has a bit for all 340, a TR is spent when used and carries its own badge, and the TM case sorts TMs, then TRs, then HMs (3396fa25c to 8c902ecf2). Since the fifteenth the machines are Paolo's (2026-10-04): HeartGold's TM01 to TM92 and HM01 to HM08 as retail, then TM93 to TM148, the seventh generation's TMs HeartGold lacks and the later TM moves of Scarlet and Violet, no TRs (5059800bf); the other 184 of hg-engine's machine items are items with no use, the TM case holds the 148 TMs by number and then the HMs, and an older save's machines become New Gold's by move as it loads (4e65dc1ef). Goldenrod's 5F sells TM93 to TM148, seven more every two badges, at 1500 to 10000 (1f5b24ccb, 727dfbd79), one copy at a time (cf6737e50); seen in `tm_shop_goldenrod.json`, `tm_save_conversion.json` and `machine_past_100_from_the_bag.json` | ✅ done |
 | EV and IV viewer | L shows effort, R shows individuals, Select restores stats; since the fifteenth round a Hyper trained IV shows as 31★ (db9f5bcc5) | ✅ done |
@@ -106,11 +107,11 @@ konefr *could* reach, not only what the game reaches today.
 
 ## konefr's own work
 
-69 commits — the content that makes New Gold a hack rather than an engine.
+79 commits (`d0380a487..8fe483d5a`) — the content that makes New Gold a hack rather than an engine.
 
 | Item | Detail | State |
 | --- | --- | :-- |
-| Trainers | Falkner through Morty and the Chuck gym; Denise has her Mareanie now that the species exists; and since his `a477c662f` (27 September, 466dfaa08) nine trainers of Routes 42 and 43 and Mt. Mortar's way at levels 44 to 49, with four moves and a held item each | ✅ 738 / 738 |
+| Trainers | Falkner through Morty and the Chuck gym; Denise has her Mareanie now that the species exists; and since his `a477c662f` (27 September, 466dfaa08) nine trainers of Routes 42 and 43 and Mt. Mortar's way at levels 44 to 49, with four moves and a held item each; since his `8fe483d5a` (28 September, a2b6dc074) twenty of the Lake of Rage, the Rocket HQ and Garett of the Radio Tower at 46 to 58, five with a shiny Pokemon | ✅ 738 / 738 |
 | Wild encounters | every map, the Whirl Islands and Cianwood's surf included, and Route 43's grass as `a477c662f` has it (the Dex's area records with it since a7c4ca858); a slot list the reference leaves short takes its last species rather than a hole | ✅ 142 / 142 |
 | Headbutt trees | routes 29-39, the Exeggcute filler replaced | ✅ done |
 | Vanilla species rebalance | 35 species: 5 type changes, 15 ability changes, 28 stat spreads | ✅ done |
@@ -120,7 +121,7 @@ konefr *could* reach, not only what the game reaches today.
 | Bug-Catching Contest | Butterfree through Escavalier, levels 20-30, evolution-item prizes | ✅ done |
 | Cherrygrove vendor and EV presets | his debug vendor, patched into a built script file, which `SCOPE.md` left out. Since the fifteenth round what it did is back by Paolo's decision of 2026-10-04, the way of this tree: a person in Cherrygrove's Pokemon Center opens the EV/IV trainer, an app of the engine's in the summary's look, whose Sets page is his twelve presets with his names (69260918c, 844b55090, 4b9bacf94); EVs set by hand or from a set, 500 for every started ten a stat gains, and Hyper Training from level 50 with the Bottle Caps she sells (0b30db648); his password and Rare Candies at 1 only in a diagnostics build (b308e4e1e). Seen in `ev_iv_trainer_set_and_pay.json`, `ev_iv_trainer_hyper_training.json` and `ev_iv_trainer_developer_vendor.json` | ✅ done |
 | Linking Cord for any trade | his `e26576dd1`: a Pokemon that evolves by trading alone evolves when a Linking Cord is used on it -- Phantump, Pumpkaboo and the rest. It sits ahead of the engine's own case, the trade with a held item, as in his code; the engine's stone rows for Kadabra and the other three are on the Evolutions row, not this one | ✅ done |
-| konefr's text | what `d0380a487..a477c662f` changes in the text: Irrigation, Eelevate and Evaporate's names and descriptions, Solar Seeds' name, description and "used" lines, the three Galarian names (his capitals, now their bases' names: 147c9e1b8), the lines and names of trainers 47, 383 and Proton, and bank 550's vendor lines, which the EV/IV trainer reads since the fifteenth round: his presets' names on its Sets page, the vendor's lines in a diagnostics build. Three plain errors of his are corrected, by Paolo's rule in `KONEFR-NOTES.md`: those names, Samantha's two lines saying PERSIAN (5a6655bbc), and Mark's and Nelson's defeat lines where a double battle reads them (247823e32). Written by the same importers at `a477c662f`, whose last commit changes no text, on top of the engine's text, so the engine layer is the commit before | ✅ done |
+| konefr's text | what `d0380a487..8fe483d5a` changes in the text: Irrigation, Eelevate and Evaporate's names and descriptions, Solar Seeds' name, description and "used" lines, the three Galarian names (his capitals, now their bases' names: 147c9e1b8), the lines and names of trainers 47, 383 and Proton, and bank 550's vendor lines, which the EV/IV trainer reads since the fifteenth round: his presets' names on its Sets page, the vendor's lines in a diagnostics build. Three plain errors of his are corrected, by Paolo's rule in `KONEFR-NOTES.md`: those names, Samantha's two lines saying PERSIAN (5a6655bbc), and Mark's and Nelson's defeat lines where a double battle reads them (247823e32). Written by the same importers at `8fe483d5a`, whose last three commits change no text, on top of the engine's text, so the engine layer is the commit before | ✅ done |
 | Water Absorb and Leaf Guard fixes | the row had it backwards. Leaf Guard's sunshine is HGSS's own and was never port work — but it left Rest out, and the Rest subscript now asks the same two questions the other six statuses ask. Water Absorb had the damaging-move guard and not the no-self-trigger one; it had both until the twelfth round, which dropped the damaging-move guard as a plain error of konefr's 82b788666 (Assorbacqua: from the fourth generation it takes the Water status moves too), so Water Absorb takes Soak and keeps the self check (3112cb441, New Gold's layer). Dry Skin and Earth Eater, whose power check was hg-engine's, take their status moves too (a96fb2180) | ✅ done |
 
 ---
@@ -134,9 +135,9 @@ The split into an engine and New Gold, deferred until further notice: `SCOPE.md`
 | konefr's five switches configurable | `IMPLEMENT_LEVEL_CAP`, `LEVEL_CAP_VARIABLE`, `UNCAP_CANDIES_FROM_LEVEL_CAP`, `ALLOW_LEVEL_CAP_EVOLVE`, `DELETABLE_HMS`: off in the engine, on in New Gold. Today they are wired always on | ⬜ deferred |
 | `GetLevelCap` reads the variable | as hg-engine does, `LEVEL_CAP_VARIABLE`, with konefr's ladder 10→13→19→22→30→34→36 as data rather than code | ⬜ deferred |
 | konefr's abilities and move behind the extension points | Irrigation, Evaporate, Solar Seeds; `ABILITY_TEMP2` and `NUM_OF_CUSTOM_MOVES` at 0 in the engine | ⬜ deferred |
-| Importers that take a revision | `d0380a487` gives the engine's data, `a477c662f` New Gold's | ⬜ deferred |
-| The separation recounted by provenance | the old count, 8 mixed commits of 175, looked only at file paths; the rule is what `d0380a487..a477c662f` introduces or modifies | ⬜ deferred |
-| The split | `git tag port-history`; `engine` from pret `e97c7fc9` with the matching decompilations cherry-picked and the rest regenerated at `d0380a487`; `newgold` rebuilt on it at `a477c662f`; `git merge -s ours` of the published branch, so the push is a fast-forward | ⬜ deferred |
+| Importers that take a revision | `d0380a487` gives the engine's data, `8fe483d5a` New Gold's | ⬜ deferred |
+| The separation recounted by provenance | the old count, 8 mixed commits of 175, looked only at file paths; the rule is what `d0380a487..8fe483d5a` introduces or modifies | ⬜ deferred |
+| The split | `git tag port-history`; `engine` from pret `e97c7fc9` with the matching decompilations cherry-picked and the rest regenerated at `d0380a487`; `newgold` rebuilt on it at `8fe483d5a`; `git merge -s ours` of the published branch, so the push is a fast-forward | ⬜ deferred |
 | The engine-only configuration played | never built yet | ⬜ deferred |
 
 ---

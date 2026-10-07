@@ -17,15 +17,19 @@ Come leggere le voci:
 
 - **Domanda** è quella da fargli.
 - **Cosa** dice che cosa abbiamo trovato.
-- **Dove** dà i commit del suo range (`d0380a487..a477c662f`, sopra hg-engine) e i file. Le righe
+- **Dove** dà i commit del suo range (`d0380a487..8fe483d5a`, sopra hg-engine) e i file. Le righe
   sono ancora quelle di `1fa3c9366`. `8cbe6ab86` cambia solo la squadra di Nob (Allenatori 4), e le
   righe di Nob sono date a quel commit; dopo Nob, lì le righe di `data/Trainers.c` sono due più
   avanti.
-- La sua punta ora è `a477c662f` ("Rebalance Route 42 and Route 43", 27 settembre), portata in
-  466dfaa08: nove allenatori delle Route 42 e 43 e della strada per il Mt. Mortar e l'erba della
-  Route 43 (Incontri 5, Allenatori 15). Tocca solo `data/Trainers.c` e `data/Encounters.c`, mette
-  lui i flag delle mosse e degli strumenti e non ha sviste da correggere. A `a477c662f` le righe di
-  `data/Trainers.c` dopo il #122 sono ancora più avanti (Nob a `:11215`).
+- La sua punta ora è `8fe483d5a` ("Add shiny Rocket HQ experiment Pokemon", 28 settembre), con
+  `0f085efad` ("Rebalance Team Rocket HQ trainers") prima, portate in a2b6dc074: venti allenatori
+  del Lago d'Ira, del Covo Rocket e Garett della Torre Radio, cinque con un Pokémon cromatico
+  (Allenatori 20). Toccano solo `data/Trainers.c`, mette lui i flag delle mosse e degli strumenti e
+  non hanno sviste da correggere. Prima c'era `a477c662f` ("Rebalance Route 42 and Route 43", 27
+  settembre), portata in 466dfaa08: nove allenatori delle Route 42 e 43 e della strada per il Mt.
+  Mortar e l'erba della Route 43 (Incontri 5, Allenatori 15). A `a477c662f` le righe di
+  `data/Trainers.c` dopo il #122 sono ancora più avanti (Nob a `:11215`), e a `8fe483d5a` quelle
+  dopo il #109 ancora di più.
 - **Nel port** dice che cosa abbiamo fatto nel frattempo: tenuto com'è (è suo), corretto (e perché)
   o deciso da Paolo.
 
@@ -373,9 +377,35 @@ mosse solo per potenza e tipo e non usa mosse di stato né Pozioni, quindi un gi
 retail. Sappiamo che stai ancora finendo gli allenatori, e Paolo (4 ottobre) ha deciso che non è
 una domanda da farti.
 
-**Dove:** `data/Trainers.c` alla tua punta `a477c662f`.
+**Dove:** `data/Trainers.c` alla tua punta `8fe483d5a`.
 
 **Nel port:** tenuti come sono. Li finiranno a mano Paolo e Claude, con il toolkit, dopo il port.
+
+### 20. Il Lago d'Ira e il Covo Rocket
+**Domanda:** il Grunt #216 deve avere due Obstagoon? E Garett #471, che si combatte nella Torre
+Radio, era fra quelli da ribilanciare col Covo?
+
+**Cosa:** in `0f085efad` hai portato a L46-58, con quattro mosse e uno strumento a testa, venti
+allenatori: al Lago d'Ira Alton #109, Lois #116, Andre #126 e Raymond #127; nel Covo Rocket i Grunt
+#216, #218-220, #222-224, #404 e #499, gli scienziati Ross #468, Mitch #469 e Gregg #470, Ariana #479,
+Petrel #488 e Lance #675, il compagno della lotta in multi del B2F; e lo scienziato Garett #471. In
+`8fe483d5a` cinque di loro hanno un Pokémon cromatico (lo shiny lock di hg-engine): il Linoone di
+Lois, il Magikarp di Raymond, l'Obstagoon del Grunt #216, il Venomoth del Grunt #220 e il Crobat di
+Petrel. Due cose ci sono sembrate strane:
+- nel #216 lo stesso commit cambia il Linoone in un Obstagoon cromatico L48, e il Grunt ha già un
+  Obstagoon L50 come ultimo Pokémon: due Obstagoon nella stessa squadra. Il Linoone con le stesse
+  mosse (Extreme Speed, Shadow Claw, Seed Bomb, Belly Drum) ora è quello cromatico di Lois;
+- Garett #471 non sta nel Covo: lo combatte la Torre Radio, al 3F (`MAP_GOLDENROD_RADIO_TOWER_3F`,
+  durante l'occupazione dei Rocket), dove gli altri allenatori sono ancora ai livelli retail, e lui
+  ora è a L52-54 (Electrode, Togedemaru, Magnezone).
+
+**Dove:** `0f085efad` e `8fe483d5a`, `data/Trainers.c:9744` (#216) e `:21047` (#471), righe a
+`8fe483d5a`.
+
+**Nel port:** tenuto com'è, tutti e venti, cromatici compresi (a2b6dc074). Lo shiny lock non
+c'era: ora una voce della squadra può essere cromatica (3cfe091dd), e come nel tuo gioco lo diventa
+per l'ID dell'allenatore, con la natura e il resto della personalità che restano quelli della voce.
+Il Venomoth del Grunt #220 l'abbiamo visto cromatico in lotta (620a38587), blu.
 
 ---
 
@@ -473,7 +503,7 @@ non nell'erba, nell'acqua, nelle rocce, negli alberi da Headbutt né nella gara 
 due nel gioco le hanno degli allenatori: lo Slowpoke di Galar di Larry #23 e lo Slowbro di Galar di
 Nelson #389. Quindi oggi nessuna si può catturare.
 
-**Dove:** `data/Encounters.c` e `data/Headbutt.c` alla tua punta `a477c662f`: nessuna `SPECIES_*_GALARIAN`,
+**Dove:** `data/Encounters.c` e `data/Headbutt.c` alla tua punta `8fe483d5a`: nessuna `SPECIES_*_GALARIAN`,
 `_ALOLAN`, `_HISUIAN` o `_PALDEAN`.
 
 **Nel port:** tenuto com'è. Paolo ha deciso (3 ottobre) che il Pokédex le traccia comunque una per una
@@ -563,7 +593,7 @@ sono offerti sotto Folletto, Typhlosion sotto Fuoco e Terra, Sudowoodo sotto Roc
 Sunflora sotto Erba e Fuoco. Il rango Folletto ha undici set nel primo tratto e sette nell'ultimo,
 due di questi tuoi.
 
-**Dove:** `data/Species.c` alla tua punta `a477c662f`; nel port 912d5cd58 e 24ef4532a.
+**Dove:** `data/Species.c` alla tua punta `8fe483d5a`; nel port 912d5cd58 e 24ef4532a.
 
 **Nel port:** tenuto così, con i tuoi tipi. Dal quindicesimo giro la Sala ha anche 45 set dei
 Folletto delle generazioni dopo la quarta (Sylveon, Florges, Tinkaton, i quattro Tapu e altri,
@@ -645,7 +675,7 @@ ha, con Wild Charge, Snarl, Nature Power, Dazzling Gleam e Confide sui loro nume
 Psyshock e Venoshock nei buchi 94, 97 e 98, le altre in ordine; poi le 29 mosse dopo la settima
 generazione che sono MT in Scarlatto/Violetto, nel loro ordine. Niente DT e niente Tera Blast; Fly,
 Surf e Waterfall solo MN. Chi impara cosa segue la regola di oggi: le MachineMoves o le LevelMoves
-del tuo `a477c662f`.
+del tuo `8fe483d5a`.
 
 **Dove:** nel port 5059800bf (la lista), 4e65dc1ef (la tasca a 156 posti e la conversione dei
 salvataggi), 1f5b24ccb (il negozio).
