@@ -200,6 +200,8 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
 .mvopt .side { flex: none; margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .mvopt .sub { display: flex; flex-wrap: wrap; gap: 3px; min-width: 0; font-size: 12px; color: var(--muted); }
 .mvopt .desc { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A phone has no hover for the rest: two lines, past the "An item to be held by a Pokémon." 128 of them start with. */
+@media (max-width: 600px) { .mvopt .desc { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } }
 .mvopt:hover { background: var(--accent-soft); }
 .mvopt.cur .nm::before { content: "✓ "; color: var(--accent); }
 .mvmore { padding: 6px 10px; font-size: 12.5px; }
