@@ -2502,6 +2502,8 @@ def edit_mon(raw, species=None, level=None, nature=None, item=None, moves=None,
         struct.pack_into("<I", a, 8, (word & ~EXP_BITS & 0xFFFFFFFF) | experience_for(growth, level))
     if item is not None:
         struct.pack_into("<H", a, 2, item)
+    if item is not None or species is not None or ability is not None:
+        restat |= _held_item_form(mon)
     if moves is not None:
         check_moves(struct.unpack_from("<H", a, 0)[0], moves, b[0x18] >> 3, kept=knew)
         known = [(struct.unpack_from("<H", b, 2 * i)[0], b[8 + i], b[12 + i]) for i in range(MAX_MON_MOVES)]
@@ -2551,6 +2553,7 @@ def new_mon(species, level, me, nature=None, moves=None, item=0, ivs=31, evs=0, 
                              ot_gender=me["gender"]))
     if ability is not None:
         _choose_ability(mon, ability)
+    _held_item_form(mon)
     b = mon["blocks"][1]
     table = move_table()
     for i in range(MAX_MON_MOVES):
@@ -2558,6 +2561,49 @@ def new_mon(species, level, me, nature=None, moves=None, item=0, ivs=31, evs=0, 
     _set_party_stats(mon, level)    # build_mon's stats, but Shedinja's one HP
     raw = seal_mon(mon)
     return raw if party else raw[:BOX_MON]
+
+
+@tree_cache
+def _item_form_rules():
+    """What BoxMon_UpdateArceusForm and BoxMon_UpdateGiratinaForm need:
+    the species and abilities they test, the types' numbers (a form of
+    Arceus or Silvally is its type's), the items ItemGivesGiratinaOriginForm
+    names and Giratina's two forms."""
+    numbers, abilities = species_numbers(), constants("include/constants/abilities.h", "ABILITY_")
+    items = constants("include/constants/items.h", "ITEM_")
+    origin = {items[i] for i in re.findall(r"item == (ITEM_\w+)",
+                                           c_function("src/pokemon.c", "BOOL ItemGivesGiratinaOriginForm("))}
+    forms, _ = compile_c(("GIRATINA_ALTERED", "GIRATINA_ORIGIN"))
+    return {"arceus": (numbers["ARCEUS"], abilities["ABILITY_MULTITYPE"]),
+            "silvally": (numbers.get("SILVALLY"), abilities.get("ABILITY_RKS_SYSTEM")),
+            "giratina": numbers["GIRATINA"], "origin": origin, "forms": forms,
+            "types": constants("include/constants/pokemon.h", "TYPE_")}
+
+
+def _held_item_form(mon):
+    """The form a held item gives, as the party menu sets it when an item
+    is given (src/party_menu.c): Arceus with Multitype is its Plate's type
+    and Silvally with RKS System its Memory's (BoxMon_UpdateArceusForm);
+    Giratina is in its Origin Forme exactly while it holds what
+    ItemGivesGiratinaOriginForm names, and its ability follows
+    (BoxMon_UpdateGiratinaForm, UpdateBoxMonAbility). Whether the form
+    changed: the stats then follow."""
+    a, b = mon["blocks"][:2]
+    species, item = struct.unpack_from("<HH", a, 0)
+    ability = a[0x0D] | (struct.unpack_from("<I", a, 8)[0] >> 31) << 8
+    rules, (arceus, silvally, held) = _item_form_rules(), item_types()
+    was = b[0x18] >> 3
+    if (species, ability) in (rules["arceus"], rules["silvally"]):
+        table = arceus if (species, ability) == rules["arceus"] else silvally
+        form = rules["types"][table.get(held.get(item, "HOLD_EFFECT_NONE"), table.get("default", "TYPE_NORMAL"))]
+    elif species == rules["giratina"]:
+        form = rules["forms"][1] if item in rules["origin"] else rules["forms"][0]
+    else:
+        return False
+    b[0x18] = (b[0x18] & 7) | form << 3
+    if species == rules["giratina"]:
+        _set_ability(mon)
+    return form != was
 
 
 @tree_cache

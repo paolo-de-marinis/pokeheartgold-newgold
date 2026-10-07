@@ -583,6 +583,26 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual((edited["item"], edited["hp"]), (1, 3))
         self.assertEqual(sv.open_mon(sv.edit_mon(hurt, item=1))["party"], sv.open_mon(hurt)["party"])
 
+    def test_a_held_item_sets_the_form_the_party_menu_would(self):
+        """Arceus holding a Plate is the Plate's type, Silvally holding a
+        Memory the Memory's (BoxMon_UpdateArceusForm); Giratina holding the
+        Griseous Orb is in its Origin Forme with Levitate, and without it
+        Altered again with Pressure (BoxMon_UpdateGiratinaForm)."""
+        items, n = {row["const"]: row["id"] for row in sv.item_table().values()}, sv.species_numbers()
+        types = sv.constants("include/constants/pokemon.h", "TYPE_")
+        me = {"codes": [sv.EOS], "id": 1, "gender": 0}
+        arceus = sv.describe_mon(sv.new_mon(n["ARCEUS"], 80, me, item=items["ITEM_FLAME_PLATE"]))
+        self.assertEqual((arceus["form"], arceus["types"]), (types["TYPE_FIRE"], ["FIRE"]))
+        arceus = sv.describe_mon(sv.edit_mon(sv.new_mon(n["ARCEUS"], 80, me), item=items["ITEM_SPLASH_PLATE"]))
+        self.assertEqual(arceus["form"], types["TYPE_WATER"])
+        silvally = sv.edit_mon(sv.new_mon(n["SILVALLY"], 80, me), item=items["ITEM_FIRE_MEMORY"])
+        self.assertEqual(sv.describe_mon(silvally)["form"], types["TYPE_FIRE"])
+        giratina = sv.edit_mon(sv.new_mon(n["GIRATINA"], 80, me), item=items["ITEM_GRISEOUS_ORB"])
+        self.assertEqual((sv.describe_mon(giratina)["form"], sv.describe_mon(giratina)["ability_name"]), (1, "Levitate"))
+        giratina = sv.edit_mon(giratina, item=0)
+        self.assertEqual((sv.describe_mon(giratina)["form"], sv.describe_mon(giratina)["ability_name"]), (0, "Pressure"))
+        self.assertTrue(sv.describe_mon(giratina)["ability_ok"])
+
     def test_a_party_pokemon_has_the_games_empty_mail(self):
         """The mail record Mail_Init leaves, which READ on a held Mail
         needs; an all-zero one sends the game to its error screen."""
