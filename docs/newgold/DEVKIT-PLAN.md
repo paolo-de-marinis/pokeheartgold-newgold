@@ -317,7 +317,7 @@ music -- so there is one system to build and to test.
   retail's rules (HP thresholds and chance), and lines at fixed moments (intro, first
   hit, current Pokemon at half HP, last Pokemon, last at half HP, win, lose, after, the
   doubles and phone-rematch variants). All of it is in `trainers.json` and works; the
-  AI's code (overlay 10) is about half decompiled.
+  AI's code (overlay 10) is all C now: main.lsf links no asm object into it.
 - **A smarter AI:** a real damage calculation with everything the game now has
   (abilities, held items, weather, terrains), knowing whether it KOs or is KO'd first
   (speed included); smart switching out of a losing match-up into a resist; items used
@@ -330,7 +330,7 @@ music -- so there is one system to build and to test.
   "totem" stat boost, the music) -- edited from the devkit's trainer screen. Neither
   retail nor hg-engine has this; in a decompilation it can be added.
 - **Order:** (1) decompile the rest of the trainer AI to matching C (the port's rule,
-  and useful anyway); (2) the battle lab (section 5), to *measure* the AI -- what it
+  and useful anyway) -- done; (2) the battle lab (section 5), to *measure* the AI -- what it
   chooses, how often it wins against test parties -- with the simulated
   player improved first (casual and good styles, see "Which parties to test
   a fight with"); (3) the event system, small and
@@ -352,6 +352,29 @@ music -- so there is one system to build and to test.
   aiming at e.g. 70-80% first-try wins against leaders and fewer against the League);
   a difficulty the player chooses (normal / expert); scripted events for drama rather
   than difficulty; and the last word to people playing it -- Paolo, and konefr.
+- **Skill and style, two knobs per trainer** (Paolo, 2026-10-07; a proposal to tune by
+  measurement, nothing final). *Skill* (1 to 10) is how well it plays; *style* is how
+  it likes to play. Both have a default -- skill from the class and the story point,
+  style from the class (and a leader's type) -- and both are set per trainer in the
+  devkit. Two trainers of the same skill make the same share of mistakes but play
+  differently. A first scale for the skill:
+
+  | Skill | Who, by default | What it does | Mistakes |
+  | --- | --- | --- | --- |
+  | 1-2 | Bug Catchers, Youngsters, Schoolkids on the early routes | attacks, prefers super-effective moves | many: often not the best move |
+  | 3-4 | ordinary trainers of the middle game, the early gyms' trainers | real damage, no useless move (no Ground move into Levitate) | frequent |
+  | 5-6 | leaders, their aides, ordinary trainers late in the game | knows who KOs first, uses items when they matter, switches out of a lost match-up | some |
+  | 7 | Rocket executives, the rival late in the game, Victory Road | reads the player's switches, sets up when it can | few |
+  | 8-9 | the Elite Four, Lance | the whole team's play | almost none |
+  | 10 | Red | everything | none |
+
+  Within one class the skill rises with the story: a Bug Catcher near Goldenrod
+  outthinks one on Route 30. Styles, by default from the class: aggressive (Black
+  Belts, Bikers), status and annoyance (Psychics, Mediums), set-up (Ace Trainers),
+  dirty -- Toxic, traps -- (Rocket Grunts), coordinated in doubles (Twins); a leader
+  plays to the gym's theme (Morty status and curses, Chuck attack, Jasmine defence,
+  Pryce hail, Clair set-up). Today's retail AI flags, which konefr chose per trainer,
+  are the style's starting point, so the styles are to agree with him.
 - **Mind:** the AI lives in overlay 10, off the boot chain, so it can grow freely; the
   events' hooks touch overlay 12, whose boot margin is limited (test_heaps). konefr
   balanced his trainers for today's AI: a stronger one makes the game harder -- to agree
