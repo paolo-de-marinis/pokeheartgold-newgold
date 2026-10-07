@@ -3667,6 +3667,8 @@ def _walk(stem, start, save=None, through=(), known=None, outer=False, reloaded=
     while 0 <= i < len(lines) and (i, tuple(stack)) not in passed and len(passed) < 4000:
         passed.add((i, tuple(stack)))
         pending.discard(i)
+        # A jump not taken whose block comes back here: from now on both ways run the same lines.
+        pending -= {p for p in pending if _rejoins(lines, labels, p) == i}
         op, args = lines[i]
         if i != start and i not in through and _primary(op, args):
             stop = i
@@ -3720,6 +3722,22 @@ def _walk(stem, start, save=None, through=(), known=None, outer=False, reloaded=
                     also |= lines_passed
         i += 1
     return writes, {i for i, _ in passed} | also, stop
+
+
+def _rejoins(lines, labels, at):
+    """Where the straight block a jump goes to comes back: the label its
+    GoTo names, or the label it falls into; None when it ends, returns,
+    branches again or starts a step of its own first (_TM70Held: a line,
+    then GoTo _TM70Given, where the gift's other way goes on)."""
+    for j in range(at, len(lines)):
+        op, args = lines[j]
+        if op == "" and j != at:
+            return j
+        if op == "GoTo":
+            return labels.get(args[0])
+        if op in _ENDS or op in ("Return", "Call") or op[:6] in ("GoToIf", "CallIf") or (j != at and _primary(op, args)):
+            return None
+    return None
 
 
 @tree_cache

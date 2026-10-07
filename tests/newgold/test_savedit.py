@@ -1378,6 +1378,34 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual((shop["kind"], shop["key"]), ("item", "ITEM_SQUIRTBOTTLE"))
         self.assertEqual(shop["needs"], [[[("badge", "BADGE_PLAIN"), "eq", 1], [whitney[2]["id"]]]])
 
+    def test_a_gift_held_already_rejoins_the_gift(self):
+        """A giver that asks the bag first (HasItem, then GoToIfEq to a line
+        of its own and GoTo back to where the give goes on) writes the
+        same after it either way: only the TM itself is conditional. Elder
+        Li's battle is a step again, FLAG_UNK_076 -- the level cap's 13 --
+        given for sure, TM70 when the bag has none."""
+        held = 0
+        for stem in sv._script_stems():
+            script = sv._script(stem)
+            lines, labels = script["lines"], script["labels"]
+            for i, (op, args) in enumerate(lines):
+                if op != "HasItem" or lines[i + 2][0] != "GoToIfEq":
+                    continue
+                block = labels[lines[i + 2][1][0]]
+                if lines[block + 2][0] != "GoTo":
+                    continue
+                held += 1
+                rejoined = [w for w in sv._walk(stem, labels[lines[block + 2][1][0]])[0] if w[:2] != ("item", args[0])]
+                if not rejoined:
+                    continue
+                walked = sv._walk(stem, i, through=(i + 3,))[0]     # past a give that is a step's marker
+                self.assertEqual([w for w in walked if w[:2] != ("item", args[0])][-len(rejoined):],
+                                 rejoined, f"{stem}, line {i + 1}")
+        self.assertGreaterEqual(held, 15, "b38d3cc13's fifteen gifts")
+        li = next(s for s in sv.story() if s["kind"] == "battle" and s["key"] == "TRAINER_ELDER_LI")
+        self.assertIn(["flag", "FLAG_UNK_076", 1, False], li["writes"])
+        self.assertIn(["item", "ITEM_TM70", 1, True], li["writes"])
+
     def test_a_story_step_runs_as_the_game_runs_it(self):
         """Whitney beaten with the badge not given yet; the badge, whose
         undo puts her back to crying; the TM; Chuck's badge starting the
