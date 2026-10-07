@@ -279,12 +279,30 @@ the tags, the number), with the arrows, Page Up and Down, Home and End on
 the list, Enter and Esc, the current value marked and in view, however far
 down the list it is (the rows around it are drawn); the field shows the name,
 selected on focus, and goes back to its value when left without a pick. It
-serves the species (icon, form as "Slowpoke · Galar", types, Dex number),
-the moves (every source as a tag), the held item, the nature (its raised and
-lowered stat), the maps and places, a pocket's items and the boxes; the few
-choices (gender, the abilities, the filters, the direction, the Pokégear
-map's level) are buttons, and the emulator slot to load into a card each.
-There is no native select or datalist left.
+serves the species, the moves, the held item, the nature, the maps and
+places, a pocket's items and the boxes, and every row is the same
+(`comboRow`): an icon's slot, the name with its badges and tags, the
+numbers on the right (under the name where the two do not fit), a second
+line, and the list's own font and colour, as wide as its field and at least
+560 pixels where there is room. A species has its icon, its form as
+"Slowpoke · Galar", its types and its Dex number; an item (`itemRow`: the
+held item, the Items pocket's "Aggiungi") its bag icon, the price, the
+bag's description under it and, where the list mixes pockets, the pocket
+in its colour; a move (`moveRow`) the game's mark for its class, its type,
+power, accuracy and PP, and every source under it; a nature its raised
+stat in red and its lowered one in blue; a box its first Pokemon and how
+full it is; a place its star, what the save has of the person and the map
+under it. The icons come once: `/api/itemicons.png` is every item icon in
+one sheet (`GetItemIndexMapping`'s members of the icon archive: the
+folder's NCGR and NCLR, or the PNG `item_data.mk` builds one from, so a new
+picture shows before a build) and `/api/moveclasses.png` the three class
+marks (`sub_02077800`'s members of the battle archive); `/api/data` gives
+each item its cell, its price (`ITEMATTR_PRICE`) and description
+(`GetItemDescIntoString`'s bank), and each move its type, class, power and
+accuracy (`LoadMoveEntry`'s record). The few choices (gender, the
+abilities, the filters, the direction, the Pokégear map's level) are
+buttons, and the emulator slot to load into a card each. There is no
+native select or datalist left.
 
 Borsa: each pocket shows and offers only its own items, as `/api/data`
 gives them from the tree's `fieldPocket` -- this game's (`savedit`'s
