@@ -141,6 +141,20 @@ effect is battle code, and the editor says so and hands it to an agent.
   tests it, read from the scripts — for Paolo's story steps and so agents do not
   break the plot.
 
+- **Trainers on the map and in a list** (Paolo, 2026-10-05): the first map
+  editor -- "our Advance Map": NPCs, items, warps, events -- reaches the
+  trainers' teams too. A team is trainer data, not map data: the editor reads
+  the trainer ids a script fights (the scr_seq sources, their branches
+  included) and opens one team editor. A route also shows **all its trainers
+  as a list**, laid out like Pokemon Central's route pages (each trainer's
+  picture, class, name and reward; a grid of six team cards: icon, species,
+  gender, level, item), **everything clickable and editable in place**.
+  Event-bound trainers -- Silver and the like, three starter variants per
+  encounter, side by side -- are in the route's list **and** behind the event
+  that starts the battle; one team, edited from either. Checks: a team past the
+  level cap where it stands, a variant missing a Pokemon the others have; a
+  button that opens the emulator in that battle.
+
 *First proof:* the trainer editor (the data is `trainers.json`), with a party
 checked by the legality rules the save editor already has.
 
@@ -180,6 +194,15 @@ devkit makes them the games' own:
   hand, or tells the agent what to change ("bigger eyes", "the walk is too
   fast") and sees the new version at once, and in the game. The art is judged
   by his eye; the pipeline makes it reliable.
+
+- **Drawn by ChatGPT, converted here** (Paolo, 2026-10-07, proven on
+  Bramblin): Paolo has the pictures drawn by ChatGPT with his own subscription
+  and drops them in; the devkit converts them (magenta out, the DS's palettes,
+  the game's frame orders and sizes) and shows them in the game. The prompts,
+  the formats and the traps found are in `DEVKIT-PROMPTS.md`; the first
+  converter is `tools/newgold/devkit/sprites/convert_chatgpt.py`. A direct
+  ChatGPT hook would be a pay-per-use API -- not without Paolo's word. The item
+  editor uses the item-icon prompt the same way (first: the Mochi's icons).
 
 *First proof:* one overworld NPC sheet in, converted, shown walking in the game.
 
@@ -316,7 +339,13 @@ music -- so there is one system to build and to test.
   is the work. The rules: it does not cheat (it learns the player's moves, item and
   ability only when it sees them, and never reads the player's choice for the same
   turn); a skill level per trainer that rises through the game with konefr's level cap
-  (a Youngster, a leader, the Elite Four); dosed mistakes -- it picks among its best
+  (a Youngster, a leader, the Elite Four) -- a fine scale, not three tiers (Paolo,
+  2026-10-06): a number per trainer in `trainers.json` (say 1 to 10), its default
+  from the trainer's class and the story point where it stands (the level cap
+  there), so a Victory Road trainer outthinks an early route's Bug Catcher, and
+  gym trainers, a leader's aide, admins, the rival, the Elite Four, the Champion
+  and Red each sit higher, overridable per trainer in the devkit; the level
+  chooses which AI modules run and how many mistakes; dosed mistakes -- it picks among its best
   choices with some chance, more for ordinary trainers, little for the League, and does
   not always switch when it should; tuned by measurement in the battle lab (a party a
   player would have at that point, at the cap, a hundred fights against each leader,
