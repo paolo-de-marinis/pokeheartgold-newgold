@@ -1051,7 +1051,10 @@ function stepBase(id) {
     }
     case "ScrCmd_804": return `Mappa del Pokégear: livello ${s.key}`;
     case "NatDexFlagAction": return "Pokédex Nazionale";
-    default: return flagLabel(s.key);
+    default: {     // a constant with no Italian words: what the game says in its scene (the constant in the title)
+      const label = flagLabel(s.key);
+      return /^(FLAG|VAR)_/.test(label) && s.said ? `«${s.said}»` : label;
+    }
   }
 }
 // What a step writes, short; every write in its title.
@@ -1102,7 +1105,7 @@ function stepRow(id, extra = "") {
   const s = S.steps.get(id), done = S.save.story.done.includes(id), writes = writesLine(s), needs = needsLine(s, done);
   const left = S.save.story.left?.[id];
   return `<div class="step ${done ? "done" : ""}"><label><input type="checkbox" data-step="${id}" ${done ? "checked" : ""}>
-      <span><strong>${esc(stepLabel(id))}</strong>${extra}</span></label>
+      <span><strong title="${esc(`${s.key} · scr_seq_${s.script.slice(8)}.s, riga ${s.line}`)}">${esc(stepLabel(id))}</strong>${extra}</span></label>
     <div class="why" title="${esc(`scr_seq_${s.script.slice(8)}.s, riga ${s.line}: ${writes.join(", ")}`)}">${esc(s.section || "script comuni")} · scrive: ${esc(writes.slice(0, 5).join(", "))}${writes.length > 5 ? ` e altre ${writes.length - 5}` : ""}</div>
     ${needs.length ? `<div class="why">Il gioco controlla prima: ${needs.join(" · ")}</div>` : ""}
     ${left ? `<div class="why"><span class="no">Rimaste da quando l'hai tolto: ${esc(left.map(([n, v]) => `${n} = ${v}`).join(", "))}</span>

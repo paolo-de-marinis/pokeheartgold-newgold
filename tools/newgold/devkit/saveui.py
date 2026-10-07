@@ -1176,7 +1176,7 @@ def part(errors, name, read, empty):
 def story_table():
     """The story's steps as the page shows them."""
     keep = ("id", "script", "line", "kind", "key", "battle", "trainer", "section", "writes", "needs", "badge", "order",
-            "opens")
+            "opens", "said")
     return [{k: step.get(k) for k in keep} for step in sv.story()]
 
 

@@ -1387,11 +1387,47 @@ def bank(which):
     """A message bank's rows, by index, as the game prints them: the bank
     `which`, a function of src/message_format.c, opens."""
     body = c_function("src/message_format.c", f"void {which}(")
-    number = int(re.search(r"NARC_msg_msg_(\d+)_bin", body).group(1))
+    return _bank_rows(int(re.search(r"NARC_msg_msg_(\d+)_bin", body).group(1)))
+
+
+@tree_cache
+def _bank_rows(number):
+    """A message bank's text by its number, the rows as the gmm spells them."""
     sys.path.insert(0, str(ROOT / "tools/newgold/import"))
     import gmm
     source(gmm.path_of(number))
     return [html.unescape(row["text"]) for row in gmm.read(number)]
+
+
+def _said(stem, start):
+    """What the game says around a story step, for a step its constant does
+    not name (FLAG_UNK_078): the first message of the script entry it is in,
+    up to its marker, else the first after it; its words as printed, the
+    buffers and line breaks left out, cut short."""
+    script = _script(stem)
+    lines, entries = script["lines"], {script["labels"][e] for e in script["entries"] if e in script["labels"]}
+    message = re.compile(r"msg_(\d{4})\w*_(\d{5})$")
+    def text_at(j):
+        for arg in lines[j][1]:
+            found = message.match(arg)
+            if lines[j][0] in ("NPCMsg", "NonNPCMsg", "GenderMsgBox", "MsgBox") and found:
+                rows = _bank_rows(int(found.group(1)))
+                row = int(found.group(2))
+                return rows[row] if row < len(rows) else None
+        return None
+    found = None
+    for j in range(start, -1, -1):
+        found = text_at(j) or found
+        if j in entries:
+            break
+    for j in range(start + 1, len(lines)):
+        if found or lines[j][0] in _ENDS:
+            break
+        found = text_at(j)
+    if not found:
+        return ""
+    words = re.sub(r"\s+", " ", re.sub(r"\{[^}]*\}|\\[nrf]", " ", found)).strip()
+    return words if len(words) <= 90 else words[:88].rsplit(" ", 1)[0] + "…"
 
 
 @tree_cache
@@ -4251,6 +4287,7 @@ def story():
         sec = map_headers()[step["maps"][0]].get("mapsec") if step["maps"] else None
         step["section"] = names_sec[sections[sec]] if sec in sections and sections[sec] < len(names_sec) else ""
         step["needs"] = [list(need) for need in requirements[step["script"]].get(step["start"], [])]
+        step["said"] = _said(step["script"], step["start"])
     cleared = {args[0] for stem in _script_stems() for op, args in _script(stem)["lines"] if op == "ClearFlag" and args}
     for step in steps:
         step["gives"] = [tuple(w[:3]) for w in step["writes"] if not w[3]]

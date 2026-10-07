@@ -1456,6 +1456,20 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertIn(["flag", "FLAG_UNK_076", 1, False], li["writes"])
         self.assertIn(["item", "ITEM_TM70", 1, True], li["writes"])
 
+    def test_a_step_says_what_the_game_says(self):
+        """A step's "said": the first line the game prints in its scene, as
+        printed, without buffers or line breaks -- the name of a step whose
+        constant says nothing (FLAG_UNK_078, Sprout Tower)."""
+        steps = sv.story()
+        sprout = next(s for s in steps if s["key"] == "FLAG_UNK_078")
+        self.assertTrue(sprout["said"])
+        bank = sv._bank_rows(56)        # msg_0056_D15R0103, Sprout Tower 3F
+        self.assertTrue(any(sprout["said"].rstrip("…")[:30] in re.sub(r"\s+", " ", re.sub(r"\{[^}]*\}|\\[nrf]", " ", row))
+                            for row in bank), sprout["said"])
+        for s in steps:
+            self.assertFalse(re.search(r"[{}]|\\[nrf]", s["said"]), s["said"])
+            self.assertLessEqual(len(s["said"]), 90)
+
     def test_a_story_step_runs_as_the_game_runs_it(self):
         """Whitney beaten with the badge not given yet; the badge, whose
         undo puts her back to crying; the TM; Chuck's badge starting the
