@@ -204,13 +204,16 @@ int main(void) {
     assert(Pokedex_CheckMonCaughtFlag(&dex, SPECIES_TOXTRICITY));
 
     // Every form lands on a Dex page and in the record, and nothing else
-    // moves. New Gold's own species is no form, and has no page yet: seeing
-    // it records nothing.
+    // moves. New Gold's own species is no form: it is seen as itself, at its
+    // place after the last Dex species' (DexFlagNo), its byte of
+    // caughtLanguages inside the array.
     for (u16 species = NATIONAL_DEX_COUNT + 1; species <= NUM_SPECIES; species++) {
         Pokemon mon = { species };
         Pokedex_SetMonSeenFlag(&dex, &mon);
         if (IsOwnSpecies(species)) {
-            assert(!Pokedex_CheckMonSeenFlag(&dex, species));
+            u16 place = DexFlagNo(species) - 1;
+            assert(Pokedex_CheckMonSeenFlag(&dex, species));
+            assert(((const u8 *)dex.seenSpecies)[place / 8] >> place % 8 & 1);
             assert(!FormRecorded(dex.formsSeen, species));
             continue;
         }
@@ -307,7 +310,7 @@ int main(void) {
 }
 '''
 
-NATIVE = ["CheckDexFlag", "SetDexFlag", "SetDexFlagState",
+NATIVE = ["DexFlagNo", "CheckDexFlag", "SetDexFlag", "SetDexFlagState",
           "Pokedex_SetSeenGenderFlagInternal", "Pokedex_SetSeenGenderFlag",
           "DexSpeciesIsInvalid", "SpeciesToDexSpecies", "Pokedex_CheckMonCaughtFlag",
           "Pokedex_CheckMonSeenFlag", "Pokedex_RecordMonSeen", "Pokedex_SetMonSeenFlag", "Pokedex_SetMonCaughtFlag"]

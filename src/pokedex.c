@@ -44,7 +44,8 @@ BOOL DexSpeciesIsInvalid(u16 species) {
     // resets the game.
     // The same goes for the forms after the last Dex species, which have no
     // entry of their own: SpeciesToDexSpecies sends them to their base's.
-    return (species >= FIRST_DEX_GAP && species <= LAST_DEX_GAP) || species > NATIONAL_DEX_COUNT;
+    // New Gold's own species after them has one (DexFlagNo).
+    return (species >= FIRST_DEX_GAP && species <= LAST_DEX_GAP) || (species > NATIONAL_DEX_COUNT && species != SPECIES_BABY_LUGIA);
 }
 
 // Each form's base species, which is the Dex entry the form counts for.
@@ -458,8 +459,7 @@ static const u16 sFormBaseSpecies[NUM_SPECIES - NATIONAL_DEX_COUNT] = {
 // their own to count (Pokedex_IsOwnDexEntry).
 u16 SpeciesToDexSpecies(u16 species) {
     // New Gold's own species (tools/newgold/import/own_species.py) is no
-    // form: it counts as itself. Until it has a Dex page, DexSpeciesIsInvalid
-    // keeps it out of the Dex, silently.
+    // form: it counts as itself, on a Dex page of its own (DexFlagNo).
     if (species == SPECIES_BABY_LUGIA) {
         return species;
     }
@@ -475,8 +475,8 @@ u16 SpeciesToDexSpecies(u16 species) {
     return species;
 }
 
-// The National Dex counts walk the species up to the last Dex species; a
-// species credited to another is counted as that one, not again.
+// The National Dex counts walk every species, New Gold's own after the forms
+// included; a species credited to another is counted as that one, not again.
 static BOOL Pokedex_IsOwnDexEntry(u16 species) {
     return SpeciesToDexSpecies(species) == species;
 }
@@ -1026,26 +1026,41 @@ static const u16 sNationalDexNumbers[NATIONAL_DEX_COUNT - LAST_DEX_GAP] = {
 
 // A Dex species' National Dex number. HeartGold's own species are their
 // number; the identifiers in the gap are not Dex species and stay as they are.
+// New Gold's own species follows the reference's last, Pecharunt.
 u16 SpeciesToNationalDexNo(u16 species) {
+    if (species == SPECIES_BABY_LUGIA) {
+        return 1026;
+    }
     if (species > LAST_DEX_GAP && species <= NATIONAL_DEX_COUNT) {
         return sNationalDexNumbers[species - LAST_DEX_GAP - 1];
     }
     return species;
 }
 
+// Where a Dex species keeps its flags: at its own number, and New Gold's own
+// species (tools/newgold/import/own_species.py), past the forms, at the place
+// after the last Dex species'. HeartGold's fields have room for it there, so
+// the save keeps its size and meaning (docs/newgold/SAVE-LAYOUT.md): flag
+// NATIONAL_DEX_COUNT of the four flag arrays, below the byte that keeps
+// Deoxys's form order, and its byte of caughtLanguages, which ROUND_UP pads.
+// No save has either set.
+static u16 DexFlagNo(u16 species) {
+    return species == SPECIES_BABY_LUGIA ? NATIONAL_DEX_COUNT + 1 : species;
+}
+
 static inline BOOL CheckDexFlag(const u8 *array, u16 flagId) {
-    flagId--;
+    flagId = DexFlagNo(flagId) - 1;
     return (array[flagId >> 3] & (1 << (flagId & 7))) != 0;
 }
 
 static inline void SetDexFlag(u8 *array, u16 flagId) {
-    flagId--;
+    flagId = DexFlagNo(flagId) - 1;
     array[flagId >> 3] |= (1 << (flagId & 7));
 }
 
 static inline void SetDexFlagState(u8 *array, u8 state, u16 flagId) {
     GF_ASSERT(state < 2);
-    flagId--;
+    flagId = DexFlagNo(flagId) - 1;
     array[flagId >> 3] &= ~(1 << (flagId & 7));
     array[flagId >> 3] |= (state << (flagId & 7));
 }
@@ -1425,7 +1440,7 @@ static void Pokedex_SetCaughtLanguage(Pokedex *pokedex, u32 species, u32 languag
 
     shift = LanguageToDexFlag(language);
     if (shift != 6) {
-        pokedex->caughtLanguages[species] |= (1 << shift);
+        pokedex->caughtLanguages[DexFlagNo(species)] |= (1 << shift);
     }
 }
 
@@ -1530,7 +1545,7 @@ u16 Pokedex_CountNationalDexOwned(Pokedex *pokedex) {
     int i, n;
     ASSERT_POKEDEX(pokedex);
     n = 0;
-    for (i = 1; i <= NATIONAL_DEX_COUNT; i++) {
+    for (i = 1; i <= NUM_SPECIES; i++) {
         if (Pokedex_IsOwnDexEntry(i) && Pokedex_CheckMonCaughtFlag(pokedex, i) == TRUE) {
             n++;
         }
@@ -1542,7 +1557,7 @@ u16 Pokedex_CountNationalDexSeen(Pokedex *pokedex) {
     int i, n;
     ASSERT_POKEDEX(pokedex);
     n = 0;
-    for (i = 1; i <= NATIONAL_DEX_COUNT; i++) {
+    for (i = 1; i <= NUM_SPECIES; i++) {
         if (Pokedex_IsOwnDexEntry(i) && Pokedex_CheckMonSeenFlag(pokedex, i) == TRUE) {
             n++;
         }
@@ -1606,7 +1621,7 @@ u16 Pokedex_CountNationalOwned_ExcludeMythical(Pokedex *pokedex) {
     u16 n;
 
     n = 0;
-    for (i = 1; i <= NATIONAL_DEX_COUNT; i++) {
+    for (i = 1; i <= NUM_SPECIES; i++) {
         if (Pokedex_IsOwnDexEntry(i) && Pokedex_CheckMonCaughtFlag(pokedex, i) == TRUE && SpeciesIsNotNationalMythical(i) == TRUE) {
             n++;
         }
@@ -1800,7 +1815,7 @@ static u16 Pokedex_RecordMonSeen(Pokedex *pokedex, Pokemon *mon, u32 *forms) {
         }
         Pokedex_SetSeenGenderFlag(pokedex, gender, 0, species);
         if (form != species) {
-            pokedex->caughtLanguages[species] |= DEX_SEEN_AS_FORM_ONLY;
+            pokedex->caughtLanguages[DexFlagNo(species)] |= DEX_SEEN_AS_FORM_ONLY;
             pokedex->caughtLanguages[form - DEX_FIRST_FORM] |= DEX_FORM_SEEN_FIRST;
         }
     } else {
@@ -1808,7 +1823,7 @@ static u16 Pokedex_RecordMonSeen(Pokedex *pokedex, Pokemon *mon, u32 *forms) {
             Pokedex_SetSeenGenderFlag(pokedex, gender, 1, species);
         }
         if (form == species) {
-            pokedex->caughtLanguages[species] &= ~DEX_SEEN_AS_FORM_ONLY;
+            pokedex->caughtLanguages[DexFlagNo(species)] &= ~DEX_SEEN_AS_FORM_ONLY;
         }
     }
     Pokedex_TryAppendSeenForm(pokedex, species, mon);
@@ -1860,7 +1875,7 @@ BOOL Pokedex_HasCaughtMonWithLanguage(Pokedex *pokedex, u32 species, u32 languag
     GF_ASSERT(language <= 8);
     ASSERT_POKEDEX(pokedex);
     shift = LanguageToDexFlag(language);
-    if (pokedex->caughtLanguages[species] & (1 << shift)) {
+    if (pokedex->caughtLanguages[DexFlagNo(species)] & (1 << shift)) {
         return TRUE;
     } else {
         return FALSE;

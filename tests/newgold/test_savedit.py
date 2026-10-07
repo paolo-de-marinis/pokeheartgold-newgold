@@ -1183,6 +1183,38 @@ class SaveditLibraryTests(unittest.TestCase):
                          [b & 0x3F for b in self.open().block("SAVE_POKEDEX")[sv.DEX_LOOKS:sv.DEX_LOOKS + sv.NATIONAL_DEX_COUNT]])
         self.assert_only(save, ["SAVE_POKEDEX"])
 
+    def test_baby_lugia_s_dex_flags_are_at_its_place(self):
+        """New Gold's own Baby Lugia keeps its Dex flags at the place after
+        the last Dex species' (DexFlagNo, dex_place): set_dex and mark_dex
+        set bit 1041 of the seen and caught flags, and touch nothing else of
+        the block but the four arrays' bit 1041 and caughtLanguages[1042]
+        (and mark_dex the Dex's two switches, which it turns on)."""
+        n = sv.species_numbers()
+        lugia = n["BABY_LUGIA"]
+        self.assertEqual(sv.dex_place(lugia), sv.NATIONAL_DEX_COUNT + 1)
+        self.assertEqual(sv.dex_place(n["PECHARUNT"]), n["PECHARUNT"])
+        self.assertEqual(sv.dex_species()[-1], lugia)
+        words = (sv.DEX_SEEN - sv.DEX_CAUGHT) // 4
+        bit = sv.NATIONAL_DEX_COUNT
+        allowed = {at + bit // 8 for at in (sv.DEX_CAUGHT, sv.DEX_SEEN, sv.DEX_GENDERS, sv.DEX_GENDERS + 4 * words)}
+        switches = {sv.DEX_ENABLED, sv.DEX_NATIONAL}
+        for mark, also in ((lambda save: sv.set_dex(save, [lugia], True, True), set()),
+                           (lambda save: sv.mark_dex(save, ["BABY_LUGIA"]), switches)):
+            save = self.open()
+            before = bytes(save.block("SAVE_POKEDEX"))
+            sv.set_dex(save, [lugia], False, False)
+            mark(save)
+            after = bytes(save.block("SAVE_POKEDEX"))
+            changed = {i: before[i] ^ after[i] for i in range(len(before)) if before[i] != after[i]}
+            self.assertLessEqual(set(changed) - {sv.DEX_LOOKS + bit + 1} - also, allowed)
+            self.assertTrue(all(mask == 1 << bit % 8 for at, mask in changed.items() if at in allowed))
+            dex = sv.dex(self.written(save))
+            self.assertIn(lugia, dex["seen"])
+            self.assertIn(lugia, dex["caught"])
+            self.assertEqual(after[sv.DEX_CAUGHT + bit // 8] >> bit % 8 & 1, 1)
+            self.assertEqual(after[sv.DEX_SEEN + bit // 8] >> bit % 8 & 1, 1)
+            self.assert_only(save, ["SAVE_POKEDEX"])
+
     def test_a_form_s_gender_is_recorded_on_its_species(self):
         """Pokedex_RecordMonSeen records the gender a form is seen in on its
         species: Pyroar's female, a species of her own, seen first makes
@@ -1800,8 +1832,10 @@ class TheCodeSaveditKeeps(unittest.TestCase):
                                   r"MON_DATA_UNUSED_113, NULL\) & MON_HIDDEN_ABILITY_BIT\) && hiddenAbility != ABILITY_NONE\)"
                                   r".*else if \(ability2 != ABILITY_NONE\) \{\s*if \(pid & 1\) \{\s*SetBoxMonData\(boxMon, "
                                   r"MON_DATA_ABILITY, &ability2\);", "ability_slot")
-        self.assertIn("return (species >= FIRST_DEX_GAP && species <= LAST_DEX_GAP) || species > NATIONAL_DEX_COUNT;",
+        self.assertIn("return (species >= FIRST_DEX_GAP && species <= LAST_DEX_GAP) || (species > NATIONAL_DEX_COUNT && species != SPECIES_BABY_LUGIA);",
                       sv.c_function("src/pokedex.c", "BOOL DexSpeciesIsInvalid("), "dex_species")
+        self.assertIn("return species == SPECIES_BABY_LUGIA ? NATIONAL_DEX_COUNT + 1 : species;",
+                      sv.c_function("src/pokedex.c", "static u16 DexFlagNo("), "dex_place")
 
     def test_the_stats_are_calc_mon_stats(self):
         """stat_line and _set_party_stats are CalcMonStats (src/pokemon.c):

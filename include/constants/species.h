@@ -1479,7 +1479,9 @@
 // The forms the reference numbers as species -- megas, regional forms,
 // Gigantamax and the rest -- come after the last real species and are not
 // Dex numbers either. The species importer keeps NUM_SPECIES on the last
-// name; this one stays on the last Pokemon the Dex has a page for.
+// name; this one stays on the last Pokemon the Dex has a page for among the
+// reference's. New Gold's own species, past the forms, have a Dex page as
+// well (DexFlagNo in src/pokedex.c).
 #define LAST_DEX_SPECIES   SPECIES_PECHARUNT
 #define NATIONAL_DEX_COUNT LAST_DEX_SPECIES
 #define FIRST_DEX_GAP      SPECIES_EGG

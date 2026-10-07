@@ -1519,7 +1519,8 @@ class Scene:
         import party
         import where
         at = party.block(where.Memory(ram), self.elf, savedit.block_ids().index("SAVE_POKEDEX")) - 0x02000000 + caught_at()
-        return ram[at + (species - 1) // 8] >> (species - 1) % 8 & 1
+        flag = savedit.dex_place(species) - 1
+        return ram[at + flag // 8] >> flag % 8 & 1
 
     def balls_for(self, species):
         """For gym.fight: the balls the bag holds when catch: wants this wild

@@ -10,11 +10,16 @@ that print it in text are C, and each must take DEX_NUMBER_DIGITS.
 
 import re
 import struct
+import sys
 import unittest
 import zlib
 
 from test_dex_range import c_function, run_native
 from test_level_cap import ROOT
+
+sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+import own_species  # noqa: E402
+
 
 def read_png4(data):
     """A 4-bit grayscale PNG's pixels, as the graphics are stored here."""
@@ -72,7 +77,7 @@ typedef int BOOL;
 u16 SpeciesToJohtoDexNo(u16 species) { return species; }
 @NATIVE@
 int main(void) {
-    static int seen[1026];
+    static int seen[1027];
     /* Every Dex species outside the gap is one National Dex number, 1..1025,
        apart from the two Galarian forms kept as species, which share
        Slowpoke's and Slowbro's. */
@@ -88,17 +93,20 @@ int main(void) {
         assert(!seen[number]);
         seen[number] = 1;
     }
-    for (u32 number = 1; number <= 1025; number++) {
+    /* New Gold's own Baby Lugia, past the forms, is the next number */
+    seen[Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_BABY_LUGIA)] = 1;
+    for (u32 number = 1; number <= 1026; number++) {
         assert(seen[number]);
     }
     assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_ARCEUS) == 493);
     assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_VICTINI) == 494);
     assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_LILLIPUP) == 506);
     assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_PECHARUNT) == 1025);
+    assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_BABY_LUGIA) == @BABY_LUGIA@);
     assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_SLOWPOKE_GALARIAN) == 79);
     assert(Pokedex_ConvertToCurrentDexNo(TRUE, SPECIES_MEGA_VENUSAUR) == 3);
     assert(Pokedex_ConvertToCurrentDexNo(FALSE, SPECIES_CHIKORITA) == SPECIES_CHIKORITA);
-    printf("PASS: the Dex prints National Dex numbers 1..1025: Lillipup 506, Pecharunt 1025.\n");
+    printf("PASS: the Dex prints National Dex numbers 1..1026: Lillipup 506, Pecharunt 1025, Baby Lugia 1026.\n");
     return 0;
 }
 """
@@ -177,7 +185,9 @@ class DexDigitTests(unittest.TestCase):
         util = (ROOT / "src/pokedex_util.c").read_text()
         native = "\n".join([tables, c_function(pokedex, "SpeciesToDexSpecies"), c_function(pokedex, "SpeciesToNationalDexNo"),
                             c_function(util, "Pokedex_ConvertToCurrentDexNo")])
-        run_native(self, NATIONAL.replace("@NATIVE@", native), "newgold-dex-national-")
+        own = own_species.SPECIES["BABY_LUGIA"]["national"]
+        self.assertEqual(own, 1026)
+        run_native(self, NATIONAL.replace("@NATIVE@", native).replace("@BABY_LUGIA@", str(own)), "newgold-dex-national-")
 
     def test_the_grid_draws_four_digits(self):
         """The Dex list's grid draws its numbers as tiles, three after the

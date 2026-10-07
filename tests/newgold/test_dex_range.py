@@ -18,6 +18,7 @@ import sys
 import tempfile
 import unittest
 
+from test_form_dex import own_defines
 from test_level_cap import ROOT, function
 
 PREFIX = r'''
@@ -33,6 +34,7 @@ typedef int BOOL;
 // A failed assertion resets the console; here it is only counted.
 static int assertions;
 #define GF_ASSERT(expr) ((expr) ? (void)0 : (void)assertions++)
+@OWN@
 @NATIVE@
 '''
 
@@ -52,10 +54,11 @@ int main(void) {
     }
 
     // The forms after the last Dex species have no entry either, and are met
-    // in battle all the time, so they are silent too.
+    // in battle all the time, so they are silent too. New Gold's own species
+    // after them has one.
     for (u16 species = NATIONAL_DEX_COUNT + 1; species <= NUM_SPECIES; species++) {
         assertions = 0;
-        assert(DexSpeciesIsInvalid(species) == TRUE);
+        assert(DexSpeciesIsInvalid(species) == !IsOwnSpecies(species));
         assert(assertions == 0);
     }
 
@@ -76,7 +79,7 @@ int main(void) {
     assert(assertions == 1);
 
     printf("PASS: %d Dex species, %d without an entry silently, impossible species still assert.\n",
-        NATIONAL_DEX_COUNT - NUM_DEX_GAP, NUM_DEX_GAP + NUM_SPECIES - NATIONAL_DEX_COUNT);
+        NATIONAL_DEX_COUNT - NUM_DEX_GAP + NUM_OWN_SPECIES, NUM_DEX_GAP + NUM_SPECIES - NATIONAL_DEX_COUNT - NUM_OWN_SPECIES);
 }
 '''
 
@@ -133,7 +136,21 @@ int main(void) {
     for (u8 i = 0; i < 4; i++) {
         assert(Pokedex_GetSeenDeoxysFormByIndex(&dex, i) == 15);
     }
-    printf("PASS: a new game has seen none of the %d Dex species; the Deoxys forms sit past them.\n", NATIONAL_DEX_COUNT);
+    // New Gold's own species keeps its flags at the place after the last Dex
+    // species' (DexFlagNo): flag NATIONAL_DEX_COUNT, and nothing else, not
+    // Pecharunt's flag nor the Deoxys form order.
+    Pokedex own = { 0 };
+    Pokedex_InitDeoxysFormOrder(&own);
+    SetDexFlag((u8 *)own.caughtSpecies, SPECIES_BABY_LUGIA);
+    assert(CheckDexFlag((const u8 *)own.caughtSpecies, SPECIES_BABY_LUGIA));
+    assert(!CheckDexFlag((const u8 *)own.caughtSpecies, SPECIES_PECHARUNT));
+    for (u32 i = 0; i < sizeof(own.caughtSpecies) - 1; i++) {
+        assert(((const u8 *)own.caughtSpecies)[i] == (i == NATIONAL_DEX_COUNT / 8 ? 1 << NATIONAL_DEX_COUNT % 8 : 0));
+    }
+    for (u8 i = 0; i < 4; i++) {
+        assert(Pokedex_GetSeenDeoxysFormByIndex(&own, i) == 15);
+    }
+    printf("PASS: a new game has seen none of the %d Dex species; the Deoxys forms sit past them, Baby Lugia before.\n", NATIONAL_DEX_COUNT);
     return 0;
 }
 """
@@ -195,6 +212,38 @@ int main(void) {
 }
 """
 
+OWN_PLACES = r"""
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "constants/species.h"
+typedef uint16_t u16;
+@DEFINES@
+@OWN@
+@NATIVE@
+
+int main(void) {
+    static int taken[NUM_SPECIES + 1];
+    for (u16 species = 1; species <= NUM_SPECIES; species++) {
+        u16 place = DexFlagNo(species);
+        if (!IsOwnSpecies(species)) {
+            assert(place == species);
+            continue;
+        }
+        // past the last Dex species', a byte of caughtLanguages that
+        // ROUND_UP pads the array with, and a flag below Deoxys's byte
+        assert(place > NATIONAL_DEX_COUNT && !taken[place]);
+        assert(place < ROUND_UP(NATIONAL_DEX_COUNT, 4));
+        assert(place - 1 < 32 * (NUM_DEX_FLAG_WORDS - 1) + 24);
+        taken[place] = 1;
+    }
+    printf("PASS: New Gold's own species keep their Dex flags in HeartGold's fields, Baby Lugia's at %d.\n",
+        DexFlagNo(SPECIES_BABY_LUGIA));
+    return 0;
+}
+"""
+
+
 def c_function(source, name):
     """Like test_level_cap.function, but for any storage class and return type."""
     match = re.search(r"^[\w \*]*\b" + name + r"\([^;]*?\) \{", source, re.M)
@@ -248,7 +297,13 @@ int main(void) {
     }
     assert(Pokedex_CountNationalDexOwned(&dex) == 1025);
     assert(Pokedex_CountNationalDexSeen(&dex) == 1025);
-    printf("PASS: Galarian Slowpoke and Slowbro count as Slowpoke and Slowbro; a full Dex is 1025.\n");
+    /* and New Gold's own Baby Lugia, past the forms: 1026 */
+    SetDexFlag((u8 *)dex.caughtSpecies, SPECIES_BABY_LUGIA);
+    SetDexFlag((u8 *)dex.seenSpecies, SPECIES_BABY_LUGIA);
+    assert(Pokedex_CheckMonCaughtFlag(&dex, SPECIES_BABY_LUGIA));
+    assert(Pokedex_CountNationalDexOwned(&dex) == 1026);
+    assert(Pokedex_CountNationalDexSeen(&dex) == 1026);
+    printf("PASS: Galarian Slowpoke and Slowbro count as Slowpoke and Slowbro; a full Dex is 1026.\n");
     return 0;
 }
 """
@@ -310,7 +365,7 @@ class DexRangeTests(unittest.TestCase):
         header = (ROOT / "include/pokedex.h").read_text()
         defines = "\n".join(line for line in header.splitlines() if line.startswith(("#define CEILDIV", "#define NUM_DEX_FLAG_WORDS")))
         native = "\n".join(c_function(source, name) for name in (
-            "CheckDexFlag", "SetDexFlag", "CheckDex4Flag", "SetDex4Flag",
+            "DexFlagNo", "CheckDexFlag", "SetDexFlag", "CheckDex4Flag", "SetDex4Flag",
             "Pokedex_DeoxysFormFlagActionInternal", "Pokedex_DeoxysFormFlagAction",
             "Pokedex_GetSeenDeoxysFormByIndex", "Pokedex_InitDeoxysFormOrder"))
         run_native(self, DEOXYS.replace("@DEFINES@", defines).replace("@NATIVE@", native), "newgold-deoxys-",
@@ -330,14 +385,26 @@ class DexRangeTests(unittest.TestCase):
         form_table = source[source.index("static const u16 sFormBaseSpecies["):]
         form_table = form_table[:form_table.index("};") + 2]
         native = "\n".join([form_table] + [c_function(source, name) for name in (
-            "DexSpeciesIsInvalid", "SpeciesToDexSpecies", "Pokedex_IsOwnDexEntry", "CheckDexFlag", "SetDexFlag",
+            "DexSpeciesIsInvalid", "SpeciesToDexSpecies", "Pokedex_IsOwnDexEntry", "DexFlagNo", "CheckDexFlag", "SetDexFlag",
             "Pokedex_CheckMonCaughtFlag", "Pokedex_CheckMonSeenFlag",
             "Pokedex_CountNationalDexOwned", "Pokedex_CountNationalDexSeen")])
         run_native(self, GALARIAN.replace("@DEFINES@", defines).replace("@NATIVE@", native), "newgold-dex-galarian-")
 
+    def test_the_own_species_dex_flags_fit_heartgold_s_fields(self):
+        """DexFlagNo keeps New Gold's own species' flags past the last Dex
+        species': each has to find its byte of caughtLanguages in the padding
+        and its flag below the byte that keeps Deoxys's form order, or the
+        save would need a layout (docs/newgold/SAVE-LAYOUT.md)."""
+        source = (ROOT / "src/pokedex.c").read_text()
+        header = (ROOT / "include/pokedex.h").read_text()
+        defines = "\n".join(line for line in header.splitlines()
+                            if line.startswith(("#define ROUND_UP", "#define CEILDIV", "#define NUM_DEX_FLAG_WORDS")))
+        program = OWN_PLACES.replace("@DEFINES@", defines).replace("@OWN@", own_defines())
+        run_native(self, program.replace("@NATIVE@", c_function(source, "DexFlagNo")), "newgold-dex-own-")
+
     def test_new_species_do_not_reset_the_game(self):
         native = function((ROOT / "src/pokedex.c").read_text(), "DexSpeciesIsInvalid")
-        program = PREFIX.replace("@NATIVE@", native) + MAIN
+        program = PREFIX.replace("@OWN@", own_defines()).replace("@NATIVE@", native) + MAIN
         with tempfile.TemporaryDirectory(prefix="newgold-dex-range-") as temp:
             c, exe = Path(temp) / "check.c", Path(temp) / "check"
             c.write_text(program)
@@ -348,8 +415,11 @@ class DexRangeTests(unittest.TestCase):
             print(result.stdout.strip())
 
     def test_the_dex_reaches_the_end_of_the_species(self):
+        """The three National counts walk every species, New Gold's own past
+        the forms included (Pokedex_IsOwnDexEntry leaves the forms out)."""
         source = (ROOT / "src/pokedex.c").read_text()
-        self.assertGreater(source.count("i <= NATIONAL_DEX_COUNT"), 0)
+        self.assertEqual(source.count("i <= NUM_SPECIES"), 3)
+        self.assertEqual(source.count("i <= NATIONAL_DEX_COUNT"), 0)
         header = (ROOT / "include/constants/species.h").read_text()
         self.assertIn("#define NATIONAL_DEX_COUNT LAST_DEX_SPECIES", header)
         self.assertIn("#define LAST_DEX_SPECIES   SPECIES_PECHARUNT", header)

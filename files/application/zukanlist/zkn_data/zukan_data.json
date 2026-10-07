@@ -21187,7 +21187,8 @@
             "SPECIES_IRON_BOULDER",
             "SPECIES_IRON_CROWN",
             "SPECIES_TERAPAGOS",
-            "SPECIES_PECHARUNT"
+            "SPECIES_PECHARUNT",
+            "SPECIES_BABY_LUGIA"
           ]
         },
         {
@@ -21499,6 +21500,7 @@
             "SPECIES_AZELF",
             "SPECIES_AZUMARILL",
             "SPECIES_AZURILL",
+            "SPECIES_BABY_LUGIA",
             "SPECIES_BAGON",
             "SPECIES_BALTOY",
             "SPECIES_BANETTE",
@@ -23054,6 +23056,7 @@
               "SPECIES_MONFERNO",
               "SPECIES_EELEKTRIK",
               "SPECIES_GROVYLE",
+              "SPECIES_BABY_LUGIA",
               "SPECIES_BALTOY",
               "SPECIES_HAWLUCHA",
               "SPECIES_QUAXWELL",
@@ -24081,6 +24084,7 @@
               "SPECIES_MONFERNO",
               "SPECIES_EELEKTRIK",
               "SPECIES_GROVYLE",
+              "SPECIES_BABY_LUGIA",
               "SPECIES_BALTOY",
               "SPECIES_HAWLUCHA",
               "SPECIES_QUAXWELL",
@@ -25001,6 +25005,7 @@
               "SPECIES_HAWLUCHA",
               "SPECIES_QUAXWELL",
               "SPECIES_GROVYLE",
+              "SPECIES_BABY_LUGIA",
               "SPECIES_KECLEON",
               "SPECIES_MONFERNO",
               "SPECIES_EELEKTRIK",
@@ -26028,6 +26033,7 @@
               "SPECIES_HAWLUCHA",
               "SPECIES_QUAXWELL",
               "SPECIES_GROVYLE",
+              "SPECIES_BABY_LUGIA",
               "SPECIES_KECLEON",
               "SPECIES_MONFERNO",
               "SPECIES_EELEKTRIK",
@@ -26931,6 +26937,7 @@
               "SPECIES_FLUTTER_MANE",
               "SPECIES_IRON_VALIANT",
               "SPECIES_FEZANDIPITI",
+              "SPECIES_BABY_LUGIA",
               "SPECIES_NIDOQUEEN",
               "SPECIES_CLEFABLE",
               "SPECIES_POLIWRATH",
@@ -27958,6 +27965,7 @@
               "SPECIES_FLUTTER_MANE",
               "SPECIES_IRON_VALIANT",
               "SPECIES_FEZANDIPITI",
+              "SPECIES_BABY_LUGIA",
               "SPECIES_NIDOQUEEN",
               "SPECIES_CLEFABLE",
               "SPECIES_POLIWRATH",
@@ -29396,6 +29404,7 @@
               "SPECIES_FLUTTER_MANE",
               "SPECIES_IRON_VALIANT",
               "SPECIES_FEZANDIPITI",
+              "SPECIES_BABY_LUGIA",
               "SPECIES_PIDGEOT",
               "SPECIES_VENOMOTH",
               "SPECIES_ALAKAZAM",
@@ -30423,6 +30432,7 @@
               "SPECIES_FLUTTER_MANE",
               "SPECIES_IRON_VALIANT",
               "SPECIES_FEZANDIPITI",
+              "SPECIES_BABY_LUGIA",
               "SPECIES_PIDGEOT",
               "SPECIES_VENOMOTH",
               "SPECIES_ALAKAZAM",
@@ -30775,6 +30785,7 @@
         {
           "id": "b",
           "mons": [
+            "SPECIES_BABY_LUGIA",
             "SPECIES_BAGON",
             "SPECIES_BALTOY",
             "SPECIES_BANETTE",
@@ -32279,7 +32290,8 @@
             "SPECIES_KILOWATTREL",
             "SPECIES_BOMBIRDIER",
             "SPECIES_FLAMIGO",
-            "SPECIES_IRON_JUGULIS"
+            "SPECIES_IRON_JUGULIS",
+            "SPECIES_BABY_LUGIA"
           ]
         },
         {
@@ -33324,7 +33336,8 @@
             "SPECIES_IRON_LEAVES",
             "SPECIES_MUNKIDORI",
             "SPECIES_IRON_BOULDER",
-            "SPECIES_IRON_CROWN"
+            "SPECIES_IRON_CROWN",
+            "SPECIES_BABY_LUGIA"
           ]
         },
         {
@@ -34330,7 +34343,8 @@
             "SPECIES_BOMBIRDIER",
             "SPECIES_FLAMIGO",
             "SPECIES_FLUTTER_MANE",
-            "SPECIES_FEZANDIPITI"
+            "SPECIES_FEZANDIPITI",
+            "SPECIES_BABY_LUGIA"
           ]
         },
         {
@@ -34756,6 +34770,7 @@
             "SPECIES_AZELF",
             "SPECIES_AZUMARILL",
             "SPECIES_AZURILL",
+            "SPECIES_BABY_LUGIA",
             "SPECIES_BAGON",
             "SPECIES_BALTOY",
             "SPECIES_BANETTE",

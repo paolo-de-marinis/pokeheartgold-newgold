@@ -965,6 +965,10 @@ def _dex_tables():
     base = {numbers[a]: numbers[b] for a, b in
             re.findall(r"\[SPECIES_(\w+) - NATIONAL_DEX_COUNT - 1\] = SPECIES_(\w+)", source)}
     national = {numbers[a]: int(b) for a, b in re.findall(r"\[SPECIES_(\w+) - LAST_DEX_GAP - 1\] = (\d+)", source)}
+    # New Gold's own species is numbered in own_species.py (SpeciesToNationalDexNo).
+    sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+    import own_species
+    national.update({numbers[name]: own["national"] for name, own in own_species.SPECIES.items() if name in numbers})
     return base, national
 
 

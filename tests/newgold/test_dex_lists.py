@@ -84,9 +84,10 @@ int main(void) {
     u32 count = 0;
     allocate(&app);
     app.unk_1858 = TRUE;
-    /* every Dex species by its National Dex number, as the national sort list has them */
-    for (u32 number = 1; number <= 1025; number++) {
-        for (u32 s = 1; s <= NATIONAL_DEX_COUNT; s++) {
+    /* every Dex species by its National Dex number, as the national sort list
+       has them, New Gold's own Baby Lugia past the forms the last */
+    for (u32 number = 1; number <= 1026; number++) {
+        for (u32 s = 1; s <= NUM_SPECIES; s++) {
             if (s == SPECIES_SLOWPOKE_GALARIAN || s == SPECIES_SLOWBRO_GALARIAN || (s >= FIRST_DEX_GAP && s <= LAST_DEX_GAP)) {
                 continue;
             }
@@ -95,7 +96,7 @@ int main(void) {
             }
         }
     }
-    assert(count == 1025);
+    assert(count == 1026);
     memcpy(sOrder, species, sizeof(species));
     sOrderCount = count;
     static PokedexArgs args;
@@ -107,21 +108,25 @@ int main(void) {
     }
     ov18_021F81D8(&app.unk_0878, NULL, species, count);
     assert(app.unk_0878.unk_7B4 == count);
-    assert(app.unk_0878.unk_7B6 == count / 2 + 1);
+    u32 caught = 0;
+    for (u32 i = 0; i < count; i++) {
+        caught += species[i] % 2;
+    }
+    assert(app.unk_0878.unk_7B6 == caught);
     ov18_021F8884(&app, 1);
     for (u32 i = 0; i < count; i++) {
         u32 slot = SpeciesToNationalDexNo(species[i]) - 1;
         assert(app.unk_1030[slot].unk_0 == species[i]);
         assert(app.unk_1030[slot].unk_2 == (species[i] % 2 ? 2 : 1));
     }
-    assert(ov18_021F891C(&app, TRUE) == 1025);
+    assert(ov18_021F891C(&app, TRUE) == 1026);
     /* the grid draws ten rows of five from its page's first entry */
-    for (u32 i = 1025; i < 1025 + 50; i++) {
+    for (u32 i = 1026; i < 1025 + 50; i++) {
         assert(app.unk_1030[i].unk_0 == SPECIES_NONE);
     }
     ov18_021F8884(&app, 0);
-    assert(app.unk_1030[count].unk_0 == SPECIES_PECHARUNT);
-    printf("PASS: the Dex list and its grid hold all %u Dex species, Pecharunt at No. %u.\n", count, ov18_021F891C(&app, TRUE));
+    assert(app.unk_1030[count].unk_0 == SPECIES_BABY_LUGIA);
+    printf("PASS: the Dex list and its grid hold all %u Dex species, Baby Lugia at No. %u.\n", count, ov18_021F891C(&app, TRUE));
     return 0;
 }
 """

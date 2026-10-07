@@ -117,7 +117,8 @@ def metrics(reference, styles):
 def dex_species(numbers, national):
     """Every species with a Dex entry of its own, by identifier: HeartGold's
     and the ones after the gap, but not the two Galarian forms kept as
-    species, which share Slowpoke's and Slowbro's numbers."""
+    species, which share Slowpoke's and Slowbro's numbers; then New Gold's
+    own past the forms (own_species.py)."""
     header = SPECIES_H.read_text(errors="replace")
     edge = {name: numbers[re.search(rf"#define {name}\s+SPECIES_([A-Z0-9_]+)", header).group(1)]
             for name in ("FIRST_DEX_GAP", "LAST_DEX_GAP", "LAST_DEX_SPECIES")}
@@ -129,7 +130,7 @@ def dex_species(numbers, national):
         if number > edge["LAST_DEX_GAP"] and national[names[number]] <= RETAIL_LAST:
             continue  # a form kept as a species: its number is its base's
         out.append(number)
-    return out
+    return out + [numbers[name] for name in own_species.SPECIES if name in numbers]
 
 
 def variants(value):
@@ -141,7 +142,8 @@ def reference_types(reference, numbers):
     """Each species' two types, as the reference's data/Species.c gives them:
     the type lists follow the tree they are written from, so the engine's
     and New Gold's (whose rebalance retypes a few species) each have their
-    own. A species the reference does not type keeps this tree's."""
+    own. A species the reference does not type keeps this tree's, and New
+    Gold's own takes its like's."""
     personal = json.loads(PERSONAL.read_text())["baseStats"]
     out = [set(entry["types"]) for entry in personal]
     text = (reference / "data/Species.c").read_text(errors="replace")
@@ -149,6 +151,9 @@ def reference_types(reference, numbers):
         found = re.search(r"\.types\s*=\s*\{\s*(TYPE_\w+)\s*,\s*(TYPE_\w+)\s*\}", block.group(2))
         if found and block.group(1) in numbers and numbers[block.group(1)] < len(out):
             out[numbers[block.group(1)]] = set(found.groups())
+    for name in own_species.SPECIES:
+        if name in numbers:
+            out[numbers[name]] = out[numbers[own_species.like(name)]]
     return out
 
 
@@ -156,6 +161,7 @@ def sort_lists(data, numbers, national, types):
     """The sort lists, as zukan_data.json's "sorting" has them, for every Dex
     species."""
     names = {number: name for name, number in numbers.items()}
+    national = {**national, **{name: own["national"] for name, own in own_species.SPECIES.items()}}
     shown = {row["index"]: row["text"] for row in gmm.read(SPECIES_NAMES)}
     stats = data["mon_stats"]
     species = dex_species(numbers, national)
@@ -205,8 +211,10 @@ def sort_lists(data, numbers, national, types):
 
 def area_flags(numbers):
     """zukan_hw_data_1, one byte of area flags a species, carried to the last
-    Dex species: an added species is found nowhere this Dex maps."""
-    last = numbers[re.search(r"#define LAST_DEX_SPECIES\s+SPECIES_([A-Z0-9_]+)", SPECIES_H.read_text()).group(1)]
+    Dex species, New Gold's own past the forms included: an added species is
+    found nowhere this Dex maps."""
+    last = max([numbers[re.search(r"#define LAST_DEX_SPECIES\s+SPECIES_([A-Z0-9_]+)", SPECIES_H.read_text()).group(1)]]
+               + [numbers[name] for name in own_species.SPECIES if name in numbers])
     out = {}
     for path in sorted(AREA_FLAGS.glob("zukan_hw_data_1_*.bin")):
         flags = path.read_bytes()[:RETAIL_LAST + 1]

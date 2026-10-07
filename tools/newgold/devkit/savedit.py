@@ -875,8 +875,8 @@ def put_in_pocket(block, pocket, item, quantity, layout=0):
 
 
 def set_dex_flag(block, at, species):
-    """SetDexFlag: the species number, counted from one."""
-    flag = species - 1
+    """SetDexFlag: the species' place (dex_place), counted from one."""
+    flag = dex_place(species) - 1
     block[at + (flag >> 3)] |= 1 << (flag & 7)
 
 
@@ -1341,7 +1341,7 @@ def mark_dex(save, names):
             _set_seen_form(block, numbers[name])
         set_dex_flag(block, DEX_SEEN, numbers[name])
         set_dex_flag(block, DEX_CAUGHT, numbers[name])
-        block[DEX_LOOKS + numbers[name]] &= ~DEX_SEEN_AS_FORM_ONLY
+        block[DEX_LOOKS + dex_place(numbers[name])] &= ~DEX_SEEN_AS_FORM_ONLY
     block[DEX_ENABLED] = 1
     block[DEX_NATIONAL] = 1
 
@@ -1555,7 +1555,7 @@ def species_table():
     out, named = [], set()
     for number in range(1, min(len(bank(SPECIES_NAMES)), len(personal_records()))):
         const, name = by_id.get(number, ""), species_name(number)
-        form = number in gap or number > NATIONAL_DEX_COUNT
+        form = number in gap or number > NATIONAL_DEX_COUNT and number not in own_dex_species()
         out.append({"id": number, "name": name, "const": const,
                     "label": f"{name} ({const.replace('_', ' ').title()})" if form or name in named else name,
                     "dex": not form, "egg": number in (numbers["EGG"], numbers["BAD_EGG"]),
@@ -3228,15 +3228,37 @@ def dex_species():
     """The species with a Dex page: 1 to NATIONAL_DEX_COUNT but the egg and
     the retail forms numbered between Arceus and the species New Gold adds
     (DexSpeciesIsInvalid), and the two Galarian forms kept as species, which
-    the Dex credits to Slowpoke and Slowbro (SpeciesToDexSpecies)."""
+    the Dex credits to Slowpoke and Slowbro (SpeciesToDexSpecies); then New
+    Gold's own species past the forms."""
     numbers = species_numbers()
     credited = {numbers["SLOWPOKE_GALARIAN"], numbers["SLOWBRO_GALARIAN"]}
     return [s for s in range(1, NATIONAL_DEX_COUNT + 1)
-            if not FIRST_DEX_GAP <= s <= LAST_DEX_GAP and s not in credited]
+            if not FIRST_DEX_GAP <= s <= LAST_DEX_GAP and s not in credited] + own_dex_species()
+
+
+@tree_cache
+def own_dex_species():
+    """New Gold's own species (tools/newgold/import/own_species.py), by
+    number, in the order their flags take the places after the last Dex
+    species' (dex_place)."""
+    source("tools/newgold/import/own_species.py")
+    sys.path.insert(0, str(ROOT / "tools/newgold/import"))
+    import own_species
+    numbers = species_numbers()
+    return [numbers[name] for name in own_species.SPECIES if name in numbers]
+
+
+def dex_place(species):
+    """DexFlagNo: where the Dex keeps a species' flags and its byte of
+    caughtLanguages. A species' own number, and New Gold's own species, past
+    the forms, the places after the last Dex species'."""
+    own = own_dex_species()
+    return NATIONAL_DEX_COUNT + 1 + own.index(species) if species in own else species
 
 
 def _dex_bit(block, at, species):
-    return (block[at + ((species - 1) >> 3)] >> ((species - 1) & 7)) & 1
+    flag = dex_place(species) - 1
+    return (block[at + (flag >> 3)] >> (flag & 7)) & 1
 
 
 def dex(save):
@@ -3327,10 +3349,11 @@ def _set_seen_genders(block, species, seen_as=None):
     archive: an assertion, and no picture."""
     ratio = GENDER_RATIO(personal_records()[personal_row(seen_as or species, 0)]["genderRatio"])
     first, second = {MON_RATIO_FEMALE: (1, 1), MON_RATIO_MALE: (0, 0), MON_RATIO_UNKNOWN: (0, 0)}.get(ratio, (0, 1))
-    bit = 1 << ((species - 1) & 7)
+    flag = dex_place(species) - 1
+    bit = 1 << (flag & 7)
     # seenGenders[1] follows [0], each as long as the seen flags.
     for at, female in ((DEX_GENDERS, first), (DEX_GENDERS + DEX_SEEN - DEX_CAUGHT, second)):
-        at += (species - 1) >> 3
+        at += flag >> 3
         block[at] = block[at] | bit if female else block[at] & ~bit
 
 
@@ -3406,11 +3429,12 @@ def set_dex(save, species, seen, caught):
         if seen and not _dex_bit(block, DEX_SEEN, s):
             _set_seen_genders(block, s)
             _set_seen_form(block, s)
+        place = dex_place(s)
         if not seen or not _dex_bit(block, DEX_SEEN, s):
-            block[DEX_LOOKS + s] &= ~DEX_SEEN_AS_FORM_ONLY
+            block[DEX_LOOKS + place] &= ~DEX_SEEN_AS_FORM_ONLY
         for at, on in ((DEX_SEEN, seen), (DEX_CAUGHT, caught)):
-            bit = 1 << ((s - 1) & 7)
-            block[at + ((s - 1) >> 3)] = block[at + ((s - 1) >> 3)] | bit if on else block[at + ((s - 1) >> 3)] & ~bit
+            bit = 1 << ((place - 1) & 7)
+            block[at + ((place - 1) >> 3)] = block[at + ((place - 1) >> 3)] | bit if on else block[at + ((place - 1) >> 3)] & ~bit
         if s == species_numbers()["UNOWN"]:
             for at, on in ((UNOWN_SEEN, seen), (UNOWN_CAUGHT, caught)):
                 if on and block[at] == 0xFF:

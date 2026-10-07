@@ -23,6 +23,7 @@ from test_level_cap import ROOT
 
 sys.path.insert(0, str(ROOT / "tools/newgold/import"))
 import gmm  # noqa: E402
+import own_species  # noqa: E402
 
 DIR = ROOT / "files/application/zukanlist/zkn_data"
 SORT_LISTS_START = 11   # members 0..10 are the mon_stats tables
@@ -74,7 +75,8 @@ class DexSortListTests(unittest.TestCase):
 
 def national_numbers():
     """species -> National Dex number, as Pokedex_ConvertToCurrentDexNo
-    answers: its own number up to Arceus, the table in src/pokedex.c after."""
+    answers: its own number up to Arceus, the table in src/pokedex.c after,
+    and New Gold's own species' numbers (own_species.py) past the forms."""
     source = (ROOT / "src/pokedex.c").read_text()
     table = source[source.index("static const u16 sNationalDexNumbers["):]
     table = table[:table.index("};")]
@@ -82,6 +84,8 @@ def national_numbers():
     out = {species: species for species in range(1, ids["SPECIES_ARCEUS"] + 1)}
     for name, number in re.findall(r"\[(SPECIES_\w+) - LAST_DEX_GAP - 1\] = (\d+),", table):
         out[ids[name]] = int(number)
+    for name, own in own_species.SPECIES.items():
+        out[ids["SPECIES_" + name]] = own["national"]
     return out
 
 
@@ -103,9 +107,10 @@ class DexSortListContentTests(unittest.TestCase):
 
     def test_the_national_order_is_every_dex_species(self):
         national = [self.ids[name] for name in self.flat(("dex_order", "national"))]
-        self.assertEqual(len(national), 1025)
+        self.assertEqual(len(national), 1026)
         self.assertEqual(sorted(national), sorted(self.dex))
-        self.assertEqual([self.numbers[s] for s in national], list(range(1, 1026)))
+        self.assertEqual([self.numbers[s] for s in national], list(range(1, 1027)))
+        self.assertEqual(national[-1], self.ids["SPECIES_BABY_LUGIA"])
         header = (ROOT / "include/application/pokedex/pokedex_internal.h").read_text()
         self.assertIn("#define POKEDEX_LIST_LEN      NATIONAL_DEX_COUNT", header)
         self.assertLessEqual(len(national), self.ids["SPECIES_PECHARUNT"])
@@ -124,18 +129,22 @@ class DexSortListContentTests(unittest.TestCase):
             self.assertEqual(got, sorted(got), order)
 
     def test_the_area_flags_reach_the_last_dex_species(self):
+        """New Gold's own Baby Lugia, past the forms, the last."""
         for path in sorted((DIR / "zukan_hw_data").glob("zukan_hw_data_1_*.bin")):
             flags = path.read_bytes()
-            self.assertEqual(len(flags), self.ids["SPECIES_PECHARUNT"] + 1, path.name)
+            self.assertEqual(len(flags), max(self.dex) + 1, path.name)
+            self.assertEqual(len(flags), self.ids["SPECIES_BABY_LUGIA"] + 1, path.name)
             # an added species has no area of its own: "unknown", and any
             self.assertEqual(flags[self.ids["SPECIES_LILLIPUP"]], 8 | 4, path.name)
+            self.assertEqual(flags[self.ids["SPECIES_BABY_LUGIA"]], 8 | 4, path.name)
 
     def test_every_dex_species_has_its_body_style(self):
         """The reference gives every species past Arceus the placeholder
         quadruped, so the body-style search listed only HeartGold's 493.
         Each Dex species is in one body-style list, an added one under the
-        games' shape (body_shapes.csv), and the shapes' order maps onto
-        retail's but for the nine the later games moved."""
+        games' shape (body_shapes.csv), New Gold's own under its like's, and
+        the shapes' order maps onto retail's but for the nine the later games
+        moved."""
         from body_shapes import styles
         shapes = styles()
         lists = [o["mons"] for g in self.data["sorting"] if g["type"] == "body_style" for o in g["options"]]
@@ -145,14 +154,18 @@ class DexSortListContentTests(unittest.TestCase):
             self.assertEqual(sorted(listed), sorted(self.dex), forme)
         stats = self.data["mon_stats"]
         style = lambda s: (lambda v: v if isinstance(v, int) else v["origin"])(stats[s]["body_style"])  # noqa: E731
+        own = {self.ids["SPECIES_" + name]: self.ids["SPECIES_" + own_species.like(name)] for name in own_species.SPECIES}
         for species in self.dex:
-            if species > self.ids["SPECIES_ARCEUS"]:
+            if species in own:
+                self.assertEqual(style(species), style(own[species]), species)
+            elif species > self.ids["SPECIES_ARCEUS"]:
                 self.assertEqual(style(species), shapes[self.numbers[species]], species)
         moved = {n for n in range(1, self.ids["SPECIES_ARCEUS"] + 1) if style(n) != shapes[n]}
         self.assertEqual(moved, {10, 13, 265, 412, 413, 416, 422, 423, 488})
         self.assertEqual(style(self.ids["SPECIES_LILLIPUP"]), 0)     # quadruped
         self.assertEqual(style(self.ids["SPECIES_BAXCALIBUR"]), 2)   # bipedal, tailed
         self.assertEqual(style(self.ids["SPECIES_PECHARUNT"]), 12)   # a head only
+        self.assertEqual(style(self.ids["SPECIES_BABY_LUGIA"]), 5)   # Lugia's, two wings
 
 
 class GiratinaFormeTests(unittest.TestCase):

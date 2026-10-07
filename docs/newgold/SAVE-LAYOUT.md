@@ -93,6 +93,21 @@ its forms draws it as itself, as it did then. A field reused this way is an
 exception to the rule below only because a save from before reads the same
 through it; anything else is a new layout.
 
+A second change of the kind gives a Dex page to a species past the ones
+HeartGold's fields are sized for. Baby Lugia, species 1438 and No. 1026, New
+Gold's own (tools/newgold/import/own_species.py), keeps its flags at the place
+after the last Dex species', NATIONAL_DEX_COUNT + 1 = 1042 (DexFlagNo in
+src/pokedex.c, dex_place in savedit.py): flag bit 1041 of caughtSpecies,
+seenSpecies and both seenGenders arrays (word 32, bit 17), under the top byte
+where Deoxys's form order sits, and caughtLanguages[1042], one of the bytes
+ROUND_UP pads the array with. Nothing ever set them: every write to those
+arrays goes through DexSpeciesIsInvalid, which turned down anything past 1041,
+the forms' marks in caughtLanguages reach 864 at most, savedit writes only the
+Dex species, and no save of Paolo's, the gyms' or the chain's has them set. So
+a save from before reads as one where Baby Lugia was never seen, which is what
+it was, and the Pokedex block keeps its 1876 bytes. One more place, 1043, is
+left after it; a third own species needs a layout.
+
 ## Why the magic, and not a version number
 
 The reference has no version. hg-engine's ALLOW_SAVE_CHANGES, on at d0380a487

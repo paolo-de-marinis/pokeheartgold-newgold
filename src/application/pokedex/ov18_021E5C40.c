@@ -1765,7 +1765,8 @@ void ov18_021E81A8(PokedexAppData *pokedexApp) {
 // Dex has seen it only as its forms, the form it was seen as first
 // (Pokedex_RecordMonSeen, DEX_SEEN_AS_FORM_ONLY), until it sees the species
 // itself. Retail's form species keep retail's ways: their FORMS pages list
-// their forms as retail does.
+// their forms as retail does. New Gold's own species, past NATIONAL_DEX_COUNT,
+// has no forms, and its look is itself.
 u16 PokedexApp_ShownSpecies(PokedexAppData *pokedexApp, u16 species) {
     const Pokedex *pokedex = pokedexApp->args->pokedex;
 
@@ -1785,7 +1786,7 @@ u16 PokedexApp_ShownSpecies(PokedexAppData *pokedexApp, u16 species) {
     case SPECIES_CHERRIM:
         return species;
     }
-    if (pokedex->caughtLanguages[species] & DEX_SEEN_AS_FORM_ONLY) {
+    if (species <= NATIONAL_DEX_COUNT && (pokedex->caughtLanguages[species] & DEX_SEEN_AS_FORM_ONLY)) {
         for (u16 form = DEX_FIRST_FORM; form <= NUM_SPECIES; ++form) {
             if ((pokedex->caughtLanguages[form - DEX_FIRST_FORM] & DEX_FORM_SEEN_FIRST) && SpeciesToDexSpecies(form) == species) {
                 return form;

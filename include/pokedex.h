@@ -16,14 +16,18 @@
 // For some reason, 4 bits are reserved for each form,
 // even though 2 would suffice. This negates any
 // benefits this split would have provided.
+// Of the flags between the last Dex species' and that byte, the two that
+// also have a byte of caughtLanguages (ROUND_UP's padding),
+// NATIONAL_DEX_COUNT + 1 and + 2, are New Gold's own species' (DexFlagNo in
+// src/pokedex.c): Baby Lugia's is the first, and the second is free.
 #define NUM_DEX_FLAG_WORDS (CEILDIV(NATIONAL_DEX_COUNT + 8, 32))
 
 // The forms the Dex records on their own. Each is a species here that the Dex
 // credits to its base species (SpeciesToDexSpecies): the Galarian Slowpoke
 // and Slowbro, kept inside the Dex's range, and every species past the last
-// Dex species. One bit a species from the first of them on, as the species'
-// flags are one a species from 1; a species that is no form keeps its bit
-// clear.
+// Dex species but New Gold's own. One bit a species from the first of them
+// on, as the species' flags are one a species from 1; a species that is no
+// form keeps its bit clear.
 #define DEX_FIRST_FORM     SPECIES_SLOWPOKE_GALARIAN
 #define NUM_DEX_FORM_WORDS (CEILDIV(NUM_SPECIES - DEX_FIRST_FORM + 1, 32))
 
