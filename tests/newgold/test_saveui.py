@@ -757,7 +757,7 @@ class SaveUiTests(unittest.TestCase):
             "map": jasmine["map"], "x": jasmine["x"], "y": jasmine["y"], "show": ["FLAG_GAME_CLEAR"]}}))
         offered = {m["id"] for m in data["maps"]}
         for const in ("MAP_UNION", "MAP_SAFARI_ZONE_01", "MAP_PAL_PARK", "MAP_NATIONAL_PARK_BUG_CATCHING_CONTEST",
-                      "MAP_GOLDENROD_UNUSED_1"):
+                      "MAP_GOLDENROD_UNUSED_1", "MAP_WIFI_SINGLE_BATTLE_AREA"):
             self.assertNotIn(maps[const], offered, const)
         self.assertIn(maps["MAP_NATIONAL_PARK"], offered)
         self.assertIn("non è un luogo", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "position",

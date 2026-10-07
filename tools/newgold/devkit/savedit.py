@@ -4499,7 +4499,9 @@ def _walked_in(const):
 @tree_cache
 def nosave_maps():
     """The maps where the game never leaves a save, as the start menu
-    turns SAVE off there: the Union Room (MapHeader_MapIsUnionRoom), the
+    turns SAVE off there or does not open at all: the Wi-Fi rooms of the
+    Mystery Zone (FieldSystem_MapIsNotMysteryZone), the Union Room
+    (MapHeader_MapIsUnionRoom), the
     Battle Tower's partner room (FieldSystem_MapIsBattleTowerMultiPartnerSelectRoom),
     and the places the player is in only under the Safari Zone's or the Pal
     Park's flag -- the map a script warps to after the command that sets
@@ -4512,7 +4514,10 @@ def nosave_maps():
     {map: why}."""
     maps = constants("include/constants/maps.h", "MAP_")
     table = map_table()
-    out = {maps[m]: "union" for m in re.findall(r"mapId == (MAP_\w+)", c_function("src/map_header.c", "BOOL MapHeader_MapIsUnionRoom("))}
+    # The start menu does not even open in the section FieldSystem_MapIsNotMysteryZone names (the Wi-Fi rooms).
+    mystery = re.search(r"!= (MAPSEC_\w+);", c_function("src/start_menu.c", "BOOL FieldSystem_MapIsNotMysteryZone(")).group(1)
+    out = {m: "mystery" for m, row in table.items() if row["section"] == mystery and row["const"] != "MAP_EVERYWHERE"}
+    out.update({maps[m]: "union" for m in re.findall(r"mapId == (MAP_\w+)", c_function("src/map_header.c", "BOOL MapHeader_MapIsUnionRoom("))})
     text = source("asm/unk_02066EDC.s").read_text()
     body = text[text.index("FieldSystem_MapIsBattleTowerMultiPartnerSelectRoom:"):]
     out.update({maps[m]: "partner" for m in re.findall(r"\.word (MAP_\w+)", body[:body.index("thumb_func_end")])})
