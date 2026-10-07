@@ -197,7 +197,7 @@ con IV 100, e ogni volta in uno slot diverso.
 
 **Dove:** `data/Trainers.c:16`, `:11990` e `:12200`.
 
-**Nel port:** corretto (a1bc374ed). Paolo l'ha notato anche giocando (5 ottobre), e il 7 ottobre
+**Nel port:** corretto (817c7ee13). Paolo l'ha notato anche giocando (5 ottobre), e il 7 ottobre
 ha deciso che sono due sviste da correggere: «per la squadra di Silver, se è palesemente una
 svista, aggiustala». Il Larvitar prende livello e IV del resto della squadra, L22 e 100, in tutte e
 tre le versioni. La versione Bayleef (#1) diventa quella Croconaw (#269) con il suo starter:
@@ -205,7 +205,7 @@ Misdreavus, Zubat, Larvitar, Teddiursa e Bayleef, tutti L22. Le due versioni com
 stesso modo, e così lo starter resta l'ultimo, come nella versione Quilava e in ogni Silver
 retail. La correzione sta nell'importer (`import_trainers.AZALEA_SILVER`): vale finché i tuoi dati
 hanno queste sviste, e se le cambi ce lo dice. Visto in gioco: lo scenario
-`rival_azalea_bayleef_team.json` (a594d0d0e) fa uscire i cinque della versione Bayleef, tutti L22,
+`rival_azalea_bayleef_team.json` (ecf5de327) fa uscire i cinque della versione Bayleef, tutti L22,
 e la tappa 08b del playthrough batte quella Croconaw al secondo tentativo, come prima. Se volevi
 squadre diverse, dicci quali.
 
