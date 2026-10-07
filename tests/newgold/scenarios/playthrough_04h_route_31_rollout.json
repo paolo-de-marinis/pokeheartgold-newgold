@@ -10,7 +10,7 @@
     "flee:40",
     "heal:MAP_VIOLET_POKECENTER_1F,8,13",
     "shift:3",
-    "pace:MAP_ROUTE_31,531,276,532,276,party0.level,10,60000",
+    "pace:MAP_ROUTE_31,531,276,532,276,party0.level,10,120000",
     "shift:none",
     "goto:MAP_VIOLET_POKECENTER_1F,8,13",
     "UP",
