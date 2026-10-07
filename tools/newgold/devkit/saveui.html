@@ -2315,7 +2315,6 @@ function renderPosition() {
   $("#leaderchips").onclick = ev => { const b = ev.target.closest("[data-place]"); if (b) pickPlace(+b.dataset.place); };
   const go = async play => {
     const f = $("#posform").elements;
-    if (play && !await mayDrop("Spostare e giocare il salvataggio così com'è su disco")) return;
     if (!f.x.reportValidity() || !f.y.reportValidity()) return;
     if (S.pos.map === null) return toast("Scegli la mappa dall'elenco o sulla minimappa", true);
     const args = {map: S.pos.map, x: +f.x.value, y: +f.y.value, direction: +f.dir.value};
@@ -2328,7 +2327,10 @@ function renderPosition() {
       if (x.key === "cap") args.cap = true;
       if (x.key === "lower") args.lower = true;
     }
-    const out = await edit("position", args, S.pos.place !== null ? `${placeName(S.data.places[S.pos.place])} (backup fatto)` : "Posizione scritta");
+    // Asked once the place is read: a change thrown away draws the tab again, form and plan with it.
+    const done = S.pos.place !== null ? `${placeName(S.data.places[S.pos.place])} (backup fatto)` : "Posizione scritta";
+    if (play && !await mayDrop("Spostare e giocare il salvataggio così com'è su disco")) return;
+    const out = await edit("position", args, done);
     if (out) storyToast(out);
     if (out && play) libraryAction(S.lib.slots.some(x => x.f === S.f) ? "resume" : "play", S.f);
   };

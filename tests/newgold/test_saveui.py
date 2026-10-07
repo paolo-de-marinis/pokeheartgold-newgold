@@ -833,7 +833,9 @@ class SaveUiTests(unittest.TestCase):
         action = page[page.index("async function libraryAction("):page.index("async function browseFor(")]
         self.assertIn('["play", "load", "resume"].includes(act) && f === S.f && !await mayDrop(', action)
         self.assertEqual(action.count('S.f === "emu:" + r.data.slot && !await mayDrop('), 2)
-        self.assertIn('if (play && !await mayDrop(', page[page.index("const go = async play =>"):])
+        go = page[page.index("const go = async play =>"):page.index('$("#posform").onsubmit')]
+        self.assertLess(go.index("const args = {map: S.pos.map"), go.index("if (play && !await mayDrop("),
+                        "the place is read before the question, which draws the tab again when it drops")
 
     def test_a_picker_opens_on_its_value_however_far_down(self):
         """combo() draws COMBO_ROWS rows at once; opened with nothing typed
