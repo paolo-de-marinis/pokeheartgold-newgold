@@ -2132,7 +2132,8 @@ function placeRows() {
           ...group("★ Altri momenti della storia", places.filter(([p]) => !isLeader(p) && !isLeague(p)))];
 }
 // What a place needs, offered as ticks beside Sposta: the person shown, the gym opened, the story put just
-// before the battle, the party at the level cap. Sposta does it all in one change, with one backup.
+// before the battle, the party at the level cap. Sposta does it all in one change, with one backup. A step that
+// does what the editor cannot is named in its tick's line, and the tick is off.
 function placePlan(i) {
   const p = S.data.places[i], st = S.save.places?.[i] || {}, done = new Set(S.save.story.done), plan = [];
   if (st.hidden && p.hide.length === 1)
@@ -2154,6 +2155,13 @@ function placePlan(i) {
       if (before.length) plan.push({key: "story", on: true, run: before, text: `Fai prima i passi che vengono prima (${before.length})`,
                                     why: before.map(stepLabel).join(" · ")});
     }
+  }
+  // What a step does that the editor does not (a Pokémon or an egg given) is said, and its tick left off.
+  for (const x of plan) {
+    const odd = [...new Set([...x.run || [], ...x.undo || []].flatMap(id => S.steps.get(id).writes.filter(w => w[0] === "other").map(w => w[1])))];
+    if (!odd.length) continue;
+    x.on = false;
+    x.why += ` · ${x.undo ? "l'editor non toglie" : "l'editor non fa"}: ${odd.join(", ")}`;
   }
   if (S.save.party.length) plan.push({key: "cap", on: false, text: `Porta la squadra al livello massimo (${S.save.given.level_cap})`,
                                       why: "ogni Pokémon della squadra a quel livello, mosse come sono"});

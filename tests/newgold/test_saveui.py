@@ -769,6 +769,16 @@ class SaveUiTests(unittest.TestCase):
         self.assertIn("non è un luogo", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "position",
                                                                    "args": {"map": maps["MAP_UNION"], "x": 8, "y": 14}}))
 
+    def test_a_plan_says_what_the_editor_does_not_do(self):
+        """A place's plan names, in a tick's line, what its story steps do
+        that the editor does not (an egg given: savedit's "other" writes),
+        and leaves that tick off: the review's Morty place hid the Burned
+        Tower's beasts with nothing said."""
+        page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
+        plan = page[page.index("function placePlan("):page.index("function drawNeeds(")]
+        self.assertRegex(plan, r'writes\.filter\(w => w\[0\] === "other"\)[^\n]*\n[^\n]*\n\s*x\.on = false;')
+        self.assertIn("l'editor non fa", plan)
+
     def test_a_part_that_does_not_read_leaves_the_rest(self):
         """A reader of the tree that fails -- the town map's art exported
         another way, a function renamed -- empties its part of /api/data
