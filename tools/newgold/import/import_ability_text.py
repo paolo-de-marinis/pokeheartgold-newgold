@@ -10,7 +10,8 @@ the engine gives an unused slot, so a read of it stays inside the bank.
 
     import_ability_text.py [--revision REV] [--write]
 
-REV defaults to the engine (d0380a487); ccf2c9f5 is New Gold.
+REV defaults to the engine (d0380a487); a477c662f is New Gold. The names the
+reference squeezed are written with their space (SPACED).
 """
 import argparse
 import re
@@ -19,6 +20,16 @@ import gmm
 
 BANKS = {720: "Placeholder", 721: "PLACEHOLDER", 722: "Placeholder"}   # bank: unused slot
 ALIASES = {"ABILITY_COMPOUND_EYES": "ABILITY_COMPOUNDEYES", "ABILITY_LIGHTNING_ROD": "ABILITY_LIGHTNINGROD"}
+# The names the reference writes without their space, as the fourth
+# generation's twelve letters would have had them, though its other names
+# run to sixteen ("Dauntless Shield", "Neutralizing Gas") and the battle
+# reads a name into 32 (test_text_length): the games' names, with their
+# space, in the names and in the capitals. In play, "Zacian's IntrepidSword
+# raised its Attack!".
+SPACED = {"CompoundEyes": "Compound Eyes", "StanceChange": "Stance Change", "MegaLauncher": "Mega Launcher",
+          "EmergencyExit": "Emergency Exit", "WaterCompaction": "Water Compaction",
+          "FullMetalBody": "Full Metal Body", "IntrepidSword": "Intrepid Sword"}
+SPACED.update({squeezed.upper(): name.upper() for squeezed, name in SPACED.items()})
 
 
 def abilities(text):
@@ -42,6 +53,8 @@ def main():
         for number in range(len(port)):
             row = theirs.get(port[number])
             text = reference[row] if row is not None and row < len(reference) else unused
+            if bank != 722:
+                text = SPACED.get(text, text)
             if number == len(rows):
                 rows.append(gmm.new_row(bank, number, text))
                 print(f"{bank} row {number} {port[number]}: new {text!r}")

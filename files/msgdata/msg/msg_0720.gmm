@@ -58,7 +58,7 @@
 	</row>
 	<row id="msg_0720_00014" index="14">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">CompoundEyes</language>
+		<language name="English">Compound Eyes</language>
 	</row>
 	<row id="msg_0720_00015" index="15">
 		<attribute name="window_context_name">used</attribute>
@@ -706,7 +706,7 @@
 	</row>
 	<row id="msg_0720_00176" index="176">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">StanceChange</language>
+		<language name="English">Stance Change</language>
 	</row>
 	<row id="msg_0720_00177" index="177">
 		<attribute name="window_context_name">used</attribute>
@@ -714,7 +714,7 @@
 	</row>
 	<row id="msg_0720_00178" index="178">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">MegaLauncher</language>
+		<language name="English">Mega Launcher</language>
 	</row>
 	<row id="msg_0720_00179" index="179">
 		<attribute name="window_context_name">used</attribute>
@@ -778,11 +778,11 @@
 	</row>
 	<row id="msg_0720_00194" index="194">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">EmergencyExit</language>
+		<language name="English">Emergency Exit</language>
 	</row>
 	<row id="msg_0720_00195" index="195">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">WaterCompaction</language>
+		<language name="English">Water Compaction</language>
 	</row>
 	<row id="msg_0720_00196" index="196">
 		<attribute name="window_context_name">used</attribute>
@@ -922,7 +922,7 @@
 	</row>
 	<row id="msg_0720_00230" index="230">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">FullMetalBody</language>
+		<language name="English">Full Metal Body</language>
 	</row>
 	<row id="msg_0720_00231" index="231">
 		<attribute name="window_context_name">used</attribute>
@@ -938,7 +938,7 @@
 	</row>
 	<row id="msg_0720_00234" index="234">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">IntrepidSword</language>
+		<language name="English">Intrepid Sword</language>
 	</row>
 	<row id="msg_0720_00235" index="235">
 		<attribute name="window_context_name">used</attribute>

@@ -9,6 +9,6 @@
             "teach:3,0,MOVE_SPLASH", "teach:3,1,0,0", "teach:3,2,0,0", "teach:3,3,0,0",
             "fight:1:1"],
   "expect": {"lines": ["Go! Zacian and Pawmot!", "Pawmot used Ally Switch!", "Pawmot and Zacian switched places!"],
-             "once_lines": ["Zacian’s IntrepidSword raised its Attack!"],
+             "once_lines": ["Zacian’s Intrepid Sword raised its Attack!"],
              "battler0.species": "SPECIES_PAWMOT", "battler2.species": "SPECIES_ZACIAN"}
 }

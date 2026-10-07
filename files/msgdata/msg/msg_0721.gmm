@@ -58,7 +58,7 @@
 	</row>
 	<row id="msg_0721_compoundeyes" index="14">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">COMPOUNDEYES</language>
+		<language name="English">COMPOUND EYES</language>
 	</row>
 	<row id="msg_0721_insomnia" index="15">
 		<attribute name="window_context_name">used</attribute>
@@ -706,7 +706,7 @@
 	</row>
 	<row id="msg_0721_00176" index="176">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">STANCECHANGE</language>
+		<language name="English">STANCE CHANGE</language>
 	</row>
 	<row id="msg_0721_00177" index="177">
 		<attribute name="window_context_name">used</attribute>
@@ -714,7 +714,7 @@
 	</row>
 	<row id="msg_0721_00178" index="178">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">MEGALAUNCHER</language>
+		<language name="English">MEGA LAUNCHER</language>
 	</row>
 	<row id="msg_0721_00179" index="179">
 		<attribute name="window_context_name">used</attribute>
@@ -778,11 +778,11 @@
 	</row>
 	<row id="msg_0721_00194" index="194">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">EMERGENCYEXIT</language>
+		<language name="English">EMERGENCY EXIT</language>
 	</row>
 	<row id="msg_0721_00195" index="195">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">WATERCOMPACTION</language>
+		<language name="English">WATER COMPACTION</language>
 	</row>
 	<row id="msg_0721_00196" index="196">
 		<attribute name="window_context_name">used</attribute>
@@ -922,7 +922,7 @@
 	</row>
 	<row id="msg_0721_00230" index="230">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">FULLMETALBODY</language>
+		<language name="English">FULL METAL BODY</language>
 	</row>
 	<row id="msg_0721_00231" index="231">
 		<attribute name="window_context_name">used</attribute>
@@ -938,7 +938,7 @@
 	</row>
 	<row id="msg_0721_00234" index="234">
 		<attribute name="window_context_name">used</attribute>
-		<language name="English">INTREPIDSWORD</language>
+		<language name="English">INTREPID SWORD</language>
 	</row>
 	<row id="msg_0721_00235" index="235">
 		<attribute name="window_context_name">used</attribute>
