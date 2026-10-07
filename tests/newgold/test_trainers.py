@@ -619,6 +619,26 @@ class TrainerTests(unittest.TestCase):
         self.assertIn("nothing written", run.stderr)
         self.assertIn("#0: .nature", run.stderr)
 
+    def test_konefr_s_shiny_pokemon_are_shiny(self):
+        """8fe483d5a ("Add shiny Rocket HQ experiment Pokemon") and the
+        rebalance before it shiny-lock one Pokemon each of five trainers:
+        Lois's Linoone and Raymond's Magikarp at the Lake of Rage, the Rocket
+        HQ's Grunts #216 (Obstagoon) and #220 (Venomoth), and Petrel's
+        Crobat. Those five are "shiny" here and nothing else is; with the
+        checkout, they are the ones his table locks."""
+        shiny = {(index, slot) for index, trainer in enumerate(self.trainers)
+                 for slot, member in enumerate(trainer["party"]) if member.get("shiny")}
+        self.assertEqual(shiny, {(116, 2), (127, 2), (216, 1), (220, 0), (488, 0)})
+        self.assertEqual([self.trainers[i]["party"][s]["species"] for i, s in sorted(shiny)],
+                         ["SPECIES_LINOONE", "SPECIES_MAGIKARP", "SPECIES_OBSTAGOON", "SPECIES_VENOMOTH", "SPECIES_CROBAT"])
+        if REFERENCE is not None:
+            parts = re.split(r"\n\s*\[(\d+)\] = \{", gmm.git_show(gmm.NEWGOLD, "data/Trainers.c"))
+            blocks = {int(parts[i]): parts[i + 1] for i in range(1, len(parts), 2)}
+            locked = {(index, slot) for index, block in blocks.items() if "TRAINER_DATA_TYPE_SHINY_LOCK" in block
+                      for slot, member in enumerate(import_trainers.party_members(block))
+                      if re.search(r"\.shinyLock\s*=\s*1\b", member)}
+            self.assertEqual(shiny, locked)
+
     def test_samantha_s_lines_name_her_persian(self):
         """konefr's eb4e20f17 made Beauty Samantha #70's Meowth a Persian with
         the same moves and her other Meowth a Wigglytuff; her retail lines,

@@ -42,7 +42,7 @@ class AbilityMessages(unittest.TestCase):
                   195: 'Water Compaction', 230: 'Full Metal Body', 234: 'Intrepid Sword'}
         for bank in (720, 721, 722):
             engine = revision(REFERENCE, 'd0380a487', f'data/text/{bank}.txt').splitlines()
-            newgold = revision(REFERENCE, 'a477c662f', f'data/text/{bank}.txt').splitlines()
+            newgold = revision(REFERENCE, '8fe483d5a', f'data/text/{bank}.txt').splitlines()
             rows = ET.parse(ROOT / f'files/msgdata/msg/msg_{bank:04}.gmm').getroot().findall('row')
             actual = [row.find("language[@name='English']").text for row in rows]
             differ = {i for i, line in enumerate(newgold) if i >= len(engine) or engine[i] != line}

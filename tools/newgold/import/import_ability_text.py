@@ -10,7 +10,7 @@ the engine gives an unused slot, so a read of it stays inside the bank.
 
     import_ability_text.py [--revision REV] [--write]
 
-REV defaults to the engine (d0380a487); a477c662f is New Gold. The names the
+REV defaults to the engine (d0380a487); 8fe483d5a is New Gold. The names the
 reference squeezed are written with their space (SPACED).
 """
 import argparse

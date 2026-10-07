@@ -32,7 +32,7 @@ KONEFR = [
     ("Fast Bulk", 2011, (252, 0, 0, 252, 0, 0)),
     ("Reset EVs", 2000, (0, 0, 0, 0, 0, 0)),
 ]
-TIP = "a477c662f"
+TIP = "8fe483d5a"
 
 
 def sets():

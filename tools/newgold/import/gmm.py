@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[3]
 MSG = ROOT / "files/msgdata/msg"
 REFERENCE = Path("/home/paolo/Porting HGSS/hg-engine-newgold-reference")
 ENGINE = "d0380a487"    # hg-engine, the parent of konefr's first commit
-NEWGOLD = "a477c662f"   # konefr's tip
+NEWGOLD = "8fe483d5a"   # konefr's tip
 
 HEADER = '<?xml version="1.0"?>\n<body language="English">\n'
 FOOTER = "</body>\n"
