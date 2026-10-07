@@ -12,9 +12,14 @@ Save_*_sizeof is two or three Thumb instructions returning a constant, so the
 answer here is the one the game will use. The packing repeats what
 SaveData_InitSubstructs and SaveData_InitSlotSpecs do, for the same reason.
 
-Usage: save_budget.py [BUILD_DIR]
+A tree with no build -- a clone -- has the sizes from save_layout.json, next
+to savedit.py, which --write fills from a build: run it after make whenever a
+block changes size (test_save_layout fails until then).
+
+Usage: save_budget.py [--write] [BUILD_DIR]
 """
 
+import json
 import re
 import struct
 import sys
@@ -22,6 +27,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
 ARRAYS = ROOT / "src/save_arrays.c"
+LAYOUT = ROOT / "tools/newgold/devkit/save_layout.json"
 MAIN_BASE = 0x02000000
 
 def _constant(name, default):
@@ -101,7 +107,8 @@ def constant(code, address, read):
     return None
 
 
-def measure(build):
+def sizes(build):
+    """Every block's Save_*_sizeof, by name, as the built ROM returns it."""
     binary = (build / "main.sbin").read_bytes()
     found = symbols(build / "main.elf")
 
@@ -120,8 +127,22 @@ def measure(build):
         return value
 
     inside, outside = chunks()
-    return ([(name, sizeof(name), slot) for name, slot in inside],
-            [(name, sizeof(name), page_offset(where)) for name, where in outside])
+    return {name: sizeof(name) for name, _ in inside + outside}
+
+
+def measure(build=None):
+    """The blocks with their sizes, from the build -- or with none, as
+    save_layout.json keeps them."""
+    known = sizes(build) if build else json.loads(LAYOUT.read_text())
+
+    def size(name):
+        if name not in known:
+            raise SystemExit(f"{name} is not in {LAYOUT.name}: make, then save_budget.py --write")
+        return known[name]
+
+    inside, outside = chunks()
+    return ([(name, size(name), slot) for name, slot in inside],
+            [(name, size(name), page_offset(where)) for name, where in outside])
 
 
 def layout(inside, outside):
@@ -150,7 +171,10 @@ def layout(inside, outside):
 
 
 def main():
-    build = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "build/heartgold.us"
+    args = [arg for arg in sys.argv[1:] if arg != "--write"]
+    build = Path(args[0]) if args else ROOT / "build/heartgold.us"
+    if "--write" in sys.argv:
+        LAYOUT.write_text(json.dumps(sizes(build), indent=2) + "\n")
     inside, outside = measure(build)
     for name, size, slot in inside:
         print(f"  {slot:<24s} {name:40s} {size:7d}")
