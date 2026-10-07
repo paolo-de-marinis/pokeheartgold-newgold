@@ -1,0 +1,11 @@
+{
+  "about": "gDiagGrassSpecies: every slot of the grass's table is the species it names, at the slot's own level, the table untouched. From Paolo's Route 29 save with five Poke Balls, the switch held at Bramblin (967, which no Johto grass has), the level-5 Chikorita walks between two of the route's grass tiles (pace:, as catch_route29.json does) until the party has two: the grass sends a wild Bramblin at Route 29's level, at the route's rate, and catch:new takes it. The field's RNG is pinned and the battle's seed fixed.",
+  "save": "route29-official.sav",
+  "edit": ["--bag", "POKE_BALL:5"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "hold:gDiagGrassSpecies=967", "flee:40", "catch:new",
+            "pace:MAP_ROUTE_29,653,401,658,404,party,2,20000",
+            {"expect": {"party": 2, "party1.species": "SPECIES_BRAMBLIN", "caught:SPECIES_BRAMBLIN": 1,
+                        "lines": ["You encountered a wild Bramblin!", "Gotcha! Bramblin was caught!"]}}],
+  "expect": {"party": 2, "party1.species": "SPECIES_BRAMBLIN", "map": "MAP_ROUTE_29"}
+}

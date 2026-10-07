@@ -519,6 +519,16 @@ BOOL FieldSystem_PerformHeadbuttEncounterCheck(FieldSystem *fieldSystem, BattleS
 }
 
 static BOOL FieldSystem_GenerateLandRegularEncounter(FieldSystem *fieldSystem, Pokemon *leadMon, BattleSetup *battleSetup, const EncounterData *encData, EncounterSlot *encSlots, EncounterGenState *encounterGen) {
+#ifdef NEWGOLD_DIAG
+    // Every slot of the grass's table is that species, at the slot's own
+    // level, so a new species is met the way any is -- walking in the grass,
+    // at the map's rate, shiny roll and all -- while the table stays as it is.
+    if (gDiagGrassSpecies != 0) {
+        for (int i = 0; i < NUM_ENCOUNTERS_LAND; ++i) {
+            encSlots[i].species = gDiagGrassSpecies;
+        }
+    }
+#endif
     return FieldSystem_GenerateRegularEncounter(leadMon, ROD_TYPE_NONE, encounterGen, encSlots, ENCOUNTER_TYPE_LAND, BATTLER_ENEMY, battleSetup);
 }
 
