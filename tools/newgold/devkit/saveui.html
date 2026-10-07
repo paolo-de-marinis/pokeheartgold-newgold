@@ -35,6 +35,8 @@ button.small { padding: 2px 8px; font-size: 12.5px; }
 button:disabled { opacity: .5; cursor: default; }
 input, select { border: 1px solid var(--border); background: var(--sunk); border-radius: 6px; padding: 5px 8px; min-width: 0; }
 input[type=number] { width: 6.5em; }
+/* Every field of a form the same height, a select's too. */
+input:not([type=checkbox]):not([type=radio]), select { height: 32px; }
 input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 h1, h2, h3 { margin: 0; font-weight: 650; }
@@ -81,14 +83,17 @@ img.ic { image-rendering: pixelated; object-fit: cover; object-position: top; di
 .edhead { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
 .edhead .actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .lock { margin-top: 10px; background: var(--danger-soft); color: var(--danger); border-radius: 8px; padding: 8px 10px; }
-.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin: 14px 0 16px; overflow-x: auto; }
-.tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 12px; white-space: nowrap; color: var(--muted); }
-.tabs button.on { border-bottom-color: var(--accent); color: var(--text); font-weight: 600; }
+/* The tabs wrap rather than scroll, and the one open is marked by colour and its line, not a bolder (wider) label. */
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--border); margin: 14px 0 16px; }
+.tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 11px; white-space: nowrap; color: var(--muted); font-weight: 550; }
+.tabs button.on { border-bottom-color: var(--accent); color: var(--text); }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
 .form { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px 16px; align-items: end; }
 label.f { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
 label.f input, label.f select { color: var(--text); font-size: 14px; }
+label.f > input:not([type=checkbox]):not([type=radio]), label.f > select, label.f > .mvin, label.f > .seg { width: 100%; }
+label.f > .seg { margin: 0; }
 .note { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
 .box { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 14px; }
 .box > h3 { font-size: 14px; }
@@ -331,7 +336,11 @@ const TYPES = {NORMAL: ["Normale", "#9a9a6b"], FIGHTING: ["Lotta", "#b8302a"], F
   GHOST: ["Spettro", "#6a5390"], STEEL: ["Acciaio", "#8f8fae"], MYSTERY: ["???", "#5f8f85"], FIRE: ["Fuoco", "#e5731f"],
   WATER: ["Acqua", "#5a7fe0"], GRASS: ["Erba", "#5ea83a"], ELECTRIC: ["Elettro", "#d4a90f"], PSYCHIC: ["Psico", "#e8497b"],
   ICE: ["Ghiaccio", "#6cb8b8"], DRAGON: ["Drago", "#6134e8"], DARK: ["Buio", "#6b5445"], FAIRY: ["Folletto", "#d97fa0"]};
-const typeBadges = types => (types || []).map(t => { const [name, colour] = TYPES[t] || [t, "#777"]; return `<span class="type" style="background:${colour}">${esc(name)}</span>`; }).join("");
+// White on the dark colours, dark on the light ones (Elettro, Ghiaccio, Terra, Normale): by the colour's luminance.
+const inkOn = hex => { const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(c => c <= .03928 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4);
+                       return .2126 * r + .7152 * g + .0722 * b > .3 ? "#1f1d1a" : "#fff"; };
+const typeBadges = types => (types || []).map(t => { const [name, colour] = TYPES[t] || [t, "#777777"]; const ink = inkOn(colour);
+  return `<span class="type" style="background:${colour};color:${ink}${ink === "#fff" ? "" : ";text-shadow:none"}">${esc(name)}</span>`; }).join("");
 const typeNames = types => (types || []).map(t => (TYPES[t] || [t])[0]).join("/");
 
 const S = {data: null, lib: null, f: null, save: null, tab: "trainer", box: 0, pocket: null,
@@ -603,8 +612,13 @@ $("#filter").addEventListener("input", renderLibrary);
 $("#refresh").addEventListener("click", loadLibrary);
 
 const usableSlots = () => S.lib.slots.filter(s => !s.problem).map(s => s.slot);
-function slotOptions(keys) {
-  return keys.map(k => { const s = S.lib.slots.find(x => x.slot === k); return `<option value="${k}">${esc(s.label)}</option>`; }).join("");
+// The emulator's slots to choose from, a card each with what it holds now.
+function slotChoice(keys) {
+  return `<div class="radiocards" role="radiogroup" aria-label="Slot">${keys.map((k, i) => {
+    const s = S.lib.slots.find(x => x.slot === k);
+    const holds = !s.exists ? "vuoto" : !s.valid ? "non è un salvataggio valido" : `${s.name} · ${s.badges} ${s.badges === 1 ? "medaglia" : "medaglie"} · ${s.location}`;
+    return `<label><input type="radio" name="slot" value="${esc(k)}" ${i ? "" : "checked"}><span><strong>${esc(s.label)}</strong><br><span class="hint">ora: ${esc(holds)}</span></span></label>`;
+  }).join("")}</div>`;
 }
 function suggestName(f) {
   const slot = f.startsWith("emu:") && S.lib.slots.find(s => s.f === f);
@@ -637,7 +651,7 @@ async function libraryAction(act, f, t) {
   }
   if (act === "play") {
     const r = await ask("Gioca", `<p>Il salvataggio <strong>${esc(f)}</strong> viene copiato nello slot scelto (quello che c'era finisce nei backup), poi si apre melonDS.</p>
-      <label class="f">Slot<select name="slot">${slotOptions(S.lib.playable)}</select></label>`,
+      ${slotChoice(S.lib.playable)}`,
       [["go", "Carica e avvia melonDS", "primary"], ["", "Annulla"]]);
     if (r.value !== "go") return;
     toast("Carico il salvataggio e apro melonDS…");
@@ -647,7 +661,7 @@ async function libraryAction(act, f, t) {
   }
   if (act === "load") {
     const r = await ask("Carica nell'emulatore", `<p>Copia <strong>${esc(f)}</strong> nello slot scelto. Quello che c'è ora nello slot viene salvato nei backup.</p>
-      <label class="f">Slot<select name="slot">${slotOptions(usableSlots())}</select></label>`,
+      ${slotChoice(usableSlots())}`,
       [["go", "Carica", "primary"], ["", "Annulla"]]);
     if (r.value !== "go") return;
     await toSlot("/api/load", f, r.data.slot, "Caricato nello slot");
@@ -810,7 +824,7 @@ function ask(title, body, buttons, setup) {
     d.returnValue = "";
     d.onclose = () => {
       const form = $("form", d), data = {};
-      for (const el of form.elements) if (el.name) data[el.name] = el.type === "checkbox" ? el.checked : el.value;
+      for (const el of form.elements) if (el.name && (el.type !== "radio" || el.checked)) data[el.name] = el.type === "checkbox" ? el.checked : el.value;
       resolve({value: d.returnValue, data, form});
     };
     d.showModal();
@@ -1174,12 +1188,14 @@ async function tickBadge(b, on) {
 // What was typed in a form and not saved yet: a story tick draws the tab again, and must not throw it away.
 function formDraft(form) {
   return !form ? [] : [...form.elements].filter(el => el.name && (el.type === "checkbox" ? el.checked !== el.defaultChecked
-    : el.tagName === "SELECT" ? ![...el.options].some(o => o.selected && o.defaultSelected) : el.value !== el.defaultValue))
+    : el.tagName === "SELECT" ? ![...el.options].some(o => o.selected && o.defaultSelected)
+    : el.type === "hidden" ? el.value !== el.dataset.orig : el.value !== el.defaultValue))
     .map(el => [el.name, el.type === "checkbox" ? el.checked : el.value]);
 }
 function applyDraft(form, draft) {
   for (const [name, v] of draft) if (form.elements[name]) form.elements[name][form.elements[name].type === "checkbox" ? "checked" : "value"] = v;
 }
+const doneText = (n, of) => `${n} su ${of} ${of === 1 ? "fatto" : "fatti"}`;
 // The story's steps outside the gyms, by place, as the search and the filter leave them.
 function storyPlaces() {
   const done = new Set(S.save.story.done), inChain = new Set(Object.values(S.data.chains).flat());
@@ -1195,7 +1211,7 @@ function storyPlaces() {
     places.get(s.section).push(s.id);
   }
   const sections = [...places].sort((a, b) => (a[0] || "~").localeCompare(b[0] || "~"));
-  return sections.map(([sec, ids]) => `<details data-sec="${esc(sec)}" ${q || S.storyopen.has(sec) ? "open" : ""}><summary><strong>${esc(sec || "Script comuni")}</strong> <span class="muted">${ids.filter(x => done.has(x)).length} di ${ids.length} fatti</span></summary>
+  return sections.map(([sec, ids]) => `<details data-sec="${esc(sec)}" ${q || S.storyopen.has(sec) ? "open" : ""}><summary><strong>${esc(sec || "Script comuni")}</strong> <span class="muted">${doneText(ids.filter(x => done.has(x)).length, ids.length)}</span></summary>
         <div class="chain">${ids.map(x => stepRow(x)).join("")}</div></details>`).join("") || `<p class="muted">Nessun passo.</p>`;
 }
 function drawPlaces() {
@@ -1215,7 +1231,8 @@ function renderTrainer() {
   const cards = S.data.pokegear.cards.map(c => `<label class="sw"><input type="checkbox" data-card="${c.value}" ${(given.pokegear.cards & c.value) === c.value ? "checked" : ""}>
       <span><strong>${esc(CARD_NAMES[c.const] ?? c.const)}</strong> <span class="muted">${esc(c.const)}</span></span></label>`).join("");
   const mapStep = n => S.data.story.find(s => s.kind === "ScrCmd_804" && +s.key === n);
-  const levels = range(S.data.pokegear.map_levels).map(n => `<option value="${n}" ${given.pokegear.map_level === n ? "selected" : ""}>${n}${mapStep(n) ? ` — come a ${esc(mapStep(n).section)}` : ""}</option>`).join("");
+  const levels = segButtons("maplevel", range(S.data.pokegear.map_levels).map(n => [String(n), `${n}${mapStep(n) ? ` · come a ${mapStep(n).section}` : ""}`]),
+                            String(given.pokegear.map_level), "Livello della mappa");
   const capOf = c => S.data.level_cap.milestones.find(m => m.badge === c)?.cap;
   const reason = S.data.level_cap.milestones.find(m => m.cap === given.level_cap);
   const usedBy = c => S.data.story.filter(s => !inChain.has(s.id) && s.needs.some(([n]) => n[0][0] === "badge" && n[0][1] === c));
@@ -1233,15 +1250,16 @@ function renderTrainer() {
   $("#tab").innerHTML = `<form id="trainer">
     <div class="form">
       <label class="f">Nome<input name="name" value="${esc(p.name)}" maxlength="${lim.name}"></label>
-      <label class="f">Genere<select name="gender">${S.data.player_genders.map(g => `<option value="${g.value}" ${p.gender === g.value ? "selected" : ""}>${esc(named(PLAYER_GENDER_NAMES, "PLAYER_GENDER_")(g.const))}</option>`).join("")}</select></label>
+      <div class="f"><span class="hint">Genere</span>${segButtons("gender", S.data.player_genders.map(g => [String(g.value), named(PLAYER_GENDER_NAMES, "PLAYER_GENDER_")(g.const)]), String(p.gender), "Genere")}
+        <input type="hidden" name="gender" value="${p.gender}" data-orig="${p.gender}"></div>
       <label class="f">ID allenatore<input type="number" name="id" min="0" max="65535" value="${p.id}"></label>
       <label class="f">ID segreto<input type="number" name="sid" min="0" max="65535" value="${p.sid}"></label>
       <label class="f">Soldi<input type="number" name="money" min="0" max="${lim.money}" value="${p.money}"></label>
       <label class="f">Gettoni<input type="number" name="coins" min="0" max="${lim.coins}" value="${p.coins}"></label>
-      <label class="f">Tempo di gioco (ore, minuti, secondi)
-        <span style="display:flex;gap:4px"><input type="number" name="h" min="0" max="${lim.hours}" value="${p.play_time[0]}" style="width:5em">
-        <input type="number" name="m" min="0" max="59" value="${p.play_time[1]}" style="width:4em">
-        <input type="number" name="s" min="0" max="59" value="${p.play_time[2]}" style="width:4em"></span></label>
+      <div class="f"><span class="hint">Tempo di gioco (ore, minuti, secondi)</span>
+        <span style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:4px"><input type="number" name="h" min="0" max="${lim.hours}" value="${p.play_time[0]}" aria-label="Ore">
+        <input type="number" name="m" min="0" max="59" value="${p.play_time[1]}" aria-label="Minuti">
+        <input type="number" name="s" min="0" max="59" value="${p.play_time[2]}" aria-label="Secondi"></span></div>
     </div>
     <p class="note">Il nome si scrive con i caratteri del gioco, ma savedit sa scrivere solo lettere (A–Z, a–z) e cifre, al massimo ${lim.name}.
       Un nome letto con altri caratteri si vede qui com'è, ma per cambiarlo servono solo lettere e cifre.</p>
@@ -1251,14 +1269,13 @@ function renderTrainer() {
     <div class="bar"><button class="primary" type="submit">Salva allenatore</button></div>
   </form>
   <div id="story">
-    <div class="zonehead"><h3>Storia</h3><span class="muted">Ogni spunta si salva subito, con backup. Livello massimo dei Pokémon ora: <strong>${given.level_cap}</strong>${reason ? ` (${esc(reason.badge ? "Medaglia " + badgeName(reason.badge) : needText([["flag", reason.flag], "eq", 1]))})` : ""}</span></div>
+    <div class="zonehead"><h3>Storia</h3><span class="muted">Ogni spunta qui sotto si salva subito, con backup. Livello massimo dei Pokémon ora: <strong>${given.level_cap}</strong>${reason ? ` (${esc(reason.badge ? "Medaglia " + badgeName(reason.badge) : needText([["flag", reason.flag], "eq", 1]))})` : ""}</span></div>
     <div class="box"><h3>Oggetti e strumenti di gioco</h3><div class="sws">${menu.filter(m => m.group !== "dex").map(m => m.html).join("")}</div>
       <p class="note">Solo l'interruttore che il gioco legge (il flag della voce del menu, o hasRunningShoes): per farlo come nel gioco, con chi te lo dà, spunta il suo passo in Momenti della storia.</p></div>
     <div class="box"><h3>Pokédex e Pokégear</h3><div class="sws">${menu.filter(m => m.group === "dex").map(m => m.html).join("")}
         <label class="sw"><input type="checkbox" id="natdex" ${S.save.dex.national ? "checked" : ""}><span><strong>Pokédex Nazionale</strong> <span class="muted">nel Pokédex e nel profilo, come NatDexFlagAction</span></span></label>
         ${cards}
-        <label class="sw"><span><strong>Mappa del Pokégear</strong> <select id="maplevel" aria-label="Livello della mappa">${levels}</select>
-          <span class="muted">mapUnlockLevel</span></span></label></div></div>
+        <div class="sw" style="flex-direction:column;align-items:stretch" title="mapUnlockLevel"><strong>Mappa del Pokégear</strong>${levels}</div></div></div>
     <div class="box"><h3>Medaglie e capipalestra</h3>
       <p class="note">Accanto a ogni medaglia i passi della sua palestra, nell'ordine in cui li fa lo script: spuntane uno e lo fa come nel gioco (con le
         variabili e i flag che il gioco scrive con lui), offrendo quelli prima; toglierlo li riporta indietro, offrendo quelli dopo. Così un salvataggio
@@ -1268,7 +1285,7 @@ function renderTrainer() {
     <div class="box"><h3>Momenti della storia</h3>
       <div class="bar" style="margin-top:0">
         <input type="search" id="storyq" placeholder="Cerca: luogo, Sudowoodo, FLAG_UNK_0B7…" value="${esc(S.storyq || "")}" style="flex:1;min-width:200px" aria-label="Cerca nella storia">
-        <select id="storyshow" aria-label="Mostra">${[["all", "Tutti"], ["done", "Fatti"], ["todo", "Da fare"]].map(([k, l]) => `<option value="${k}" ${show === k ? "selected" : ""}>${l}</option>`).join("")}</select>
+        ${segButtons("storyshow", [["all", "Tutti"], ["done", "Fatti"], ["todo", "Da fare"]], show, "Mostra")}
       </div>
       <p class="note">Ogni passo è uno script del gioco, dal punto in cui scrive il salvataggio fino alla fine: spuntarlo lo esegue sul salvataggio come il gioco
         (le scelte che dipendono dal salvataggio le decide il salvataggio), toglierlo lo riporta indietro: un passo spuntato qui rimette quello che aveva
@@ -1278,8 +1295,11 @@ function renderTrainer() {
     </div>
   </div>`;
   applyDraft($("#trainer"), draft);
+  $$("#gender [data-v]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.v === $("#trainer").elements.gender.value)));
   S.trainerFor = S.f;
   drawPlaces();
+  $("#gender").onclick = ev => { const b = ev.target.closest("[data-v]"); if (!b) return; $("#trainer").elements.gender.value = b.dataset.v;
+    $$("#gender [data-v]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); };
   $("#trainer").addEventListener("submit", ev => {
     ev.preventDefault();
     const f = ev.target.elements;
@@ -1293,13 +1313,16 @@ function renderTrainer() {
     if (d.badge) return tickBadge(S.data.badges.find(b => b.const === d.badge), el.checked);
     if (d.menu) return edit("menu", {icon: d.menu, on: el.checked}, "Salvato (backup fatto)");
     if (el.id === "natdex") return edit("dex_switches", {national: el.checked});
-    if (el.id === "maplevel") return edit("pokegear", {map_level: +el.value}, "Mappa del Pokégear salvata");
+
     if (d.card)     // a bit each, as SavePokegear_RegisterCard ORs it in
       return edit("pokegear", {cards: el.checked ? given.pokegear.cards | +d.card : given.pokegear.cards & ~+d.card}, "Schede del Pokégear salvate");
   };
   // The search and the filter draw the places again, and nothing else: the form keeps what was typed in it.
   $("#storyq").oninput = ev => { S.storyq = ev.target.value; drawPlaces(); };
-  $("#storyshow").onchange = ev => { S.storyshow = ev.target.value; drawPlaces(); };
+  $("#storyshow").onclick = ev => { const b = ev.target.closest("[data-v]"); if (!b) return; S.storyshow = b.dataset.v;
+    $$("#storyshow [data-v]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); drawPlaces(); };
+  $("#maplevel").onclick = ev => { const b = ev.target.closest("[data-v]"); if (b) edit("pokegear", {map_level: +b.dataset.v}, "Mappa del Pokégear salvata"); };
+  story.onclick = ev => { const b = ev.target.closest("[data-place]"); if (b) { S.pendingPlace = +b.dataset.place; S.tab = "pos"; store.set("tab", S.tab); renderTabs(); } };
 }
 
 // ---- Squadra -------------------------------------------------------------
@@ -1914,52 +1937,67 @@ function renderMachines(pocket) {
 // ---- Pokédex -------------------------------------------------------------
 function renderDex() {
   const dex = S.save.dex, ch = S.dex.changes;
-  // The forms the Dex records on their own come after the species, by their label (Slowpoke (Slowpoke Galarian)).
+  // The forms the Dex records on their own come after the species, by their label (Slowpoke · Galar).
   const seen = new Set([...dex.seen, ...dex.forms_seen]), caught = new Set([...dex.caught, ...dex.forms_caught]);
   const forms = new Set(S.data.dex_forms);
   const state = id => ch.get(id) || {seen: seen.has(id), caught: caught.has(id)};
+  const name = id => forms.has(id) ? speciesLabel(id) : S.species.get(id)?.name ?? String(id);
   const q = S.dex.q.toLowerCase();
   const rows = [...S.data.dex, ...S.data.dex_forms].filter(id => {
-    const s = state(id), name = (forms.has(id) ? S.species.get(id)?.label : S.species.get(id)?.name) ?? "";
-    if (q && !name.toLowerCase().includes(q) && String(id) !== q) return false;
+    const s = state(id);
+    if (q && !name(id).toLowerCase().includes(q) && String(id) !== q) return false;
     return S.dex.show === "all" || (S.dex.show === "seen" && s.seen) || (S.dex.show === "caught" && s.caught) || (S.dex.show === "missing" && !s.caught);
   });
   $("#tab").innerHTML = `<div class="bar" style="margin-top:0">
       <strong>Visti ${dex.seen.length}</strong> · <strong>Catturati ${dex.caught.length}</strong> <span class="muted">su ${S.data.dex.length}</span>
-      <label style="display:flex;gap:6px;align-items:center;margin-left:12px" title="Il Pokédex e la sua voce nel menu (FLAG_GOT_POKEDEX)"><input type="checkbox" id="dexon" ${dex.enabled ? "checked" : ""}> Pokédex ottenuto (voce nel menu)</label>
-      <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="dexnat" ${dex.national ? "checked" : ""}> Pokédex Nazionale</label>
+    </div>
+    <div class="sws" style="margin-top:10px">
+      <label class="sw" title="Il Pokédex e la sua voce nel menu (FLAG_GOT_POKEDEX)"><input type="checkbox" id="dexon" ${dex.enabled ? "checked" : ""}>
+        <span><strong>Pokédex ottenuto</strong> <span class="hint">la voce nel menu · si salva subito</span></span></label>
+      <label class="sw"><input type="checkbox" id="dexnat" ${dex.national ? "checked" : ""}><span><strong>Pokédex Nazionale</strong> <span class="hint">si salva subito</span></span></label>
     </div>
     <div class="bar">
       <button type="button" data-all="seen">Tutti visti</button><button type="button" data-all="caught">Tutti catturati</button>
       <button type="button" data-all="clear" class="danger">Azzera</button>
-      <span style="flex:1"></span>
-      <button type="button" class="primary" id="dexsave" ${ch.size ? "" : "disabled"}>Salva modifiche (${ch.size})</button>
-      ${ch.size ? `<button type="button" id="dexdrop">Scarta</button>` : ""}
+      <span class="hint">si salvano subito, con backup</span>
     </div>
     <div class="bar">
       <input type="search" id="dexq" placeholder="Cerca per nome o numero…" value="${esc(S.dex.q)}" style="flex:1;min-width:180px" aria-label="Cerca nel Pokédex">
-      <select id="dexshow" aria-label="Mostra">${[["all", "Tutti"], ["seen", "Visti"], ["caught", "Catturati"], ["missing", "Non catturati"]].map(([k, l]) => `<option value="${k}" ${S.dex.show === k ? "selected" : ""}>${l}</option>`).join("")}</select>
+      ${segButtons("dexshow", [["all", "Tutti"], ["seen", "Visti"], ["caught", "Catturati"], ["missing", "Non catturati"]], S.dex.show, "Mostra")}
     </div>
-    <p class="note">Le caselle cambiano solo qui finché non premi "Salva modifiche". Catturato vale solo se anche visto, come lo legge il gioco. Dopo le specie, le forme che il Pokédex registra a sé (le regionali come Slowpoke di Galar): una forma vista o presa segna vista o presa anche la sua specie.${S.save.info.legacy ? " Questo salvataggio è in un formato più vecchio e non ha ancora il registro delle forme: il gioco lo aggiunge quando lo carica." : ""}</p>
+    <p class="note">Le caselle qui sotto cambiano solo qui finché non premi "Salva modifiche". Catturato vale solo se anche visto, come lo legge il gioco. Dopo le specie, le forme che il Pokédex registra a sé (le regionali come Slowpoke di Galar): una forma vista o presa segna vista o presa anche la sua specie.${S.save.info.legacy ? " Questo salvataggio è in un formato più vecchio e non ha ancora il registro delle forme: il gioco lo aggiunge quando lo carica." : ""}</p>
     <div class="dexlist" style="margin-top:10px">${rows.map(id => { const s = state(id); return `<div class="dexrow ${ch.has(id) ? "dirty" : ""}" data-id="${id}">
-      <span class="n">${id}</span><span class="nm">${esc((forms.has(id) ? S.species.get(id)?.label : S.species.get(id)?.name) ?? id)}</span>
+      <span class="n">${id}</span><span class="nm">${esc(name(id))}</span>
       <label><input type="checkbox" data-k="seen" ${s.seen ? "checked" : ""}> visto</label>
-      <label><input type="checkbox" data-k="caught" ${s.caught ? "checked" : ""}> preso</label></div>`; }).join("") || `<span class="muted">Nessuna specie.</span>`}</div>`;
+      <label><input type="checkbox" data-k="caught" ${s.caught ? "checked" : ""}> preso</label></div>`; }).join("") || `<span class="muted">Nessuna specie.</span>`}</div>
+    <div id="dexbar"></div>`;
+  // A tick redraws its row and the bar, not the list: the keyboard's focus stays on the tick.
+  const bar = () => {
+    $("#dexbar").className = `bar stickybar${ch.size ? "" : " idle"}`;
+    $("#dexbar").innerHTML = `<span class="hint">${ch.size ? `${ch.size} ${ch.size === 1 ? "specie cambiata, non ancora salvata" : "specie cambiate, non ancora salvate"}` : "le caselle cambiano solo qui finché non salvi"}</span>
+      <span style="flex:1"></span>
+      <button type="button" class="primary" id="dexsave" ${ch.size ? "" : "disabled"}>Salva modifiche${ch.size ? ` (${ch.size})` : ""}</button>
+      <button type="button" id="dexdrop" ${ch.size ? "" : "disabled"}>Scarta</button>`;
+    $("#dexsave").onclick = async () => {
+      const changes = [...ch].map(([id, s]) => ({id, ...s}));
+      if (await edit("dex", {changes}, `Pokédex salvato (${changes.length} specie)`)) { ch.clear(); renderDex(); }
+    };
+    $("#dexdrop").onclick = () => { ch.clear(); renderDex(); };
+  };
+  bar();
   $("#dexq").oninput = ev => { S.dex.q = ev.target.value; const pos = ev.target.selectionStart; renderDex(); const el = $("#dexq"); el.focus(); el.setSelectionRange(pos, pos); };
-  $("#dexshow").onchange = ev => { S.dex.show = ev.target.value; renderDex(); };
+  $("#dexshow").onclick = ev => { const b = ev.target.closest("[data-v]"); if (b) { S.dex.show = b.dataset.v; renderDex(); } };
   $(".dexlist").onchange = ev => {
     const row = ev.target.closest(".dexrow"), id = +row.dataset.id, s = {...state(id)};
     s[ev.target.dataset.k] = ev.target.checked;
     if (ev.target.dataset.k === "caught" && s.caught) s.seen = true;
     if (ev.target.dataset.k === "seen" && !s.seen) s.caught = false;
     if (s.seen === seen.has(id) && s.caught === caught.has(id)) ch.delete(id); else ch.set(id, s);
-    renderDex();
+    row.classList.toggle("dirty", ch.has(id));
+    row.querySelector('[data-k="seen"]').checked = s.seen;
+    row.querySelector('[data-k="caught"]').checked = s.caught;
+    bar();
   };
-  $("#dexsave").onclick = async () => {
-    const changes = [...ch].map(([id, s]) => ({id, ...s}));
-    if (await edit("dex", {changes}, `Pokédex salvato (${changes.length} specie)`)) { ch.clear(); renderDex(); }
-  };
-  if ($("#dexdrop")) $("#dexdrop").onclick = () => { ch.clear(); renderDex(); };
   $$("[data-all]").forEach(b => b.onclick = async () => {
     const what = {seen: "segnare tutte le specie come viste", caught: "segnare tutte le specie come catturate", clear: "azzerare visti e catturati"}[b.dataset.all];
     const r = await ask("Pokédex", `<p>Vuoi ${what}? Riguarda tutte le ${S.data.dex.length} specie del Pokédex Nazionale.</p>`, [["yes", "Sì", b.dataset.all === "clear" ? "danger" : "primary"], ["", "No"]]);
@@ -2160,7 +2198,8 @@ function renderFlags() {
   $("#tab").innerHTML = `<div class="bar" style="margin-top:0">
       <input type="search" id="flagq" placeholder="Cerca per nome o numero: UNK_076, GYM, 0x6a, 6a, 106…" value="${esc(S.flagq || "")}" style="flex:1;min-width:200px" aria-label="Cerca flag e variabili">
     </div>
-    <p class="note">Solo flag e variabili che il salvataggio conserva (include/constants/flags.h e vars.h). Ogni cambio si salva subito, con backup.</p>
+    <p class="note">Solo flag e variabili che il salvataggio conserva (include/constants/flags.h e vars.h). Un flag si salva subito quando lo spunti;
+      una variabile quando premi Imposta o Invio. Ogni cambio fa un backup.</p>
     <div id="flagres" class="scroll" style="margin-top:10px"></div>`;
   const search = async () => {
     const q = $("#flagq").value.trim();
@@ -2172,17 +2211,24 @@ function renderFlags() {
     $("#flagres").innerHTML = (found.total > rows.length ? `<p class="note">I primi ${rows.length} di ${found.total} (prima le variabili): restringi la ricerca.</p>` : "") + (rows.length ? `<table><tr><th>Nome</th><th>Numero</th><th>Valore</th></tr>${rows.map(r => `<tr>
       <td class="mono">${esc(r.name)}</td><td class="mono muted">0x${r.number.toString(16)}</td>
       <td>${r.kind === "flag" ? `<label style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-flag="${r.number}" ${r.value ? "checked" : ""}> ${r.value ? "attivo" : "spento"}</label>`
-        : `<input type="number" min="0" max="65535" value="${r.value}" data-var="${r.number}" aria-label="${esc(r.name)}"> <button type="button" class="small" data-setvar="${r.number}">Imposta</button>`}</td></tr>`).join("")}</table>`
+        : `<span class="qty"><input type="number" min="0" max="65535" value="${r.value}" data-var="${r.number}" data-was="${r.value}" aria-label="${esc(r.name)}"> <button type="button" class="small" data-setvar="${r.number}" disabled>Imposta</button></span>`}</td></tr>`).join("")}</table>`
       : `<p class="muted">Nessun risultato.</p>`);
   };
   $("#flagq").oninput = () => { clearTimeout(flagTimer); flagTimer = setTimeout(search, 250); };
   $("#flagres").onchange = async ev => {
     if (ev.target.dataset.flag) { await edit("flag", {number: +ev.target.dataset.flag, value: ev.target.checked}, "Flag scritto"); }
   };
-  $("#flagres").onclick = async ev => {
-    const b = ev.target.closest("[data-setvar]");
-    if (b) await edit("var", {number: +b.dataset.setvar, value: +$(`input[data-var="${b.dataset.setvar}"]`).value}, "Variabile scritta");
+  // A variable's field is marked until it is written: Imposta, or Invio in the field.
+  const setVar = async n => { const el = $(`input[data-var="${n}"]`); if (el.reportValidity()) await edit("var", {number: +n, value: +el.value}, "Variabile scritta"); };
+  $("#flagres").onclick = async ev => { const b = ev.target.closest("[data-setvar]"); if (b) await setVar(b.dataset.setvar); };
+  $("#flagres").oninput = ev => {
+    const el = ev.target.closest("[data-var]");
+    if (!el) return;
+    const dirty = el.value !== el.dataset.was;
+    el.closest("tr").classList.toggle("dirty", dirty);
+    el.closest("tr").querySelector("[data-setvar]").disabled = !dirty;
   };
+  $("#flagres").onkeydown = ev => { if (ev.key === "Enter" && ev.target.dataset.var) { ev.preventDefault(); setVar(ev.target.dataset.var); } };
   search();
 }
 
