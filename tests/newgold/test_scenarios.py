@@ -74,6 +74,14 @@ class ScenarioFileTests(unittest.TestCase):
         for key in ("party0.ev6", "party0.evs", "party0.hp_ev", "cash"):
             self.assertFalse(scene.readable(key, key=True), key)
 
+    def test_a_scenario_can_read_the_roamers(self):
+        # A roamer's record as RoamerSaveData holds it (the editor's story
+        # step lets Raikou and Entei loose), and its location's index.
+        for key in ("roamer0.species", "roamer1.met_location", "roamer3.active", "roamer0.location"):
+            self.assertTrue(scene.readable(key, key=True), key)
+        for key in ("roamer4.species", "roamer0.map", "roamer.species"):
+            self.assertFalse(scene.readable(key, key=True), key)
+
     def test_every_scenario_is_one_scene_py_can_play(self):
         # A typo in a step or an expectation is found here, without the
         # emulator, rather than twenty seconds into a run.

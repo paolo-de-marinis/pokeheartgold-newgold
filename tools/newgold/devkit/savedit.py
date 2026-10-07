@@ -4992,6 +4992,9 @@ def main():
                         help="put the player in front of the person who runs that scripted battle or gives "
                              "that badge (story_places: TRAINER_LEADER_WHITNEY, BADGE_RISING), facing them, "
                              "the flags that hide them cleared; as the editor's Posizione does")
+    parser.add_argument("--step", action="append", default=[], metavar="STEP_ID",
+                        help="run a story step as the game would (run_step; the editor's Allenatore tick), "
+                             "by its id as story() names it: 0024:134, the Burned Tower")
     parser.add_argument("--from-ram", type=Path,
                         help="a boot_check memory dump; the game lays out a whole "
                              "save region before the title screen, and this seals it "
@@ -5133,6 +5136,14 @@ def main():
         number = set_flag(save, name, value != "0")
         save.write()
         print(f"{name} ({number:#x}) {'cleared' if value == '0' else 'set'}")
+
+    for step_id in args.step:
+        try:
+            writes = run_step(save, step_id)
+        except ValueError as e:
+            raise SystemExit(f"--step: {e}")
+        save.write()
+        print(f"story step {step_id}: {len(writes)} writes")
 
     if args.before:
         place = next((p for p in story_places() if args.before in (p["key"], p["trainer_const"])), None)

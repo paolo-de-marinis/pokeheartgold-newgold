@@ -336,8 +336,12 @@ steps after it), and, unticked, the map's sight trainers given as beaten
 raised to the level cap, and the ones above it brought down -- the cap the
 ticked steps will leave (Whitney's badge taken back: 30, not 34), each
 Pokemon named; Sposta does it all in one change. `savedit.py --before TRAINER_OR_BADGE` does the
-position and the hide flag from the command line (the scenario
-`editor_place_before_jasmine.json`). Then every map, grouped by its section
+position and the hide flag from the command line (the scenarios
+`editor_place_before_jasmine.json`, and `editor_place_before_will.json`:
+the walk-in to (6, 16), five steps, Will's line), and `savedit.py --step
+STEP_ID` runs a story step as Allenatore's tick does
+(`editor_story_step_lets_the_beasts_roam.json`: the Burned Tower's step,
+Raikou and Entei roaming, read in RAM as scene.py's `roamerN.*`). Then every map, grouped by its section
 (the name the game shows) with its region and kind --
 Italian words for its constant's words match too ("centro", "palestra",
 "lega"), and a person's name finds their map ("falkner") -- and a map a

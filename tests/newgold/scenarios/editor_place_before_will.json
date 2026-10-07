@@ -1,0 +1,16 @@
+{
+  "about": "The save editor's place before Will (savedit.story_places on a room the game walks the player into): route29-official.sav put at the Will room's arrival (6, 22) by --before. Continue enters the room and its frame script (VAR_TEMP_x4001 at 0, as every entry leaves it) walks the player six tiles in, to (6, 16), where the place's 'walked' says the walk stops -- not before Will, who stands at (6, 10): the review's A there gave nothing. The five steps the place says are left reach the tile before him, and one A has him say his line (msg_0523_T10R0201 row 0, 523 << 16). A walk-in that ended elsewhere, or a count of steps that did not reach him, fails here.",
+  "save": "route29-official.sav",
+  "edit": ["--before", "TRAINER_ELITE_FOUR_WILL_WILL_2"],
+  "steps": [
+    "field",
+    {"expect": {"map": "MAP_POKEMON_LEAGUE_WILL_ROOM", "x": 6, "y": 16}},
+    "goto:MAP_POKEMON_LEAGUE_WILL_ROOM,6,11",
+    {"expect": {"x": 6, "y": 11}},
+    "poke:gDiagFieldMessage=0",
+    "A",
+    "wait:200",
+    {"expect": {"gDiagFieldMessage": 34275328}}
+  ],
+  "expect": {"map": "MAP_POKEMON_LEAGUE_WILL_ROOM"}
+}

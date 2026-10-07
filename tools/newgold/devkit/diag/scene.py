@@ -162,6 +162,8 @@ start menu's settings as Options holds them: text speed 2 fast, battle
 scene 1 off, battle style 1 set), flag:FLAG_..., var:VAR_..., trainer:TRAINER_...
 (1 once that trainer is beaten, TrainerFlagCheck),
 caught:SPECIES_... (1 once the Pokedex has it caught),
+roamerN.species|level|hp|active|status|met_location|location (the roamer
+record N of RoamerSaveData -- 0 Raikou, 1 Entei -- and its location's index),
 bgN:X,Y (the entry at tile X, Y of the field's layer N, 3 the message box's,
 as the BgConfig's tilemap buffer holds it for the screen: tile number and
 palette << 12, 0 for nothing there -- a window's frame drawn or not),
@@ -264,6 +266,8 @@ def readable(step_or_key, key=False):
                 or step_or_key.startswith(("flag:", "var:", "gDiag"))
                 or re.fullmatch(r"trainer:TRAINER_\w+", step_or_key) is not None
                 or re.fullmatch(r"caught:SPECIES_\w+", step_or_key) is not None
+                or re.fullmatch(r"roamer[0-3]\.(species|level|hp|active|status|met_location|ivs|personality|location)",
+                                step_or_key) is not None
                 or re.fullmatch(r"bag:ITEM_\w+", step_or_key) is not None
                 or re.fullmatch(r"icon:ITEM_\w+", step_or_key) is not None
                 or re.fullmatch(r"bg[0-7]:\d+,\d+", step_or_key) is not None
@@ -1875,6 +1879,15 @@ class Scene:
             if field[:2] in ("ev", "iv") and field[2:].isdigit():
                 return mons[int(slot)][field[:2] + "s"][int(field[2:])]
             return mons[int(slot)]["moves"][int(field[4:])] if field[4:].isdigit() else mons[int(slot)][field]
+        if name.startswith("roamer") and "." in name:     # RoamerSaveData's record N, as savedit.roamer_rules lays it out
+            index, field = name[len("roamer"):].split(".")
+            rules = savedit.roamer_rules()
+            at = party.block(memory, self.elf, savedit.block_ids().index("SAVE_ROAMER")) - 0x02000000
+            if field == "location":
+                return ram[at + rules["locations"] + int(index)]
+            at += rules["data"] + int(index) * rules["size"] + rules["fields"][field]
+            size = {"met_location": 4, "ivs": 4, "personality": 4, "species": 2, "hp": 2}.get(field, 1)
+            return int.from_bytes(ram[at:at + size], "little")
         if name.startswith("caught:"):
             return self.caught(ram, self.number(name[len("caught:"):]))
         if name.startswith(("flag:", "var:", "trainer:")):

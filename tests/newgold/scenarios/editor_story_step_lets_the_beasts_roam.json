@@ -1,0 +1,13 @@
+{
+  "about": "A story step run by the save editor lets the roamers loose as CreateRoamer does (savedit --step, Allenatore's tick, the gate of Posizione's 'Davanti a Morty'): route29-official.sav with the Burned Tower's step (scr_seq_0024 line 134) run on it. Continue loads the save, and the RoamerSaveData the field reads holds Raikou and Entei active at Lv. 40, each on a Johto route (MAP_ROUTE_29 33 to MAP_ROUTE_46 48), as Save_CreateRoamerByID makes them; the beasts hidden from the tower. Before the fix the step hid them and left both records empty: gone from the tower, never roaming.",
+  "save": "route29-official.sav",
+  "edit": ["--step", "0024:134"],
+  "steps": [
+    "field",
+    {"expect": {"flag:FLAG_HIDE_BURNED_TOWER_B1F_RAIKOU": 1, "flag:FLAG_HIDE_BURNED_TOWER_B1F_ENTEI": 1,
+                "roamer0.active": 1, "roamer0.species": "SPECIES_RAIKOU", "roamer0.level": 40, "roamer0.met_location": [33, 48],
+                "roamer1.active": 1, "roamer1.species": "SPECIES_ENTEI", "roamer1.level": 40, "roamer1.met_location": [33, 48],
+                "roamer2.active": 0}}
+  ],
+  "expect": {"roamer0.hp": [100, 160], "roamer1.hp": [100, 160]}
+}
