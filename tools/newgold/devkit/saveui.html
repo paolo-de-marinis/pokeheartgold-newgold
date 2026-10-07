@@ -209,6 +209,8 @@ dialog form > h3 { padding: 14px 16px 0; margin: 0 0 10px; }
 .mvhead { padding: 6px 10px 3px; font-size: 12px; font-weight: 650; color: var(--muted); border-top: 1px solid var(--border); position: sticky; top: 0;
           z-index: 1; background: var(--panel); display: flex; align-items: center; gap: 6px; }
 .mvhead .dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+/* The arrows' row stops under its group's header, not behind it. */
+.mvlist:has(.mvhead) { scroll-padding-top: 30px; }
 .townbox canvas { display: block; width: 100%; max-width: 752px; height: auto; image-rendering: pixelated; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; }
 .townbox { max-width: 752px; }
 .townscroll { overflow-x: auto; }
@@ -547,14 +549,16 @@ function combo(input, {rows, onPick, empty = "Nessun risultato", clearable = fal
     const at = words.length ? -1 : hits.findIndex(r => same(r.id, input.dataset.id));
     const from = at >= COMBO_ROWS ? Math.max(0, Math.min(at - COMBO_ROWS / 2, hits.length - COMBO_ROWS)) : 0;
     shown = hits.slice(from, from + COMBO_ROWS);
-    let group;
+    // A group's header and its rows are one block, so the header stays on top only while its own rows are in view.
+    let group, grouped = false;
     const rest = hits.length - from - shown.length;
     list.innerHTML = (from ? `<div class="mvmore muted">… ${from} prima: scrivi per restringere</div>` : "") + shown.map((r, i) => {
-      const head = r.group !== undefined && r.group !== group ? `<div class="mvhead">${r.group}</div>` : "";
+      const head = r.group !== undefined && r.group !== group ? `${grouped ? "</div>" : ""}<div class="mvgroup"><div class="mvhead">${r.group}</div>` : "";
+      grouped ||= !!head;
       group = r.group;
       return `${head}<div class="mvopt${same(r.id, input.dataset.id) ? " cur" : ""}" role="option" id="${id}-${i}" data-i="${i}"${
         r.title ? ` title="${esc(r.title)}"` : ""}>${r.html}</div>`;
-    }).join("") + (rest > 0 ? `<div class="mvmore muted">… e altri ${rest}: scrivi per restringere</div>` : "")
+    }).join("") + (grouped ? "</div>" : "") + (rest > 0 ? `<div class="mvmore muted">… e altri ${rest}: scrivi per restringere</div>` : "")
       || `<div class="mvmore muted">${esc(typeof empty === "function" ? empty() : empty)}</div>`;
     // One width for every list: in a dialog the body's (a half or a third column's list was narrower than the species'),
     // on the page its field's, at least COMBO_WIDTH; moved left rather than past the dialog's or the page's edge.
@@ -568,7 +572,13 @@ function combo(input, {rows, onPick, empty = "Nessun risultato", clearable = fal
     if (at < 0) list.scrollTop = 0;     // a new search starts at its top, not where the last list was scrolled
     input.setAttribute("aria-expanded", "true");
     active = -1;
-    if (at >= 0) mark(at - from, "center");
+    if (at >= 0) {
+      mark(at - from, "center");
+      // Centred, the value may leave at the top a group's last sliver, its header and no whole row: the list starts at the next.
+      const top = list.getBoundingClientRect().top, g = $$(".mvgroup", list).find(g => g.getBoundingClientRect().bottom > top + 1);
+      const sliver = g ? g.getBoundingClientRect().bottom - top : 0;
+      if (sliver && sliver < $(".mvhead", g).offsetHeight + g.lastElementChild.offsetHeight) list.scrollTop += sliver;
+    }
   };
   const pick = i => {
     const r = shown[i];

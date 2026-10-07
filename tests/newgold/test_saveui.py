@@ -908,7 +908,7 @@ class SaveUiTests(unittest.TestCase):
         body = page[page.index("function combo("):page.index("const tagHtml =")]
         self.assertIn("const from = at >= COMBO_ROWS ? Math.max(0, Math.min(at - COMBO_ROWS / 2, hits.length - COMBO_ROWS)) : 0;", body)
         self.assertIn("shown = hits.slice(from, from + COMBO_ROWS);", body)
-        self.assertIn('if (at >= 0) mark(at - from, "center");', body)
+        self.assertIn('if (at >= 0) {\n      mark(at - from, "center");', body)
 
     def test_where_a_key_item_is_given(self):
         """/api/data's "givers": the places whose scripts give each item --
