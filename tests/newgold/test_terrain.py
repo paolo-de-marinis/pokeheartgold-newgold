@@ -372,7 +372,8 @@ int main(void) {
 
 
 # BtlCmd_TryCamouflage on the host, with its table: the type it gives a
-# Bulbasaur (Grass/Poison) by the ground and the terrain over it.
+# Bulbasaur (Grass/Poison) by the ground and the terrain over it, and when it
+# fails: only on a user of that type alone.
 CAMOUFLAGE = r"""
 #include <assert.h>
 #include <stdint.h>
@@ -392,18 +393,26 @@ static BOOL BattlerTypeIsItsAbilitys(BattleContext *ctx, int battlerId) { (void)
 static int BattleSystem_GetTerrainId(BattleSystem *bs) { return bs->terrain; }
 static int GetBattlerVar(BattleContext *ctx, int battlerId, u32 varId, void *data) {
     (void)data;
-    return varId == BMON_DATA_TYPE_1 ? ctx->battleMons[battlerId].type1 : ctx->battleMons[battlerId].type2;
+    return varId == BMON_DATA_TYPE_1 ? ctx->battleMons[battlerId].type1
+         : varId == BMON_DATA_TYPE_2 ? ctx->battleMons[battlerId].type2 : ctx->battleMons[battlerId].type3;
 }
 @FUNCTIONS@
 static BattleSystem bs;
 static BattleContext ctx;
-static int camouflage(int ground, int overlay) {
+static int camouflaged(BattleMon mon, int ground, int overlay) {
     BattleContext blank = { 0 };
     ctx = blank;
-    ctx.battleMons[0] = (BattleMon){ TYPE_GRASS, TYPE_POISON, TYPE_NONE };
+    ctx.battleMons[0] = mon;
     bs.terrain = ground; ctx.terrainOverlayType = overlay;
     BtlCmd_TryCamouflage(&bs, &ctx);
-    return ctx.skipped ? -1 : ctx.battleMons[0].type1;
+    if (ctx.skipped) {
+        return -1;
+    }
+    assert(ctx.battleMons[0].type2 == ctx.battleMons[0].type1 && ctx.battleMons[0].type3 == TYPE_NONE);
+    return ctx.battleMons[0].type1;
+}
+static int camouflage(int ground, int overlay) {
+    return camouflaged((BattleMon){ TYPE_GRASS, TYPE_POISON, TYPE_NONE }, ground, overlay);
 }
 int main(void) {
     assert(camouflage(TERRAIN_PLAIN, TERRAIN_NONE) == TYPE_NORMAL);
@@ -417,14 +426,22 @@ int main(void) {
     assert(camouflage(TERRAIN_SNOW, TERRAIN_NONE) == TYPE_ICE);
     assert(camouflage(TERRAIN_ICE, TERRAIN_NONE) == TYPE_ICE);
     assert(camouflage(TERRAIN_WATER, TERRAIN_NONE) == TYPE_WATER);
-    // Grass it is already: the move fails.
-    assert(camouflage(TERRAIN_GRASS, TERRAIN_NONE) == -1);
+    // Grass and Poison, it becomes Grass alone (Showdown's gen-9
+    // camouflage); retail failed it for having Grass at all.
+    assert(camouflage(TERRAIN_GRASS, TERRAIN_NONE) == TYPE_GRASS);
     // A terrain comes first, wherever the battle is.
     assert(camouflage(TERRAIN_CAVE, ELECTRIC_TERRAIN) == TYPE_ELECTRIC);
     assert(camouflage(TERRAIN_PLAIN, MISTY_TERRAIN) == TYPE_FAIRY);
     assert(camouflage(TERRAIN_WATER, PSYCHIC_TERRAIN) == TYPE_PSYCHIC);
-    assert(camouflage(TERRAIN_SAND, GRASSY_TERRAIN) == -1);
+    assert(camouflage(TERRAIN_SAND, GRASSY_TERRAIN) == TYPE_GRASS);
+    // Grass alone already: the move fails, and nothing changes.
+    assert(camouflaged((BattleMon){ TYPE_GRASS, TYPE_GRASS, TYPE_NONE }, TERRAIN_SAND, GRASSY_TERRAIN) == -1);
     assert(ctx.battleMons[0].type1 == TYPE_GRASS);
+    // Grass with a third type added (Forest's Curse, Trick-or-Treat) is not
+    // Grass alone: it loses the third.
+    assert(camouflaged((BattleMon){ TYPE_GRASS, TYPE_GRASS, TYPE_GHOST }, TERRAIN_GRASS, TERRAIN_NONE) == TYPE_GRASS);
+    // A Normal and Flying Pokemon on plain ground becomes pure Normal.
+    assert(camouflaged((BattleMon){ TYPE_NORMAL, TYPE_FLYING, TYPE_NONE }, TERRAIN_PLAIN, TERRAIN_NONE) == TYPE_NORMAL);
     return 0;
 }
 """

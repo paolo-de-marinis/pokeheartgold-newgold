@@ -1,0 +1,11 @@
+{
+  "about": "Camouflage fails only on a user that is the new type and nothing else (Showdown's gen-9 camouflage, getTypes().join() === newType, the seventh generation's rule; Pokemon Central's Camuffamento is silent): a Normal and Flying Pidgey on Route 29's plain ground becomes Normal alone. A level-10 Pidgey is given Camouflage (teach:) against a forced wild Chansey that knows only Splash: \"Pidgey transformed into the Normal type!\". Before, retail's rule failed it for having Normal as either type: \"But it failed!\". The field's RNG is pinned as in rolls_forced_high.json.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "PIDGEY:10"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceEffect": 2, "gDiagForceHit": 1, "gDiagForceCritical": 2},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            "teach:0,0,MOVE_CAMOUFLAGE", "teach:0,1,0,0", "teach:0,2,0,0", "teach:0,3,0,0",
+            "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:1:1"],
+  "expect": {"lines": ["Pidgey used Camouflage!", "Pidgey transformed into the Normal type!"], "no_lines": ["But it failed!"]}
+}

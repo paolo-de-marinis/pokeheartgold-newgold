@@ -6421,8 +6421,15 @@ BOOL BtlCmd_TryCamouflage(BattleSystem *battleSystem, BattleContext *ctx) {
     int type = sCamouflageTypeTable[terrain];
 
     // The user becomes that type and nothing else, an added third type
-    // included, as with every move that sets a Pokemon's type.
-    if (GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_1, NULL) != type && GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_2, NULL) != type) {
+    // included, as with every move that sets a Pokemon's type. It fails only
+    // on a user that is that type and nothing else already: a Normal and
+    // Flying Pokemon becomes pure Normal on plain ground (Showdown's gen-9
+    // camouflage, getTypes().join() === newType, the seventh generation's
+    // rule; Pokemon Central's Camuffamento is silent). Retail's, as
+    // Showdown's gen-4 one, failed on a user with the type as either of its
+    // two.
+    if (GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_1, NULL) != type || GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_2, NULL) != type
+        || GetBattlerVar(ctx, ctx->battlerIdAttacker, BMON_DATA_TYPE_3, NULL) != TYPE_NONE) {
         ctx->battleMons[ctx->battlerIdAttacker].type1 = type;
         ctx->battleMons[ctx->battlerIdAttacker].type2 = type;
         ctx->battleMons[ctx->battlerIdAttacker].type3 = TYPE_NONE;
