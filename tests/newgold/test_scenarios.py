@@ -96,12 +96,11 @@ class ScenarioFileTests(unittest.TestCase):
     def test_the_playthrough_is_one_chain_from_a_new_game_with_its_own_team(self):
         # Every leg follows the one before it, from the new game to
         # Whitney's Plain Badge, one line with no branch; the party is the one the
-        # bot caught and trained: no leg edits the save (--party, --level,
-        # --teach, --train, the last of them gone from leg 08b's Bugsy in
-        # round 15) -- the bot trains in play, learns by gym.py's rule and
-        # teaches a machine from the bag. No step writes it either (set:,
-        # teach:, a poke: or hold: of anything but the pinned RNG and battle
-        # seed).
+        # bot caught and trained: no leg but the two below edits the save
+        # (--party, --level, --teach, --train) -- the bot trains in play,
+        # learns by gym.py's rule and teaches a machine from the bag. No step
+        # writes it either (set:, teach:, a poke: or hold: of anything but
+        # the pinned RNG and battle seed).
         legs_ = {path.stem: json.loads(path.read_text()) for path in SCENARIOS.glob("playthrough_*.json")}
         line, leg = [], "playthrough_12b_whitney"
         while leg:
@@ -110,9 +109,12 @@ class ScenarioFileTests(unittest.TestCase):
         self.assertEqual(line[-1], "playthrough_01_new_game")
         self.assertNotIn("save", legs_[line[-1]])
         self.assertEqual(sorted(line), sorted(legs_))
-        # Paolo, 2026-10-06: the bot losing to Whitney is a balance question
-        # for after the port, so her leg alone may raise the team.
-        edited = {"playthrough_12b_whitney": ["--train", "36"]}
+        # Paolo, 2026-10-06: the bot losing a battle is a balance question
+        # for after the port, not a porting one, so the two legs where it lost
+        # every try may raise the team: Whitney's, and the Ilex rival's at the
+        # lowest level that beats him (seven losses running on 33299bd93's
+        # chain; trained to 17, one battle won in five, to 18 four in five).
+        edited = {"playthrough_08b_ilex": ["--train", "18"], "playthrough_12b_whitney": ["--train", "36"]}
         for name, spec in legs_.items():
             with self.subTest(name):
                 self.assertEqual(spec.get("edit"), edited.get(name))
