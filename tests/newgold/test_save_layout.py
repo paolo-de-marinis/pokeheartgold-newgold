@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""save_layout.json, the save's block sizes for a tree with no build.
+"""save_layout.json, the save's block sizes for a tree with no build, and
+the one header make generates that the editor's compiles include.
 
 The sizes come out of the built ROM, since the game's Save_*_sizeof exist in
 no other form; a clone has no ROM, so the save editor reads them from this
@@ -10,6 +11,7 @@ clone that misreads every save, so it fails here. After make:
 """
 
 import json
+import shutil
 import sys
 import tempfile
 import unittest
@@ -50,6 +52,17 @@ class SaveLayoutFileTests(unittest.TestCase):
             stale.write_text(json.dumps(kept))
             with mock.patch.object(save_budget, "LAYOUT", stale):
                 self.assertEqual(sv.layout_file_differs(BUILD), ["Save_Pokedex_sizeof"])
+
+    def test_a_clone_makes_fx_const_h_as_make_does(self):
+        """global.h includes it, and only make writes it (ignored by git)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            shutil.copytree(ROOT / "tools/gen_fx_consts", Path(tmp) / "tools/gen_fx_consts")
+            (Path(tmp) / "lib/include/nitro/fx").mkdir(parents=True)
+            with mock.patch.object(sv, "ROOT", Path(tmp)):
+                sv.made_fx_const()
+            self.assertEqual(sorted(p.name for p in (Path(tmp) / "lib/include/nitro/fx").iterdir()), ["fx_const.h"])
+            self.assertEqual((Path(tmp) / "lib/include/nitro/fx/fx_const.h").read_bytes(),
+                             (ROOT / "lib/include/nitro/fx/fx_const.h").read_bytes())
 
 
 if __name__ == "__main__":

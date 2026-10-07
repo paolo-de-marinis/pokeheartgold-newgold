@@ -165,6 +165,27 @@ def build_defines():
     return flags
 
 
+def made_fx_const():
+    """lib/include/nitro/fx/fx_const.h, which global.h includes: make writes
+    it with tools/gen_fx_consts before anything compiles, and a clone has
+    none yet, so it is made here as make makes it."""
+    header, tool = ROOT / "lib/include/nitro/fx/fx_const.h", ROOT / "tools/gen_fx_consts"
+    if header.exists():
+        return
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp) / header.relative_to(ROOT)     # make's argument: the header guard is made of it
+        out.parent.mkdir(parents=True)
+        for command in (["cc", "-O3", "-DNDEBUG", f'-DSOURCE_DIR="{tool}"', "-o", f"{tmp}/gen_fx_consts",
+                         *(str(tool / f"{name}.c") for name in ("main", "fx_encode", "fx_data")), "-lm"],
+                        [f"{tmp}/gen_fx_consts", str(header.relative_to(ROOT))]):
+            run = subprocess.run(command, cwd=tmp, capture_output=True, text=True)
+            if run.returncode:
+                raise SystemExit(f"could not make {header.relative_to(ROOT)}:\n{run.stderr[:1200]}")
+        part = header.with_name("." + Path(tmp).name)
+        part.write_bytes(out.read_bytes())
+        part.replace(header)
+
+
 @tree_cache
 def compile_c(exprs=(), inits=(), headers=LAYOUT_HEADERS, decls=()):
     """What the host compiler makes of the headers: each of `exprs`, a C
@@ -174,6 +195,7 @@ def compile_c(exprs=(), inits=(), headers=LAYOUT_HEADERS, decls=()):
     a struct a .c file keeps to itself (c_struct). Nothing is run: the
     values are read out of the assembly the compiler writes. Every header
     it read is noted for fresh()."""
+    made_fx_const()
     lines = [f'#include "{h}"' for h in headers] + list(decls)
     lines.append(f"const unsigned int probe_values[] = {{ {', '.join(f'(unsigned int)({e})' for e in exprs) or 0} }};")
     for i, (kind, init) in enumerate(inits):
