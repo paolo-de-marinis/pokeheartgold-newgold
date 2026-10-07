@@ -324,9 +324,9 @@ position and the hide flag from the command line (the scenario
 Italian words for its constant's words match too ("centro", "palestra",
 "lega"), and a person's name finds their map ("falkner") -- and a map a
 blackout sends the player to is tagged; the maps where the game never saves
-(`savedit.nosave_maps`: the Union Room, the Battle Tower's partner room, the
-Safari Zone, Pal Park, the Bug Contest's park) and the unused ones are not
-offered. Above it the
+(`savedit.nosave_maps`: the Wi-Fi rooms, where the start menu never opens,
+the Union Room, the Battle Tower's partner room, the Safari Zone, Pal Park,
+the Bug Contest's park) and the unused ones are not offered. Above it the
 Pokégear's town map, both regions, with the player marked and the player's
 section lit. Hovering names the places under the pointer and the one a
 click picks (the town, the route), which fills the field; on a phone the

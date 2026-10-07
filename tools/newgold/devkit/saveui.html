@@ -511,6 +511,8 @@ function combo(input, {rows, onPick, empty = "Nessun risultato", clearable = fal
     if (input.value === labelOf(input.dataset.id)) { input.select(); open(""); } else open(input.value);
   });
   input.addEventListener("input", () => open(input.value));
+  // A click on the field that has the focus already (a dialog's first field) opens the list too.
+  input.addEventListener("click", () => { if (list.hidden) open(input.value === labelOf(input.dataset.id) ? "" : input.value); });
   input.addEventListener("blur", () => {
     close();
     if (clearable && !input.value.trim() && input.dataset.id) { input.dataset.id = ""; onPick?.(null); }
