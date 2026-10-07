@@ -8,6 +8,14 @@ through the harness, and Paolo judges it, on his phone if he likes. The devkit's
 sprite and item editors will host the same flow: drop the pictures in, the
 conversion and the in-game preview follow (DEVKIT-PLAN.md, section 4).
 
+**Bramblin is in the game** (2026-10-08): its battle front and back, their
+shiny colours, the party icon and the follower are Paolo's, where the
+reference had Bulbasaur's battle pictures. A species whose pictures are
+Paolo's is listed in `tools/newgold/import/own_art.py`, which every importer
+that writes those files reads, so a re-import keeps his pictures instead of
+the reference's; the next species (Baby Lugia) is one line there, then one
+run of the converter.
+
 The prompts are in English, which ChatGPT follows best. Replace `<NAME>` with
 the Pokemon's or the item's English name.
 
@@ -97,8 +105,10 @@ and in the bag).
   the normal one, the **back's PNG carries the shiny palette** (the same
   indices); the female pictures are separate files and must be replaced too
   (a female Bramblin first showed the old placeholder). `heights.py write`
-  follows the pictures. The size of a new species' battle picture follows the
-  community sprites of the same Pokemon (Bramblin about 41x34).
+  follows the pictures, and `import_sprite_offsets.py` stands the front as it
+  is drawn in its frame, over a shadow its size. The size of a new species'
+  battle picture follows the community sprites of the same Pokemon (Bramblin
+  42 wide).
 - **Party icon:** `poke_icon_<n>.png`, 32x64, in one of the three palettes all
   icons share (`poke_icon_00000000.pal`); the species' palette number is in
   `sPokemonPalNoBySpeciesAndForm` (src/pokemon_icon_idx.c): the conversion
@@ -108,7 +118,8 @@ and in the bag).
   palettes (normal, shiny), built into the species' mmodel texture
   (`import_followers.nsbtx`). **Size, HeartGold's rule measured on its own
   followers:** the drawn height is the median of retail's 32x32 followers whose
-  Dex height is within 1 dm of the species' (0.6 m gives 17 pixels), the feet
+  Dex height is within 1 dm of the species' (0.6 m gives 17 pixels), measured
+  on the first down frame, and the down frame is scaled to it, the feet
   on row 29, centred at x 16, one scale for all eight frames so it does not
   change size while walking; the largest Pokemon use 64x64 frames.
 - **Item icon:** 32x32, 4bpp, its own 16-colour palette, as the items
@@ -117,7 +128,12 @@ and in the bag).
   battle, normal and shiny (the harness: `scene.py` with
   `gDiagForceBattleSpecies` on a route, the species both as the foe and as the
   player's Pokemon -- the 256-colour trap showed only with the back loaded).
+  `front1.lift` finds the foe's front on the screen in its PNG's colours, a
+  shiny one in its back's: Bramblin's scenarios are `bramblin_pictures.json`
+  and `bramblin_pictures_shiny.json`.
 
-The converter written for Bramblin is
-`tools/newgold/devkit/sprites/convert_chatgpt.py`; the sprite editor
-generalises it.
+The converter is `tools/newgold/devkit/sprites/convert_chatgpt.py`: it takes
+the species, each picture and the follower sheet's rows (`--rows`, top to
+bottom; a right row is not used), writes into the tree and runs what follows
+the pictures; its docstring has Bramblin's command. It refuses a species not
+in `own_art.py`. The sprite editor will host it.
