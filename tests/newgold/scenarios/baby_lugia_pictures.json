@@ -1,0 +1,10 @@
+{
+  "about": "Baby Lugia's battle pictures are Paolo's own (2026-10-07), pixel art at its own pixels, 75x62 in the front's frame: a forced wild Baby Lugia on Route 30 against the player's Baby Lugia, and front1.lift finds Paolo's front on the screen in its PNG's colours, standing one row over the ground line -- its clearance, the record import_sprite_offsets.py places for his picture as the converter drew it in its frame. On Lugia's placeholder the front stood where Lugia floats. The save is a scratch copy of Paolo's Route 29 save put on Route 30 with a Baby Lugia leading.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "BABY_LUGIA:15,CYNDAQUIL:15", "--where", "34:552:329"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=1438", "UP", "fight:0:0",
+            {"expect": {"battler0.species": "SPECIES_BABY_LUGIA", "battler1.species": "SPECIES_BABY_LUGIA",
+                        "battler1.shiny": 0, "front1.lift": 1}}],
+  "expect": {"lines": ["wild Baby Lugia"]}
+}

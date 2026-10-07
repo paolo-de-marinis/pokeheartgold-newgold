@@ -1,0 +1,9 @@
+{
+  "about": "Baby Lugia's shiny colours are Paolo's own (2026-10-07): the same wild Baby Lugia as baby_lugia_pictures.json, its personality the same from the pinned RNG, comes out shiny under the trainer ID 462822871 (the one that makes bramblin_pictures_shiny.json's foe shiny), and front1.lift finds its front in the shiny colours its back's PNG carries, one row over the ground line as the normal one stands. The save is a scratch copy of Paolo's Route 29 save put on Route 30 with a Baby Lugia leading.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "BABY_LUGIA:15,CYNDAQUIL:15", "--where", "34:552:329", "--trainer-id", "462822871"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=1438", "UP", "fight:0:0",
+            {"expect": {"battler1.species": "SPECIES_BABY_LUGIA", "battler1.shiny": 1, "front1.lift": 1}}],
+  "expect": {"lines": ["wild Baby Lugia"]}
+}

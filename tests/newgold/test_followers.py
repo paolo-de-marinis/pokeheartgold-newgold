@@ -28,6 +28,7 @@ from test_picture_tables import run_native
 
 sys.path.insert(0, str(ROOT / "tools/newgold/import"))
 import import_followers  # noqa: E402
+import own_species  # noqa: E402
 
 
 def table(source, name):
@@ -124,7 +125,7 @@ class FollowerTests(unittest.TestCase):
             r"\{ SPRITE_FOLLOWER_MON_(\w+), MMODEL_FOLLOWER_MON_(\w+), 0x\w+ \| \((\d+) << 10\) \}",
             (ROOT / "src/field/object_graphics_info.c").read_text()))
         models = added_models()
-        self.assertEqual(len(models), 741)
+        self.assertEqual(len(models), 742)
         for i, name in enumerate(models):
             data = (import_followers.MMODEL_DIR / f"mmodel_{863 + i:08d}.NSBTX").read_bytes()
             self.assertEqual(entries[name], (name, 20 if import_followers.texture_width(data) == 64 else 19), name)
@@ -139,12 +140,16 @@ class FollowerTests(unittest.TestCase):
         """A texture's frames are as wide as the reference's picture of them.
         Four of its frame lists name the other size -- Hydrapple's and Garden
         Vivillon's pictures are 32 wide, Hatterene's and Dondozo's 64 -- and
-        a texture sized by the list drew Hydrapple as a bare shadow."""
+        a texture sized by the list drew Hydrapple as a bare shadow. New
+        Gold's own species have no picture there (test_sprites checks
+        theirs)."""
         if not import_followers.REFERENCE.exists():
             self.skipTest("no reference checkout")
         from PIL import Image
         models, _ = import_followers.plan()
         for i, (name, directory, *_rest) in enumerate(models):
+            if name in own_species.SPECIES:
+                continue
             data = (import_followers.MMODEL_DIR / f"mmodel_{863 + i:08d}.NSBTX").read_bytes()
             picture = Image.open(io.BytesIO(import_followers.show(f"{directory}/overworld.png")))
             self.assertEqual(import_followers.texture_width(data), picture.width, name)

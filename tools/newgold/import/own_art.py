@@ -17,4 +17,5 @@ The next species is one more line.
 
 SPECIES = (
     "BRAMBLIN",     # Paolo, 2026-10-08: the reference drew Bulbasaur's battle pictures for it
+    "BABY_LUGIA",   # Paolo, 2026-10-07: New Gold's own; its battle pictures and follower are his
 )
