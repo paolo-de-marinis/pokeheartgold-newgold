@@ -34,6 +34,11 @@ only once one is drawn for it.
 
 A species whose pictures are Paolo's own (own_art.py) keeps the texture the
 tree has for it (convert_chatgpt.py builds it with nsbtx from his picture).
+One New Gold adds (own_species.py) has no MON_FOLLOWER_ENTRY to walk by, and
+with his pictures it does not walk as its like: it takes a model of its own,
+after the reference's, as the 379 retail followers that walk, bounce fast
+and fit through a door do, with a 32x32 texture; until his picture is
+converted, the texture is Bulbasaur's.
 
     import_followers.py [--reference PATH] [--write]
 """
@@ -217,11 +222,11 @@ def nsbtx(directory, reference=REFERENCE, read=None):
 def texture(name, directory, reference=REFERENCE):
     """A model's texture: the reference's picture in directory built, or for
     a species whose pictures are Paolo's own (own_art.py) the tree's, kept
-    from the member mmodel.h gives it now."""
+    from the member mmodel.h gives it now, or Bulbasaur's while it has none."""
     if name not in own_art.SPECIES:
         return nsbtx(directory, reference)
     member = re.search(rf"^#define MMODEL_FOLLOWER_MON_{name}\s+(\d+)", MMODEL_H.read_text(), re.M)
-    return (MMODEL_DIR / f"mmodel_{int(member.group(1)):08d}.NSBTX").read_bytes()
+    return (MMODEL_DIR / f"mmodel_{int(member.group(1)) if member else MMODEL_BASE:08d}.NSBTX").read_bytes()
 
 
 def texture_width(data):
@@ -273,6 +278,10 @@ def plan(reference=REFERENCE):
         if name in table:
             size, bounce = properties.get(name, ("OVERWORLD_CAN_ENTER", "OVERWORLD_BOUNCE_FAST"))
             models.append((name, f"data/graphics/sprites/{name.lower()}", size, bounce, table[name]))
+            lut[name] = f"FOLLOWER_MON_{name}"
+        elif name in own_species.SPECIES and name in own_art.SPECIES:
+            models.append((name, f"data/graphics/sprites/{name.lower()}", "OVERWORLD_CAN_ENTER",
+                           "OVERWORLD_BOUNCE_FAST", "OVERWORLD_SIZE_SMALL"))
             lut[name] = f"FOLLOWER_MON_{name}"
     for n, name in species:
         if name in lut:
