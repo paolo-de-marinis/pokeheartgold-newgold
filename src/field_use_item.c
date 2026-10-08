@@ -144,7 +144,7 @@ static const struct ItemUseFuncDat sItemFieldUseFuncs[] = {
     // party menu on the item just as these two would.
     { NULL,                        NULL,                         ItemCheckUseFunc_Dummy      },
     { NULL,                        NULL,                         ItemCheckUseFunc_Dummy      },
-    { ItemMenuUseFunc_FormChange,  NULL,                         NULL                        }, // Nectars
+    { ItemMenuUseFunc_FormChange,  NULL,                         NULL                        }, // Nectars, Prison Bottle
     { ItemMenuUseFunc_FormChange,  NULL,                         NULL                        }, // Rotom Catalog
 };
 

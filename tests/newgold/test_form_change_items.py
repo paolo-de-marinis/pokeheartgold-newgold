@@ -43,9 +43,18 @@ NECTARS = ["ITEM_RED_NECTAR", "ITEM_YELLOW_NECTAR", "ITEM_PINK_NECTAR", "ITEM_PU
 class FormChangeRoutines(unittest.TestCase):
     def test_the_items_have_routines_that_open_the_party_menu(self):
         rows, table = records(), routines()
-        for item, routine in [("ITEM_REVEAL_GLASS", 30)] + [(nectar, 34) for nectar in NECTARS]:
+        for item, routine in [("ITEM_REVEAL_GLASS", 30), ("ITEM_PRISON_BOTTLE", 34)] + [(nectar, 34) for nectar in NECTARS]:
             self.assertEqual(int(rows[item]["fieldUseFunc"]), routine, item)
             self.assertEqual(table[routine], "ItemMenuUseFunc_FormChange", item)
+
+    def test_the_gracidea_s_routine_is_the_gracidea_s_alone(self):
+        """Routine 28 opens the party menu on ITEM_GRACIDEA whatever the item:
+        hg-engine gave it the Prison Bottle too, which made Shaymin's Sky
+        Forme and did nothing to Hoopa. Routine 34 has nothing for the
+        registered button, so an item on it is not registered."""
+        rows = records()
+        self.assertEqual([item for item, row in rows.items() if row["fieldUseFunc"] == "28"], ["ITEM_GRACIDEA"])
+        self.assertEqual([item for item, row in rows.items() if row["fieldUseFunc"] == "34" and row["selectable"] == "true"], [])
 
     def test_the_rotom_catalog_opens_the_party_menu(self):
         self.assertEqual(int(records()["ITEM_ROTOM_CATALOG"]["fieldUseFunc"]), 35)
@@ -123,7 +132,12 @@ int main(void) {
     assert(ItemFormChangeSpecies(ITEM_REVEAL_GLASS, SPECIES_ORICORIO) == SPECIES_NONE);
     assert(ItemFormChangeSpecies(ITEM_REVEAL_GLASS, SPECIES_EGG) == SPECIES_NONE);
     assert(ItemFormChangeSpecies(ITEM_POTION, SPECIES_TORNADUS) == SPECIES_NONE);
-    puts("PASS: the Reveal Glass on the four Forces of Nature, the Nectars on Oricorio's styles.");
+    assert(ItemFormChangeSpecies(ITEM_PRISON_BOTTLE, SPECIES_HOOPA) == SPECIES_HOOPA_UNBOUND);
+    assert(ItemFormChangeSpecies(ITEM_PRISON_BOTTLE, SPECIES_HOOPA_UNBOUND) == SPECIES_HOOPA);
+    assert(ItemFormChangeSpecies(ITEM_PRISON_BOTTLE, SPECIES_SHAYMIN) == SPECIES_NONE);
+    assert(ItemFormChangeSpecies(ITEM_PRISON_BOTTLE, SPECIES_TORNADUS) == SPECIES_NONE);
+    assert(ItemFormChangeSpecies(ITEM_REVEAL_GLASS, SPECIES_HOOPA) == SPECIES_NONE);
+    puts("PASS: the Reveal Glass on the four Forces of Nature, the Nectars on Oricorio's styles, the Prison Bottle on Hoopa.");
     return 0;
 }
 """

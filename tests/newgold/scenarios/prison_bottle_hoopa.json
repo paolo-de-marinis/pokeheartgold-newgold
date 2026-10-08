@@ -1,0 +1,9 @@
+{
+  "about": "The Prison Bottle turns Hoopa Confined into Unbound and back (Pokemon Central, Vaso del vincolo): route29-official.sav with a Hoopa (savedit --party) and the bottle, which is a key item and stays in the bag. From the bag, USE on the Hoopa: Hoopa Unbound; again: Hoopa Confined. hg-engine gave the bottle the Gracidea's routine, which opens the party menu on ITEM_GRACIDEA: 'It won't have any effect.' on a Hoopa, the species unchanged, and use: fails.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "HOOPA:50", "--item", "PRISON_BOTTLE:1"],
+  "steps": ["field", "use:ITEM_PRISON_BOTTLE,0",
+            {"expect": {"party0.species": "SPECIES_HOOPA_UNBOUND", "bag:ITEM_PRISON_BOTTLE": 1}},
+            "use:ITEM_PRISON_BOTTLE,0"],
+  "expect": {"party0.species": "SPECIES_HOOPA", "bag:ITEM_PRISON_BOTTLE": 1}
+}

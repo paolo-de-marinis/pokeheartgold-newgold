@@ -2516,6 +2516,15 @@ static u16 ItemFormChangeSpecies(u16 itemId, u16 species) {
                 return sNectarForms[itemId - ITEM_RED_NECTAR];
             }
         }
+    } else if (itemId == ITEM_PRISON_BOTTLE) {
+        // Hoopa Confined and Unbound, into one another (Pokemon Central,
+        // Vaso del vincolo).
+        if (species == SPECIES_HOOPA) {
+            return SPECIES_HOOPA_UNBOUND;
+        }
+        if (species == SPECIES_HOOPA_UNBOUND) {
+            return SPECIES_HOOPA;
+        }
     }
     return SPECIES_NONE;
 }
@@ -2761,8 +2770,9 @@ static int PartyMenu_HandleUseItemOnMon(PartyMenu *partyMenu) {
 
     formSpecies = ItemFormChangeSpecies(partyMenu->args->itemId, GetMonData(Party_GetMonByIndex(partyMenu->args->party, partyMenu->partyMonIndex), MON_DATA_SPECIES_OR_EGG, NULL));
     if (formSpecies != SPECIES_NONE) {
-        // A Nectar is used up; the Reveal Glass is a key item.
-        if (partyMenu->args->itemId != ITEM_REVEAL_GLASS) {
+        // A Nectar is used up; the Reveal Glass and the Prison Bottle are key
+        // items.
+        if (partyMenu->args->itemId >= ITEM_RED_NECTAR && partyMenu->args->itemId <= ITEM_PURPLE_NECTAR) {
             Bag_TakeItem(partyMenu->args->bag, partyMenu->args->itemId, 1, HEAP_ID_PARTY_MENU);
         }
         partyMenu->args->species = formSpecies;

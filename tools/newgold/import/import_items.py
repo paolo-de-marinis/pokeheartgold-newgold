@@ -500,6 +500,13 @@ OWN_RECORDS = {
     "ITEM_SWIFT_MOCHI": dict(fieldUseFunc="1", partyUse="1", speed_ev_up="true"),
     "ITEM_FRESH_START_MOCHI": dict(fieldUseFunc="1", partyUse="1", hp_ev_up="true", atk_ev_up="true",
                                    def_ev_up="true", speed_ev_up="true", spatk_ev_up="true", spdef_ev_up="true"),
+    # The Prison Bottle turns Hoopa Confined into Unbound and back (Pokemon
+    # Central, Vaso del vincolo). hg-engine gives it the Gracidea's routine,
+    # 28, which opens the party menu on ITEM_GRACIDEA, so it made a Shaymin
+    # Sky Forme; the Nectars' 34 opens it on the item itself, and
+    # ItemFormChangeSpecies knows Hoopa. That routine has nothing for the
+    # registered button, so it is not registered, as in the games that have it.
+    "ITEM_PRISON_BOTTLE": dict(fieldUseFunc="34", selectable="false"),
 }
 
 # Each step of Goldenrod's TM shop costs one price (727dfbd79, Paolo
