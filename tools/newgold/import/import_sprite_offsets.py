@@ -28,9 +28,9 @@ standing it on the ground as pret's rule means.
 Where the reference itself draws a front in the wrong place, the record
 here does not follow it. The offset says how far over the ground line the
 picture's lowest row stands, retail's grounded fronts between 12 rows under
-it (Metagross) and 3 over it (Pikachu), its floating ones higher. In three
+it (Metagross) and 3 over it (Pikachu), its floating ones higher. In four
 cases, the first that applies, the offset is another, and in the first and
-the last the shadow (the record's last two bytes) goes with it:
+the third the shadow (the record's last two bytes) goes with it:
 
 * A picture another species drew first stands as that species does. 120
   added species and forms have no art in the reference and draw Bulbasaur's
@@ -41,18 +41,29 @@ the last the shadow (the record's last two bytes) goes with it:
 * GROUNDED: species that stand on the ground in the latest games and that
   the reference draws in the air (a Steenee 11 rows up, a Tirtouga 18) take
   the offset of retail's grounded fronts with their size of shadow. Flittle
-  is one: its toes hover half an inch over the ground (Scarlet's entry).
-  FLOATING: species that float in the latest games, and in Black and White
-  for the fifth generation's, take FLOAT over their shadow, the middle of
-  retail's floaters, where the reference drew them higher (an Elgyem 17 rows
-  up, a Woobat 29) or as high: a floater that reads as one, near its
-  platform. A model standing on the ground keeps its lowest row still
-  through its idle animation, a floater's bobs.
+  is one: its toes hover half an inch over the ground (Scarlet's entry). A
+  model standing on the ground keeps its lowest row still through its idle
+  animation, a floater's bobs; a bob of 4 pixels or less does not decide
+  alone (Revavroom's engine shakes it 4): Black and White's sprite or the
+  Pokedex texts have to say the same. Where the evidence is split
+  (Elgyem, Beheeyem, Cofagrigus) the front floats, Paolo's choice.
 * A form whose record is its base's, or one never placed (UNPLACED), stands
   as its base does, as retail's forms do (they share their species' record):
   a Combat Breed Tauros, never placed, floated 11 rows over where Tauros
   stands, and a Sunny Castform, given Castform's record for a picture drawn
   lower in its frame, sat 8 rows under where Castform floats.
+* Any other added front the reference draws over retail's grounded range
+  floats, at a lift (the offset) by its height, the rows its first frame
+  draws (float_lift). Retail's floaters sit lower the taller they are, and
+  the line with the least absolute error over its 115 fronts drawn over the
+  ground stands them 16 rows up to 47 rows tall (Gastly's 46 rows: Paolo's
+  16), a row lower for every 4 rows taller, at 8 from 76 rows (Lugia's 76
+  at 8): a tall one floats lower, and still floats. The reference's lift
+  stays where it is within 2 rows of the rule's and comes to the nearer of
+  those otherwise: a Woobat drawn 29 rows up floats at 18, Cofagrigus, 77
+  rows tall, at 10, not 12, where its lid touched the screen's top. None
+  rises so high its top leaves the screen. OVERRIDES are the few that look
+  better in play at another lift, each with its reason.
 
 A species with a picture of its own whose record was never placed, and not
 a form taking its base's, has the medium shadow nobody chose for it. Its
@@ -98,12 +109,16 @@ GROUNDED = {"SPECIES_TIRTOUGA", "SPECIES_CLAWITZER", "SPECIES_STEENEE", "SPECIES
             "SPECIES_REVAVROOM", "SPECIES_ORTHWORM", "SPECIES_IRON_TREADS", "SPECIES_ENAMORUS_THERIAN",
             "SPECIES_TERAPAGOS_TERASTAL", "SPECIES_GOURGEIST", "SPECIES_MIRAIDON", "SPECIES_LEAVANNY",
             "SPECIES_FERROSEED", "SPECIES_FERROTHORN", "SPECIES_FLITTLE", "SPECIES_POLTCHAGEIST"}
-# The median offset of retail's fronts of species with Levitate, 26 from
-# Cresselia's 1 to Misdreavus' 24 (Gastly 21, Bronzor 10).
-FLOAT = 12
-FLOATING = {"SPECIES_ELGYEM", "SPECIES_BEHEEYEM", "SPECIES_TYMPOLE", "SPECIES_COFAGRIGUS", "SPECIES_PUMPKABOO",
-            "SPECIES_PUMPKABOO_SMALL", "SPECIES_PUMPKABOO_LARGE", "SPECIES_PUMPKABOO_SUPER", "SPECIES_MILCERY",
-            "SPECIES_VAROOM", "SPECIES_SOLOSIS", "SPECIES_SINISTEA", "SPECIES_WOOBAT"}
+GROUNDED_TOP = 3    # retail's highest grounded front, Pikachu: over it a front floats
+# The screen row ov12 stands a front's lowest row on at an offset of 0
+# (ov07_022377F4's 50 and the frame's 39, scene.py's front_lift): a front
+# `height` rows tall lifted over GROUND_LINE + 1 - height loses its top
+# over the screen's.
+GROUND_LINE = 89
+# Floaters that look better in play at another lift than the rule's.
+OVERRIDES = {
+    "SPECIES_MILCERY": 19,  # a small round blob reads as floating higher: the reference's, Paolo's pick
+}
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from heights import SPRITES, png_rows  # noqa: E402
@@ -181,6 +196,29 @@ def shadow_size(picture):
     return 1 + (area >= SHADOW_AREA[0]) + (area >= SHADOW_AREA[1])
 
 
+def drawn_height(picture):
+    """The rows a front picture's first frame draws, its top opaque row to its lowest."""
+    rows = [y for y, row in enumerate(picture[:FRAME]) if any(row[:FRAME // 2])]
+    return rows[-1] - rows[0] + 1
+
+
+def float_rule(height):
+    """The rule's lift for a floater `height` rows tall: 16 up to 47 rows, a
+    row less for every 4 taller (to the nearest), 8 from 76 rows."""
+    return min(16, max(8, 16 - (height - 44) // 4))
+
+
+def float_lift(name, picture, lift):
+    """A floater's lift: the reference's, brought within 2 rows of the
+    rule's for its height, or its OVERRIDES; never so high its top is cut."""
+    height = drawn_height(picture)
+    rule = float_rule(height)
+    lift = OVERRIDES.get(name, min(max(lift, rule - 2), rule + 2))
+    if lift > GROUND_LINE + 1 - height:
+        raise ValueError(f"{name}: {height} rows at a lift of {lift} come over the screen's top")
+    return lift
+
+
 def records(reference):
     theirs = reference_records(reference)
     fronts = reference_front_heights(reference)
@@ -205,10 +243,10 @@ def records(reference):
                 record[Y_OFFSET:] = out[owner][Y_OFFSET:]
             elif name[len("SPECIES_"):] in own_art.SPECIES:
                 record[Y_OFFSET:] = struct.pack("<bbB", ours[0], 0, shadow_size(picture))
-            elif name in GROUNDED or name in FLOATING:
+            elif name in GROUNDED:
                 if tail in UNPLACED:
                     record[-1] = shadow_size(picture)
-                struct.pack_into("<b", record, Y_OFFSET, FLOAT if name in FLOATING else GROUND[record[-1]])
+                struct.pack_into("<b", record, Y_OFFSET, GROUND[record[-1]])
             elif base and (tail in UNPLACED or record[Y_OFFSET:] == theirs[base][Y_OFFSET:]):
                 if number_of[base] > number:
                     raise ValueError(f"{name}: its base {base} comes after it")
@@ -218,6 +256,9 @@ def records(reference):
                     record[-1] = shadow_size(picture)
                 if ours and fronts.get(name, -1) >= 0:
                     struct.pack_into("<b", record, Y_OFFSET, tail[0] + ours[0] - fronts[name])
+                lift = struct.unpack_from("<b", record, Y_OFFSET)[0]
+                if picture and (lift > GROUNDED_TOP or name in OVERRIDES):
+                    struct.pack_into("<b", record, Y_OFFSET, float_lift(name, picture, lift))
             record = bytes(record)
         out.append(record)
     return out

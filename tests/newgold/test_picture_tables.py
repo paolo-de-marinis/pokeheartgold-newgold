@@ -14,7 +14,6 @@ which is the one its picture matches. a/1/8/0 is carried whole from the
 reference, and its six readers share one bound.
 """
 
-import json
 import os
 from pathlib import Path
 import re
@@ -242,26 +241,43 @@ class PictureTableTests(unittest.TestCase):
         self.assertEqual({name: offset(name) for name in grounded if not -12 <= offset(name) <= 3}, {})
         self.assertEqual({offset(f"CASTFORM_{form}") for form in ("SUNNY", "RAINY", "SNOWY")}, {offset("CASTFORM")})
 
-    def test_added_floaters_float_as_retail_s_do(self):
-        """Paolo, 2026-10-08: the ones that float a little suspended, so they
-        are seen, after checking which really float. The reference drew
-        floaters as high as 29 rows (Woobat), Elgyem, Pumpkaboo and Milcery
-        17 to 19; they float in the latest games' models, and Elgyem, Tympole
-        and Cofagrigus in Black and White, so they stand where retail's
-        middle floater does: the median offset of its fronts of species with
-        Levitate, 12 (Bronzor 10, Gastly 21)."""
+    def test_added_floaters_float_by_their_height(self):
+        """Paolo, 2026-10-08: 16 rows is right for a Gastly, a very tall
+        floater sits lower for its height (Cofagrigus) and still floats, and
+        how it looks in play has the last word (Milcery higher). The rule's
+        ends are retail's own: its fronts drawn over the ground line (over
+        Pikachu's 3) float 16 rows up at the median up to 47 rows tall, 8 from
+        76 rows. Every added species' floater is within 2 rows of the rule
+        for its height or in OVERRIDES, its top on the screen; Elgyem keeps
+        the reference's 17, Woobat, Solosis and Sinistea come down from 29, 26
+        and 28 to 18 with Swoobat, Duosion and Yamask from 24 and 20,
+        Cofagrigus from 12 to 10, and Tympole and Varoom go up to 14."""
+        iso = import_sprite_offsets
         member = read_narc((ROOT / "files/a/1/8/0").read_bytes())[0][0]
-        names = import_sprite_offsets.port_species()
-        number = {name: n for n, name in enumerate(names)}
-        offset = lambda n: struct.unpack_from("<b", member, n * import_sprite_offsets.RECORD  # noqa: E731
-                                              + import_sprite_offsets.Y_OFFSET)[0]
-        personal = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
-        levitate = sorted(offset(n) for n in range(1, import_sprite_offsets.RETAIL)
-                          if "ABILITY_LEVITATE" in personal[n]["abilities"] + [personal[n]["hiddenAbility"]])
-        self.assertEqual((len(levitate), statistics.median(levitate)), (26, import_sprite_offsets.FLOAT))
-        floating = ("ELGYEM", "BEHEEYEM", "TYMPOLE", "COFAGRIGUS", "PUMPKABOO", "PUMPKABOO_SMALL", "PUMPKABOO_LARGE",
-                    "PUMPKABOO_SUPER", "MILCERY", "VAROOM", "SOLOSIS", "SINISTEA", "SINISTEA_ANTIQUE", "WOOBAT")
-        self.assertEqual({name for name in floating if offset(number[f"SPECIES_{name}"]) != 12}, set())
+        names = iso.port_species()
+        number = {name[len("SPECIES_"):]: n for n, name in enumerate(names)}
+        offset = lambda n: struct.unpack_from("<b", member, n * iso.RECORD + iso.Y_OFFSET)[0]  # noqa: E731
+        height = lambda n: iso.drawn_height(iso.front_picture(n))  # noqa: E731
+        retail = [(height(n), offset(n)) for n in range(1, iso.RETAIL) if offset(n) > iso.GROUNDED_TOP]
+        self.assertEqual(len(retail), 115)
+        self.assertEqual(statistics.median(lift for rows, lift in retail if rows <= 47), iso.float_rule(47))
+        self.assertEqual(statistics.median(lift for rows, lift in retail if rows >= 76), iso.float_rule(76))
+        rule = [iso.float_rule(rows) for rows in range(1, iso.FRAME + 1)]
+        self.assertEqual(rule, sorted(rule, reverse=True))
+        self.assertEqual((iso.float_rule(46), iso.float_rule(77), iso.float_rule(80)), (16, 8, 8))
+        # The species before the forms, each its own picture: none of them a
+        # form taking its base's record.
+        floaters = [n for n in range(iso.FIRST_ADDED, number["PECHARUNT"] + 1)
+                    if offset(n) > iso.GROUNDED_TOP and names[n] not in iso.OVERRIDES]
+        self.assertGreater(len(floaters), 100)
+        self.assertEqual({names[n]: (height(n), offset(n)) for n in floaters
+                          if abs(offset(n) - iso.float_rule(height(n))) > 2}, {})
+        self.assertEqual({names[n]: offset(n) for n in range(iso.FIRST_ADDED, len(names))
+                          if iso.front_picture(n) and offset(n) > iso.GROUND_LINE + 1 - height(n)}, {})
+        pinned = {"ELGYEM": 17, "BEHEEYEM": 11, "TYMPOLE": 14, "COFAGRIGUS": 10, "YAMASK": 18, "PUMPKABOO": 18,
+                  "PUMPKABOO_SUPER": 15, "MILCERY": 19, "VAROOM": 14, "SOLOSIS": 18, "DUOSION": 18, "REUNICLUS": 17,
+                  "SINISTEA": 18, "SINISTEA_ANTIQUE": 18, "POLTEAGEIST": 16, "WOOBAT": 18, "SWOOBAT": 18}
+        self.assertEqual({name: offset(number[name]) for name in pinned}, pinned)
 
     def test_records_never_placed_take_their_picture_s_shadow(self):
         """The reference never placed the records of 46 added species with
