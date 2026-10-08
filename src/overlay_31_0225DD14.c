@@ -2,6 +2,7 @@
 
 #include "newgold/diag.h"
 
+#include "item_name_cell.h"
 #include "overlay_03.h"
 #include "overlay_31_0225D60C.h"
 #include "overlay_31_0225DD14.h"
@@ -58,5 +59,5 @@ void ov31_0225DD14(MartBottomScreen *screen) {
 
 // A row's item name, at its top left.
 void ov31_0225DE00(MartBottomScreen *screen, Window *window, String *string, int row) {
-    AddTextPrinterParameterizedWithColor(window, 0, string, 0, 0, TEXT_SPEED_NOTRANSFER, MAKE_TEXT_COLOR(1, 2, 0), NULL);
+    PrintItemNameInCell(window, string, 0, HEAP_ID_8);
 }

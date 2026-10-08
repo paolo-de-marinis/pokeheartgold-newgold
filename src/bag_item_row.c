@@ -1,6 +1,7 @@
 #include "constants/items.h"
 
 #include "bag_app_state.h"
+#include "item_name_cell.h"
 #include "text.h"
 
 // How many of each pocket's slots the redraw reads, by pocket.
@@ -75,7 +76,7 @@ void ov15_021FF364(BagAppState *bagApp, int scroll, int unused, BOOL movingOnly)
             } else if (i == bagApp->unk672) {
                 ov15_021FF570(bagApp, ListRowWindow(bagApp, window), bagApp->listNames[i], pocket, i);
             } else {
-                AddTextPrinterParameterizedWithColor(ListRowWindow(bagApp, window), 0, bagApp->listNames[i], 0, ROW_Y, TEXT_SPEED_NOTRANSFER, MAKE_TEXT_COLOR(1, 2, 0), NULL);
+                PrintItemNameInCell(ListRowWindow(bagApp, window), bagApp->listNames[i], ROW_Y, HEAP_ID_6);
             }
             window++;
             if (++drawn >= rows) {
@@ -114,14 +115,14 @@ void ov15_021FF560(BagAppState *bagApp) {
 void ov15_021FF570(BagAppState *state, Window *window, String *name, BagViewPocket *list, u32 index) {
     switch (list->pocketId) {
     case POCKET_TMHMS:
-        AddTextPrinterParameterizedWithColor(window, 0, name, 0, 0, TEXT_SPEED_NOTRANSFER, MAKE_TEXT_COLOR(1, 2, 0), NULL);
+        PrintItemNameInCell(window, name, 0, HEAP_ID_6);
         ov15_021FE914(state, window, &list->slots[index], ROW_Y);
         // HeartGold counts TMs beside the name. New Gold's are never spent, so
         // the count is always the one the player bought and says nothing; HMs
         // never had one for the same reason.
         break;
     case POCKET_KEY_ITEMS:
-        AddTextPrinterParameterizedWithColor(window, 0, name, 0, 0, TEXT_SPEED_NOTRANSFER, MAKE_TEXT_COLOR(1, 2, 0), NULL);
+        PrintItemNameInCell(window, name, 0, HEAP_ID_6);
         if (list->slots[index].id == Bag_GetRegisteredItem1(state->bag)) {
             ov15_021FE9F0(state, window, ROW_Y, 0);
         }
@@ -130,7 +131,7 @@ void ov15_021FF570(BagAppState *state, Window *window, String *name, BagViewPock
         }
         break;
     default:
-        AddTextPrinterParameterizedWithColor(window, 0, name, 0, 0, TEXT_SPEED_NOTRANSFER, MAKE_TEXT_COLOR(1, 2, 0), NULL);
+        PrintItemNameInCell(window, name, 0, HEAP_ID_6);
         ov15_021FF66C(state->messageFormat, state->msgData, window, list->slots[index].quantity);
         break;
     }

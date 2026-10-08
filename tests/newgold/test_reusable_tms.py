@@ -252,7 +252,8 @@ typedef struct { ItemSlot *slots; u16 position; s16 scroll; u8 pocketId; u8 coun
 BOOL ItemIsTM(u16 itemId);
 BOOL ItemIsHM(u16 itemId);
 static int counted, labelled;
-static void AddTextPrinterParameterizedWithColor(Window *w, int f, String *s, int x, int y, int speed, u32 c, void *cb) {}
+#define HEAP_ID_6 6
+static void PrintItemNameInCell(Window *w, String *s, u32 y, int heapID) {}
 static void ov15_021FE914(BagAppState *state, Window *window, ItemSlot *slot, u32 y) { labelled++; }
 static void ov15_021FE9F0(BagAppState *state, Window *window, u32 y, u32 which) {}
 static void ov15_021FF66C(MessageFormat *f, MsgData *m, Window *window, u32 quantity) { counted++; }
