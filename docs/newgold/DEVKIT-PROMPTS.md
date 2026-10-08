@@ -187,7 +187,11 @@ A species New Gold adds beyond konefr's reference is one entry in
 takes until its own is written; its name, ten characters at most, as the
 names bank has them ("Baby Lugia"); its National Dex number; its height and
 weight in decimetres and hectograms and as the Dex prints them; the Dex's
-size page; and how many semitones its cry is raised over its like's. The
+size page's scales, the trainer's as retail's species of that height have
+them and the Pokemon's 256, its front pixel for pixel, when that is about as
+tall as theirs are drawn (`import_dex_metrics.py` then stands the front on
+retail's line from the picture, and a test checks it); and how many
+semitones its cry is raised over its like's. The
 file's docstring has the rules every importer follows for it. Then the
 importers, from `tools/newgold/import` with the reference's checkout as REF,
 in the order Baby Lugia's commit ran them:

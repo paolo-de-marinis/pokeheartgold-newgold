@@ -43,9 +43,12 @@ SPECIES = {
         "height_text": "4’07”",
         "weight_text": "47.6 lbs.",
         # The Dex's size page: the trainer's scale and offset of every retail
-        # species of 1.4 m, and the Pokemon's for a 62-row front.
+        # species of 1.4 m, and the Pokemon drawn pixel for pixel, its
+        # 62-row front as tall as retail's of 1.4 m are drawn there (54 to
+        # 82 rows, 63 the median); import_dex_metrics.py stands it on
+        # retail's line.
         "scale_m": 256, "ypos_m": 9, "scale_f": 272, "ypos_f": 8,
-        "mon_scale_m": 229, "mon_ypos_m": 7, "mon_scale_f": 229, "mon_ypos_f": 7,
+        "mon_scale_m": 256, "mon_scale_f": 256,
         "cry_semitones": 7,
     },
 }

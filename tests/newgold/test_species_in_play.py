@@ -450,6 +450,25 @@ class SpeciesInPlayTests(unittest.TestCase):
             checked += 1
         self.assertGreater(checked, 1000)
 
+    def test_an_own_species_stands_on_the_size_page_s_line(self):
+        """The SIZE page stands a front at import_dex_metrics.feet, which puts
+        retail's on 150, the median of its 493; New Gold's own species has to
+        stand there as retail's standing Pokemon do, 148 to 153. Baby Lugia
+        stood on 162, through the bottom of the panel: its offset was typed
+        for another front, and a redrawn front would move it again."""
+        import import_dex_metrics as importer
+        import own_species
+        rows = json.loads((ROOT / "files/application/zukanlist/zkn_data/zukan_data.json")
+                          .read_text())["mon_stats"]
+        retail = sorted(importer.feet(n, rows[n]["mon_ypos_m"], rows[n]["mon_scale_m"]) for n in range(1, 494))
+        self.assertEqual(retail[len(retail) // 2], importer.FEET)
+        numbers = importer.species_numbers(importer.SPECIES_H)
+        for name in own_species.SPECIES:
+            row = rows[numbers[name]]
+            for gender in "mf":
+                stands = importer.feet(numbers[name], row[f"mon_ypos_{gender}"], row[f"mon_scale_{gender}"])
+                self.assertTrue(148 <= stands <= 153, f"{name} ({gender}) stands on row {stands}")
+
     def test_the_dex_metrics_importer_counts_nothing_on_a_rerun(self):
         """It counted a row as updated whenever the reference's figures
         differed from it, before putting back what it writes over them --

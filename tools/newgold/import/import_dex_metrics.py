@@ -26,6 +26,10 @@ stays. And the Dex's area filter reads one byte per species
 (zukan_hw_data_1, retail's 494); an added species is "area unknown" there,
 as its area page has no map.
 
+New Gold's own species takes its size and its size page's scales from
+own_species.py, and the offset that stands its front on retail's line from
+its front picture, so a redrawn front stands there too on the next run.
+
     import_dex_metrics.py REFERENCE [--write]
 """
 import argparse
@@ -34,6 +38,7 @@ import re
 from pathlib import Path
 
 import gmm
+import heights
 import own_species
 from body_shapes import styles as shape_styles
 from import_species import national_numbers
@@ -58,6 +63,14 @@ RETAIL_LAST = 493  # Arceus
 # other way round from the formes whose figures they hold.
 GIRATINA_ORIGIN = {"height": 69, "weight": 6500, "body_style": 3}
 
+# The SIZE page draws a front 256 / scale times its size about its frame's
+# centre, row 40, which it puts on screen row 112 + ypos (ov18_021F6AB0's
+# affine parameters): the front's feet are on 112 + ypos + (40 - clearance)
+# * 256 / scale, clearance the rows below its lowest drawn one (heights.py).
+# Retail's standing Pokemon have theirs on 150, the median of its 493, a row
+# below the trainer's.
+FEET = 150
+
 # entry field  <-  reference field
 FIELDS = {
     "height": "heightDecimetres",
@@ -77,6 +90,13 @@ FIELDS = {
 def species_numbers(path):
     return {name: int(number) for name, number in
             re.findall(r"^#define SPECIES_([A-Z0-9_]+)\s+(\d+)\s*$", path.read_text(errors="replace"), re.M)}
+
+
+def feet(number, ypos, scale):
+    """The screen row the SIZE page stands species number's front on."""
+    folder = heights.SPRITES / f"{number:04d}"
+    front = next(p for p in (folder / "male/front.png", folder / "female/front.png") if p.stat().st_size)
+    return 112 + ypos + (40 - heights.height_of(front)[0]) * 256 / scale
 
 
 def body_styles(reference):
@@ -108,9 +128,14 @@ def metrics(reference, styles):
                 entry[ours] = int(raw, 0)
         out[name] = entry
     # New Gold's own species is its like's but its size and size page; its
-    # body style is its like's too, never body_shapes.csv's.
+    # body style is its like's too, never body_shapes.csv's. Its front
+    # stands on retail's line, wherever its picture has its feet.
+    numbers = species_numbers(SPECIES_H)
     for name, own in own_species.SPECIES.items():
         out[name] = {**out[own["like"]], **{field: own[field] for field in FIELDS if field in own}}
+        for gender in "mf":
+            scale = out[name][f"mon_scale_{gender}"]
+            out[name][f"mon_ypos_{gender}"] = round(FEET - feet(numbers[name], 0, scale))
     return out
 
 

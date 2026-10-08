@@ -20147,13 +20147,13 @@
       "weight": 216,
       "body_style": 5,
       "scale_f": 272,
-      "mon_scale_f": 229,
+      "mon_scale_f": 256,
       "scale_m": 256,
-      "mon_scale_m": 229,
+      "mon_scale_m": 256,
       "ypos_f": 8,
-      "mon_ypos_f": 7,
+      "mon_ypos_f": -1,
       "ypos_m": 9,
-      "mon_ypos_m": 7
+      "mon_ypos_m": -1
     }
   ],
   "sorting": [
