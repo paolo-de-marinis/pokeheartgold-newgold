@@ -509,7 +509,7 @@ class SaveUiTests(unittest.TestCase):
         refused = lambda op, args: self.refused("/api/edit", {"f": "gyms/test.sav", "op": op, "args": args})  # noqa: E731
         self.assertIn("non si dà", refused("party_edit", {"slot": 0, "item": items["ITEM_BICYCLE"]}))
         self.assertIn("non si dà", refused("party_edit", {"slot": 0, "item": items["ITEM_TM01"]}))
-        self.assertTrue(sv.item_table()[items["ITEM_TEAL_MASK"]]["give"], "another game's key item, prevent_toss clear")
+        self.assertFalse(sv.item_table()[items["ITEM_TEAL_MASK"]]["give"], "a key item: prevent_toss, as every key item")
         self.assertIn("non si dà", refused("party_edit", {"slot": 0, "item": items["ITEM_TEAL_MASK"]}))
         self.assertIn("non ha nome", refused("party_edit", {"slot": 0, "item": items["ITEM_NONE_1823"]}))
         self.assertIn("Lettere", refused("box_edit", {"box": 2, "slot": 5, "item": items["ITEM_GRASS_MAIL"]}))

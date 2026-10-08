@@ -522,10 +522,15 @@ def own_record(name, fields, row, machines, tm_prices):
     Besides OWN_RECORDS and the TM shop's prices: a machine of the reference's
     that is not one of this game's -- TR00 to TR99, TM00, the second HM07,
     Scarlet and Violet's TM100 and TM149 to TM229 -- is an item of the Items
-    pocket with no field routine (5059800bf)."""
+    pocket with no field routine (5059800bf); and a key item can be neither
+    given nor tossed, as in every game, where hg-engine's record lets 45 of
+    them be both (the bag offers GIVE and TOSS for an item without
+    prevent_toss): the Adventure Guide, the Rotom Phone, the Teal Mask..."""
     values = dict(zip(fields, row), **OWN_RECORDS.get(name, {}))
     if values["fieldPocket"] == "POCKET_TMHMS" and name not in machines:
         values.update(fieldPocket="POCKET_ITEMS", fieldUseFunc=str(GENERIC_FIELD_USE))
+    if values["fieldPocket"] == "POCKET_KEY_ITEMS":
+        values["prevent_toss"] = "true"
     if name in tm_prices:
         values.update(price=str(tm_prices[name]), price_high="0")
     return [values[field] for field in fields]

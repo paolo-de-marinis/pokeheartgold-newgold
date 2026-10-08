@@ -1506,8 +1506,8 @@ def storable(fields):
 def holdable(fields, party):
     """An item a Pokemon is given here only as the bag gives one (savedit's
     "give": GIVE is offered for no key item, no machine, no Apricorn) --
-    and never a key item, whatever another game's leaves in its
-    prevent_toss (the Teal Mask), nor an item with no name (hg-engine's
+    and never a key item, whatever its prevent_toss says (hg-engine's
+    record left it off 45, the Teal Mask among them), nor an item with no name (hg-engine's
     ITEM_NONE_ placeholders) -- and no Mail in a box: the PC takes no
     Pokemon holding one. One it holds already is not sent again (changed)."""
     item = fields.get("item")

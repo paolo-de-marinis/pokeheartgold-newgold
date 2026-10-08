@@ -581,3 +581,15 @@ class KeeAndMarangaBerryTests(unittest.TestCase):
             self.assertEqual((row["flingPower"], row["flingEffect"]), ("10", steal[f"STEAL_EFFECT_{stat}_UP"]), item)
             for field in ("fieldPocket", "battlePocket", "fieldUseFunc", "battleUseFunc", "partyUse"):
                 self.assertEqual(row[field], roseli[field], f"{item}.{field}")
+
+
+class KeyItemTests(unittest.TestCase):
+    """A key item can be neither given nor tossed, in every game: the bag
+    offers GIVE and TOSS (TRASH) for an item without prevent_toss, and
+    hg-engine's records (d0380a487) leave it off 45 key items -- the
+    Adventure Guide, the Rotom Phone, the Sandwich, the Teal Mask..."""
+
+    def test_no_key_item_can_be_given_or_tossed(self):
+        loose = [row["item"] for row in item_records()
+                 if row["fieldPocket"] == "POCKET_KEY_ITEMS" and row["prevent_toss"] != "true"]
+        self.assertEqual(loose, [])
