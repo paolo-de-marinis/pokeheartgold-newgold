@@ -24,15 +24,18 @@ from test_level_cap import ROOT
 
 sys.path[:0] = [str(ROOT / "tools/newgold/import")]
 import gmm  # noqa: E402
+import import_dex_text  # noqa: E402
 import import_species_text  # noqa: E402
+import own_species  # noqa: E402
 
 REFERENCE = gmm.REFERENCE if (gmm.REFERENCE / ".git").exists() else None
 HEARTGOLD, SOULSILVER = 803, 804
 FOREIGN = range(805, 811)
 ARCEUS = 493
 FIRST_ADDED = 508
+BABY_LUGIA = 1438   # own_species.py
 REBROKEN = 46       # entries fit_entry breaks again into three lines
-PAGED = 116         # entries three lines cannot hold, broken into two pages
+PAGED = 117         # entries three lines cannot hold, broken into two pages (Baby Lugia's own among them)
 
 
 def entries(bank):
@@ -111,6 +114,32 @@ class DexEntryTests(unittest.TestCase):
         self.assertEqual((rebroken, paged), (REBROKEN, PAGED))
         for bank in (SOULSILVER, *FOREIGN):
             self.assertEqual(entries(bank)[FIRST_ADDED:], ours[FIRST_ADDED:], f"msg_{bank:04d}")
+
+    def test_an_own_species_entry_and_category_are_its_own(self):
+        """Baby Lugia's entry is own_species.py's, a page a window, in every
+        entry bank; its category is the one written there, in every category
+        bank."""
+        lines = import_species_text.entry_window()[1]
+        own = own_species.SPECIES["BABY_LUGIA"]
+        for bank in (HEARTGOLD, SOULSILVER, *FOREIGN):
+            broken = entries(bank)[BABY_LUGIA].split("\\n")
+            pages = [broken[:lines], broken[lines:]]
+            self.assertEqual([" ".join(page).strip() for page in pages], list(own["entry"]), f"msg_{bank:04d}")
+            for page in pages:
+                self.assertTrue(import_species_text.fits("\\n".join(page)), f"msg_{bank:04d}")
+        for bank in (816, 823, *range(824, 829)):
+            self.assertEqual(entries(bank)[BABY_LUGIA], own["category"], f"msg_{bank:04d}")
+
+    @unittest.skipIf(REFERENCE is None, "behaviour reference not present")
+    def test_a_rerun_keeps_an_own_species_text(self):
+        """The importers write Baby Lugia's entry and category as they are."""
+        wanted = import_species_text.wanted(gmm.ENGINE)
+        for bank in (HEARTGOLD, 816, 823):
+            self.assertEqual(gmm.read(bank)[BABY_LUGIA]["text"], wanted[bank][BABY_LUGIA], f"msg_{bank:04d}")
+        data = import_dex_text.text_data(gmm.ENGINE)["BABY_LUGIA"]
+        for bank, kind in import_dex_text.BANKS.items():
+            if kind != "name":
+                self.assertEqual(gmm.read(bank)[BABY_LUGIA]["text"], import_dex_text.wanted(kind, data, None), f"msg_{bank:04d}")
 
 
 if __name__ == "__main__":

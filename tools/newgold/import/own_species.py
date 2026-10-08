@@ -53,6 +53,10 @@ SPECIES = {
         "scale_m": 256, "ypos_m": 9, "scale_f": 272, "ypos_f": 8,
         "mon_scale_m": 256, "mon_scale_f": 256,
         "cry_semitones": 7,
+        # Paolo, 2026-10-08: Lugia's category, and an entry of its own.
+        "category": "Diving Pokémon",
+        "entry": ("Though its body is still small, its cry carries far beneath the sea and can call its parent home.",
+                  "It cannot yet control its power, so it stays hidden in the currents around the Whirl Islands."),
     },
 }
 
