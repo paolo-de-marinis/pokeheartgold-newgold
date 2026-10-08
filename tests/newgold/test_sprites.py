@@ -201,7 +201,9 @@ class OwnPicturesTests(unittest.TestCase):
 
     def test_the_battle_pictures_are_two_frames_in_sixteen_colours(self):
         """160x80, index 0 transparent, a 16-entry palette; every gender's
-        alike; the back's palette the shiny one over the front's indices."""
+        alike; the back's palette the shiny one over the front's indices.
+        Frame 2 is Baby Lugia's second pose (Paolo, 2026-10-08), standing on
+        frame 1's line, and frame 1 again for Bramblin, who has none."""
         for name in own_art.SPECIES:
             pictures = battle_pictures(name)
             self.assertTrue(pictures, name)
@@ -210,7 +212,10 @@ class OwnPicturesTests(unittest.TestCase):
                 self.assertEqual((im.size, im.mode, im.info.get("transparency")), ((160, 80), "P", 0), path)
                 self.assertEqual(palette_entries(path), 16, path)
                 self.assertLess(max(im.tobytes()), 16, path)
-                self.assertEqual(im.crop((0, 0, 80, 80)).tobytes(), im.crop((80, 0, 160, 80)).tobytes(), path)
+                one, two = im.crop((0, 0, 80, 80)), im.crop((80, 0, 160, 80))
+                self.assertEqual(one.tobytes() == two.tobytes(), name != "BABY_LUGIA", f"{path}: frame 2 is frame 1")
+                feet = [f.point(lambda v: 255 if v else 0).getbbox()[3] for f in (one, two)]
+                self.assertEqual(feet[0], feet[1], path)
                 self.assertEqual(path.read_bytes(), pictures[next(iter(pictures))[0], picture].read_bytes(), path)
             front, back = (Image.open(pictures[next(iter(pictures))[0], p]) for p in ("front.png", "back.png"))
             self.assertNotEqual(front.getpalette()[3:48], back.getpalette()[3:48], name)
