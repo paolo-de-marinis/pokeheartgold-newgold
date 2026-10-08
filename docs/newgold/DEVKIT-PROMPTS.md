@@ -20,7 +20,8 @@ converter.
 the reference has not: species 1438, No. 1026, Lugia's data for now with a
 size, a name and a cry of its own (below, "A species the reference has not
 got"). Its battle pictures and follower are Paolo's (2026-10-07), the battle
-ones at his own pixels, and it is in `own_art.py` as Bramblin is; its party
+ones at his own pixels and in two poses since 2026-10-08 (below, "the second
+pose"), and it is in `own_art.py` as Bramblin is; its party
 icon is his drawing redrawn by hand at 32x32 (2026-10-08, below), until he
 draws one at that size.
 
@@ -41,7 +42,8 @@ the Pokemon's or the item's English name.
   same indices, so a part the normal draws in one colour and the shiny in two
   (or the other way round) is one more pair; past 15 pairs two of them become
   one, and the normal or the shiny loses a shade there. Baby Lugia's drawings
-  have 21 pairs: 6 merged, 72 of its pixels a neighbouring shade.
+  have 22 pairs over both poses: 7 merged, the shiny exact, 243 of the
+  normal's pixels a neighbouring shade.
 
 ## Battle pictures: front and back
 
@@ -66,6 +68,88 @@ Rules for both images:
 ```text
 Also make the SAME front and back images again, pixel for pixel identical in shape, using <NAME>'s official SHINY colours.
 ```
+
+## Battle pictures: the second pose
+
+Each battle picture has two frames, and HeartGold alternates them: the
+species' record in `a/1/8/0` gives the front and the back a script of frame 1
+and frame 2 with their durations (Lugia's front 1, 2, 1, 2; its back frame 2
+once), played as the Pokemon comes out and on the summary. Retail's frame 2
+always differs from frame 1; a converter given one pose writes it twice, and
+the Pokemon stands still. Paolo drew Baby Lugia's (2026-10-08), from these
+prompts, each with his normal first pose attached:
+
+```text
+I attach <NAME>'s FRONT battle sprite (pixel art on a magenta background). Draw its SECOND animation frame, the way Pokémon HeartGold/SoulSilver battle sprites have one: the same Pokémon, same view, same size, same place on the canvas, with one clear change of pose — the wings beaten to the other end of a wingbeat (lowered and swept down if they are raised now, raised high if they are low) and the mouth slightly open, as if calling out. Everything else — head shape, eye, crest, belly, legs, tail, outline — stays exactly as in the original.
+
+Rules:
+- Exactly the same canvas size and the same pixel grid as the attached image: every pixel the same size block, on the same grid, no in-between pixels.
+- Use ONLY the colours already in the attached image. No new colours, no anti-aliasing, no blur, no gradients.
+- The same dark 1-pixel outline.
+- Feet on the same row and the body centred where it is now; the Pokémon must not grow by more than a few pixels on any side.
+- Flat pure magenta (#FF00FF) background, no magenta on the Pokémon.
+- One image only.
+```
+
+```text
+I attach <NAME>'s BACK battle sprite (seen from behind, as the player's own Pokémon appears in battle; pixel art on a magenta background). Draw its SECOND animation frame, the way Pokémon HeartGold/SoulSilver back sprites have one: the same Pokémon, same view from behind, same size, same place on the canvas, with a small but clear change of pose — the wings moved to the other end of a wingbeat and the head lifted slightly, as if it is about to attack. Everything else — the spikes along its back, the tail, the legs, the colours of each part, the outline — stays exactly as in the original.
+
+Rules:
+- Exactly the same canvas size and the same pixel grid as the attached image: every pixel the same size block, on the same grid, no in-between pixels.
+- Use ONLY the colours already in the attached image. No new colours, no anti-aliasing, no blur, no gradients.
+- The same dark 1-pixel outline.
+- Feet on the same row and the body where it is now; the Pokémon must not grow by more than a few pixels on any side.
+- Flat pure magenta (#FF00FF) background, no magenta on the Pokémon.
+- One image only.
+```
+
+The change of pose is the species' own: a Pokemon with no wings takes
+another ("the body squashed down and the branches spread, as if bouncing"
+for Bramblin). **The shiny second pose is not drawn again but recoloured**
+from the new normal one, so its shape is the normal's pixel for pixel; attach
+the new normal pose and the shiny first pose:
+
+```text
+I attach two images of <NAME>: (1) the NEW pose in its normal colours, (2) the original sprite in its SHINY colours.
+Recolour image 1 with the shiny colours of image 2: the result must be image 1 pixel for pixel — same canvas, same pixel grid, same shape, same outline, every pixel in the same place — only the colours change, each part taking the colour that part has in image 2 (white body stays white, blue parts become the shiny's red/pink parts, the belly the shiny's pink).
+Use ONLY colours that appear in image 2. No new colours, no anti-aliasing, no blur. Flat pure magenta (#FF00FF) background. One image only.
+```
+
+The converter takes the second pose beside the first, normal and shiny
+(Baby Lugia's eight, `.rounds/round18/babylugia/art/final`):
+
+```text
+convert_chatgpt.py BABY_LUGIA --front front1_normal.png --back back1_normal.png \
+    --shiny-front front1_shiny.png --shiny-back back1_shiny.png \
+    --front2 front2_normal.png --back2 back2_normal.png \
+    --shiny-front2 front2_shiny.png --shiny-back2 back2_shiny.png --grid 14
+```
+
+**Frame 2 shares frame 1's place and palette.** Both poses are drawn on one
+canvas, and each picture and its second pose are cut out with one box, the
+one the two fill together: frame 2 stands where it is drawn beside frame 1,
+the feet on the same row, and the animation does not jump (a box each would
+have centred each pose on its own and moved the body). Both poses and both
+colourings are in one palette, 15 colours over the four pictures, so the
+second pose may bring only what the first leaves room for: Baby Lugia's open
+mouth is a 15th colour, a pink drawn alike in the normal and the shiny. Its
+normal and shiny have 22 colour pairs over both poses for 15 indices; the
+seven merges keep each pixel one of its colours (a pair merges only into one
+sharing its normal or its shiny colour), so the shiny is exact and 243 of the
+normal's shading pixels (130 in the first pose, 113 in the second) take a
+neighbouring shade; the open mouth, cheapest of all and sharing no colour,
+would otherwise have gone lavender. Without a second pose the converter
+writes frame 1 twice, as before (Bramblin's pictures). The height, the
+record and the Dex's size page read frame 1.
+
+Seen in play (2026-10-08, the diagnostics build, normal and shiny): the wild
+Baby Lugia's entry shows frame 2 twice, tilting as Lugia's movement script
+swings it; the player's, sent out, its back's frame 2 for 12 frames; the
+summary the front's script again. Each captured frame was matched against
+both frames drawn where the game's Pokepic says it draws one (its place,
+tilt and whichAnimStep, read from RAM): frame 2's pixels match 0.95 to 0.97
+at a small tilt where frame 1's match half, and the back's frame 2 all of
+them. The strips and a GIF of the entry are in `.rounds/round19/poses/shots`.
 
 ## Party icon
 
@@ -138,12 +222,14 @@ of its own. In the game: the shop and the bag's Items pocket
   palette, in 15-bit colour; index 0 is the transparent one. With `--grid`
   (the battle pictures) or `--paired` (the follower) each pixel's normal and
   shiny colour pair is an index, past 15 the cheapest merged into their
-  nearest; otherwise the shiny pictures vote each index's colour.
+  nearest sharing its normal or its shiny colour, while one does; otherwise
+  the shiny pictures vote each index's colour.
 - **The PNG's palette must have exactly 16 entries.** A 256-entry palette made
   the battle load 256 colours over every other sprite's: the whole battle was
   garbled (found with Bramblin).
 - **Battle:** `files/poketool/pokegra/pokegra/<species>/{male,female}/`
-  `front.png` and `back.png`, 160x80 (two 80x80 frames); the front's palette is
+  `front.png` and `back.png`, 160x80 (two 80x80 frames, the second pose or
+  the first again); the front's palette is
   the normal one, the **back's PNG carries the shiny palette** (the same
   indices); the female pictures are separate files and must be replaced too
   (a female Bramblin first showed the old placeholder). `heights.py write`
