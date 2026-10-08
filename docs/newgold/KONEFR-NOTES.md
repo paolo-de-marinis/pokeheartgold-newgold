@@ -619,11 +619,22 @@ le forme di Castform 8-9 righe sotto Castform.
 **Nel port:** corretto nell'importer (3b50ddc9e): un'immagine che un'altra specie disegna già sta
 come quella specie, i dieci da terra prendono la mediana dei fronti retail con la stessa ombra, e
 una forma sta come la sua base. Controllati poi sui modelli dei giochi recenti (06b0c527f): Elgyem,
-Beheeyem, Tympole, Cofagrigus, Pumpkaboo, Milcery e Varoom fluttuano davvero, e ora stanno 12 righe
-sopra il terreno come il fluttuante medio del retail, non 17-19; Gourgeist e Miraidon stanno a terra.
-Erano in aria anche Flittle (23 righe, ma il Pokédex dice che le dita sono a un centimetro da terra),
-Poltchageist (16), Leavanny, Ferroseed e Ferrothorn, ora a terra; Solosis, Sinistea e Woobat (26-29
-righe, più di ogni fluttuante retail) ora a 12.
+Beheeyem, Tympole, Cofagrigus, Pumpkaboo, Milcery e Varoom fluttuano davvero; Gourgeist e Miraidon
+stanno a terra. Erano in aria anche Flittle (23 righe, ma il Pokédex dice che le dita sono a un
+centimetro da terra), Poltchageist (16), Leavanny, Ferroseed e Ferrothorn, ora a terra.
+Quanto in alto fluttua una specie aggiunta ora dipende dall'altezza della sua immagine, come nel
+retail (33bce9716): 16 righe fino a 47 righe di altezza (Gastly), una in meno ogni 4 righe in più, 8
+da 76 (Lugia); il tuo valore resta se è entro 2 righe da questo, altrimenti va al bordo più vicino.
+Così Solosis, Sinistea e Woobat (26-29 righe, più di ogni fronte retail con Levitazione) scendono a
+18, e con loro Duosion, Swoobat e Yamask, Cofagrigus da 12 a 10, Chandelure da 22 a 13, Flabébé
+sale da 6 a 13;
+Milcery resta al tuo 19, che a Paolo piace di più.
+
+**Da confermare:** Ferrothorn. Il modello dei giochi recenti sta a terra (i viticci in basso come
+zampe), ma l'immagine del tuo range è la posa di Bianco e Nero, il corpo in basso e i viticci in
+alto, e lo sprite animato di Bianco e Nero tiene il corpo 12 pixel su, appeso alle punte dei
+viticci. Nell'immagine niente lo regge in aria, quindi nel port sta a 2 righe, il corpo sulla
+piattaforma, invece del tuo 6; se lo volevi appeso come in Bianco e Nero, dimmelo.
 
 ---
 
