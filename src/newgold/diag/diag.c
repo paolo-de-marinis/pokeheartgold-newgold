@@ -85,6 +85,7 @@ u32 gDiagDexSizeShown;
 u32 gDiagDexSizeIcon;
 u32 gDiagMartOwnedRows;
 u32 gDiagMartConfirmLine;
+u32 gDiagItemNameCut;
 
 void Diag_BattleState(int state) {
     if ((u32)state == gDiagBattleState) {

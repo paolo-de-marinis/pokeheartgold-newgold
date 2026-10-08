@@ -218,6 +218,10 @@ extern unsigned long gDiagMartOwnedRows;
 // Certainly. That'll be $1500."; the counters' "Would you like" is not
 // counted. 0 until the first, and not cleared when the mart closes.
 extern unsigned long gDiagMartConfirmLine;
+// The most pixels an item name ran past its cell's window in the bag's list
+// or a mart's, in the font it was printed in (PrintItemNameInCell): 0 while
+// every name shown fitted. Not cleared.
+extern unsigned long gDiagItemNameCut;
 
 #endif // NEWGOLD_DIAG
 

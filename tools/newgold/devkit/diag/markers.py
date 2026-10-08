@@ -222,6 +222,8 @@ class Markers:
                          f", size page {size & 0xFFFF} form {size >> 16} icon {w('gDiagDexSizeIcon') & 0xFFFF}")
         if w("gDiagMartOwnedRows") or w("gDiagMartConfirmLine"):
             parts.append(f"mart list rows owned {w('gDiagMartOwnedRows'):#04x}, confirm line {w('gDiagMartConfirmLine')}")
+        if w("gDiagItemNameCut"):
+            parts.append(f"an item name cut by {w('gDiagItemNameCut')} pixels in a bag's or a mart's cell")
         # Each check names its roll just before it takes it, so between frames
         # none is waiting: one that is was named by a check that took no roll,
         # and a forced switch would answer the battle's next roll in its place.

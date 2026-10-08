@@ -25,6 +25,11 @@ static inline void PrintItemNameInCell(Window *window, String *name, u32 y, enum
     if (fontId == FONT_NARROW) {
         FontID_Alloc(FONT_NARROW, heapID);
     }
+#ifdef NEWGOLD_DIAG
+    if (FontID_String_GetWidth(fontId, name, 0) > room + gDiagItemNameCut) {
+        gDiagItemNameCut = FontID_String_GetWidth(fontId, name, 0) - room;
+    }
+#endif
     AddTextPrinterParameterizedWithColor(window, fontId, name, 0, y, TEXT_SPEED_NOTRANSFER, MAKE_TEXT_COLOR(1, 2, 0), NULL);
     if (fontId == FONT_NARROW) {
         FontID_Release(FONT_NARROW);

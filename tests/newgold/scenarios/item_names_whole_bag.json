@@ -1,0 +1,7 @@
+{
+  "about": "An item's name shows whole in the bag's list: route29-official.sav given the Fresh-Start Mochi, Heavy-Duty Boots, Terrain Extender, Utility Umbrella and Auspicious Armor (savedit --item), the start menu's BAG, the Items pocket, whose page shows all five. The cell's window is 88 pixels wide, every name HeartGold has fits it in the system font, and these five run to 97 (Fresh-Start Mochi): printed in the system font, 'Fresh-Start Moc' and 'Heavy-Duty Boot' were cut at the window's edge and gDiagItemNameCut reads 9; the longer ones go in the narrow font (PrintItemNameInCell) and it reads 0.",
+  "save": "route29-official.sav",
+  "edit": ["--item", "FRESH_START_MOCHI:1,HEAVY_DUTY_BOOTS:1,TERRAIN_EXTENDER:1,UTILITY_UMBRELLA:1,AUSPICIOUS_ARMOR:1"],
+  "steps": ["field", "X", "wait:60", "touch:42,118", "wait:200", "touch:16,15", "wait:60"],
+  "expect": {"icon:ITEM_FRESH_START_MOCHI": 1, "icon:ITEM_HEAVY_DUTY_BOOTS": 1, "gDiagItemNameCut": 0}
+}

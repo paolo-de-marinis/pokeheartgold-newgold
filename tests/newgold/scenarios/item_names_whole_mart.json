@@ -1,0 +1,8 @@
+{
+  "about": "An item's name shows whole in a mart's list: Cherrygrove's EV/IV trainer's shop (route29-official.sav, given 30000), Buy Mochi and Caps, RIGHT twice to the list's second page, where the Fresh-Start Mochi is. The cell's window is 88 pixels wide and the name 97 in the system font: printed in it, 'Fresh-Start Moc' was cut at the window's edge and gDiagItemNameCut reads 9; it goes in the narrow font (PrintItemNameInCell) and reads 0.",
+  "save": "route29-official.sav",
+  "edit": ["--money", "30000", "--where", "69:12:15:0"],
+  "steps": ["field", "goto:MAP_CHERRYGROVE_POKECENTER_1F,12,12", "A", "wait:250", "A", "wait:250", "A", "wait:250", "A", "wait:250",
+            "DOWN", "A", "wait:400", "A", "wait:600", "RIGHT", "wait:60", "RIGHT", "wait:60"],
+  "expect": {"icon:ITEM_FRESH_START_MOCHI": 1, "gDiagItemNameCut": 0}
+}
