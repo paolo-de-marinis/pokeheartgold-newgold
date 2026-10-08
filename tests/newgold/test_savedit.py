@@ -1678,6 +1678,20 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(sv.fights(save, lance), "TRAINER_CHAMPION_LANCE_2")
         self.assertEqual(sv.place_state(save, place)["fights"], "TRAINER_CHAMPION_LANCE_2")
 
+    def test_a_place_says_whether_its_person_fights_again(self):
+        """Once Lance's step is done (FLAG_UNK_97E, the Hall of Fame's) his
+        script still runs the battle, so his place is fought "again" and the
+        page offers no story taken back -- which, from a post-game save,
+        cleared the game's flags and hid Red. Will's tests FLAG_DEFEATED_WILL
+        before the battle, the Radio Tower's OnLoad shows Archer only during
+        the takeover his win ends, and Falkner gives his badge once: none of
+        them again."""
+        places = {p["trainer_const"]: p for p in sv.story_places()}
+        self.assertTrue(places["TRAINER_CHAMPION_LANCE"]["again"])
+        for who in ("TRAINER_ELITE_FOUR_WILL_WILL", "TRAINER_EXECUTIVE_ARCHER_ARCHER", "TRAINER_LEADER_FALKNER_FALKNER"):
+            self.assertFalse(places[who]["again"], who)
+        self.assertEqual([p["trainer_const"] for p in sv.story_places() if p["again"]], ["TRAINER_CHAMPION_LANCE"])
+
     def test_the_beasts_run_off_as_the_game_lets_them(self):
         """The Burned Tower's step hides Raikou and Entei and lets them
         loose (CreateRoamer 0 and 1): each roamer's record as

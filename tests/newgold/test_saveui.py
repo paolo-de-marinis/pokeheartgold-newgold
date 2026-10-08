@@ -915,6 +915,8 @@ class SaveUiTests(unittest.TestCase):
             "map": chuck["map"], "x": chuck["x"], "y": chuck["y"], "spawn": 10}}))
         page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
         self.assertIn("if (x.spawn) args.spawn = x.spawn;", page)
+        # A place fought again (savedit.story_places' "again": Lance) takes no story back.
+        self.assertIn("if (done.has(p.step) && !p.again) {", page)
 
     def test_a_place_puts_the_party_at_the_cap_the_plan_leaves(self):
         """op "position" with "cap" raises the party to the cap the plan's

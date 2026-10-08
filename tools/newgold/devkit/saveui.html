@@ -2298,11 +2298,12 @@ function placePlan(i) {
                why: `${S.steps.get(st.gate).section}${before.length ? `, con i ${before.length} passi prima` : ""}: senza, il gioco rimanda fuori il giocatore`});
   }
   if (p.step && S.steps.has(p.step)) {
-    if (done.has(p.step)) {
+    // A battle the game runs again once done (Lance's, after the Hall of Fame) needs no story taken back.
+    if (done.has(p.step) && !p.again) {
       const after = laterSteps(p.step);
       plan.push({key: "story", on: true, undo: [...after.reverse(), p.step], text: `Riporta la storia a subito prima della lotta`,
                  why: `toglie "${stepLabel(p.step)}"${after.length ? ` e i ${after.length} passi dopo` : ""}: già fatto, ${placeWho(p)} non lotterebbe`});
-    } else {
+    } else if (!done.has(p.step)) {
       const opened = new Set(plan.find(x => x.key === "gate")?.run || []), before = earlierSteps(p.step).filter(x => !opened.has(x));
       if (before.length) plan.push({key: "story", on: true, run: before, text: `Fai prima i passi che vengono prima (${before.length})`,
                                     why: before.map(stepLabel).join(" · ")});

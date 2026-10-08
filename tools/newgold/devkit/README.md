@@ -408,7 +408,8 @@ player six tiles in, and the place says where that stops and how many steps
 are left to the person, or to Lance's trigger), and offers, ticked, what the battle needs: the person shown again
 (their hide flag cleared), the gym's gate step, the story put just before
 the battle (the earlier steps run, or a battle won taken back with the
-steps after it), and, unticked, the map's sight trainers given as beaten
+steps after it -- not one the game runs again once won, as `story_places`'
+`again` says of Lance's), and, unticked, the map's sight trainers given as beaten
 (the walk from Cianwood's winch to Chuck passes Black Belt Nob), the party
 raised to the level cap, and the ones above it brought down -- the cap the
 ticked steps will leave (Whitney's badge taken back: 30, not 34), each

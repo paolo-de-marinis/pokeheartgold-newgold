@@ -4481,12 +4481,12 @@ def _negate(condition):
     return subject, _NOT[test], value
 
 
-def _requirements(stem):
+def _requirements(stem, every=False):
     """For each line of a script file the game can reach, what it tested on
     the way from an entry (the first way found, the shortest): positive
     conditions only -- a flag set, a badge or an item had, a trainer beaten,
     a variable at or past a value -- as the negative ones say only that the
-    step is not done yet."""
+    step is not done yet; `every`, those too."""
     script = _script(stem)
     lines, labels = script["lines"], script["labels"]
     entry = _entry_conditions(stem)
@@ -4524,7 +4524,7 @@ def _requirements(stem):
             if j is not None and j < len(lines) and j not in found:
                 found[j] = c
                 queue.append((j, c, subjects, compared))
-    keep = lambda s, test, value: (s[0] == "var" and test in ("eq", "ge", "gt") and value > 0) or \
+    keep = lambda s, test, value: every or (s[0] == "var" and test in ("eq", "ge", "gt") and value > 0) or \
         (s[0] != "var" and test == "eq" and value)
     return {i: [c for c in dict.fromkeys(conditions) if keep(*c)] for i, conditions in found.items()}
 
@@ -4532,6 +4532,16 @@ def _requirements(stem):
 def _need_met(save, need, items=None):
     subject, test, value = need
     return _TESTS[test](_state(save, subject, items), value)
+
+
+def _fails(writes, conditions):
+    """Whether a step's writes leave one of these tests failing: a flag, a
+    trainer, a badge or a variable written to what the test does not want."""
+    for (subject, test, value), (kind, name, written) in itertools.product(conditions, writes):
+        if (kind, name) == tuple(subject[:2]) and kind in ("flag", "trainer", "badge", "var") \
+                and not (_TESTS[test](written, value) if kind == "var" else written == value):
+            return True
+    return False
 
 
 def _gives(write, need):
@@ -4991,7 +5001,13 @@ def story_places():
     there first ("bg": a sign or switch, "coord": a step onto a trigger),
     "trainers": the sight trainers on the map (std_trainer), whom the
     walk to the person may run into, [constant, name], and "variants": the
-    trainers its step's battle may be fought with (story's "variants")."""
+    trainers its step's battle may be fought with (story's "variants"), and
+    "again": whether the person fights again once the step is done -- no
+    test on the way to the battle that its writes fail (Will's
+    FLAG_DEFEATED_WILL), no person of the map they hide, no showing of this
+    one they skip (the Radio Tower's OnLoad keeps Archer only at
+    VAR_SCENE_ROCKET_TAKEOVER 4): Lance, whose script tests nothing the Hall
+    of Fame writes."""
     steps = {(s["script"], s["line"]): s for s in story()}
     trainers, names = constants("include/constants/trainers.h", "TRAINER_"), trainer_names()
     out = []
@@ -5004,6 +5020,8 @@ def story_places():
         script, events = _script(stem), map_events(map_id)
         if not events:
             continue
+        ways = _requirements(stem, every=True)
+        hiding = {o.get("eventFlag") for o in events.get("objects", [])}
         free = lambda x, y: tile_problem(map_id, x, y) is None   # noqa: E731
         walked = ...
         sight = sorted({t for o in events.get("objects", [])
@@ -5080,6 +5098,10 @@ def story_places():
                 walk = {"x": end[0], "y": end[1], "steps": left}
             trainer = key if what == "battle" else (step or {}).get("battle")
             hide = [ev["eventFlag"]] if kind == "object" and ev.get("eventFlag") not in (None, "FLAG_NOTHING", "0", 0) else []
+            again = bool(step) and not _fails(step["gives"], ways.get(step["start"], ())) \
+                and not any(w[0] == "flag" and w[2] and w[1] in hiding for w in step["gives"]) \
+                and not any(_fails(step["gives"], ways.get(k, ())) for k, (op, args) in enumerate(script["lines"])
+                            if op == "ClearFlag" and args and args[0] in hide)
             same = next((p for p in out if (p["map"], p["x"], p["y"], p["key"]) == (map_id, spot[0], spot[1], key)), None)
             if same:        # one person drawn twice, disguised and revealed (Fuchsia's Gym): one place, both flags
                 same["hide"] += [h for h in hide if h not in same["hide"]]
@@ -5088,7 +5110,7 @@ def story_places():
                         "trainer": names[trainers[trainer]] if trainer in trainers and trainers[trainer] < len(names) else "",
                         "trainer_const": trainer, "step": step["id"] if step else None,
                         "variants": [key for key, _ in (step or {}).get("variants", [])],
-                        "badge": (step or {}).get("badge"), "hide": hide, "walked": walk,
+                        "badge": (step or {}).get("badge"), "hide": hide, "walked": walk, "again": again,
                         "trainers": [[t, names[trainers[t]] if trainers[t] < len(names) else t] for t in sight
                                      if t != trainer and t in trainers],
                         "via": via if first is not None else kind if kind in ("coord", "frame") else None,
