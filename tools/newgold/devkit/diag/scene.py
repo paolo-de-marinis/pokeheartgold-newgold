@@ -92,6 +92,10 @@ A step is one of
                                 item is not spent (it would have no effect) -- or, for
                                 a key item that changes a form (the Reveal Glass, the
                                 Prison Bottle), when the Pokemon's species stays
+    give:ITEM,SLOT              one ITEM given to party slot SLOT (0 the first) to hold,
+                                from the bag as use: does it, GIVE for USE; failed when
+                                the bag offers no GIVE for it (a key item) or the slot
+                                holds an item already
     buy:ITEM,COUNT              COUNT of ITEM bought from the mart clerk the player
                                 faces (across the counter): A through the clerk's lines
                                 and on BUY, the item found in the mart's list, the
@@ -243,7 +247,7 @@ CONSTANTS = {"MAP_": "include/constants/maps.h", "SPECIES_": "include/constants/
              "TYPE_": "include/constants/pokemon.h"}
 STEPS = ("wait", "touch", "drag", "shot", "poke", "hold", "heaps", "untilheap", "field", "fight", "goto", "teach",
          "set", "newgame", "starter", "save", "flee", "catch", "heal", "pace", "swap", "shift", "again", "retry",
-         "machine", "answers", "buy", "use")
+         "machine", "answers", "buy", "use", "give")
 
 
 def waiting(free, idle, talks, presses):
@@ -320,6 +324,7 @@ def party_menu_layout():
 TABS = [(16 + 32 * i, 15) for i in range(8)]
 CELLS = [(64 + 128 * (i % 2), (57, 93, 130)[i // 2]) for i in range(6)]
 BAG_USE = (48, 143)
+BAG_GIVE = (48, 175)
 
 
 @savedit.tree_cache
@@ -333,9 +338,9 @@ def machine_layout():
              "__builtin_offsetof(BagViewPocket, slots)", "__builtin_offsetof(BagViewPocket, pocketId)",
              "__builtin_offsetof(BagViewPocket, count)", "POCKET_TMHMS", "__builtin_offsetof(PokemonSummaryAppPrefix, unk7BD)",
              "PARTY_MENU_STATE_USE_TMHM", "PARTY_MENU_STATE_WAIT_TEXT_PRINTER", "PARTY_MENU_STATE_YES_NO_HANDLE_INPUT",
-             "PARTY_MENU_STATE_USE_ITEM_SELECT_MON", "PARTY_MENU_STATE_ITEM_USE_CB")
+             "PARTY_MENU_STATE_USE_ITEM_SELECT_MON", "PARTY_MENU_STATE_ITEM_USE_CB", "PARTY_MENU_STATE_GIVE_ITEM_SELECT_MON")
     keys = ("view", "pocket", "item", "pockets", "entry", "slots", "id", "count", "tms", "cursor", "pick", "text", "yesno",
-            "choose", "using")
+            "choose", "using", "give")
     return dict(zip(keys, savedit.compile_c(exprs=names, headers=savedit.LAYOUT_HEADERS + (
         "bag_app_state.h", "pokemon_summary_app.h", "party_menu.h"))[0]))
 
@@ -964,9 +969,9 @@ class Scene:
         elif kind == "buy":
             item, count = rest.split(",")
             return self.buy(self.number(item), int(count))
-        elif kind == "use":
+        elif kind in ("use", "give"):
             item, slot = rest.split(",")
-            return self.use(self.number(item), int(slot))
+            return self.use(self.number(item), int(slot), give=kind == "give")
         elif kind == "fight":
             import gym
             idle = presses = talks = 0
@@ -1345,7 +1350,7 @@ class Scene:
             core.step(20, hooks)
         return [f"machine: slot {slot} did not learn move {move} in {frames} frames"]
 
-    def use(self, item, slot, frames=12000):
+    def use(self, item, slot, frames=12000, give=False):
         """use:ITEM,SLOT -- the start menu's BAG; in the bag the pocket that
         holds ITEM, touched until the bag shows it (BagView.unk64), the item
         on its page, until the bag has it picked (BagView.itemId), and USE;
@@ -1354,13 +1359,17 @@ class Scene:
         Pokemon?" while the bag has more), the bag and the start menu. Done
         when one is spent, or the Pokemon's species changed (a key item that
         changes a form is kept), and the player can move; back in the bag with
-        none spent ("It won't have any effect.") is a failure.
+        none spent ("It won't have any effect.") is a failure. give: is the
+        same with GIVE for USE: "Give to which Pokemon?" for "Use on which
+        Pokemon?", and the item leaves the bag for the Pokemon's hand.
         ponytail: the item on its pocket's first page only, as machine:."""
         import party
         core, hooks, layout, bag = self.core, self.hooks, app_layout(), machine_layout()
+        what, button = ("give", BAG_GIVE) if give else ("use", BAG_USE)
+        choose = bag["give"] if give else bag["choose"]
         had = party.bag(core.ram(), self.elf, item)
         if not had or slot >= len(self.mons()):
-            return [f"use: no item {item} in the bag, or no party slot {slot}"]
+            return [f"{what}: no item {item} in the bag, or no party slot {slot}"]
         species = self.mons()[slot]["species"]
         field = savedit.item_table()[item]["pocket"]
         pocket = savedit.constants("include/constants/items.h", "POCKET_")[
@@ -1378,7 +1387,7 @@ class Scene:
             spent = party.bag(core.ram(), self.elf, item) < had or self.mons()[slot]["species"] != species
             if name is None:
                 if spent and self.movable():
-                    self.say(f"[{core.frames}] use: item {item} on slot {slot}")
+                    self.say(f"[{core.frames}] {what}: item {item} on slot {slot}")
                     return None
                 if spent:
                     core.press("B", 6, hooks)       # the start menu, back from the bag
@@ -1397,20 +1406,20 @@ class Scene:
                 # item's own pocket is found by its record's fieldPocket.
                 tab = next((i for i, at in enumerate(pockets) if core.word(at + bag["id"], 1) == pocket), None)
                 if tab is None:
-                    return [f"use: item {item}'s pocket {pocket} is not one the bag shows"]
+                    return [f"{what}: item {item}'s pocket {pocket} is not one the bag shows"]
                 if core.word(view + bag["pocket"], 1) != tab:
                     core.touch(*TABS[tab], 6, hooks)
                 elif core.word(view + bag["item"], 2) != item:
                     if item not in shown[tab][:len(CELLS)]:
-                        return [f"use: item {item} is not on its pocket's first page: {shown[tab]}"]
+                        return [f"{what}: item {item} is not on its pocket's first page: {shown[tab]}"]
                     core.touch(*CELLS[shown[tab].index(item)], 6, hooks)
                 else:
-                    core.touch(*BAG_USE, 6, hooks)
+                    core.touch(*button, 6, hooks)
                 core.step(20, hooks)
             elif name == "PartyMenuApp_Main":
-                if spent and state == bag["choose"]:
+                if spent and state == choose:
                     core.press("B", 6, hooks)       # "Use on which Pokemon?" again: out
-                elif state == bag["choose"] and not touched:
+                elif state == choose and not touched:
                     core.touch(*PANELS[slot], 6, hooks)
                     touched = True
                 elif state in (bag["using"], bag["text"]) or (spent and touched):
@@ -1423,7 +1432,7 @@ class Scene:
                 break
             core.press("B", 6, hooks)
             core.step(20, hooks)
-        return [f"use: item {item} was not spent on slot {slot} in {frames} frames"]
+        return [f"{what}: item {item} was not spent on slot {slot} in {frames} frames"]
 
     def asking(self):
         """Whether the script the field runs waits on a yes/no: a context of
