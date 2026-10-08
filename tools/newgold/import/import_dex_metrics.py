@@ -92,11 +92,17 @@ def species_numbers(path):
             re.findall(r"^#define SPECIES_([A-Z0-9_]+)\s+(\d+)\s*$", path.read_text(errors="replace"), re.M)}
 
 
+def front_of(number):
+    """Species number's front picture, the male one where it has one; None
+    while it has none, a new species before import_sprites.py."""
+    folder = heights.SPRITES / f"{number:04d}"
+    return next((p for p in (folder / "male/front.png", folder / "female/front.png")
+                 if p.exists() and p.stat().st_size), None)
+
+
 def feet(number, ypos, scale):
     """The screen row the SIZE page stands species number's front on."""
-    folder = heights.SPRITES / f"{number:04d}"
-    front = next(p for p in (folder / "male/front.png", folder / "female/front.png") if p.stat().st_size)
-    return 112 + ypos + (40 - heights.height_of(front)[0]) * 256 / scale
+    return 112 + ypos + (40 - heights.height_of(front_of(number))[0]) * 256 / scale
 
 
 def body_styles(reference):
@@ -129,13 +135,16 @@ def metrics(reference, styles):
         out[name] = entry
     # New Gold's own species is its like's but its size and size page; its
     # body style is its like's too, never body_shapes.csv's. Its front
-    # stands on retail's line, wherever its picture has its feet.
+    # stands on retail's line, wherever its picture has its feet, once it
+    # has a front: a new species gets one from import_sprites.py, after this,
+    # and Paolo's from the converter, so this runs again after either.
     numbers = species_numbers(SPECIES_H)
     for name, own in own_species.SPECIES.items():
         out[name] = {**out[own["like"]], **{field: own[field] for field in FIELDS if field in own}}
-        for gender in "mf":
-            scale = out[name][f"mon_scale_{gender}"]
-            out[name][f"mon_ypos_{gender}"] = round(FEET - feet(numbers[name], 0, scale))
+        if front_of(numbers[name]):
+            for gender in "mf":
+                scale = out[name][f"mon_scale_{gender}"]
+                out[name][f"mon_ypos_{gender}"] = round(FEET - feet(numbers[name], 0, scale))
     return out
 
 

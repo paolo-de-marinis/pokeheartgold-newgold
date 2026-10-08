@@ -229,7 +229,9 @@ line in `own_art.py`; `import_followers.py --write` again, which now gives
 it a model of its own (Baby Lugia: model 1307, member 1604, sprite 1791),
 and without which the converter refuses its follower ("has no follower
 model of its own"); then the converter, Baby Lugia's command in its
-docstring (`--grid 14 ... --paired`), and the icon with `--icon ... --grid 1`.
+docstring (`--grid 14 ... --paired`), and the icon with `--icon ... --grid 1`;
+then `import_dex_metrics.py REF --write` again, which stands the new front on
+the SIZE page's line (a test fails until it has).
 
 A re-run of any of them keeps it, and none moves it. What is not generated
 is its Dex page: `src/pokedex.c` names it in SpeciesToDexSpecies (it is no
