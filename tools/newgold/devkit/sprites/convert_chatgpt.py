@@ -67,6 +67,10 @@ follower sheets of round 17 (.rounds/round17/lugia):
         --shiny-front front_shiny.png --shiny-back back_shiny.png --grid 14 \\
         --follower baby_lugia_sheet_normal_hq.png --shiny-follower baby_lugia_sheet_shiny_hq.png \\
         --rows down,up,left,right --paired
+
+and its icon, his 50x50 frames redrawn at 32x32, at one pixel a pixel:
+
+    convert_chatgpt.py BABY_LUGIA --icon icon_32x32_claude_from_paolo.png --grid 1
 """
 import argparse
 import cmath
