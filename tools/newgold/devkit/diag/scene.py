@@ -89,7 +89,9 @@ A step is one of
                                 bag, as a player gives a Pokemon a Potion or an HP Up:
                                 the pocket that holds it, the item, USE, the Pokemon,
                                 A through the line it prints, and out; failed when the
-                                item is not spent (it would have no effect)
+                                item is not spent (it would have no effect) -- or, for
+                                a key item that changes a form (the Reveal Glass, the
+                                Prison Bottle), when the Pokemon's species stays
     buy:ITEM,COUNT              COUNT of ITEM bought from the mart clerk the player
                                 faces (across the counter): A through the clerk's lines
                                 and on BUY, the item found in the mart's list, the
@@ -1350,14 +1352,19 @@ class Scene:
         in the party menu, slot SLOT's panel, A through the line the item
         prints, then B out of the party menu (it stays on "Use on which
         Pokemon?" while the bag has more), the bag and the start menu. Done
-        when one is spent and the player can move; back in the bag with none
-        spent ("It won't have any effect.") is a failure.
+        when one is spent, or the Pokemon's species changed (a key item that
+        changes a form is kept), and the player can move; back in the bag with
+        none spent ("It won't have any effect.") is a failure.
         ponytail: the item on its pocket's first page only, as machine:."""
         import party
         core, hooks, layout, bag = self.core, self.hooks, app_layout(), machine_layout()
         had = party.bag(core.ram(), self.elf, item)
         if not had or slot >= len(self.mons()):
             return [f"use: no item {item} in the bag, or no party slot {slot}"]
+        species = self.mons()[slot]["species"]
+        field = savedit.item_table()[item]["pocket"]
+        pocket = savedit.constants("include/constants/items.h", "POCKET_")[
+            next(p["const"] for p in savedit.pockets() if p["name"] == field)]
         end = core.frames + frames
         wrong = self.start_menu("START_MENU_ACTION_BAG", end)
         if wrong:
@@ -1368,7 +1375,7 @@ class Scene:
             name, manager = self.app()
             state = manager and core.word(manager + layout["OverlayManager.proc_state"])
             data = manager and core.word(manager + layout["OverlayManager.data"])
-            spent = party.bag(core.ram(), self.elf, item) < had
+            spent = party.bag(core.ram(), self.elf, item) < had or self.mons()[slot]["species"] != species
             if name is None:
                 if spent and self.movable():
                     self.say(f"[{core.frames}] use: item {item} on slot {slot}")
@@ -1386,9 +1393,11 @@ class Scene:
                 pockets = [view + bag["pockets"] + i * bag["entry"] for i in range(8)]
                 shown = [[core.word(core.word(at + bag["slots"]) + 4 * k, 2) for k in range(core.word(at + bag["count"], 1))]
                          for at in pockets]
-                tab = next((i for i, items in enumerate(shown) if item in items), None)
+                # A pocket's count is filled in when the bag shows it, so the
+                # item's own pocket is found by its record's fieldPocket.
+                tab = next((i for i, at in enumerate(pockets) if core.word(at + bag["id"], 1) == pocket), None)
                 if tab is None:
-                    return [f"use: item {item} is in no pocket the bag shows"]
+                    return [f"use: item {item}'s pocket {pocket} is not one the bag shows"]
                 if core.word(view + bag["pocket"], 1) != tab:
                     core.touch(*TABS[tab], 6, hooks)
                 elif core.word(view + bag["item"], 2) != item:
@@ -1404,8 +1413,8 @@ class Scene:
                 elif state == bag["choose"] and not touched:
                     core.touch(*PANELS[slot], 6, hooks)
                     touched = True
-                elif state in (bag["using"], bag["text"]):
-                    core.press("A", 6, hooks)       # the line the item prints
+                elif state in (bag["using"], bag["text"]) or (spent and touched):
+                    core.press("A", 6, hooks)       # the line the item prints ("Hoopa changed Forme!")
                 core.step(20, hooks)
             else:
                 core.step(10, hooks)
