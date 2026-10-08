@@ -353,6 +353,18 @@ class ConvertChatgptTests(unittest.TestCase):
         self.assertEqual(self.palette_entries(self.c.png(front)), 16)
         self.assertNotEqual(front.getpalette()[3:48], back.getpalette()[3:48])
 
+    def test_pixel_art_on_its_own_grid_reads_back_pixel_for_pixel(self):
+        """Cells that start on the picture's edge, as a 32x32 icon drawn at
+        one screen pixel a pixel or four has them, came back a row and a
+        column short and shifted by one."""
+        from PIL import Image
+        small = Image.open(self.sheet("art.png", 1)).resize((32, 16), Image.NEAREST)
+        for grid in (1, 4):
+            path = Path(self.tmp.name) / f"art{grid}.png"
+            small.resize((32 * grid, 16 * grid), Image.NEAREST).save(path)
+            read = self.c.load(path, grid)
+            self.assertEqual(read.tobytes(), small.point(lambda v: v & 0xF8).tobytes(), grid)
+
     def test_heartgold_s_followers_of_bramblin_s_height_are_17_rows_tall(self):
         """DEVKIT-PROMPTS.md's rule, measured on the tree's own followers."""
         self.assertEqual(self.c.follower_height(6), 17)

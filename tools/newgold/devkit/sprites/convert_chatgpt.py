@@ -129,12 +129,14 @@ def load(path, grid=None):
 
 def phase(im, grid):
     """Where pixel art's cells start, across and down: its colour edges'
-    positions modulo grid, averaged round the circle."""
+    positions modulo grid, averaged round the circle. Rounded first, so
+    cells that start on the picture's edge start at 0, not a hair short of
+    grid, which lost the first row and column."""
     px, out = im.load(), []
     for dx, dy in ((1, 0), (0, 1)):
         z = sum(cmath.exp(2j * math.pi * (x if dx else y) / grid)
                 for y in range(dy, im.height) for x in range(dx, im.width) if px[x, y] != px[x - dx, y - dy])
-        out.append(cmath.phase(z) / (2 * math.pi) * grid % grid)
+        out.append(round(cmath.phase(z) / (2 * math.pi) * grid, 6) % grid)
     return out
 
 
