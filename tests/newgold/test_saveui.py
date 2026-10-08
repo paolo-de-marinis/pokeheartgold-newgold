@@ -915,6 +915,8 @@ class SaveUiTests(unittest.TestCase):
             "map": chuck["map"], "x": chuck["x"], "y": chuck["y"], "spawn": 10}}))
         page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
         self.assertIn("if (x.spawn) args.spawn = x.spawn;", page)
+        # The gate's line says one step before it in the singular (Morty's: the rival on the Burned Tower's 1F).
+        self.assertIn('before.length === 1 ? ", con il passo prima"', page)
         # A place fought again (savedit.story_places' "again": Lance) takes no story back.
         self.assertIn("if (done.has(p.step) && !p.again) {", page)
 

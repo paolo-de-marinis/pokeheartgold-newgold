@@ -2295,7 +2295,7 @@ function placePlan(i) {
   if (st.gate && S.steps.has(st.gate)) {
     const before = earlierSteps(st.gate);
     plan.push({key: "gate", on: true, run: [...before, st.gate], text: `Apri la palestra: ${stepLabel(st.gate)}`,
-               why: `${S.steps.get(st.gate).section}${before.length ? `, con i ${before.length} passi prima` : ""}: senza, il gioco rimanda fuori il giocatore`});
+               why: `${S.steps.get(st.gate).section}${before.length === 1 ? ", con il passo prima" : before.length ? `, con i ${before.length} passi prima` : ""}: senza, il gioco rimanda fuori il giocatore`});
   }
   if (p.step && S.steps.has(p.step)) {
     // A battle the game runs again once done (Lance's, after the Hall of Fame) needs no story taken back.
