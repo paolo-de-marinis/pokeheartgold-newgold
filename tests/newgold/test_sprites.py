@@ -41,10 +41,6 @@ import own_species  # noqa: E402
 
 SPRITES = ROOT / "files/poketool/pokegra/pokegra"
 REFERENCE = Path(os.environ.get("HG_ENGINE_NEWGOLD_REFERENCE", import_followers.REFERENCE))
-# Paolo's icon for Baby Lugia is not drawn yet (2026-10-07): his picture has
-# 50x50 frames, which a 32x32 icon cannot show at its own pixels. Lugia's
-# stands in, in the shared palette the game shows it in.
-PLACEHOLDER_ICONS = {"BABY_LUGIA"}
 
 
 def species_numbers():
@@ -198,9 +194,8 @@ class OwnPicturesTests(unittest.TestCase):
             for (gender, picture), path in battle_pictures(name).items():
                 self.assertNotEqual(path.read_bytes(), import_followers.show(f"{folder}/male/{picture}", REFERENCE),
                                     f"{name} {gender} {picture}")
-            if name not in PLACEHOLDER_ICONS:
-                theirs = Image.open(io.BytesIO(import_followers.show(f"{folder}/icon.png", REFERENCE)))
-                self.assertNotEqual(Image.open(icon_of(name)).tobytes(), theirs.tobytes(), name)
+            theirs = Image.open(io.BytesIO(import_followers.show(f"{folder}/icon.png", REFERENCE)))
+            self.assertNotEqual(Image.open(icon_of(name)).tobytes(), theirs.tobytes(), name)
             kept = (import_followers.MMODEL_DIR / f"mmodel_{member_of(name):08d}.NSBTX").read_bytes()
             self.assertNotEqual(kept, import_followers.nsbtx(folder, REFERENCE), name)
 
@@ -221,11 +216,16 @@ class OwnPicturesTests(unittest.TestCase):
             self.assertNotEqual(front.getpalette()[3:48], back.getpalette()[3:48], name)
 
     def test_the_icon_is_two_frames_in_a_shared_palette(self):
+        """32x64, the shared palette's, and the Pokemon at most 24 rows tall
+        in each frame, as every retail icon is (DEVKIT-PROMPTS.md)."""
         for name in own_art.SPECIES:
             im = Image.open(icon_of(name))
             self.assertEqual((im.size, im.mode), ((32, 64), "P"), name)
             self.assertEqual(palette_entries(icon_of(name)), 16, name)
             self.assertIsNotNone(import_icons.drawn_in(icon_of(name), import_icons.shared_palettes()), name)
+            for frame in range(2):
+                box = im.crop((0, 32 * frame, 32, 32 * frame + 32)).point(lambda v: 255 if v else 0).getbbox()
+                self.assertLessEqual(box[3] - box[1], 24, f"{name} frame {frame}")
 
     def test_the_follower_is_heartgold_s_size_its_right_frames_mirrored(self):
         """Eight 32x32 frames, the first down one as tall as HeartGold's
