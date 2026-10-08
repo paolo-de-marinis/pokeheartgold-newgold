@@ -110,7 +110,8 @@ def number_of(name):
 def load(path, grid=None):
     """The picture in RGB; pixel art drawn grid screen pixels a pixel at one
     pixel a cell, the colour most of the cell has, in 15-bit colour, and
-    magenta where an indexed picture has index 0."""
+    magenta where an indexed picture has magenta, at any index: Paolo's
+    second poses have the outline at index 0."""
     im = Image.open(path)
     if not grid:
         return im.convert("RGB")
@@ -124,10 +125,8 @@ def load(path, grid=None):
             cell = collections.Counter(px[x, y] for y in range(round(y0 + row * grid), round(y0 + (row + 1) * grid))
                                        for x in range(round(x0 + col * grid), round(x0 + (col + 1) * grid)))
             v = cell.most_common(1)[0][0]
-            if palette and v == 0:
-                out.putpixel((col, row), MAGENTA)
-            else:
-                out.putpixel((col, row), tuple(c & 0xF8 for c in (palette[3 * v:3 * v + 3] if palette else v)))
+            colour = tuple(palette[3 * v:3 * v + 3]) if palette else v
+            out.putpixel((col, row), MAGENTA if palette and colour == MAGENTA else tuple(c & 0xF8 for c in colour))
     return out
 
 

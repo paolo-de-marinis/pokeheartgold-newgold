@@ -327,6 +327,18 @@ class PixelArtTests(unittest.TestCase):
                 i = small.getpixel((x, y))
                 self.assertEqual(read.getpixel((x, y)), (255, 0, 255) if i == 0 else tuple(v & 0xF8 for v in colours[i]))
 
+    def test_an_indexed_picture_s_magenta_is_its_background_at_any_index(self):
+        """Paolo's second poses have the outline at index 0 and the magenta
+        further on: the outline is read as the outline, not as background."""
+        im = Image.new("P", (4, 3), 1)
+        im.putpalette([24, 32, 55, 255, 0, 255])
+        im.putpixel((1, 1), 0)
+        picture = io.BytesIO()
+        im.save(picture, "PNG")
+        read = self.convert.load(picture, 1)
+        self.assertEqual(read.getpixel((1, 1)), (24, 32, 48))
+        self.assertEqual(read.getpixel((0, 0)), (255, 0, 255))
+
     def test_past_fifteen_pairs_the_cheapest_merge_into_their_nearest(self):
         """Fifteen pairs far apart, a hundred pixels each, and two of one
         pixel each 8 away from one of them: those two merge, into it."""
