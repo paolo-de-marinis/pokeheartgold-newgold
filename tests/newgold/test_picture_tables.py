@@ -14,9 +14,11 @@ which is the one its picture matches. a/1/8/0 is carried whole from the
 reference, and its six readers share one bound.
 """
 
+import json
 import os
 from pathlib import Path
 import re
+import statistics
 import struct
 import subprocess
 import sys
@@ -234,9 +236,32 @@ class PictureTableTests(unittest.TestCase):
         self.assertTrue(placeholders)
         self.assertEqual({names[n]: tail(n) for n in placeholders if tail(n) != tail(number["SPECIES_BULBASAUR"])}, {})
         grounded = ("TRUBBISH", "TIRTOUGA", "CLAWITZER", "STEENEE", "EISCUE", "ARCTOVISH", "REVAVROOM", "ORTHWORM",
-                    "IRON_TREADS", "ENAMORUS_THERIAN", "TERAPAGOS_TERASTAL", "TERAPAGOS_STELLAR", "TAUROS_COMBAT")
+                    "IRON_TREADS", "ENAMORUS_THERIAN", "TERAPAGOS_TERASTAL", "TERAPAGOS_STELLAR", "TAUROS_COMBAT",
+                    "GOURGEIST", "MIRAIDON", "MIRAIDON_LOW_POWER_MODE", "MIRAIDON_DRIVE_MODE", "LEAVANNY", "FERROSEED",
+                    "FERROTHORN", "FLITTLE", "POLTCHAGEIST", "POLTCHAGEIST_MASTERPIECE")
         self.assertEqual({name: offset(name) for name in grounded if not -12 <= offset(name) <= 3}, {})
         self.assertEqual({offset(f"CASTFORM_{form}") for form in ("SUNNY", "RAINY", "SNOWY")}, {offset("CASTFORM")})
+
+    def test_added_floaters_float_as_retail_s_do(self):
+        """Paolo, 2026-10-08: the ones that float a little suspended, so they
+        are seen, after checking which really float. The reference drew
+        floaters as high as 29 rows (Woobat), Elgyem, Pumpkaboo and Milcery
+        17 to 19; they float in the latest games' models, and Elgyem, Tympole
+        and Cofagrigus in Black and White, so they stand where retail's
+        middle floater does: the median offset of its fronts of species with
+        Levitate, 12 (Bronzor 10, Gastly 21)."""
+        member = read_narc((ROOT / "files/a/1/8/0").read_bytes())[0][0]
+        names = import_sprite_offsets.port_species()
+        number = {name: n for n, name in enumerate(names)}
+        offset = lambda n: struct.unpack_from("<b", member, n * import_sprite_offsets.RECORD  # noqa: E731
+                                              + import_sprite_offsets.Y_OFFSET)[0]
+        personal = json.loads((ROOT / "files/poketool/personal/personal.json").read_text())["baseStats"]
+        levitate = sorted(offset(n) for n in range(1, import_sprite_offsets.RETAIL)
+                          if "ABILITY_LEVITATE" in personal[n]["abilities"] + [personal[n]["hiddenAbility"]])
+        self.assertEqual((len(levitate), statistics.median(levitate)), (26, import_sprite_offsets.FLOAT))
+        floating = ("ELGYEM", "BEHEEYEM", "TYMPOLE", "COFAGRIGUS", "PUMPKABOO", "PUMPKABOO_SMALL", "PUMPKABOO_LARGE",
+                    "PUMPKABOO_SUPER", "MILCERY", "VAROOM", "SOLOSIS", "SINISTEA", "SINISTEA_ANTIQUE", "WOOBAT")
+        self.assertEqual({name for name in floating if offset(number[f"SPECIES_{name}"]) != 12}, set())
 
     def test_records_never_placed_take_their_picture_s_shadow(self):
         """The reference never placed the records of 46 added species with

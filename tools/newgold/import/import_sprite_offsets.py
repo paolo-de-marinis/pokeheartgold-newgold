@@ -40,7 +40,14 @@ the last the shadow (the record's last two bytes) goes with it:
   Bulbasaur stands.
 * GROUNDED: species that stand on the ground in the latest games and that
   the reference draws in the air (a Steenee 11 rows up, a Tirtouga 18) take
-  the offset of retail's grounded fronts with their size of shadow.
+  the offset of retail's grounded fronts with their size of shadow. Flittle
+  is one: its toes hover half an inch over the ground (Scarlet's entry).
+  FLOATING: species that float in the latest games, and in Black and White
+  for the fifth generation's, take FLOAT over their shadow, the middle of
+  retail's floaters, where the reference drew them higher (an Elgyem 17 rows
+  up, a Woobat 29) or as high: a floater that reads as one, near its
+  platform. A model standing on the ground keeps its lowest row still
+  through its idle animation, a floater's bobs.
 * A form whose record is its base's, or one never placed (UNPLACED), stands
   as its base does, as retail's forms do (they share their species' record):
   a Combat Breed Tauros, never placed, floated 11 rows over where Tauros
@@ -89,7 +96,14 @@ GROUND = {1: 2, 2: 0, 3: -1}
 SHADOW_AREA = (1236, 2185)
 GROUNDED = {"SPECIES_TIRTOUGA", "SPECIES_CLAWITZER", "SPECIES_STEENEE", "SPECIES_EISCUE", "SPECIES_ARCTOVISH",
             "SPECIES_REVAVROOM", "SPECIES_ORTHWORM", "SPECIES_IRON_TREADS", "SPECIES_ENAMORUS_THERIAN",
-            "SPECIES_TERAPAGOS_TERASTAL"}
+            "SPECIES_TERAPAGOS_TERASTAL", "SPECIES_GOURGEIST", "SPECIES_MIRAIDON", "SPECIES_LEAVANNY",
+            "SPECIES_FERROSEED", "SPECIES_FERROTHORN", "SPECIES_FLITTLE", "SPECIES_POLTCHAGEIST"}
+# The median offset of retail's fronts of species with Levitate, 26 from
+# Cresselia's 1 to Misdreavus' 24 (Gastly 21, Bronzor 10).
+FLOAT = 12
+FLOATING = {"SPECIES_ELGYEM", "SPECIES_BEHEEYEM", "SPECIES_TYMPOLE", "SPECIES_COFAGRIGUS", "SPECIES_PUMPKABOO",
+            "SPECIES_PUMPKABOO_SMALL", "SPECIES_PUMPKABOO_LARGE", "SPECIES_PUMPKABOO_SUPER", "SPECIES_MILCERY",
+            "SPECIES_VAROOM", "SPECIES_SOLOSIS", "SPECIES_SINISTEA", "SPECIES_WOOBAT"}
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from heights import SPRITES, png_rows  # noqa: E402
@@ -191,10 +205,10 @@ def records(reference):
                 record[Y_OFFSET:] = out[owner][Y_OFFSET:]
             elif name[len("SPECIES_"):] in own_art.SPECIES:
                 record[Y_OFFSET:] = struct.pack("<bbB", ours[0], 0, shadow_size(picture))
-            elif name in GROUNDED:
+            elif name in GROUNDED or name in FLOATING:
                 if tail in UNPLACED:
                     record[-1] = shadow_size(picture)
-                struct.pack_into("<b", record, Y_OFFSET, GROUND[record[-1]])
+                struct.pack_into("<b", record, Y_OFFSET, FLOAT if name in FLOATING else GROUND[record[-1]])
             elif base and (tail in UNPLACED or record[Y_OFFSET:] == theirs[base][Y_OFFSET:]):
                 if number_of[base] > number:
                     raise ValueError(f"{name}: its base {base} comes after it")
