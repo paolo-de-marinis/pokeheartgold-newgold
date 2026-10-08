@@ -8,7 +8,7 @@
     "field",
     "poke:sLCRNG_State=0xbb160215",
     "flee:40",
-    "goto:MAP_ROUTE_31,552,286,60000",
+    "goto:MAP_ROUTE_31,552,286,120000",
     {
       "expect": {
         "flag:FLAG_TALKED_TO_MOM_AFTER_NAMING_RIVAL": 1,
