@@ -28,13 +28,21 @@ void ov12_022593FC(BattleSystem *battleSystem, OpponentData *opponentData);
 
 // ChangeForm: the battler's sprite redrawn in place from the packet's species,
 // form, colours, sex and personality, stood on the ground by its picture's
-// height.
+// height. A front also takes the new species' Y offset and shadow from its
+// a/1/8/0 record, as a send-out (ov12_022612A4) and Transform
+// (ov07_0223476C) set them: retail's forms share their species' record, but
+// here a form is a species with a record of its own, and kept the old one's
+// -- a Minior, sent out in its Core Form, Bulbasaur's placeholder at -1,
+// stood its Meteor Form on the ground, not 18 rows up.
 void ov12_022593FC(BattleSystem *battleSystem, OpponentData *opponentData) {
     ChangeFormCommand *data = (ChangeFormCommand *)opponentData->command;
     PokepicTemplate template;
     PokepicTemplate *pokepicTemplate;
     int facing;
     int height;
+    s8 yOffset;
+    s8 shadowXOffset;
+    u8 shadowSize;
 
     facing = (opponentData->battlerType & BATTLER_TYPE_IS_ENEMY) ? MON_PIC_FACING_FRONT : MON_PIC_FACING_BACK;
     GetMonSpriteCharAndPlttNarcIdsEx(&template, data->species, data->gender, facing, data->shiny, data->form, data->personality);
@@ -47,6 +55,15 @@ void ov12_022593FC(BattleSystem *battleSystem, OpponentData *opponentData) {
     height = GetMonPicHeightBySpeciesGenderForm(data->species, data->gender, facing, data->form, data->personality);
     ov12_0223BBD8(ov12_0223A99C(battleSystem), opponentData->unk194, height);
     Pokepic_SetAttr(opponentData->pokepic, POKEPIC_Y, height + ov07_02234B5C(opponentData->battlerType, 1));
+    if (facing == MON_PIC_FACING_FRONT) {
+        sub_020729D8(opponentData->pokepicAnimNarc, &yOffset, data->species, facing);
+        sub_020729FC(opponentData->pokepicAnimNarc, &shadowXOffset, data->species, facing);
+        sub_02072A20(opponentData->pokepicAnimNarc, &shadowSize, data->species, facing);
+        Pokepic_SetAttr(opponentData->pokepic, POKEPIC_SHADOW_H, yOffset);
+        Pokepic_SetAttr(opponentData->pokepic, POKEPIC_SHADOW_XOFFSET, shadowXOffset);
+        Pokepic_SetAttr(opponentData->pokepic, POKEPIC_SHADOW_YOFFSET, 36 - height);
+        Pokepic_SetAttr(opponentData->pokepic, POKEPIC_SHADOW_SIZE, shadowSize);
+    }
     ov12_0226430C(battleSystem, opponentData->unk194, data->command);
     ov12_02259928(opponentData);
 }

@@ -1,0 +1,10 @@
+{
+  "about": "A wild Minior comes in in its Core Form (out of a battle it is in its core, Mon_ChangeToBattleForm) and Shields Down turns it into its Meteor Form at once ('The wild Minior transformed!'), a redraw in place (ChangeForm, ov12_022593FC). The meteor floats where its own a/1/8/0 record stands it, 18 rows over the ground line by front1.lift, its shadow under it; the redraw kept the core's record, Bulbasaur's placeholder at -1, and stood the meteor on the ground.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "CYNDAQUIL:60"],
+  "hold": {"gDiagBattleSeed": 1},
+  "steps": ["field", "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=803", "LEFT", "fight:0:0",
+            {"expect": {"battler1.species": "SPECIES_MINIOR", "front1.lift": 18}},
+            "fight", "field"],
+  "expect": {"lines": ["You encountered a wild Minior!", "The wild Minior transformed!"]}
+}

@@ -849,7 +849,7 @@ typedef struct OpponentData {
     SysTask *unk198;
     u16 unk19C;
     int unk1A0;
-    u32 *unk1A4;
+    NARC *pokepicAnimNarc; // a/1/8/0, each species' record: its pictures' animations, Y offset and shadow
     u8 unk1A8;
     u8 unk1A9[3];
 } OpponentData;
