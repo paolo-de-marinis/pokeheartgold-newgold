@@ -1492,10 +1492,22 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertEqual(whitney[1]["needs"], [[[("var", "VAR_UNK_410A"), "eq", 1], [whitney[0]["id"]]]],
                          "the lass's trigger tile")
         self.assertEqual(whitney[2]["needs"], [[[("flag", "FLAG_UNK_0B7"), "eq", 1], [whitney[1]["id"]]]])
-        morty = steps[chains["BADGE_FOG"][0]]
+        rival, morty = (steps[i] for i in chains["BADGE_FOG"][:2])
         self.assertEqual((morty["kind"], morty["key"], morty["section"]), ("gate", "VAR_UNK_4079", "Burned Tower"))
         self.assertEqual([s["id"] for s in steps.values() if s["kind"] == "gate"], [morty["id"]],
                          "Elm's lab and the Kimono Girls set VAR_UNK_4079 again, after the gym opened")
+        # B1F is reached only across the rival's trigger on 1F (VAR_UNK_40A6 at 0), which tests no flag.
+        self.assertEqual((rival["kind"], rival["key"]), ("battle", "TRAINER_RIVAL_SILVER_8"))
+        self.assertEqual(morty["needs"], [[[("var", "VAR_UNK_40A6"), "ne", 0], [rival["id"]]]], "the rival's trigger")
+        self.assertEqual(sv._behind_triggers()["MAP_BURNED_TOWER_B1F"][-1][:2], ("VAR_UNK_40A6", 0))
+        judge = next(s for s in steps.values() if s["key"] == "FLAG_GOT_JUDGE_EXPLANATION")
+        self.assertEqual(judge["needs"], [], "the Frontier's gate moves VAR_UNK_40E5 on in its own scene, no step")
+        self.assertNotIn("MAP_POKEMON_LEAGUE_WILL_ROOM", sv._behind_triggers(),
+                         "the League's rival waits at the gate only once VAR_UNK_4119 is 1: no new game's way")
+        save = self.open()
+        for sid in (rival["id"], morty["id"]):      # what Morty's place runs to open his gym
+            sv.run_step(save, sid)
+        self.assertEqual(sv.level_cap(save), 36, "the rival beaten in the Burned Tower: 36, not 34")
         self.assertEqual([(steps[i]["kind"], steps[i]["key"]) for i in chains["BADGE_GLACIER"]],
                          [("badge", "BADGE_GLACIER"), ("item", "ITEM_TM07")], "TM07 follows the badge in one scene")
         bottle = [("item", "ITEM_SQUIRTBOTTLE", 1), "eq", 1]
@@ -1618,7 +1630,7 @@ class SaveditLibraryTests(unittest.TestCase):
         step, whose test is both."""
         flags = sv.constants("include/constants/flags.h", "FLAG_")
         steps = {s["id"]: s for s in sv.story()}
-        gate = steps[sv.badge_chains()["BADGE_FOG"][0]]
+        gate = next(s for s in steps.values() if s["kind"] == "gate")
         self.assertIn(["flag", "FLAG_HIDE_BURNED_TOWER_B1F_RAIKOU", 1, False], gate["writes"])
         self.assertIn(["var", "VAR_UNK_4076", 1, False], gate["writes"])
         dex = next(s for s in steps.values() if s["kind"] == "GivePokedex")
@@ -1674,7 +1686,7 @@ class SaveditLibraryTests(unittest.TestCase):
         Save_CreateRoamerByID makes it -- active, Lv. 40, full HP for its
         IVs, on a Johto route -- and taken back, none again (Paolo's Morty
         place had them vanish from the tower and never roam)."""
-        gate = next(s for s in sv.story() if s["id"] == sv.badge_chains()["BADGE_FOG"][0])
+        gate = next(s for s in sv.story() if s["kind"] == "gate")
         self.assertIn(["roamer", "0", 1, False], gate["writes"])
         self.assertIn(["roamer", "1", 1, False], gate["writes"])
         rules, numbers, maps = sv.roamer_rules(), sv.species_numbers(), sv.constants("include/constants/maps.h", "MAP_")
@@ -1761,7 +1773,7 @@ class SaveditLibraryTests(unittest.TestCase):
         sv.run_step(save, beaten)
         self.assertEqual(sv.undo_step(save, beaten), [])
         self.assertEqual([sv.var_value(save, variables[v]) for v in ("VAR_UNK_410A", "VAR_UNK_40DA")], [0, 0])
-        gate = sv.badge_chains()["BADGE_FOG"][0]
+        gate = next(s["id"] for s in sv.story() if s["kind"] == "gate")
         sv.run_step(save, gate)
         self.assertEqual(sv.undo_step(save, gate), [])
         self.assertEqual(sv.var_value(save, variables["VAR_UNK_4079"]), sv._gates()[0]["VAR_UNK_4079"])

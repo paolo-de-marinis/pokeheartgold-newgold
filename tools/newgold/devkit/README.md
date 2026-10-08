@@ -143,10 +143,20 @@ before the `SetVar` that opens Morty's gym; the Expansion Card's flag, set
 before its card, is one step with it. Each step has what it writes, what
 the game tests on the way to it from the script's entry (a trigger tile's variable, the map's frame
 table, `CheckBadge`, `HasItem`, `GoToIfSet` and the rest: the positive
-ones), and the steps that give that. `badge_chains()` is each badge's gym in
+ones), and the steps that give that -- and, on a map reached only across a
+trigger tile that tests no flag, the trigger's variable moved off the 0 a
+new game has (`_behind_triggers`: its tiles shut part the map's ground, the
+warps past them lead to maps that lead nowhere else), given by the steps of
+the trigger's own scene when that scene moves it on, else by any step that
+does. The Burned Tower's B1F is behind the rival on 1F, the Rocket
+Hideout's lower floors behind B1F's first Persian statue, and the
+Pokéathlon Dome behind Route 35's gatehouse, whose workman turns the player
+back until Whitney's battle; the Battle Frontier's gate moves its variable
+on in a scene that is no step, and asks none. `badge_chains()` is each badge's gym in
 order -- Whitney beaten, the lass's trigger, the badge, TM45 -- from those
 links and the step a walk stops at (Pryce's TM07, given in the badge's
-scene). `run_step` runs a step on a save as the game would, each jump decided
+scene); a gate comes first with what it needs (Morty's: the rival on the
+Burned Tower's 1F, then B1F's beasts, the badge, TM30). `run_step` runs a step on a save as the game would, each jump decided
 on the save (Chuck's badge starts the Rocket takeover only as the third
 midgame badge; a gift the bag has no room for, `GoToIfNoItemSpace`, is not
 given), taking what `TakeItem` takes and the money `SubMoneyImmediate` does,

@@ -1204,7 +1204,7 @@ function needText(need) {
   if (kind === "item") return `${itemNameOf(name)} nella Borsa`;
   if (kind === "trainer") return `${name} battuto`;
   if (kind === "flag") return STORY_NAMES[name] ? `${STORY_NAMES[name]} (${name})` : name;
-  return `${name} ${{eq: "=", ge: "≥", gt: ">"}[test] ?? test} ${value}`;
+  return `${name} ${{eq: "=", ge: "≥", gt: ">", ne: "≠"}[test] ?? test} ${value}`;
 }
 // What the game tests before a step, each with whether the save has it -- for
 // a step not done yet: once done, what it tested may have moved on since.

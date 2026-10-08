@@ -4411,6 +4411,76 @@ def _gates():
     return gates, frozenset(lines)
 
 
+@tree_cache
+def _behind_triggers():
+    """The maps a trigger tile bars the way to, with no flag test: a coord
+    event of a map's zone (the game runs its script as the player steps on
+    it while its variable holds its value: 0 here, as a new game has it,
+    so that it fires the first time through) whose tiles, shut, part the
+    map's ground -- walls and water bar, a person may move or hide -- so
+    that some of its warps are reached from the others only across it, and
+    those warps lead to maps that lead nowhere else: the Burned Tower's
+    rival stands on the one tile to the hole down to B1F. {map constant of
+    a map behind: [(the trigger's variable, its value, its script file,
+    its label)]}."""
+    out = {}
+    for map_id, row in map_table().items():
+        events = map_events(map_id) if map_chunks(map_id) else {}
+        warps = events.get("warps", [])
+        coords = [c for c in events.get("coords", []) if _kept(str(c.get("var", ""))) and _number(str(c.get("val"))) == 0]
+        if len(warps) < 2 or not coords or _matrix_of().get(map_id) == main_matrix()[1]:
+            continue            # outside, the way in may be any edge of the map, not a warp
+        open_ = {p for p, why in ground(map_id)[1].items() if why in (None, "object")}
+
+        def reach(starts, shut=frozenset()):
+            seen, todo = set(), [p for p in starts if p in open_ and p not in shut]
+            while todo:
+                p = todo.pop()
+                if p not in seen:
+                    seen.add(p)
+                    todo += [q for q in ((p[0] + dx, p[1] + dy) for dx, dy, _ in STEPS) if q in open_ and q not in shut]
+            return seen
+        # A warp's own tile, or the free tiles beside it (a door set in a wall).
+        starts = [{(w["x"], w["z"])} | {(w["x"] + dx, w["z"] + dy) for dx, dy, _ in STEPS} for w in warps]
+        for c in coords:
+            shut = frozenset((c["x"] + i, c["z"] + j) for i in range(c.get("w", 1)) for j in range(c.get("h", 1)))
+            parts = []          # the warps, grouped by the ground they share with the trigger shut
+            for k in range(len(warps)):
+                if not any(k in part for part in parts):
+                    ground_k = reach(starts[k], shut)
+                    parts.append({j for j in range(len(warps)) if starts[j] & ground_k} | {k})
+            if len(parts) < 2 or len({frozenset(reach(starts[min(part)])) for part in parts}) > 1:
+                continue        # not parted, or parted by more than the trigger
+            ends = [_dead_end(row["const"], [warps[k]["header"] for k in part], part) for part in parts]
+            if None in ends:    # a side the player comes in by: the others are behind the trigger
+                for d in set().union(*(e for e in ends if e)):
+                    stem = re.fullmatch(r"NARC_scr_seq_(scr_seq_\w+)_bin", map_headers()[row["const"]].get("scriptsBank", ""))
+                    label = re.fullmatch(r"_EV_(\w+) \+ 1", str(c["scriptId"]))
+                    if stem and label:
+                        out.setdefault(d, []).append((c["var"], 0, stem.group(1), label.group(1)))
+    return out
+
+
+def _dead_end(const, headers, anchors):
+    """The maps a map's warps lead to (`headers`, from its warps numbered
+    `anchors`) when they lead nowhere else: each warp of theirs back to one
+    of those warps, or to another of them. None when one leads out -- to the
+    main matrix, or back to the map by another warp."""
+    maps, behind, todo = constants("include/constants/maps.h", "MAP_"), set(), list(headers)
+    while todo:
+        d = todo.pop()
+        if d == const or d in behind:
+            continue
+        if d not in maps or _matrix_of().get(maps[d]) == main_matrix()[1]:
+            return None
+        behind.add(d)
+        for w in map_events(maps[d]).get("warps", []):
+            if w["header"] == const and w.get("anchor") not in anchors:
+                return None
+            todo.append(w["header"])
+    return behind
+
+
 def _negate(condition):
     """A condition not met: a flag, badge, item or trainer the other way
     round, a variable's test turned over."""
@@ -4618,9 +4688,22 @@ def story():
         if step["kind"] == "gate" and opener(step) != first[step["key"]]:
             step["kind"] = "var"
     trainers, names = constants("include/constants/trainers.h", "TRAINER_"), trainer_names()
+    behind = _behind_triggers()
     for step in steps:
         step["needs"] = [[need, [other["id"] for other in steps if other is not step
                                  and any(_gives(w, need) for w in other["gives"])]] for need in step["needs"]]
+        # A trigger on the only way to its map, as the game orders them: moved on by the
+        # steps of its own scene when that scene moves it (the rival's battle), else by
+        # any step that does (Route 35's workman turns the player back until Whitney's).
+        for var, value, stem, label in sorted({v for m in step["maps"] for v in behind.get(m, ())}):
+            need = [("var", var), "ne", value]
+            by = [other for other in steps if other is not step and any(_gives(w, need) for w in other["gives"])]
+            script = _script(stem)
+            scene = _reach(stem, script["labels"][label], zero=False) if label in script["labels"] else set()
+            if any((_write(*script["lines"][j]) or ())[:2] in (("var", var), ("add", var)) for j in scene):
+                by = [other for other in by if other["script"] == stem and other["start"] in scene]
+            if by and not any(_gives(w, need) for w in step["gives"]):
+                step["needs"].append([need, [other["id"] for other in by]])
         trainer = step["battle"] or (step["key"] if step["kind"] == "battle" else None)
         step["trainer"] = names[trainers[trainer]] if trainer in trainers and trainers[trainer] < len(names) else ""
         if step["kind"] == "gate":
@@ -4640,25 +4723,29 @@ def _badge_chains(steps, by_id, gates):
     """The gym of each badge, as the steps of its GiveBadge step's chain:
     the steps giving what it tests, and theirs, the first of each; the step
     that opens a gate of those maps (the lowest value its variable is set to
-    past the one that keeps the player out); the scripted battles of those
+    past the one that keeps the player out), and those giving what it tests
+    (the rival beaten on the Burned Tower's 1F); the scripted battles of those
     scripts, their steps that test what the chain gives (the machine
     after the badge) and the step a chain step's walk stops at, the same
     scene going on (Pryce's machine, given right after his badge); and any
     step testing a story flag the chain leaves for good (Clair's machine,
     once the Dragon's Den gave the badge). In
-    order: a step after the ones it needs, then gate, battle, the rest, the
-    badge."""
+    order: the gate and what it needs first, then a step after the ones it
+    needs, then gate, battle, the rest, the badge."""
     out = {}
     for badge_step in (s for s in steps if s["kind"] == "badge"):
         if badge_step["key"] in out:
             continue
-        chain, todo = [badge_step["id"]], [badge_step]
-        while todo:
-            for need, by in todo.pop()["needs"]:
-                if by and by[0] not in chain:
-                    chain.append(by[0])
-                    todo.append(by_id[by[0]])
-        files = {by_id[sid]["script"] for sid in chain}
+        chain = [badge_step["id"]]
+
+        def follow(todo):       # the steps giving what these test, and theirs
+            while todo:
+                for need, by in todo.pop()["needs"]:
+                    if by and by[0] not in chain:
+                        chain.append(by[0])
+                        todo.append(by_id[by[0]])
+        follow([badge_step])
+        files, opening = {by_id[sid]["script"] for sid in chain}, set()
         for var, blocked in gates.items():
             gated = [m for stem in files for m in _map_of_scripts().get(stem, [])
                      if any(c[0] == ("var", var) for cs in _entry_conditions(stem).values() for c in cs)]
@@ -4667,6 +4754,8 @@ def _badge_chains(steps, by_id, gates):
                 first = min(openers, key=lambda s: min(w[2] for w in s["gives"] if w[:2] == ("var", var)))
                 if first["id"] not in chain:
                     chain.append(first["id"])
+                    follow([first])     # the Burned Tower's B1F, past the rival on 1F
+                    opening |= set(chain[chain.index(first["id"]):])
         grew = True
         while grew:
             grew = False
@@ -4693,7 +4782,7 @@ def _badge_chains(steps, by_id, gates):
                 depth[sid] = 1 + max(below, default=-1)
             return depth[sid]
         rank = {"gate": 0, "battle": 1, "badge": 3}
-        out[badge_step["key"]] = sorted(chain, key=lambda sid: (deep(sid), rank.get(by_id[sid]["kind"], 2),
+        out[badge_step["key"]] = sorted(chain, key=lambda sid: (sid not in opening, deep(sid), rank.get(by_id[sid]["kind"], 2),
                                                                  by_id[sid]["script"], by_id[sid]["line"]))
     return out
 
