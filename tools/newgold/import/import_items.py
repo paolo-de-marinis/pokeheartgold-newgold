@@ -36,7 +36,8 @@ yet -- the items come first, the effects are someone else's pass.
 WHAT COMES OUT OF WHERE
 
     include/constants/items.h              the constant, ITEMS_COUNT, hold effects
-    files/itemtool/itemdata/item_data.csv  the record, from data/itemdata/itemdata.c
+    files/itemtool/itemdata/item_data.csv  the record, from data/itemdata/itemdata.c,
+                                           with this tree's decisions over it (own_record)
     files/itemtool/itemdata/item_data.mk   the icon build rule
     files/itemtool/itemdata/item_icon/     the PNG, from data/graphics/item
     files/msgdata/msg/msg_0221..0224.gmm   description, name, with-article, plural,
@@ -472,6 +473,64 @@ def record(reference, name, fields, effects, report):
     return row
 
 
+# --- the tree's own records ----------------------------------------------
+
+# What later work decided about a record the reference brings, field by field
+# over the reference's value. A --write rebuilds every imported record from the
+# reference and then from here (own_record), so a re-import keeps it; until the
+# nineteenth round it undid all of them. A record both trees share is kept
+# whole and only --sync touches it (KEPT, priced_here), so none is here.
+OWN_RECORDS = {
+    # Berries, as Pokemon Central has them (3633e55ea): the Berries pocket with
+    # the Roseli Berry's routine and party use, Natural Gift Fairy and Dark,
+    # Fling 10 with the Ganlon's and the Apicot's effects, which an eater gets
+    # too (b0f34eacf).
+    "ITEM_KEE_BERRY": dict(pluckEffect="17", flingEffect="17", flingPower="10", naturalGiftType="TYPE_FAIRY",
+                           fieldPocket="POCKET_BERRIES", fieldUseFunc="8", partyUse="1"),
+    "ITEM_MARANGA_BERRY": dict(pluckEffect="20", flingEffect="20", flingPower="10", naturalGiftType="TYPE_DARK",
+                               fieldPocket="POCKET_BERRIES", fieldUseFunc="8", partyUse="1"),
+    # Used from the bag as a vitamin is (8c4f11b77): its routine and party use
+    # and the flag of the Mochi's stat -- all six for the Fresh-Start Mochi,
+    # whose -128 TryModEV reads as a reset (e40e930b3).
+    "ITEM_HEALTH_MOCHI": dict(fieldUseFunc="1", partyUse="1", hp_ev_up="true"),
+    "ITEM_MUSCLE_MOCHI": dict(fieldUseFunc="1", partyUse="1", atk_ev_up="true"),
+    "ITEM_RESIST_MOCHI": dict(fieldUseFunc="1", partyUse="1", def_ev_up="true"),
+    "ITEM_GENIUS_MOCHI": dict(fieldUseFunc="1", partyUse="1", spatk_ev_up="true"),
+    "ITEM_CLEVER_MOCHI": dict(fieldUseFunc="1", partyUse="1", spdef_ev_up="true"),
+    "ITEM_SWIFT_MOCHI": dict(fieldUseFunc="1", partyUse="1", speed_ev_up="true"),
+    "ITEM_FRESH_START_MOCHI": dict(fieldUseFunc="1", partyUse="1", hp_ev_up="true", atk_ev_up="true",
+                                   def_ev_up="true", speed_ev_up="true", spatk_ev_up="true", spdef_ev_up="true"),
+}
+
+# Each step of Goldenrod's TM shop costs one price (727dfbd79, Paolo
+# 2026-10-04), by the badges sGoldenrodTMSteps says it needs.
+TM_STEP_PRICES = {2: 1500, 4: 2000, 6: 3000, 8: 4000, 10: 5000, 12: 6000, 14: 8000, 16: 10000}
+
+
+def tm_step_prices():
+    """TM93 to TM148's prices, by this tree's name."""
+    source = (ROOT / "src/scrcmd_mart.c").read_text()
+    table = source[source.index("sGoldenrodTMSteps[] = {"):]
+    return {name: TM_STEP_PRICES[int(badges)]
+            for name, badges in re.findall(r"\{ (ITEM_\w+), +(\d+) \}", table[:table.index("};")])}
+
+
+def own_record(name, fields, row, machines, tm_prices):
+    """An imported item's row: the reference's (record) with this tree's
+    decisions over it.
+
+    Besides OWN_RECORDS and the TM shop's prices: a machine of the reference's
+    that is not one of this game's -- TR00 to TR99, TM00, the second HM07,
+    Scarlet and Violet's TM100 and TM149 to TM229 -- is an item of the Items
+    pocket with no field routine (5059800bf)."""
+    values = dict(zip(fields, row), **OWN_RECORDS.get(name, {}))
+    if values["fieldPocket"] == "POCKET_TMHMS" and name not in machines:
+        values.update(fieldPocket="POCKET_ITEMS", fieldUseFunc=str(GENERIC_FIELD_USE))
+    if name in tm_prices:
+        values.update(price=str(tm_prices[name]), price_high="0")
+    return [values[field] for field in fields]
+
+
 # --- the text ------------------------------------------------------------
 
 
@@ -545,6 +604,13 @@ PRICE = ("price", "price_high")
 RETAIL = "43b084839"
 
 
+def machines_here():
+    """TM93 to TM148 by this tree's name: the machines past HM08, which sit
+    on the reference's TM items (machine_items.py)."""
+    names = {number: name for name, number in defines(ITEMS_H.read_text(), "ITEM_").items()}
+    return {names[item] for item, _ in machine_items.machines_past_hm08()}
+
+
 def priced_here():
     """The items whose price is not the reference's, by this tree's name:
     those HeartGold has, at retail's price, and TM93 to TM148, which sit on
@@ -552,9 +618,8 @@ def priced_here():
     shop (Paolo, 2026-10-04)."""
     text = subprocess.run(["git", "-C", str(ROOT), "show", f"{RETAIL}:files/itemtool/itemdata/item_data.csv"],
                           capture_output=True, text=True, check=True).stdout
-    names = {number: name for name, number in defines(ITEMS_H.read_text(), "ITEM_").items()}
-    return ({row["item"] for row in csv.DictReader(text.splitlines())} |
-            {names[item] for item, _ in machine_items.machines_past_hm08()})
+    return {row["item"] for row in csv.DictReader(text.splitlines())} | machines_here()
+
 
 KEPT = {
     # This engine evolves a Pokemon by a party-use routine, not by a hold
@@ -713,11 +778,13 @@ def main():
 
     constants, csv_rows, narc_rows, icon_rules, icons, mapping = [], [], [], [], [], []
     blank_art = unnamed = 0
+    machines, tm_prices = machines_here(), tm_step_prices()
     for name in missing:
         item_id, next_id = next_id, next_id + 1
         data_member, next_data = next_data, next_data + 1
         constants.append((name, item_id))
-        csv_rows.append([name] + record(reference, name, fields, effects, report))
+        csv_rows.append([name] + own_record(name, fields, record(reference, name, fields, effects, report),
+                                            machines, tm_prices))
 
         member = reference.ids[name] + 2
         png, is_blank = reference.icons[member]

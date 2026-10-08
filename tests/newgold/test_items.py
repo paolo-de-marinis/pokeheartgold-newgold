@@ -400,6 +400,38 @@ class SharedRecordTests(unittest.TestCase):
         self.assertEqual(bad, [], "run tools/newgold/import/import_items.py --sync --write")
 
 
+class ImportedRecordTests(unittest.TestCase):
+    """A re-import keeps what later work decided about an imported record.
+
+    import_items.py --write rebuilds every item the reference brings from the
+    reference's record, and until the nineteenth round that was all it did:
+    a run changed 249 rows back -- TM93 to TM148's shop prices, the Kee and
+    Maranga Berries' pocket, the Mochi's use from the bag, the TRs' pocket.
+    Each imported row here must be its reference record with own_record's
+    decisions over it, which is what a run writes.
+    """
+
+    def test_every_imported_record_is_the_reference_s_with_this_tree_s_decisions(self):
+        if REFERENCE is None:
+            self.skipTest("Pinned NewGold reference checkout not configured")
+        reference = import_items.Reference(Path(REFERENCE))
+        header = import_items.original(import_items.ITEMS_H)
+        here = import_items.item_block(header)
+        effects = import_items.hold_effect_map(reference, import_items.defines(header, "HOLD_EFFECT_"))
+        rows = list(csv.reader(import_items.ITEM_CSV.read_text().splitlines()))
+        fields = rows[0][1:]
+        machines, prices = import_items.machines_here(), import_items.tm_step_prices()
+        bad = []
+        for row in rows[1:]:
+            if row[0] in here:
+                continue
+            want = import_items.own_record(row[0], fields, import_items.record(reference, row[0], fields, effects, {}),
+                                           machines, prices)
+            bad += [f"{row[0]}.{field}: {got} here, {wanted} from a re-import"
+                    for field, wanted, got in zip(fields, want, row[1:]) if wanted != got]
+        self.assertEqual(bad, [])
+
+
 if __name__ == "__main__":
     unittest.main()
 
