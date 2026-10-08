@@ -349,11 +349,46 @@ class DiagnosticsTests(unittest.TestCase):
             def step(self, frames, hooks):
                 self.frames += frames
         core = Core()
-        with mock.patch.object(party, "mons", lambda ram, elf: next(reads)):
+        with mock.patch.object(party, "mons", lambda ram, elf: next(reads)), \
+                mock.patch.object(party, "ciphering", lambda core, elf: False):
             self.assertEqual(party.sealed_mons(core, None), [{"sealed": True}])
         self.assertEqual(core.frames, 2)
         torn = {"species": 19423, "item": 0, "exp": 2775330619, "level": 1, "hp": 0, "maxHp": 0, "sealed": False}
         self.assertTrue(party.party(b"", None, [torn])[0].endswith("(read mid-encryption)"))
+
+    def test_a_frame_that_ends_in_the_cipher_is_read_again(self):
+        # Leg 04j's Geodude, level 13, read as 236: the frame ended in
+        # GetMonData's decryption of its party half (the field asks for
+        # Waterfall every frame), the box half still sealed. The ARM9's PC
+        # comes out of the core's savestate, ARM9's section after the others.
+        import struct
+        from unittest import mock
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/diag"))
+        import party
+
+        def state(pc):
+            arm9 = struct.pack("<II16II", 0, 0, *range(15), pc, 0x3F)
+            return (b"MELN" + bytes(12) + b"DMA0" + struct.pack("<I", 0x20) + bytes(8 + 16)
+                    + b"ARM9" + struct.pack("<I", 16 + len(arm9)) + bytes(8) + arm9)
+        self.assertEqual(party.arm9_pc(state(0x0202000F)), 0x0202000F)
+        pcs = iter([0x0202000F, 0x020D69E8])
+
+        class Core:
+            frames = 0
+
+            def ram(self):
+                return b""
+
+            def state(self):
+                return state(next(pcs))
+
+            def step(self, frames, hooks):
+                self.frames += frames
+        core = Core()
+        with mock.patch.object(party, "mons", lambda ram, elf: [{"sealed": True}]), \
+                mock.patch.object(party, "_cipher", lambda elf: [(0x02020000, 0x02020040)]):
+            self.assertEqual(party.sealed_mons(core, None), [{"sealed": True}])
+        self.assertEqual(core.frames, 1)
 
     def test_gym_keeps_the_strongest_damaging_move_of_each_type(self):
         # A fifth move: the strongest damaging move of each type stays,

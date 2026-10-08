@@ -340,19 +340,22 @@ class ScenarioFileTests(unittest.TestCase):
         flees = []
         s.goto, s.run = goto, (lambda step: (steps.append(step), flees.append(s.flee)))
         s.value = lambda ram, key: next(values)
-        with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": next(hps), "maxHp": 20, "sealed": True}]):
+        with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": next(hps), "maxHp": 20, "sealed": True}]), \
+                mock.patch.object(party, "ciphering", lambda core, elf: False):
             self.assertIsNone(s.pace((33, 1, 2), (33, 3, 4), "party0.level", 8, 10000))
         self.assertEqual(walks, [(33, 1, 2), (33, 3, 4), (33, 1, 2)])
         self.assertEqual(steps, ["goto:158,8,13", "UP", "A", "field"])
         self.assertEqual((flees, s.flee), ([101] * 4, 40))     # runs from all on the way, then as before
         s.value = lambda ram, key: 5
-        with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": 20, "maxHp": 20, "sealed": True}]):
+        with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": 20, "maxHp": 20, "sealed": True}]), \
+                mock.patch.object(party, "ciphering", lambda core, elf: False):
             self.assertIn("under 8", s.pace((33, 1, 2), (33, 3, 4), "party0.level", 8, 1000)[0])
         # With shift:, the one sent in for the first fights: its HP counts too.
         steps.clear()
         s.shift, values = 1, iter([5, 8])
         s.value = lambda ram, key: next(values)
-        with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": 20, "maxHp": 20, "sealed": True}, {"hp": 5, "maxHp": 30, "sealed": True}]):
+        with mock.patch.object(party, "mons", lambda ram, elf: [{"hp": 20, "maxHp": 20, "sealed": True}, {"hp": 5, "maxHp": 30, "sealed": True}]), \
+                mock.patch.object(party, "ciphering", lambda core, elf: False):
             self.assertIsNone(s.pace((33, 1, 2), (33, 3, 4), "party0.level", 8, 10000))
         self.assertEqual(steps, ["goto:158,8,13", "UP", "A", "field"])
 
@@ -402,7 +405,8 @@ class ScenarioFileTests(unittest.TestCase):
         s = scene.Scene.__new__(scene.Scene)
         s.core, s.hooks, s.elf = Core(), [], None
         reads = iter([[{"species": 17223, "sealed": False}], [{"species": 163, "sealed": True}]])
-        with mock.patch.object(party, "mons", lambda ram, elf: next(reads)):
+        with mock.patch.object(party, "mons", lambda ram, elf: next(reads)), \
+                mock.patch.object(party, "ciphering", lambda core, elf: False):
             self.assertEqual(s.mons(), [{"species": 163, "sealed": True}])
         self.assertEqual(s.core.frames, 1)
 
@@ -433,7 +437,8 @@ class ScenarioFileTests(unittest.TestCase):
         s.app = lambda: ("PartyMenuApp_Main", 0x200)
         s.movable = lambda: s.core.pressed.count("B") >= 2
         mons = [{"species": 155, "sealed": True}, {"species": 163, "sealed": True}]
-        with mock.patch.object(party, "mons", lambda ram, elf: mons):
+        with mock.patch.object(party, "mons", lambda ram, elf: mons), \
+                mock.patch.object(party, "ciphering", lambda core, elf: False):
             self.assertIn("not traded", s.swap(0, 1, frames=100)[0])
         self.assertEqual(s.core.pressed[-2:], ["B", "B"])
 

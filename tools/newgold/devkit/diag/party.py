@@ -9,6 +9,7 @@ are the ones the game is using. Experience is what the level cap acts on: a
 Pokemon at the cap is held at the cap's threshold, one above it keeps what it
 wins and does not level.
 """
+import functools
 import re
 import struct
 import sys
@@ -92,13 +93,46 @@ def mons(ram, elf):
     return out
 
 
+# The code that decrypts a Pokemon in place and encrypts it again. GetMonData
+# (SetMonData, AddMonData) decrypts the party half before the box half, so a
+# frame that ends in between leaves a box half sealed() passes and a party
+# half part decrypted: the field's FieldInput_Process asks every frame whether
+# a party Pokemon knows Waterfall (GetIdxOfFirstPartyMonWithMove), and a
+# level-13 Geodude came out as 236.
+CIPHER = ("_MonEncryptSegment", "_MonDecryptSegment", "MonEncryptionLCRNG", "MonEncryptSegment",
+          "MonDecryptSegment", "GetMonData", "SetMonData", "AddMonData")
+
+
+@functools.lru_cache
+def _cipher(elf):
+    table = where._elf(elf)
+    return [(table[name][0] & ~1, (table[name][0] & ~1) + table[name][1]) for name in CIPHER if name in table]
+
+
+def arm9_pc(state):
+    """The ARM9's PC in a melonDS savestate: past the MELN header, section
+    after section (its name, its length, 8 bytes) to ARM9's, whose body is
+    the cycles, whether it is halted, R0 to R15 and the CPSR."""
+    at = state.find(b"MELN") + 0x10
+    while state[at:at + 4] != b"ARM9":
+        at += struct.unpack_from("<I", state, at + 4)[0]
+    return struct.unpack_from("<I", state, at + 0x10 + 4 * 17)[0]
+
+
+def ciphering(core, elf):
+    """Whether the frame ended in CIPHER's code."""
+    pc = arm9_pc(bytes(core.state())) & ~1
+    return any(start <= pc < end for start, end in _cipher(elf))
+
+
 def sealed_mons(core, elf, hooks=(), frames=60):
-    """mons() of a running core once every Pokemon is sealed: read again a
-    frame later while one is not, `frames` at most. scene.py's party
-    expectations and gym.py's closing list read the party this way."""
+    """mons() of a running core once every Pokemon is sealed and the game is
+    not in CIPHER's code: read again a frame later while it is, `frames` at
+    most. scene.py's party expectations and gym.py's closing list read the
+    party this way."""
     out = mons(core.ram(), elf)
     for _ in range(frames):
-        if all(m["sealed"] for m in out):
+        if all(m["sealed"] for m in out) and not ciphering(core, elf):
             break
         core.step(1, hooks)
         out = mons(core.ram(), elf)
