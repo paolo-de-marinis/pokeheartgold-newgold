@@ -358,5 +358,84 @@ class PixelArtTests(unittest.TestCase):
         self.assertEqual(sorted(zip(normals, shinies)), sorted(pairs))
 
 
+class SecondPoseTests(unittest.TestCase):
+    """convert_chatgpt.py --front2 ...: frame 2 of the battle pictures is a
+    second pose drawn on the first one's canvas (Baby Lugia's wingbeat,
+    2026-10-08). It stands where it is drawn beside frame 1 -- one box for
+    both, so the animation does not jump -- in one palette over both poses
+    and both colourings; without it frame 2 is frame 1, as before."""
+
+    def setUp(self):
+        sys.path.insert(0, str(ROOT / "tools/newgold/devkit/sprites"))
+        import convert_chatgpt
+        self.convert = convert_chatgpt
+        body = {(x, y): (8 * (x % 3 + 1), 64, 128) for x in range(20, 30) for y in range(30, 38)}
+        wing = {(x, y): (200, 200, 40) for x in range(15, 20) for y in range(26, 30)}
+        back = {(x, y): (96, 96, 96) for x in range(5, 12) for y in range(10, 16)}
+        back2 = dict(back)
+        back2[8, 12] = (240, 16, 16)
+        self.drawn = [body, back, {**body, **wing}, back2]
+        self.shiny = [{p: (b, r, g) for p, (r, g, b) in d.items()} for d in self.drawn]
+        self.pictures = [self.picture(d) for d in self.drawn]
+        self.shiny_pictures = [self.picture(d) for d in self.shiny]
+
+    @staticmethod
+    def picture(pixels):
+        """A PNG drawn one pixel a pixel on magenta."""
+        im = Image.new("RGB", (40, 40), (255, 0, 255))
+        for p, colour in pixels.items():
+            im.putpixel(p, colour)
+        out = io.BytesIO()
+        im.save(out, "PNG")
+        return out
+
+    def convert_poses(self, poses):
+        first = [self.pictures[0], self.pictures[1], self.shiny_pictures[0], self.shiny_pictures[1]]
+        second = [self.pictures[2], self.pictures[3], self.shiny_pictures[2], self.shiny_pictures[3]]
+        return self.convert.battle(*first, grid=1, second=second if poses == 2 else ())
+
+    @staticmethod
+    def coloured(sheet, palette_of):
+        im = sheet.copy()
+        im.putpalette(palette_of.getpalette())
+        return im.convert("RGB")
+
+    def test_frame_2_stands_where_it_is_drawn_beside_frame_1(self):
+        """The wing reaches 5 left of the body and 4 above it: the box both
+        poses fill is 15x12, centred, its lowest row on 78; the body is at
+        the same place in both frames, the wing beside it in frame 2."""
+        front, _back, _merged, _marked, _moved = self.convert_poses(2)
+        opaque = front.point(lambda v: 255 if v else 0)
+        self.assertEqual(opaque.crop((0, 0, 80, 80)).getbbox(), (37, 71, 47, 79))
+        self.assertEqual(opaque.crop((80, 0, 160, 80)).getbbox(), (32, 67, 47, 79))
+        self.assertEqual(front.crop((37, 71, 47, 79)).tobytes(), front.crop((117, 71, 127, 79)).tobytes())
+
+    def test_both_poses_and_both_colourings_share_one_palette(self):
+        """Every pixel of both frames, front and back, is its drawn colour in
+        the front's palette and its shiny colour in the back's, over the
+        same indices."""
+        front, back, _merged, _marked, _moved = self.convert_poses(2)
+        normal_of = [self.coloured(front, front), self.coloured(back, front)]
+        shiny_of = [self.coloured(front, back), self.coloured(back, back)]
+        # Where a canvas pixel lands: front box (15, 26) at (32, 67), back box (5, 10) at (36, 73); frame 2 80 on.
+        offsets = [(17, 41), (31, 63), (97, 41), (111, 63)]
+        for k, (normal, shiny, (dx, dy)) in enumerate(zip(self.drawn, self.shiny, offsets)):
+            for (x, y), colour in normal.items():
+                self.assertEqual(normal_of[k % 2].getpixel((dx + x, dy + y)), colour, (k, x, y))
+                self.assertEqual(shiny_of[k % 2].getpixel((dx + x, dy + y)), shiny[x, y], (k, x, y))
+
+    def test_without_a_second_pose_frame_2_is_frame_1_as_before(self):
+        """No second pose gives what a second pose the same as the first
+        gives: both frames the first pose, placed as today."""
+        alone = self.convert_poses(1)
+        first = [self.pictures[0], self.pictures[1], self.shiny_pictures[0], self.shiny_pictures[1]]
+        again = self.convert.battle(*first, grid=1, second=first)
+        for one, other in zip(alone[:2], again[:2]):
+            self.assertEqual((one.tobytes(), one.getpalette()), (other.tobytes(), other.getpalette()))
+            self.assertEqual(one.crop((0, 0, 80, 80)).tobytes(), one.crop((80, 0, 160, 80)).tobytes())
+        opaque = alone[0].point(lambda v: 255 if v else 0)
+        self.assertEqual(opaque.getbbox(), (35, 71, 125, 79))
+
+
 if __name__ == "__main__":
     unittest.main()

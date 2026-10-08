@@ -10,11 +10,17 @@ pixels at its edges dropped), the cells placed where the colour edges are.
 Each part is converted when its pictures are given:
 
   battle    --front F --back B --shiny-front SF --shiny-back SB (--width W | --grid PX)
+            [--front2 F2 --back2 B2 --shiny-front2 SF2 --shiny-back2 SB2]
             files/poketool/pokegra/pokegra/NNNN/<gender>/{front,back}.png for
             each gender the species has a picture for: 160x80, two 80x80
-            frames alike, the subject cropped to its pixels, centred, its
+            frames, the subject cropped to its pixels, centred, its
             lowest row on row 78: scaled to W wide (the width of the
             species' community sprite), or with --grid at its own size.
+            Frame 2 is frame 1 again, or the second pose (--front2 ...,
+            drawn on the same canvas): each picture and its second pose
+            are cropped to the box the two fill together, so frame 2
+            stands where it is drawn beside frame 1, the feet on one line,
+            and both poses are in one palette.
             Front and back share 15 colours, index 0 transparent; the
             front's PNG carries the normal palette and the back's the shiny
             one on the same indices. The shiny pictures vote each index's
@@ -22,7 +28,8 @@ Each part is converted when its pictures are given:
             index, and past 15 pairs the one cheapest to merge (its pixels
             times its distance, normal plus shiny) becomes its nearest,
             until 15 are left: each merge is printed, and the preview's
-            merged.png draws the cells it moved green. heights.py and
+            merged.png draws the cells it moved green, a row a pose,
+            and each pose's count is printed. heights.py and
             import_sprite_offsets.py then write the height and the record
             that follow the pictures.
   icon      --icon I [--grid PX]
@@ -67,6 +74,13 @@ follower sheets of round 17 (.rounds/round17/lugia):
         --shiny-front front_shiny.png --shiny-back back_shiny.png --grid 14 \\
         --follower baby_lugia_sheet_normal_hq.png --shiny-follower baby_lugia_sheet_shiny_hq.png \\
         --rows down,up,left,right --paired
+
+and its battle pictures in two poses, his final eight (art/final, 2026-10-08):
+
+    convert_chatgpt.py BABY_LUGIA --front front1_normal.png --back back1_normal.png \\
+        --shiny-front front1_shiny.png --shiny-back back1_shiny.png \\
+        --front2 front2_normal.png --back2 back2_normal.png \\
+        --shiny-front2 front2_shiny.png --shiny-back2 back2_shiny.png --grid 14
 
 and its icon, his 50x50 frames redrawn at 32x32, at one pixel a pixel:
 
@@ -152,14 +166,15 @@ def mask_of(im):
     return ImageChops.invert(bg)
 
 
-def shrink(im, size, crop=True):
+def shrink(im, size, crop=True, box=None):
     """{(x, y): colour} of the picture's opaque pixels scaled to size (w, h),
     each the average of the subject's own pixels it covers, in 15-bit colour;
-    cropped to the subject first when crop, the height then following the
-    width (size (w, 0)), and w None keeping the subject's own size."""
+    cropped to the subject first when crop (to box when one is given), the
+    height then following the width (size (w, 0)), and w None keeping the
+    subject's own size."""
     m = mask_of(im)
     if crop:
-        box = m.getbbox()
+        box = box or m.getbbox()
         im, m = im.crop(box), m.crop(box)
         width = size[0] or im.width
         size = (width, round(im.height * width / im.width))
@@ -243,31 +258,52 @@ def png(im, transparent=True):
     return out.getvalue()
 
 
-def battle(front, back, shiny_front, shiny_back, width=None, grid=None):
-    """(front, back, merged, marked): the sheets, the back's PNG carrying the
-    shiny palette; with grid, the merged pairs, and the front's and the
-    back's first frames in the normal colours, the cells the merges moved
-    green. Without width, each picture at its own size."""
-    fr, bk, sfr, sbk = (shrink(load(p, grid), (width, 0)) for p in (front, back, shiny_front, shiny_back))
+def battle(front, back, shiny_front, shiny_back, width=None, grid=None, second=()):
+    """(front, back, merged, marked, moved): the sheets, the back's PNG
+    carrying the shiny palette; with grid, the merged pairs, the front's and
+    the back's frames in the normal colours, a row a pose, the cells the
+    merges moved green, and how many cells each pose has moved. Without
+    width, each picture at its own size. second, the same four pictures in a
+    second pose, is frame 2: each picture and its second pose are cropped to
+    the box the two fill together, so frame 2 stands where it is drawn beside
+    frame 1 (the feet on one line, nothing jumps), and one palette is made
+    over both poses; without it frame 2 is frame 1 again."""
+    poses = [(front, back, shiny_front, shiny_back)] + ([second] if second else [])
+    views = []
+    for paths in zip(*poses):
+        pictures = [load(p, grid) for p in paths]
+        boxes = [mask_of(im).getbbox() for im in pictures]
+        box = tuple(pick(b[i] for b in boxes) for i, pick in enumerate((min, min, max, max)))
+        views.append([shrink(im, (width, 0), box=box) for im in pictures])
+    fr, bk, sfr, sbk = views
+    normals = [p for pose in zip(fr, bk) for p in pose]
+    shinies = [p for pose in zip(sfr, sbk) for p in pose]
     if grid:
-        (ifr, ibk), normal, shiny, merged = paired([fr, bk], [sfr, sbk])
+        maps, normal, shiny, merged = paired(normals, shinies)
     else:
-        (ifr, ibk), normal = quantize([fr, bk])
-        shiny, merged = shiny_palette([ifr, ibk], [sfr, sbk], normal), []
+        maps, normal = quantize(normals)
+        shiny, merged = shiny_palette(maps, shinies, normal), []
+    ifr, ibk = maps[0::2], maps[1::2]
 
-    def at(indices, across=0):
-        w, h = max(x for x, _ in indices) + 1, max(y for _, y in indices) + 1
+    def at(frames, across=0):
+        w, h = max(x for f in frames for x, _ in f) + 1, max(y for f in frames for _, y in f) + 1
         return across + (80 - w) // 2, 79 - h
 
-    def sheet(indices, palette):
-        return indexed((160, 80), [(at(indices), indices), (at(indices, 80), indices)], palette)
-    marked = indexed((160, 80), [(at(ifr), ifr), (at(ibk, 80), ibk)], normal).convert("RGB")
-    moved = {pair for pair, _into, _pixels in merged}
-    for (ox, oy), colours, shiny_colours in ((at(ifr), fr, sfr), (at(ibk, 80), bk, sbk)):
+    def sheet(frames, palette):
+        return indexed((160, 80), [(at(frames), frames[0]), (at(frames, 80), frames[-1])], palette)
+    places = [at(ifr), at(ibk, 80)]
+    rows = []
+    for k, indices in enumerate(maps):
+        x, y = places[k % 2]
+        rows.append(((x, y + 80 * (k // 2)), indices))
+    marked = indexed((160, 80 * len(poses)), rows, normal).convert("RGB")
+    merged_pairs, moved = {pair for pair, _into, _pixels in merged}, [0] * len(poses)
+    for k, (((ox, oy), _), colours, shiny_colours) in enumerate(zip(rows, normals, shinies)):
         for (x, y), colour in colours.items():
-            if (colour, shiny_colours.get((x, y))) in moved:
+            if (colour, shiny_colours.get((x, y))) in merged_pairs:
                 marked.putpixel((ox + x, oy + y), (0, 255, 0))
-    return sheet(ifr, normal), sheet(ibk, shiny), merged, marked
+                moved[k // 2] += 1
+    return sheet(ifr, normal), sheet(ibk, shiny), merged, marked, moved
 
 
 def icon(path, grid=None):
@@ -412,7 +448,8 @@ def preview(directory, name, im):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("species", help="the SPECIES_ constant's name, BRAMBLIN")
-    for part in ("front", "back", "shiny-front", "shiny-back", "icon", "follower", "shiny-follower"):
+    for part in ("front", "back", "shiny-front", "shiny-back", "front2", "back2", "shiny-front2", "shiny-back2",
+                 "icon", "follower", "shiny-follower"):
         parser.add_argument(f"--{part}", type=Path)
     parser.add_argument("--width", type=int, help="the battle picture's width")
     parser.add_argument("--grid", type=float, help="the pictures are pixel art, this many screen pixels a pixel")
@@ -428,13 +465,20 @@ def main():
                          "the reference's pictures back")
 
     battle_parts = (args.front, args.back, args.shiny_front, args.shiny_back)
+    second = (args.front2, args.back2, args.shiny_front2, args.shiny_back2)
+    if any(second) and not (all(second) and all(battle_parts)):
+        raise SystemExit("a second pose needs --front2, --back2, --shiny-front2 and --shiny-back2 "
+                         "beside the first pose's four")
     if any(battle_parts):
         if not all(battle_parts) or not (args.width or args.grid):
             raise SystemExit("the battle pictures need --front, --back, --shiny-front, --shiny-back "
                              "and --width or --grid")
-        front, back, merged, marked = battle(*battle_parts, args.width, args.grid)
+        front, back, merged, marked, moved = battle(*battle_parts, args.width, args.grid,
+                                                    second if any(second) else ())
         for pair, into, pixels in merged:
             print(f"battle: the pair {pair} merged into {into}, {pixels} pixels")
+        if merged:
+            print("battle: " + ", ".join(f"pose {k} {n} pixels moved" for k, n in enumerate(moved, 1)))
         folder = SPRITES / f"{number:04d}"
         genders = [g for g in ("male", "female") if (folder / g / "front.png").stat().st_size]
         for gender in genders:

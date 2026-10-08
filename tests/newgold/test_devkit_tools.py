@@ -346,7 +346,7 @@ class ConvertChatgptTests(unittest.TestCase):
 
     def test_battle_pictures_have_sixteen_colours_and_the_back_the_shiny_ones(self):
         normal, shiny = self.sheet("front.png", 1), self.sheet("front_shiny.png", 1, light=60)
-        front, back, merged, _marked = self.c.battle(normal, normal, shiny, shiny, 42)
+        front, back, merged, _marked, _moved = self.c.battle(normal, normal, shiny, shiny, 42)
         self.assertEqual(merged, [])
         self.assertEqual(front.size, (160, 80))
         self.assertEqual(front.tobytes(), back.tobytes())
