@@ -110,7 +110,7 @@ SHADOW_AREA = (1236, 2185)
 GROUNDED = {"SPECIES_TIRTOUGA", "SPECIES_CLAWITZER", "SPECIES_STEENEE", "SPECIES_EISCUE", "SPECIES_ARCTOVISH",
             "SPECIES_REVAVROOM", "SPECIES_ORTHWORM", "SPECIES_IRON_TREADS", "SPECIES_ENAMORUS_THERIAN",
             "SPECIES_TERAPAGOS_TERASTAL", "SPECIES_GOURGEIST", "SPECIES_MIRAIDON", "SPECIES_LEAVANNY",
-            "SPECIES_FERROSEED", "SPECIES_FERROTHORN", "SPECIES_FLITTLE", "SPECIES_POLTCHAGEIST"}
+            "SPECIES_FERROSEED", "SPECIES_FLITTLE", "SPECIES_POLTCHAGEIST"}
 # Floaters the reference stands on the ground: the rule's lift, theirs being a
 # grounded one. Dragapult hovers as Dreepy and Drakloak do (Paolo, 2026-10-08).
 FLOATING = {"SPECIES_DRAGAPULT"}
@@ -123,6 +123,10 @@ GROUND_LINE = 89
 # Floaters that look better in play at another lift than the rule's.
 OVERRIDES = {
     "SPECIES_MILCERY": 19,  # a small round blob reads as floating higher: the reference's, Paolo's pick
+    # Black and White's hanging pose, the vines up: hung from their tips with
+    # the body well off the ground, as Black and White's sprite holds it
+    # (Paolo, 2026-10-08: "Ferrothorn appeso").
+    "SPECIES_FERROTHORN": 12,
 }
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))

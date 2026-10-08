@@ -237,7 +237,7 @@ class PictureTableTests(unittest.TestCase):
         grounded = ("TRUBBISH", "TIRTOUGA", "CLAWITZER", "STEENEE", "EISCUE", "ARCTOVISH", "REVAVROOM", "ORTHWORM",
                     "IRON_TREADS", "ENAMORUS_THERIAN", "TERAPAGOS_TERASTAL", "TERAPAGOS_STELLAR", "TAUROS_COMBAT",
                     "GOURGEIST", "MIRAIDON", "MIRAIDON_LOW_POWER_MODE", "MIRAIDON_DRIVE_MODE", "LEAVANNY", "FERROSEED",
-                    "FERROTHORN", "FLITTLE", "POLTCHAGEIST", "POLTCHAGEIST_MASTERPIECE")
+                    "FLITTLE", "POLTCHAGEIST", "POLTCHAGEIST_MASTERPIECE")
         self.assertEqual({name: offset(name) for name in grounded if not -12 <= offset(name) <= 3}, {})
         self.assertEqual({offset(f"CASTFORM_{form}") for form in ("SUNNY", "RAINY", "SNOWY")}, {offset("CASTFORM")})
 
@@ -253,7 +253,9 @@ class PictureTableTests(unittest.TestCase):
         and 28 to 18 with Swoobat, Duosion and Yamask from 24 and 20,
         Cofagrigus from 12 to 10, and Tympole and Varoom go up to 14.
         Dragapult, which the reference stood on the ground, floats by the
-        rule (8) with Dreepy and Drakloak (Paolo: all three float)."""
+        rule (8) with Dreepy and Drakloak (Paolo: all three float), and
+        Ferrothorn, drawn in Black and White's hanging pose, hangs 12 rows up
+        as that game's sprite holds it (Paolo: "Ferrothorn appeso")."""
         iso = import_sprite_offsets
         member = read_narc((ROOT / "files/a/1/8/0").read_bytes())[0][0]
         names = iso.port_species()
@@ -279,7 +281,7 @@ class PictureTableTests(unittest.TestCase):
         pinned = {"ELGYEM": 17, "BEHEEYEM": 11, "TYMPOLE": 14, "COFAGRIGUS": 10, "YAMASK": 18, "PUMPKABOO": 18,
                   "PUMPKABOO_SUPER": 15, "MILCERY": 19, "VAROOM": 14, "SOLOSIS": 18, "DUOSION": 18, "REUNICLUS": 17,
                   "SINISTEA": 18, "SINISTEA_ANTIQUE": 18, "POLTEAGEIST": 16, "WOOBAT": 18, "SWOOBAT": 18,
-                  "DREEPY": 16, "DRAKLOAK": 10, "DRAGAPULT": 8}
+                  "DREEPY": 16, "DRAKLOAK": 10, "DRAGAPULT": 8, "FERROTHORN": 12}
         self.assertEqual({name: offset(number[name]) for name in pinned}, pinned)
 
     def test_records_never_placed_take_their_picture_s_shadow(self):
