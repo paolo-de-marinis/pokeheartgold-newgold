@@ -5752,7 +5752,7 @@
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Ice Dragon Pokémon</language>
 	</row>
-	<row id="msg_0816_01438" index="1438">
+	<row id="msg_0816_baby_lugia" index="1438">
 		<attribute name="window_context_name">used</attribute>
 		<language name="English">Diving Pokémon</language>
 	</row>

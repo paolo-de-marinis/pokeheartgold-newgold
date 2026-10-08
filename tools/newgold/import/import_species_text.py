@@ -325,8 +325,10 @@ def encodes_as(row):
 
 
 def rewrite(bank, texts):
-    """The bank's rows with these texts, ids kept; returns (rows, changed)."""
+    """The bank's rows with these texts, ids kept, a new row's named after
+    its species as the others are; returns (rows, changed)."""
     have = gmm.read(bank)
+    species = port_species()
     rows, changed = [], 0
     for index, text in enumerate(texts):
         old = have[index] if index < len(have) else None
@@ -334,7 +336,7 @@ def rewrite(bank, texts):
             rows.append(old)
             continue
         changed += 1
-        name = old["id"] if old else None
+        name = old["id"] if old else f"msg_{bank:04d}_{species[index].lower()}"
         if text and not text.strip(" "):
             rows.append(gmm.garbage_row(bank, index, len(text), name))
         else:
