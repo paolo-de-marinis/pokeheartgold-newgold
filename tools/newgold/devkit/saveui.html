@@ -2255,6 +2255,8 @@ const PLACE_VIA = {bg: "prima la leva: A qui, poi da lui", coord: "un passo avan
 // A room the game walks the player into (the Elite Four's, Lance's): the walk stops short of the person, the player does the rest.
 const walkedText = p => `Entrando, il gioco fa camminare il giocatore fino a (${p.walked.x}, ${p.walked.y}); da lì ${p.walked.steps} ${p.walked.steps === 1 ? "passo" : "passi"} in avanti ${
   p.via === "coord" ? "e parte la scena" : `fino a ${placeWho(p)}, poi A`}.`;
+// A heal spawn (savedit.blackout_spawn) by its map's name.
+const spawnName = s => s?.map != null ? mapTitle(S.maps.get(s.map)) || `mappa ${s.map}` : `punto ${s?.id ?? "?"}, nessun Centro`;
 function placeTags(i) {
   const p = S.data.places[i], st = S.save.places?.[i] || {}, step = p.step && S.steps.get(p.step);
   return [mapTitle(S.maps.get(p.map)),
@@ -2310,6 +2312,12 @@ function placePlan(i) {
     plan.push({key: "beat", on: false, beat: st.left, text: `Dai per battuti gli allenatori di questa mappa (${st.left.length})`,
                why: `${st.left.map(t => who.get(t) || t).join(", ")}: andando da ${placeWho(p)} nessuno ti ferma per lottare`});
   }
+  // Where a blackout sends the player: the game changes it only as the player enters a Pokémon Center, so the
+  // place sets the nearest one the save has reached (savedit.place_spawn).
+  const now = S.save.position.spawn;
+  if (st.spawn && st.spawn.id !== now?.id)
+    plan.push({key: "spawn", on: true, spawn: st.spawn.id, text: `Dopo una sconfitta si ricompare in ${spawnName(st.spawn)}`,
+               why: `ora in ${spawnName(now)}: il gioco lo cambia solo entrando in un Centro Pokémon`});
   // What a step does that the editor does not (a Pokémon or an egg given) is said, and its tick left off.
   for (const x of plan) {
     const odd = [...new Set([...x.run || [], ...x.undo || []].flatMap(id => S.steps.get(id).writes.filter(w => w[0] === "other").map(w => w[1])))];
@@ -2388,6 +2396,7 @@ function renderPosition() {
   $("#tab").innerHTML = `<dl class="kv" style="font-size:14px">
       <dt>Mappa</dt><dd><strong>${esc(here ? mapTitle(here) : "?")}</strong> <span class="muted">id ${c.map}</span></dd>
       <dt>Coordinate</dt><dd>x ${c.x}, y ${c.y}, rivolto ${esc(dirName(S.data.directions.find(x => x.value === c.direction)?.const ?? String(c.direction)))}</dd>
+      <dt>Dopo una sconfitta</dt><dd>${esc(spawnName(pos.spawn))}</dd>
       <dt>Continua con warp</dt><dd>${pos.by_warp ? `sì, verso ${esc(mapTitle(S.maps.get(pos.warp.map)) || pos.warp.map)} (${pos.warp.x}, ${pos.warp.y})` : "no"}</dd>
     </dl>
     <form id="posform" class="box">
@@ -2430,6 +2439,7 @@ function renderPosition() {
       if (!x.on) continue;
       if (x.key === "show") args.show = S.data.places[S.pos.place].hide;
       if (x.beat) args.beat = x.beat;
+      if (x.spawn) args.spawn = x.spawn;
       if (x.run) args.run = [...(args.run || []), ...x.run.filter(id => !(args.run || []).includes(id))];
       if (x.undo) args.undo = x.undo;
       if (x.key === "cap") args.cap = true;

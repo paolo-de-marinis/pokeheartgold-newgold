@@ -1398,6 +1398,39 @@ class SaveditLibraryTests(unittest.TestCase):
         row = sv.map_table()[num["MAP_VIOLET_POKECENTER_1F"]]
         self.assertEqual((row["section"], row["region"], row["type"]), ("MAPSEC_VIOLET_CITY", "MAP_REGION_JOHTO", "MAP_TYPE_INTERIOR"))
 
+    def test_a_blackout_goes_to_the_nearest_center_reached(self):
+        """LocalFieldData.lastSpawn, where compile_c puts it, is the
+        sSpawnMaps row + 1 that GetDeathWarpData warps to. A place's
+        (place_spawn) is its own section's Pokemon Center -- Violet's for
+        Falkner, the League's for Lance -- or else the nearest of the towns
+        whose fly point the save has reached: from the Burned Tower, Violet's
+        while only Violet is, Ecruteak's once Ecruteak is too."""
+        save, num = self.open(), sv.constants("include/constants/maps.h", "MAP_")
+        rows = sv.spawns()["rows"]
+        spawn = {r["deathSpawnMapNo"]: i + 1 for i, r in enumerate(rows) if r["isBlackoutSpawn"] == "1"}
+        places = sv.story_places()
+        at = lambda p: sv.place_spawn(save, p["map"], p["x"], p["y"])  # noqa: E731
+        falkner = next(p for p in places if p["key"] == "TRAINER_LEADER_FALKNER_FALKNER")
+        self.assertEqual(at(falkner), spawn["MAP_VIOLET_POKECENTER_1F"])
+        lance = next(p for p in places if p["map"] == num["MAP_POKEMON_LEAGUE_LANCE_ROOM"])
+        self.assertEqual(at(lance), spawn["MAP_POKEMON_LEAGUE_ENTRANCE"])
+        rival = next(p for p in places if p["map"] == num["MAP_BURNED_TOWER_1F"])
+        self.assertIsNone(at(rival), "no town reached, and no Pokemon Center in the tower")
+        fly = {r["flyPointMapNo"]: sv._flypoint_flag_base() + int(r["flagIdx"], 0) for r in rows}
+        sv.write_flag(save, fly["MAP_VIOLET"], True)
+        self.assertEqual(at(rival), spawn["MAP_VIOLET_POKECENTER_1F"])
+        sv.write_flag(save, fly["MAP_ECRUTEAK"], True)
+        self.assertEqual(at(rival), spawn["MAP_ECRUTEAK_POKECENTER_1F"])
+        sv.set_blackout_spawn(save, at(rival))
+        again = self.written(save)
+        self.assertEqual(sv.blackout_spawn(again), {"id": spawn["MAP_ECRUTEAK_POKECENTER_1F"],
+                                                     "map": num["MAP_ECRUTEAK_POKECENTER_1F"]})
+        self.assertEqual(sv.position(again)["spawn"], sv.blackout_spawn(again))
+        lake = next(i + 1 for i, r in enumerate(rows) if r["deathSpawnMapNo"] == "MAP_LAKE_OF_RAGE")
+        with self.assertRaises(ValueError, msg="a fly point only, no heal spawn"):
+            sv.set_blackout_spawn(save, lake)
+        self.assert_only(save, ["SAVE_LOCAL_FIELD_DATA", "SAVE_FLAGS"])
+
     def test_a_bad_checksum_is_reported(self):
         raw = bytearray(sv.party_raw(self.open())[0])
         raw[20] ^= 0xFF

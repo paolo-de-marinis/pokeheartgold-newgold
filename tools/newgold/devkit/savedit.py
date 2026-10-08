@@ -1828,7 +1828,8 @@ def spawns():
     """sSpawnMaps (asm/unk_0203BA5C.s) by its macro's own field names: each
     fly point, as GetFlyWarpData gives it, and each heal spawn of a row that
     is one (isBlackoutSpawn), as GetDeathWarpData does -- with the direction
-    each puts in the Location it fills. {"fly"|"heal": {map: (x, y, dir)}}."""
+    each puts in the Location it fills. {"fly"|"heal": {map: (x, y, dir)}},
+    and "rows": the rows, a spawn id being its row + 1 (SpawnIdToTableIndex)."""
     text = source("asm/unk_0203BA5C.s").read_text()
     fields = [f.strip() for f in re.search(r"\.macro spawn (.*)", text).group(1).split(",")]
     rows = [dict(zip(fields, (a.strip() for a in args.split(",")))) for args in re.findall(r"^\s*spawn (.*)$", text, re.M)]
@@ -1840,7 +1841,53 @@ def spawns():
     fly, heal = facing("GetFlyWarpData"), facing("GetDeathWarpData")
     return {"fly": {maps[r["flyPointMapNo"]]: (int(r["flyPointX"], 0), int(r["flyPointY"], 0), fly) for r in rows},
             "heal": {maps[r["deathSpawnMapNo"]]: (int(r["deathSpawnX"], 0), int(r["deathSpawnY"], 0), heal)
-                     for r in rows if r["isBlackoutSpawn"] == "1"}}
+                     for r in rows if r["isBlackoutSpawn"] == "1"}, "rows": rows}
+
+
+def blackout_spawn(save):
+    """LocalFieldData_GetBlackoutSpawn: the spawn id a blackout warps to
+    (GetDeathWarpData), as {"id", "map"} -- the map None for an id that is
+    no heal spawn's."""
+    spawn, rows = get_bits(save.block("SAVE_LOCAL_FIELD_DATA"), _given_layout()["spawn"]), spawns()["rows"]
+    row = rows[spawn - 1] if 0 < spawn <= len(rows) and rows[spawn - 1]["isBlackoutSpawn"] == "1" else None
+    return {"id": spawn, "map": constants("include/constants/maps.h", "MAP_")[row["deathSpawnMapNo"]] if row else None}
+
+
+def set_blackout_spawn(save, spawn):
+    """LocalFieldData_SetBlackoutSpawn, with a spawn id of a heal spawn's row."""
+    rows = spawns()["rows"]
+    if not (0 < spawn <= len(rows) and rows[spawn - 1]["isBlackoutSpawn"] == "1"):
+        raise ValueError(f"spawn {spawn} is no heal spawn of sSpawnMaps")
+    put_bits(save.block("SAVE_LOCAL_FIELD_DATA"), _given_layout()["spawn"], spawn)
+
+
+@tree_cache
+def _flypoint_flag_base():
+    """The flag of a fly point's flag number 0 (Save_VarsFlags_FlypointFlagAction)."""
+    base = re.search(r"(FLAG_\w+) \+ flypoint_flag_no", c_function("src/sys_flags.c", "BOOL Save_VarsFlags_FlypointFlagAction("))
+    return constants("include/constants/flags.h", "FLAG_")[base.group(1)]
+
+
+def place_spawn(save, map_id, x, y):
+    """The heal spawn a blackout sends the player to from (x, y) on this map
+    for a player who came here as the game lets: the game keeps the last
+    Pokemon Center entered (MapHeader_GetSpawnIdForDeathWarp, on every warp
+    in), so the nearest one the save could have entered -- its own section's
+    (the player is there), or a town's the save has reached, the fly point's
+    flag FlypointFlagAction sets on arrival -- nearest on the Pokégear's
+    town map (town_tile), the table's order between equals. Its spawn id;
+    None with none."""
+    rows, maps = spawns()["rows"], constants("include/constants/maps.h", "MAP_")
+    flags, section = _flypoint_flag_base(), map_table()[map_id]["section"]
+    hx, hy = town_tile(map_id, x, y, (x, y))
+    out = []
+    for i, r in enumerate(rows):
+        own = map_table()[maps[r["deathSpawnMapNo"]]]["section"] == section
+        reached = r["isFlyPoint"] == "1" and flag_is_set(save, flags + int(r["flagIdx"], 0))
+        if r["isBlackoutSpawn"] == "1" and (own or reached):
+            fx, fy = town_tile(maps[r["flyPointMapNo"]], int(r["flyPointX"], 0), int(r["flyPointY"], 0), (0, 0))
+            out.append((not own, (fx - hx) ** 2 + (fy - hy) ** 2, i + 1))
+    return min(out)[2] if out else None
 
 
 def map_events(map_id):
@@ -3486,16 +3533,19 @@ def set_dex_switches(save, enabled=None, national=None):
 
 @tree_cache
 def _given_layout():
-    """PlayerSaveData.hasRunningShoes inside struct LocalFieldData (which
-    src/save_local_field_data.c declares for itself), and SavePokegear's
-    registeredCards and mapUnlockLevel bitfields, as bitfield() gives them."""
-    (shoes, width), (cards, level) = compile_c(
+    """PlayerSaveData.hasRunningShoes and lastSpawn inside struct
+    LocalFieldData (which src/save_local_field_data.c declares for itself),
+    and SavePokegear's registeredCards and mapUnlockLevel bitfields, as
+    bitfield() gives them."""
+    (shoes, width, spawn, spawn_width), (cards, level) = compile_c(
         ("__builtin_offsetof(struct LocalFieldData, player) + __builtin_offsetof(PlayerSaveData, hasRunningShoes)",
-         "sizeof(((PlayerSaveData *)0)->hasRunningShoes)"),
+         "sizeof(((PlayerSaveData *)0)->hasRunningShoes)", "__builtin_offsetof(struct LocalFieldData, lastSpawn)",
+         "sizeof(((struct LocalFieldData *)0)->lastSpawn)"),
         (("SavePokegear", ".registeredCards = ~0u"), ("SavePokegear", ".mapUnlockLevel = ~0u")),
         headers=LAYOUT_HEADERS + ("player_avatar.h", "save_pokegear.h"),
         decls=(c_struct("src/save_local_field_data.c", "LocalFieldData"),))
-    return {"shoes": (shoes, width, (1 << 8 * width) - 1), "cards": bitfield(cards), "map_level": bitfield(level)}
+    return {"shoes": (shoes, width, (1 << 8 * width) - 1), "spawn": (spawn, spawn_width, (1 << 8 * spawn_width) - 1),
+            "cards": bitfield(cards), "map_level": bitfield(level)}
 
 
 def running_shoes(save):
@@ -3624,7 +3674,7 @@ def position(save):
     return {"current": dict(zip(fields, struct.unpack_from("<5i", block, 0))),
             "warp": dict(zip(fields, struct.unpack_from("<5i", block, 3 * LOCATION))),
             "special": dict(zip(fields, struct.unpack_from("<5i", block, 4 * LOCATION))),
-            "by_warp": flag_is_set(save, FLAG_CONTINUE_BY_WARP)}
+            "by_warp": flag_is_set(save, FLAG_CONTINUE_BY_WARP), "spawn": blackout_spawn(save)}
 
 
 def num_flags():
@@ -4920,8 +4970,10 @@ def story_places():
 def place_state(save, place):
     """Where the save stands for a place: whether its person is hidden
     (their flag set), its trainer beaten, the map's sight trainers not
-    beaten yet ("left"), and the gate keeping the player out of its map, if
-    the save holds it closed (the gate step's id)."""
+    beaten yet ("left"), the gate keeping the player out of its map, if
+    the save holds it closed (the gate step's id), and the heal spawn a
+    blackout there sends the player to ("spawn", place_spawn's, as
+    blackout_spawn gives it; None with none)."""
     names, _, _, trainer_base = _script_names()
     hidden = bool(place["hide"]) and all(h in names and flag_is_set(save, names[h]) for h in place["hide"])
     won = lambda t: bool(t and t in names and flag_is_set(save, trainer_base + names[t]))  # noqa: E731
@@ -4934,8 +4986,11 @@ def place_state(save, place):
         for var, value in re.findall(r"InitScriptGoToIfEqual (VAR_\w+), (\w+), _EV_\w+ \+ 1", source(hdr).read_text()):
             if var in gates and var in names and var_value(save, names[var]) == _number(value):
                 gate = next((s["id"] for s in story() if s["kind"] == "gate" and s["key"] == var), None) or var
+    spawn = place_spawn(save, place["map"], place["x"], place["y"])
+    rows, maps = spawns()["rows"], constants("include/constants/maps.h", "MAP_")
     return {"hidden": hidden, "beaten": beaten, "gate": gate,
-            "left": [t for t, _ in place.get("trainers", []) if t in names and not won(t)]}
+            "left": [t for t, _ in place.get("trainers", []) if t in names and not won(t)],
+            "spawn": {"id": spawn, "map": maps[rows[spawn - 1]["deathSpawnMapNo"]]} if spawn else None}
 
 
 def _step(step_id):
@@ -5102,7 +5157,8 @@ def main():
     parser.add_argument("--before", metavar="TRAINER_OR_BADGE",
                         help="put the player in front of the person who runs that scripted battle or gives "
                              "that badge (story_places: TRAINER_LEADER_WHITNEY, BADGE_RISING), facing them, "
-                             "the flags that hide them cleared; as the editor's Posizione does")
+                             "the flags that hide them cleared and a blackout sent to the nearest Pokemon "
+                             "Center (place_spawn); as the editor's Posizione does")
     parser.add_argument("--step", action="append", default=[], metavar="STEP_ID",
                         help="run a story step as the game would (run_step; the editor's Allenatore tick), "
                              "by its id as story() names it: 0024:134, the Burned Tower")
@@ -5264,9 +5320,13 @@ def main():
         for flag in place["hide"]:
             write_flag(save, names[flag], False)
         set_position(save, place["map"], place["x"], place["y"], place["direction"])
+        spawn = place_spawn(save, place["map"], place["x"], place["y"])
+        if spawn:
+            set_blackout_spawn(save, spawn)
         save.write()
         print(f"put the player before {args.before} on map {place['map']} at ({place['x']}, {place['y']}) "
-              f"facing {place['direction']}{', showing ' + ', '.join(place['hide']) if place['hide'] else ''}")
+              f"facing {place['direction']}{', showing ' + ', '.join(place['hide']) if place['hide'] else ''}"
+              f", a blackout to map {blackout_spawn(save)['map']}")
     if args.where:
         parts = args.where.split(":")
         map_id, x, y = (int(v) for v in parts[:3])

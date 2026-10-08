@@ -1190,7 +1190,9 @@ class Library:
         person there cleared ("show": a place's own hide flag), and the
         map's sight trainers given as beaten ("beat": a place's
         "trainers" on that map), so that the walk to the person is no
-        battle on the way."""
+        battle on the way, and the heal spawn a blackout sends the player
+        to ("spawn", a place's savedit.place_spawn: the game sets it only
+        on entering a Pokemon Center)."""
         report = self.op_story(save, a) if a.get("run") or a.get("undo") else None
         names = sv._script_names()[0]
         for flag in a.get("show", []):
@@ -1202,6 +1204,11 @@ class Library:
             if trainer not in sight:
                 raise Refused(f"{trainer} non è un allenatore di questa mappa")
             sv._apply(save, ("trainer", trainer, 1))
+        if a.get("spawn") is not None:
+            try:
+                sv.set_blackout_spawn(save, number(a["spawn"], 1, 0xFFFF, "punto di ritorno"))
+            except ValueError:
+                raise Refused(f"{a['spawn']} non è un Centro Pokémon dove si torna dopo una sconfitta")
         self.put(save, a)
         if a.get("cap") or a.get("lower"):     # the cap the story steps above leave
             self.op_party_cap(save, {"raise": bool(a.get("cap")), "lower": bool(a.get("lower"))})

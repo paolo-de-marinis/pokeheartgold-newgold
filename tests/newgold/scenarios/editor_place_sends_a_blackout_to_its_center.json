@@ -1,0 +1,12 @@
+{
+  "about": "The save editor's place sets the blackout spawn (savedit.place_spawn, Posizione's 'Davanti a…' and savedit --before): route29-official.sav, whose LocalFieldData.lastSpawn is still the new game's -- the player's house in New Bark (GetMomSpawnId) -- put before Falkner with a Magikarp at level 2. The game sets the spawn only as the player enters a Pokemon Center, and a place enters none; --before sets it to Violet's, the Center of the Gym's own section. Falkner wins, the script whites the player out, and the player wakes up in Violet's Pokemon Center, not at home.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "MAGIKARP:2", "--before", "TRAINER_LEADER_FALKNER_FALKNER"],
+  "steps": [
+    "field",
+    {"expect": {"map": "MAP_VIOLET_GYM"}},
+    "fight",
+    "field"
+  ],
+  "expect": {"lines": ["You are challenged by Leader Falkner!"], "map": "MAP_VIOLET_POKECENTER_1F"}
+}

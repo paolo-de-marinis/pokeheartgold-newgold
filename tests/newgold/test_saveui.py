@@ -895,6 +895,27 @@ class SaveUiTests(unittest.TestCase):
         page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
         self.assertIn("if (x.beat) args.beat = x.beat;", page)
 
+    def test_a_place_sends_a_blackout_to_its_center(self):
+        """A place says, for the save, the Pokemon Center a blackout there
+        would send the player to (savedit.place_spawn): Chuck's, Cianwood's.
+        op "position" with "spawn" writes it in the same change -- the game
+        sets it only on entering a Center, and a place enters none -- and
+        the position says it; an id that is no heal spawn is refused. The
+        page's plan sends it."""
+        places, maps = self.ok("/api/data")["places"], sv.constants("include/constants/maps.h", "MAP_")
+        i, chuck = next((i, p) for i, p in enumerate(places) if p["trainer_const"] == "TRAINER_LEADER_CHUCK_CHUCK")
+        spawn = self.ok("/api/save?f=gyms/test.sav")["places"][i]["spawn"]
+        self.assertEqual(spawn["map"], maps["MAP_CIANWOOD_POKECENTER_1F"])
+        self.assertNotEqual(self.ok("/api/save?f=gyms/test.sav")["position"]["spawn"], spawn)
+        out = self.edit("position", {"map": chuck["map"], "x": chuck["x"], "y": chuck["y"], "direction": chuck["direction"],
+                                     "spawn": spawn["id"]})
+        self.assertEqual(out["position"]["spawn"], spawn)
+        self.assertEqual(sv.blackout_spawn(sv.Save(self.save)), spawn)
+        self.assertIn("non è un Centro Pokémon", self.refused("/api/edit", {"f": "gyms/test.sav", "op": "position", "args": {
+            "map": chuck["map"], "x": chuck["x"], "y": chuck["y"], "spawn": 10}}))
+        page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
+        self.assertIn("if (x.spawn) args.spawn = x.spawn;", page)
+
     def test_a_place_puts_the_party_at_the_cap_the_plan_leaves(self):
         """op "position" with "cap" raises the party to the cap the plan's
         story steps leave, not the one the save had: Whitney's place on a

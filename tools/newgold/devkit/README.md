@@ -164,7 +164,15 @@ player on a map, in the order tried: the fly point (`GetFlyWarpData` over
 warp of its zone events -- its own tile, or the first free neighbour of a
 door set in a wall -- and, on a matrix shared with other maps, a step in
 from another map's ground; `preset(map)` is the first of them, with the
-direction the game faces the player in. `tile_problem` says why a tile is
+direction the game faces the player in. `blackout_spawn` is where a
+blackout sends the player (`LocalFieldData.lastSpawn`, read as the running
+shoes are: a row of `sSpawnMaps` + 1, `GetDeathWarpData`'s), which the game
+sets only as the player enters a Pokemon Center
+(`MapHeader_GetSpawnIdForDeathWarp`, on every warp in); `place_spawn` is
+the one a player who came to a tile would have: the Center of its own
+section, or else the nearest on the town map of the towns whose fly point
+the save has reached (the flag `FlypointFlagAction` sets on arrival).
+`tile_problem` says why a tile is
 no place to stand: off the map's chunks, a wall, surfable water
 (`MetatileBehavior_IsSurfableWater`), an object of the map, or -- in a
 building (`MapHeader_IsInBuilding`) -- joined to no arrival and no person of
@@ -385,10 +393,15 @@ steps after it), and, unticked, the map's sight trainers given as beaten
 (the walk from Cianwood's winch to Chuck passes Black Belt Nob), the party
 raised to the level cap, and the ones above it brought down -- the cap the
 ticked steps will leave (Whitney's badge taken back: 30, not 34), each
-Pokemon named; Sposta does it all in one change. `savedit.py --before TRAINER_OR_BADGE` does the
-position and the hide flag from the command line (the scenarios
-`editor_place_before_jasmine.json`, and `editor_place_before_will.json`:
-the walk-in to (6, 16), five steps, Will's line), and `savedit.py --step
+Pokemon named -- and, ticked, a blackout sent to the place's Pokemon Center
+(`place_spawn`: Violet's for Falkner, the League's for Lance), as the game
+sets it only on entering one; the tab says where a blackout sends the
+player now. Sposta does it all in one change. `savedit.py --before TRAINER_OR_BADGE` does the
+position, the hide flag and the blackout from the command line (the scenarios
+`editor_place_before_jasmine.json`, `editor_place_before_will.json`:
+the walk-in to (6, 16), five steps, Will's line, and
+`editor_place_sends_a_blackout_to_its_center.json`: Falkner lost to with a
+Magikarp, and the player wakes up in Violet's Center, not at home), and `savedit.py --step
 STEP_ID` runs a story step as Allenatore's tick does
 (`editor_story_step_lets_the_beasts_roam.json`: the Burned Tower's step,
 Raikou and Entei roaming, read in RAM as scene.py's `roamerN.*`). Then every map, grouped by its section
