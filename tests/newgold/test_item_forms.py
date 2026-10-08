@@ -178,6 +178,18 @@ class HeldItemFormTests(unittest.TestCase):
         take = function(read("src/party_menu_list_items.c"), "PartyMonContextMenuAction_Take")
         self.assertIn("PartyMenu_UpdateHeldItemForm(partyMenu, mon);", take)
 
+    def test_ogerpon_s_masks_can_be_given(self):
+        """Held items of the Items pocket, which the bag's GIVE offers (no
+        prevent_toss), as in Scarlet and Violet; hg-engine's records file
+        them as key items that cannot be given. The Teal Mask stays a key
+        item."""
+        import csv
+        rows = {row["item"]: row for row in csv.DictReader(read("files/itemtool/itemdata/item_data.csv").splitlines())}
+        for mask in ("ITEM_CORNERSTONE_MASK", "ITEM_WELLSPRING_MASK", "ITEM_HEARTHFLAME_MASK"):
+            self.assertEqual((rows[mask]["fieldPocket"], rows[mask]["prevent_toss"]), ("POCKET_ITEMS", "false"), mask)
+        teal = rows["ITEM_TEAL_MASK"]
+        self.assertEqual((teal["fieldPocket"], teal["prevent_toss"]), ("POCKET_KEY_ITEMS", "true"))
+
 
 class GriseousCoreTests(unittest.TestCase):
     """The Griseous Core gives Giratina its Origin Forme as the Orb does

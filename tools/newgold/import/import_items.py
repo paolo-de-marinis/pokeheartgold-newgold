@@ -507,6 +507,14 @@ OWN_RECORDS = {
     # ItemFormChangeSpecies knows Hoopa. That routine has nothing for the
     # registered button, so it is not registered, as in the games that have it.
     "ITEM_PRISON_BOTTLE": dict(fieldUseFunc="34", selectable="false"),
+    # Ogerpon holds a mask for its form and the fifth more power the battle
+    # gives it (Species_HeldItemForm, CalcMoveDamage): held items of Scarlet
+    # and Violet's Other Items pocket (Pokemon Central, Maschera Fondamenta),
+    # where hg-engine files them as key items the bag's GIVE never offers. The
+    # Teal Mask is a key item there too, and stays one.
+    "ITEM_CORNERSTONE_MASK": dict(fieldPocket="POCKET_ITEMS", prevent_toss="false"),
+    "ITEM_WELLSPRING_MASK": dict(fieldPocket="POCKET_ITEMS", prevent_toss="false"),
+    "ITEM_HEARTHFLAME_MASK": dict(fieldPocket="POCKET_ITEMS", prevent_toss="false"),
 }
 
 # Each step of Goldenrod's TM shop costs one price (727dfbd79, Paolo

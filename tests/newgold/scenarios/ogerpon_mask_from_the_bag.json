@@ -1,0 +1,16 @@
+{
+  "about": "Ogerpon holds its mask (Pokemon Central, Maschera Fondamenta: a held item, in Scarlet and Violet's Other Items pocket): route29-official.sav with a level-5 Ogerpon and the Cornerstone Mask in the bag (savedit). From the Items pocket, GIVE to the Ogerpon: it holds the mask and is the Cornerstone Mask form in the party. Against a forced wild Chansey (Splash alone) it comes out in that form, Grass and Rock, and its Throat Chop (taught), at the top of the damage range with no critical hit, takes 31 of the Chansey's 40 HP; with the mask taken out of its hand in the battle (set:), the same Throat Chop takes 26: the mask's fifth more power. hg-engine filed the masks as key items with prevent_toss, so the bag offered no GIVE and give: fails.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "OGERPON:5", "--item", "CORNERSTONE_MASK:1"],
+  "hold": {"gDiagBattleSeed": 1, "gDiagForceCritical": 2, "gDiagForceHit": 1, "gDiagForceDamageRoll": 1},
+  "steps": ["field", "give:ITEM_CORNERSTONE_MASK,0",
+            {"expect": {"party0.item": "ITEM_CORNERSTONE_MASK", "party0.species": "SPECIES_OGERPON_CORNERSTONE_MASK",
+                        "bag:ITEM_CORNERSTONE_MASK": 0}},
+            "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=113", "LEFT", "fight:1:0",
+            {"expect": {"battler0.species": "SPECIES_OGERPON_CORNERSTONE_MASK", "battler0.item": "ITEM_CORNERSTONE_MASK",
+                        "battler0.types": "TYPE_ROCK", "battler1.hp": 40}},
+            "teach:0,1,MOVE_THROAT_CHOP", "teach:1,0,MOVE_SPLASH", "teach:1,1,0,0", "teach:1,2,0,0", "teach:1,3,0,0",
+            "fight:2:1", {"expect": {"battler1.hp": 9}},
+            "set:0,item,ITEM_NONE", "set:1,hp,40", "fight:2:1"],
+  "expect": {"battler1.hp": 14, "once_lines": ["Ogerpon used Throat Chop!"]}
+}
