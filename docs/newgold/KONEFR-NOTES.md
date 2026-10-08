@@ -618,8 +618,12 @@ le forme di Castform 8-9 righe sotto Castform.
 
 **Nel port:** corretto nell'importer (3b50ddc9e): un'immagine che un'altra specie disegna già sta
 come quella specie, i dieci da terra prendono la mediana dei fronti retail con la stessa ombra, e
-una forma sta come la sua base. Forse stanno a terra anche Elgyem, Beheeyem, Tympole, Cofagrigus,
-Pumpkaboo, Milcery, Varoom e Miraidon: sono da controllare sui giochi recenti.
+una forma sta come la sua base. Controllati poi sui modelli dei giochi recenti (06b0c527f): Elgyem,
+Beheeyem, Tympole, Cofagrigus, Pumpkaboo, Milcery e Varoom fluttuano davvero, e ora stanno 12 righe
+sopra il terreno come il fluttuante medio del retail, non 17-19; Gourgeist e Miraidon stanno a terra.
+Erano in aria anche Flittle (23 righe, ma il Pokédex dice che le dita sono a un centimetro da terra),
+Poltchageist (16), Leavanny, Ferroseed e Ferrothorn, ora a terra; Solosis, Sinistea e Woobat (26-29
+righe, più di ogni fluttuante retail) ora a 12.
 
 ---
 
