@@ -618,12 +618,12 @@ le forme di Castform 8-9 righe sotto Castform.
 
 **Nel port:** corretto nell'importer (3b50ddc9e): un'immagine che un'altra specie disegna già sta
 come quella specie, i dieci da terra prendono la mediana dei fronti retail con la stessa ombra, e
-una forma sta come la sua base. Controllati poi sui modelli dei giochi recenti (06b0c527f): Elgyem,
+una forma sta come la sua base. Controllati poi sui modelli dei giochi recenti (127817390): Elgyem,
 Beheeyem, Tympole, Cofagrigus, Pumpkaboo, Milcery e Varoom fluttuano davvero; Gourgeist e Miraidon
 stanno a terra. Erano in aria anche Flittle (23 righe, ma il Pokédex dice che le dita sono a un
 centimetro da terra), Poltchageist (16), Leavanny e Ferroseed, ora a terra.
 Quanto in alto fluttua una specie aggiunta ora dipende dall'altezza della sua immagine, come nel
-retail (33bce9716): 16 righe fino a 47 righe di altezza (Gastly), una in meno ogni 4 righe in più, 8
+retail (ba498f9b8): 16 righe fino a 47 righe di altezza (Gastly), una in meno ogni 4 righe in più, 8
 da 76 (Lugia); il valore di hg-engine resta se è entro 2 righe da questo, altrimenti va al bordo più
 vicino (non alla regola: i piccoli disegnati troppo in alto stanno a 18, non a 16).
 Così Solosis, Sinistea e Woobat (26-29 righe, più di ogni fronte retail con Levitazione) scendono a
@@ -631,13 +631,13 @@ Così Solosis, Sinistea e Woobat (26-29 righe, più di ogni fronte retail con Le
 sale da 6 a 13; le forme di Castform restano al 9 di Castform e Qwilfish di Hisui al 22 di Qwilfish,
 come la loro base. Milcery resta al 19 di hg-engine (quello che si vede nel tuo gioco), che a Paolo
 piace di più. Dragapult, che hg-engine metteva a terra (2), ora fluttua per la regola, 8 righe, con
-Dreepy e Drakloak (1f4ecc9a9: «tutti e tre fluttuano», Paolo).
+Dreepy e Drakloak (a668963e5: «tutti e tre fluttuano», Paolo).
 
 Ferrothorn: il modello dei giochi recenti sta a terra (i viticci in basso come zampe), ma
 l'immagine di hg-engine (`d0380a487`) è la posa di Bianco e Nero, il corpo in basso e i viticci in
 alto, e lo sprite animato di Bianco e Nero tiene il corpo 12 pixel su, appeso alle punte dei
 viticci. Paolo lo vuole appeso (8 ottobre, «Ferrothorn appeso»): ora sta 12 righe sopra il terreno
-(a1d332644), invece del 6 di hg-engine, a cui con le spine tocca la sua ombra.
+(34f7e3ac2), invece del 6 di hg-engine, a cui con le spine tocca la sua ombra.
 
 ---
 
