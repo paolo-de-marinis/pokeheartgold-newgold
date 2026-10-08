@@ -1546,8 +1546,12 @@ def species_table():
     bad egg and the retail forms between them (FIRST_DEX_GAP to LAST_DEX_GAP):
     those numbers are rows of the form table ResolveMonForm reads, and the
     game keeps a Rotom Wash as SPECIES_ROTOM with form 2 -- stored as 504 it
-    is a nameless '-----' with a '?' icon. Nor a form only a battle has."""
+    is a nameless '-----' with a '?' icon. Nor a form only a battle has.
+
+    "no" is the number the Dex prints: SpeciesToNationalDexNo of the species
+    it credits a form to (dex_forms, dex_numbers)."""
     numbers = species_numbers()
+    bases, printed = dex_forms(), dex_numbers()
     by_id = {}
     for name, number in numbers.items():
         by_id.setdefault(number, name)
@@ -1556,7 +1560,8 @@ def species_table():
     for number in range(1, min(len(bank(SPECIES_NAMES)), len(personal_records()))):
         const, name = by_id.get(number, ""), species_name(number)
         form = number in gap or number > NATIONAL_DEX_COUNT and number not in own_dex_species()
-        out.append({"id": number, "name": name, "const": const,
+        base = bases.get(number, number)
+        out.append({"id": number, "name": name, "const": const, "no": printed.get(base, base),
                     "label": f"{name} ({const.replace('_', ' ').title()})" if form or name in named else name,
                     "dex": not form, "egg": number in (numbers["EGG"], numbers["BAD_EGG"]),
                     "pick": number not in gap and number not in battle_forms()})
@@ -3286,6 +3291,20 @@ def dex_forms():
     body = body[:body.index("\n}\n")]
     bases.update({numbers[f]: numbers[b] for f, b in re.findall(r"species == SPECIES_(\w+)\) \{\s*return SPECIES_(\w+);", body)})
     return dict(sorted(bases.items()))
+
+
+@tree_cache
+def dex_numbers():
+    """SpeciesToNationalDexNo (src/pokedex.c) where it is not the species'
+    own number: sNationalDexNumbers past the retail forms (Victini, 575, is
+    No. 494) and New Gold's own species (Baby Lugia, 1438, is No. 1026)."""
+    numbers = species_numbers()
+    text = source("src/pokedex.c").read_text()
+    printed = {numbers[s]: int(n) for s, n in re.findall(r"\[SPECIES_(\w+) - LAST_DEX_GAP - 1\] = (\d+),", text)}
+    body = text[text.index("u16 SpeciesToNationalDexNo(u16 species) {"):]
+    body = body[:body.index("\n}\n")]
+    printed.update({numbers[s]: int(n) for s, n in re.findall(r"species == SPECIES_(\w+)\) \{\s*return (\d+);", body)})
+    return printed
 
 
 def _form_bit(block, at, form):

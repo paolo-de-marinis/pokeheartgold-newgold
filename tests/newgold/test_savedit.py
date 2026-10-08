@@ -1215,6 +1215,17 @@ class SaveditLibraryTests(unittest.TestCase):
             self.assertEqual(after[sv.DEX_SEEN + bit // 8] >> bit % 8 & 1, 1)
             self.assert_only(save, ["SAVE_POKEDEX"])
 
+    def test_a_species_row_has_the_number_the_dex_prints(self):
+        """species_table's "no", the editor's "n." and its Dex tab's number:
+        SpeciesToNationalDexNo of the species the Dex credits a form to, not
+        the species' own number past Arceus. Every Dex species prints one of
+        1 to their count, once."""
+        n = sv.species_numbers()
+        no = {row["id"]: row["no"] for row in sv.species_table()}
+        self.assertEqual([no[n[s]] for s in ("ARCEUS", "VICTINI", "PECHARUNT", "BABY_LUGIA")], [493, 494, 1025, 1026])
+        self.assertEqual([no[n[s]] for s in ("SLOWPOKE_GALARIAN", "MEOWTH_GALARIAN")], [79, 52])
+        self.assertEqual(sorted(no[s] for s in sv.dex_species()), list(range(1, len(sv.dex_species()) + 1)))
+
     def test_a_form_s_gender_is_recorded_on_its_species(self):
         """Pokedex_RecordMonSeen records the gender a form is seen in on its
         species: Pyroar's female, a species of her own, seen first makes

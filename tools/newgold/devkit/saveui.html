@@ -519,8 +519,8 @@ function buildLists() {
   // The species a Pokemon may be made as, each with its icon, its form, its types and its Dex number.
   S.speciesRows = d.species.filter(r => r.pick).map(r => comboRow(r.id, speciesLabel(r.id), {
     before: speciesIcon({species: r.id}), after: typeBadges(r.types),
-    tags: [formWords(r) ? {text: "forma", cls: "pre"} : ""], side: `n. ${S.speciesByName.get(r.name)?.id ?? r.id}`,
-    words: `n. ${S.speciesByName.get(r.name)?.id ?? r.id} ${r.const} ${r.id} ${typeNames(r.types)} ${r.name}`}));
+    tags: [formWords(r) ? {text: "forma", cls: "pre"} : ""], side: `n. ${r.no}`,
+    words: `n. ${r.no} ${r.const} ${r.id} ${typeNames(r.types)} ${r.name}`}));
 }
 // A map's own words, out of its constant: MAP_VIOLET_POKECENTER_1F is "Violet Pokecenter 1F".
 const mapWords = r => r.const.replace(/^MAP_/, "").split("_").map(w => /\d/.test(w) ? w : w[0] + w.slice(1).toLowerCase()).join(" ");
@@ -2099,9 +2099,11 @@ function renderDex() {
   const state = id => ch.get(id) || {seen: seen.has(id), caught: caught.has(id)};
   const name = id => forms.has(id) ? speciesLabel(id) : S.species.get(id)?.name ?? String(id);
   const q = S.dex.q.toLowerCase();
-  const rows = [...S.data.dex, ...S.data.dex_forms].filter(id => {
+  // The number the Dex prints (Victini, species 575, is No. 494; Baby Lugia No. 1026), the species in its order.
+  const no = id => S.species.get(id)?.no ?? id;
+  const rows = [...S.data.dex.slice().sort((a, b) => no(a) - no(b)), ...S.data.dex_forms].filter(id => {
     const s = state(id);
-    if (q && !name(id).toLowerCase().includes(q) && String(id) !== q) return false;
+    if (q && !name(id).toLowerCase().includes(q) && String(no(id)) !== q) return false;
     return S.dex.show === "all" || (S.dex.show === "seen" && s.seen) || (S.dex.show === "caught" && s.caught) || (S.dex.show === "missing" && !s.caught);
   });
   $("#tab").innerHTML = `<div class="bar" style="margin-top:0">
@@ -2123,7 +2125,7 @@ function renderDex() {
     </div>
     <p class="note">Le caselle qui sotto cambiano solo qui finché non premi "Salva modifiche". Catturato vale solo se anche visto, come lo legge il gioco. Dopo le specie, le forme che il Pokédex registra a sé (le regionali come Slowpoke di Galar): una forma vista o presa segna vista o presa anche la sua specie.${S.save.info.legacy ? " Questo salvataggio è in un formato più vecchio e non ha ancora il registro delle forme: il gioco lo aggiunge quando lo carica." : ""}</p>
     <div class="dexlist" style="margin-top:10px">${rows.map(id => { const s = state(id); return `<div class="dexrow ${ch.has(id) ? "dirty" : ""}" data-id="${id}">
-      <span class="n">${id}</span><span class="nm">${esc(name(id))}</span>
+      <span class="n">${no(id)}</span><span class="nm">${esc(name(id))}</span>
       <label><input type="checkbox" data-k="seen" ${s.seen ? "checked" : ""}> visto</label>
       <label><input type="checkbox" data-k="caught" ${s.caught ? "checked" : ""}> preso</label></div>`; }).join("") || `<span class="muted">Nessuna specie.</span>`}</div>
     <div id="dexbar"></div>`;
