@@ -57,15 +57,19 @@ the third the shadow (the record's last two bytes) goes with it:
   draws (float_lift). Retail's floaters sit lower the taller they are, and
   the line with the least absolute error over its 115 fronts drawn over the
   ground stands them 16 rows up to 47 rows tall (Gastly's 46 rows: Paolo's
-  16), a row lower for every 4 rows taller, at 8 from 76 rows (Lugia's 76
-  at 8): a tall one floats lower, and still floats. The reference's lift
-  stays where it is within 2 rows of the rule's and comes to the nearer of
-  those otherwise: a Woobat drawn 29 rows up floats at 18, Cofagrigus, 77
-  rows tall, at 10, not 12, where its lid touched the screen's top. None
-  rises so high its top leaves the screen. A species the reference stands
-  on the ground that floats (FLOATING) floats too, at the rule's lift:
-  Dragapult, 78 rows tall, at 8, as Dreepy and Drakloak do. OVERRIDES are the few
-  that look better in play at another lift, each with its reason.
+  16), a row lower for every 4 rows taller, at 8 from 76 rows (Lugia's 76 at
+  8): a tall one floats lower, and still floats. The reference's lift stays
+  where it is within 2 rows of the rule's and comes to the nearer edge of
+  that band otherwise, not to the rule: a Woobat drawn 29 rows up floats at
+  18 (the rule's 16), Cofagrigus, 77 rows tall, at 10 (the rule's 8; at the
+  reference's 12 its lid touched the screen's top). None rises so high its
+  top leaves the screen. A species the reference stands on the ground that
+  floats (FLOATING) floats too, at the rule's lift: Dragapult, 78 rows tall,
+  at 8, as Dreepy and Drakloak do. OVERRIDES are the few that look better in
+  play at another lift, each with its reason. A form keeping a retail base's
+  record (the bullet before) is not one of these and may sit outside the
+  band: Castform's Sunny, Rainy and Snowy at Castform's 9 (the rule's 16,
+  16, 14), Hisuian Qwilfish at Qwilfish's 22 (16).
 
 A species with a picture of its own whose record was never placed, and not
 a form taking its base's, has the medium shadow nobody chose for it. Its
