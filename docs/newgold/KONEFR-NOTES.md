@@ -961,6 +961,14 @@ L'elenco completo è in AUDIT-2026-09-23.md ("Differences from konefr's referenc
 - I prezzi degli strumenti sono quelli di Scarlatto/Violetto, e quelli delle MT seguono la MT con lo
   stesso numero, non la mossa: Hyper Beam (MT15) 1600, Captivate (MT78) 32000. Nel port sono tornati
   tutti quelli di HeartGold (71e467d2f, Paolo, 4 ottobre).
+- 45 strumenti chiave non hanno prevent_toss (Adventure Guide, Rotom Phone, Sandwich, Teal Mask...),
+  quindi la borsa offre DAI e GETTA; il Vaso del vincolo (Prison Bottle) usa la routine della
+  Gracidea, che apre il menu squadra sulla Gracidea: su Hoopa non fa niente e su Shaymin dà la forma
+  Cielo; la Cornerstone, la Wellspring e la Hearthflame Mask di Ogerpon sono strumenti chiave che non
+  si possono dare, mentre la lotta legge la maschera tenuta (`data/itemdata/itemdata.c`). Nel port
+  nessuno strumento chiave si dà o si getta (06c9e5520), il Vaso cambia Hoopa Vincolato in Libero e
+  viceversa (aece456ac) e le maschere sono strumenti da tenere, come in Scarlatto e Violetto
+  (0d300e9e5): tutto nell'importer, che li tiene a ogni nuovo import.
 - Queste cose sono di hg-engine e non sue, anche se i nostri record a volte gliele attribuiscono: i
   prezzi degli strumenti e le potenze di Natural Gift, `ALLOW_SAVE_CHANGES`, gli sprite segnaposto,
   le voci del Pokédex e le 33 Bacche Hyper (Strumenti 3).
