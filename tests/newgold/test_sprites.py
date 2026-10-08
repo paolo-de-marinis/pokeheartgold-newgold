@@ -357,6 +357,26 @@ class PixelArtTests(unittest.TestCase):
         self.assertEqual(indices[21, 0], indices[10, 0])
         self.assertEqual(sorted(zip(normals, shinies)), sorted(pairs))
 
+    def test_a_pixel_keeps_one_of_its_colours_while_it_can(self):
+        """Fourteen pairs far apart, a mouth of seven pixels 16 from one of
+        them and sharing no colour with any, and twenty pixels with one
+        pair's normal colour and a shiny of their own: the twenty merge,
+        though the mouth is cheaper, and keep their normal colour."""
+        normal, shiny = {}, {}
+        pairs = [((16 * i, 0, 0), (0, 16 * i, 0)) for i in range(14)]
+        for i, (a, b) in enumerate(pairs):
+            for k in range(100):
+                normal[i, k], shiny[i, k] = a, b
+        mouth, own = ((160, 8, 0), (8, 160, 0)), ((48, 0, 0), (0, 200, 0))
+        for k in range(7):
+            normal[20, k], shiny[20, k] = mouth
+        for k in range(20):
+            normal[21, k], shiny[21, k] = own
+        (indices,), normals, shinies, merges = self.convert.paired([normal], [shiny])
+        self.assertEqual(merges, [(own, pairs[3], 20)])
+        self.assertIn(mouth, list(zip(normals, shinies)))
+        self.assertEqual(indices[21, 0], indices[3, 0])
+
 
 class SecondPoseTests(unittest.TestCase):
     """convert_chatgpt.py --front2 ...: frame 2 of the battle pictures is a

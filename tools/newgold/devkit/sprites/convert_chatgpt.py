@@ -219,6 +219,10 @@ def paired(normals, shinies, n=15):
     pixel's (normal, shiny) colour pair: up to n pairs keep an index each;
     past n, the pair cheapest to merge (its pixels times its distance, normal
     plus shiny, to its nearest pair) becomes that one, until n are left.
+    Only a pair sharing its normal or its shiny colour is a merge's target
+    while one is left, so each pixel keeps one of its two colours exactly:
+    a colour of a few pixels drawn the same in both, Baby Lugia's open
+    mouth, was the cheapest and went lavender in both.
     Each picture as {(x, y): index 1..n}, the normal and the shiny palette,
     and the merges as (pair, into, pixels)."""
     if any(normal.keys() != shiny.keys() for normal, shiny in zip(normals, shinies)):
@@ -230,7 +234,9 @@ def paired(normals, shinies, n=15):
     def distance(a, b):
         return sum(abs(u - v) for x, y in zip(a, b) for u, v in zip(x, y))
     while len(count) > n:
-        _cost, pair, nearest = min((count[a] * distance(a, b), a, b) for a in count for b in count if a != b)
+        candidates = ([(a, b) for a in count for b in count if a != b and (a[0] == b[0] or a[1] == b[1])]
+                      or [(a, b) for a in count for b in count if a != b])
+        _cost, pair, nearest = min((count[a] * distance(a, b), a, b) for a, b in candidates)
         merges.append((pair, nearest, count[pair]))
         count[nearest] += count.pop(pair)
         into = {k: nearest if v == pair else v for k, v in into.items()}
