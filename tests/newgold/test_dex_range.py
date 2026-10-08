@@ -19,6 +19,7 @@ import tempfile
 import unittest
 
 from test_form_dex import own_defines
+import own_species  # noqa: E402  (test_form_dex puts tools/newgold/import on the path)
 from test_level_cap import ROOT, function
 
 PREFIX = r'''
@@ -237,6 +238,12 @@ int main(void) {
         assert(place - 1 < 32 * (NUM_DEX_FLAG_WORDS - 1) + 24);
         taken[place] = 1;
     }
+    // one after another in own_species.py's order, as savedit.py's dex_place
+    // has them
+    static const u16 own[] = {@ORDER@};
+    for (int k = 0; k < NUM_OWN_SPECIES; k++) {
+        assert(DexFlagNo(own[k]) == NATIONAL_DEX_COUNT + 1 + k);
+    }
     printf("PASS: New Gold's own species keep their Dex flags in HeartGold's fields, Baby Lugia's at %d.\n",
         DexFlagNo(SPECIES_BABY_LUGIA));
     return 0;
@@ -394,12 +401,15 @@ class DexRangeTests(unittest.TestCase):
         """DexFlagNo keeps New Gold's own species' flags past the last Dex
         species': each has to find its byte of caughtLanguages in the padding
         and its flag below the byte that keeps Deoxys's form order, or the
-        save would need a layout (docs/newgold/SAVE-LAYOUT.md)."""
+        save would need a layout (docs/newgold/SAVE-LAYOUT.md). They follow
+        one another in own_species.py's order, which savedit.py's dex_place
+        counts by: the C names each species by hand."""
         source = (ROOT / "src/pokedex.c").read_text()
         header = (ROOT / "include/pokedex.h").read_text()
         defines = "\n".join(line for line in header.splitlines()
                             if line.startswith(("#define ROUND_UP", "#define CEILDIV", "#define NUM_DEX_FLAG_WORDS")))
-        program = OWN_PLACES.replace("@DEFINES@", defines).replace("@OWN@", own_defines())
+        program = OWN_PLACES.replace("@DEFINES@", defines).replace("@OWN@", own_defines()).replace(
+            "@ORDER@", ", ".join(f"SPECIES_{name}" for name in own_species.SPECIES))
         run_native(self, program.replace("@NATIVE@", c_function(source, "DexFlagNo")), "newgold-dex-own-")
 
     def test_new_species_do_not_reset_the_game(self):
