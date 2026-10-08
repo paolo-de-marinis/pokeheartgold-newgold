@@ -2315,7 +2315,7 @@ function placePlan(i) {
                why: `${st.left.map(t => who.get(t) || t).join(", ")}: andando da ${placeWho(p)} nessuno ti ferma per lottare`});
   }
   // Where a blackout sends the player: the game changes it only as the player enters a Pokémon Center, so the
-  // place sets the nearest one the save has reached (savedit.place_spawn).
+  // place sets the nearest one (savedit.place_spawn).
   const now = S.save.position.spawn;
   if (st.spawn && st.spawn.id !== now?.id)
     plan.push({key: "spawn", on: true, spawn: st.spawn.id, text: `Dopo una sconfitta si ricompare in ${spawnName(st.spawn)}`,

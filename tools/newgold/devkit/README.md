@@ -189,8 +189,8 @@ shoes are: a row of `sSpawnMaps` + 1, `GetDeathWarpData`'s), which the game
 sets only as the player enters a Pokemon Center
 (`MapHeader_GetSpawnIdForDeathWarp`, on every warp in); `place_spawn` is
 the one a player who came to a tile would have: the Center of its own
-section, or else the nearest on the town map of the towns whose fly point
-the save has reached (the flag `FlypointFlagAction` sets on arrival).
+section, or else the nearest on the town map, as the way there passes it
+(Violet's from the Sprout Tower, whatever fly points the save has).
 `tile_problem` says why a tile is
 no place to stand: off the map's chunks, a wall, surfable water
 (`MetatileBehavior_IsSurfableWater`), an object of the map, or -- in a
@@ -420,7 +420,9 @@ position, the hide flag and the blackout from the command line (the scenarios
 `editor_place_before_jasmine.json`, `editor_place_before_will.json`:
 the walk-in to (6, 16), five steps, Will's line, and
 `editor_place_sends_a_blackout_to_its_center.json`: Falkner lost to with a
-Magikarp, and the player wakes up in Violet's Center, not at home, and
+Magikarp, and the player wakes up in Violet's Center, not at home,
+`editor_place_blackout_from_sprout_tower.json`: the same from Elder Li, in
+a tower with no Center, on a save that has reached New Bark alone, and
 `editor_place_before_lance.json`: the place of Lance's step, his first team
 as `VAR_UNK_4135` picks it, the League's Center after the loss; a place's
 trainer is found by any of its step's variants, and the place says when the

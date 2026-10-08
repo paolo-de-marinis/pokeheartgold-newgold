@@ -1,0 +1,12 @@
+{
+  "about": "A place outside a town's own section sends a blackout to the nearest Pokemon Center on the town map (savedit.place_spawn), whatever fly points the save has: route29-official.sav, which has reached New Bark alone, put before Elder Li on the Sprout Tower's 3F with a Magikarp at level 2. The tower is no section with a Center, and the nearest is Violet's. Li wins, the player whites out and wakes up in Violet's Pokemon Center; with the fly points the only way to a Center, the player woke up in the house in New Bark (map 63).",
+  "save": "route29-official.sav",
+  "edit": ["--party", "MAGIKARP:2", "--before", "TRAINER_ELDER_LI"],
+  "steps": [
+    "field",
+    {"expect": {"map": "MAP_SPROUT_TOWER_3F"}},
+    "fight",
+    "field"
+  ],
+  "expect": {"map": "MAP_VIOLET_POKECENTER_1F"}
+}

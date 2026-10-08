@@ -1861,30 +1861,21 @@ def set_blackout_spawn(save, spawn):
     put_bits(save.block("SAVE_LOCAL_FIELD_DATA"), _given_layout()["spawn"], spawn)
 
 
-@tree_cache
-def _flypoint_flag_base():
-    """The flag of a fly point's flag number 0 (Save_VarsFlags_FlypointFlagAction)."""
-    base = re.search(r"(FLAG_\w+) \+ flypoint_flag_no", c_function("src/sys_flags.c", "BOOL Save_VarsFlags_FlypointFlagAction("))
-    return constants("include/constants/flags.h", "FLAG_")[base.group(1)]
-
-
-def place_spawn(save, map_id, x, y):
+def place_spawn(map_id, x, y):
     """The heal spawn a blackout sends the player to from (x, y) on this map
     for a player who came here as the game lets: the game keeps the last
     Pokemon Center entered (MapHeader_GetSpawnIdForDeathWarp, on every warp
-    in), so the nearest one the save could have entered -- its own section's
-    (the player is there), or a town's the save has reached, the fly point's
-    flag FlypointFlagAction sets on arrival -- nearest on the Pokégear's
-    town map (town_tile), the table's order between equals. Its spawn id;
-    None with none."""
+    in), so its own section's (the player is there), or else the nearest on
+    the Pokégear's town map (town_tile), the table's order between equals --
+    Violet's from the Sprout Tower, Goldenrod's from the Radio Tower, as the
+    way there passes it. Its spawn id; None with none."""
     rows, maps = spawns()["rows"], constants("include/constants/maps.h", "MAP_")
-    flags, section = _flypoint_flag_base(), map_table()[map_id]["section"]
+    section = map_table()[map_id]["section"]
     hx, hy = town_tile(map_id, x, y, (x, y))
     out = []
     for i, r in enumerate(rows):
-        own = map_table()[maps[r["deathSpawnMapNo"]]]["section"] == section
-        reached = r["isFlyPoint"] == "1" and flag_is_set(save, flags + int(r["flagIdx"], 0))
-        if r["isBlackoutSpawn"] == "1" and (own or reached):
+        if r["isBlackoutSpawn"] == "1":
+            own = map_table()[maps[r["deathSpawnMapNo"]]]["section"] == section
             fx, fy = town_tile(maps[r["flyPointMapNo"]], int(r["flyPointX"], 0), int(r["flyPointY"], 0), (0, 0))
             out.append((not own, (fx - hx) ** 2 + (fy - hy) ** 2, i + 1))
     return min(out)[2] if out else None
@@ -5125,7 +5116,7 @@ def place_state(save, place):
         for var, value in re.findall(r"InitScriptGoToIfEqual (VAR_\w+), (\w+), _EV_\w+ \+ 1", source(hdr).read_text()):
             if var in gates and var in names and var_value(save, names[var]) == _number(value):
                 gate = next((s["id"] for s in story() if s["kind"] == "gate" and s["key"] == var), None) or var
-    spawn = place_spawn(save, place["map"], place["x"], place["y"])
+    spawn = place_spawn(place["map"], place["x"], place["y"])
     rows, maps = spawns()["rows"], constants("include/constants/maps.h", "MAP_")
     step = next((s for s in story() if s["id"] == place["step"]), None) if place.get("step") else None
     return {"hidden": hidden, "beaten": beaten, "gate": gate, "fights": fights(save, step) if step else None,
@@ -5472,7 +5463,7 @@ def main():
         for flag in place["hide"]:
             write_flag(save, names[flag], False)
         set_position(save, place["map"], place["x"], place["y"], place["direction"])
-        spawn = place_spawn(save, place["map"], place["x"], place["y"])
+        spawn = place_spawn(place["map"], place["x"], place["y"])
         if spawn:
             set_blackout_spawn(save, spawn)
         save.write()
