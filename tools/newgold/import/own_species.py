@@ -10,9 +10,10 @@ from four rules:
    the egg moves, the Dex entry and category, the Dex metrics row, the
    picture records' animation, and the battle pictures, icon and palette
    number until Paolo's own are drawn (own_art.py). Its follower walks as its
-   like's, the way a form walks as its base's. What is written here for it
-   (the name, the Dex number, the size and the size page) overrides the
-   like's.
+   like's, the way a form walks as its base's, until it is in own_art.py too:
+   then import_followers.py gives it a model of its own for his texture. What
+   is written here for it (the name, the Dex number, the size and the size
+   page's scales) overrides the like's.
 2. What names the species itself is its own: its Dex species, the species
    its egg hatches as (itself, not its like), its trainer seed, its cry and
    its footprint member. It evolves into nothing, and nothing into it.

@@ -21,7 +21,8 @@ the reference has not: species 1438, No. 1026, Lugia's data for now with a
 size, a name and a cry of its own (below, "A species the reference has not
 got"). Its battle pictures and follower are Paolo's (2026-10-07), the battle
 ones at his own pixels, and it is in `own_art.py` as Bramblin is; its party
-icon is Lugia's until he redraws his at 32x32.
+icon is his drawing redrawn by hand at 32x32 (2026-10-08, below), until he
+draws one at that size.
 
 The prompts are in English, which ChatGPT follows best. Replace `<NAME>` with
 the Pokemon's or the item's English name.
@@ -78,7 +79,12 @@ The game has no shiny icons: one picture serves both. **The frame is 32x32,
 and the Pokemon at most 32 wide and 24 tall in it**, as every retail icon is,
 in the colours of one of the three palettes all icons share
 (`poke_icon_00000000.pal`): a bigger drawing can only be shrunk, and shrunk it
-is no longer pixel art (Baby Lugia's icon was drawn in 50x50 frames).
+is no longer pixel art. Baby Lugia's was drawn in 50x50 frames, its body
+about 40 tall: it was redrawn pixel by pixel at 0.6 of its size from what of
+his pixels each new one covers, outline, eye and marks kept, its two frames'
+head the same drawing (`.rounds/round18/babylugia/art`,
+`icon_32x32_claude_from_paolo.png` and its grid), and went in through the
+converter with `--grid 1`.
 
 ## Following Pokemon (overworld)
 
@@ -211,12 +217,19 @@ import_dex_metrics.py REF --write
 git show 4c8176ea1^:files/data/sound/gs_sound_data.sdat > ../../../files/data/sound/gs_sound_data.sdat
 import_cries.py REF --write               # the like's samples, played higher
 import_footprints.py REF --write          # the like's footprint
-import_sprites.py REF --write             # the like's pictures, until Paolo's
+import_sprites.py REF --write             # the like's pictures
 heights.py write
 import_sprite_offsets.py --write
 import_icons.py REF --write
 import_followers.py --write               # it walks as its like
 ```
+
+Paolo's pictures for it then go in as Bramblin's did, in this order: its
+line in `own_art.py`; `import_followers.py --write` again, which now gives
+it a model of its own (Baby Lugia: model 1307, member 1604, sprite 1791),
+and without which the converter refuses its follower ("has no follower
+model of its own"); then the converter, Baby Lugia's command in its
+docstring (`--grid 14 ... --paired`), and the icon with `--icon ... --grid 1`.
 
 A re-run of any of them keeps it, and none moves it. What is not generated
 is its Dex page: `src/pokedex.c` names it in SpeciesToDexSpecies (it is no
