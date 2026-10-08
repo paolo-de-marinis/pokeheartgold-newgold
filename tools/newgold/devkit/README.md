@@ -127,7 +127,16 @@ or the next marker, a jump decided on what it wrote itself before it, and a
 battle whose win runs into a marker opens that marker's step. After a
 battle the field is built again and runs its map's OnLoad and OnResume
 scripts (`fieldmap.c`), so the walk runs them too: Route 36's hides the
-Sudowoodo once it was fought. A step also brings its scene before the
+Sudowoodo once it was fought. A `Warp` to a map whose entry runs a scene
+at once (`_arrival`: a frame-table script on a temporary variable at 0, as
+every entry leaves it) goes on into that scene, as the game does: Lance's
+win warps to the Hall of Fame, whose scene clears the game (`HOFCredits`,
+the flag `SetGameClearFlag` sets). The same battle with another trainer as
+the script picks them -- Lance or his rematch team, and the Elite Four's,
+by `VAR_UNK_4135` -- is one step: the trainer fought with no test of its
+own, the others its `variants` with the test that picks each, which no
+step needs (`fights` says which one a save fights; the rival's teams,
+picked by the starter, no variable tells). A step also brings its scene before the
 marker: what the game writes on every way there from the script's entry
 with no other marker on it (`_before`) -- the Burned Tower's beasts, hidden
 before the `SetVar` that opens Morty's gym; the Expansion Card's flag, set
@@ -401,7 +410,11 @@ position, the hide flag and the blackout from the command line (the scenarios
 `editor_place_before_jasmine.json`, `editor_place_before_will.json`:
 the walk-in to (6, 16), five steps, Will's line, and
 `editor_place_sends_a_blackout_to_its_center.json`: Falkner lost to with a
-Magikarp, and the player wakes up in Violet's Center, not at home), and `savedit.py --step
+Magikarp, and the player wakes up in Violet's Center, not at home, and
+`editor_place_before_lance.json`: the place of Lance's step, his first team
+as `VAR_UNK_4135` picks it, the League's Center after the loss; a place's
+trainer is found by any of its step's variants, and the place says when the
+save fights the rematch team), and `savedit.py --step
 STEP_ID` runs a story step as Allenatore's tick does
 (`editor_story_step_lets_the_beasts_roam.json`: the Burned Tower's step,
 Raikou and Entei roaming, read in RAM as scene.py's `roamerN.*`). Then every map, grouped by its section

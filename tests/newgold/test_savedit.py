@@ -1634,6 +1634,40 @@ class SaveditLibraryTests(unittest.TestCase):
         self.assertTrue(sv.flag_is_set(save, flags["FLAG_HIDE_BURNED_TOWER_B1F_RAIKOU"]))
         self.assertIn(gate["id"], sv.story_state(save)["done"])
 
+    def test_lances_battle_is_a_step_with_his_rematch_team(self):
+        """scr_seq_0824_T10R0601 fights TRAINER_CHAMPION_LANCE, or his
+        rematch team once VAR_UNK_4135 is 8: one step, Lance's, the rematch
+        team its variant with the test that picks it and no need of it --
+        as the Elite Four's (Will's needed VAR_UNK_4135 >= 8). Its win warps
+        to the Hall of Fame, whose scene runs as the room is entered and
+        clears the game (HOFCredits, SetGameClearFlag): the step writes
+        that, and the place before him is the step's. The save picks the
+        team (fights)."""
+        flags, variables = sv.constants("include/constants/flags.h", "FLAG_"), sv.constants("include/constants/vars.h", "VAR_")
+        lance = next(s for s in sv.story() if s["kind"] == "battle" and s["key"] == "TRAINER_CHAMPION_LANCE")
+        self.assertEqual(lance["variants"], [["TRAINER_CHAMPION_LANCE", []],
+                                             ["TRAINER_CHAMPION_LANCE_2", [[("var", "VAR_UNK_4135"), "ge", 8]]]])
+        self.assertEqual(lance["needs"], [])
+        self.assertIn("FLAG_GAME_CLEAR", [w[1] for w in lance["writes"]], "the Hall of Fame's scene")
+        will = next(s for s in sv.story() if s["kind"] == "battle" and s["key"] == "TRAINER_ELITE_FOUR_WILL_WILL")
+        self.assertEqual((will["needs"], [v[0] for v in will["variants"]]),
+                         ([], ["TRAINER_ELITE_FOUR_WILL_WILL", "TRAINER_ELITE_FOUR_WILL_WILL_2"]))
+        place = next(p for p in sv.story_places() if p["map"] == sv.constants("include/constants/maps.h", "MAP_")["MAP_POKEMON_LEAGUE_LANCE_ROOM"])
+        self.assertEqual((place["step"], place["trainer_const"]), (lance["id"], "TRAINER_CHAMPION_LANCE"))
+        self.assertIn("TRAINER_CHAMPION_LANCE_2", place["variants"])
+        save, found = self.open(), {}
+        before = save.image()
+        self.assertEqual(sv.fights(save, lance), "TRAINER_CHAMPION_LANCE")
+        sv.run_step(save, lance["id"], found)
+        self.assertTrue(sv.flag_is_set(save, flags["FLAG_GAME_CLEAR"]))
+        self.assertEqual(sv.var_value(save, variables["VAR_UNK_411A"]), 1, "the first time: Oak at Olivine's port")
+        self.assertIn(lance["id"], sv.story_state(save)["done"])
+        sv.undo_step(save, lance["id"], sv.record(save, found))
+        self.assertEqual(save.image(), before)
+        sv.write_var(save, variables["VAR_UNK_4135"], 8)
+        self.assertEqual(sv.fights(save, lance), "TRAINER_CHAMPION_LANCE_2")
+        self.assertEqual(sv.place_state(save, place)["fights"], "TRAINER_CHAMPION_LANCE_2")
+
     def test_the_beasts_run_off_as_the_game_lets_them(self):
         """The Burned Tower's step hides Raikou and Entei and lets them
         loose (CreateRoamer 0 and 1): each roamer's record as

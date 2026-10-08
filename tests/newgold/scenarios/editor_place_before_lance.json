@@ -1,0 +1,15 @@
+{
+  "about": "Lance's battle is a story step and his place is its (savedit.story, story_places): route29-official.sav put before TRAINER_CHAMPION_LANCE by --before, with a Magikarp at level 2. Continue enters his room at its arrival, the frame script walks the player six tiles in, the place's steps go on to the row below his trigger, and one step up starts the scene; VAR_UNK_4135 is 0, so the script picks his first team, Gyarados first (TRAINER_CHAMPION_LANCE_2, the rematch team, leads with Salamence). Lance wins, and the blackout --before set -- the League's own Pokemon Center, at its entrance -- is where the player wakes up.",
+  "save": "route29-official.sav",
+  "edit": ["--party", "MAGIKARP:2", "--before", "TRAINER_CHAMPION_LANCE"],
+  "steps": [
+    "field",
+    {"expect": {"map": "MAP_POKEMON_LEAGUE_LANCE_ROOM", "x": 6, "y": 22}},
+    "goto:MAP_POKEMON_LEAGUE_LANCE_ROOM,6,11",
+    {"expect": {"x": 6, "y": 11}},
+    "UP",
+    "fight",
+    "field"
+  ],
+  "expect": {"lines": ["Champion Lance sent out Gyarados!"], "no_lines": ["Salamence"], "map": "MAP_POKEMON_LEAGUE_ENTRANCE"}
+}

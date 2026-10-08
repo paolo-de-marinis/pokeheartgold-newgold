@@ -2263,6 +2263,8 @@ function placeTags(i) {
     p.step && S.save.story.done.includes(p.step) || st.beaten ? {text: p.kind === "badge" ? "medaglia già data" : "già battuto", cls: "warn"} : "",
     st.hidden ? {text: "non c'è: nascosto", cls: "warn", title: p.hide.join(", ")} : "",
     st.gate ? {text: "il gioco ti rimanda fuori", cls: "bad", title: "la palestra è chiusa: fai prima il passo che la apre"} : "",
+    // The script picks the team by the save (savedit.fights): Lance's rematch one once VAR_UNK_4135 is 8.
+    st.fights && st.fights !== p.trainer_const ? {text: "squadra della rivincita", title: `lo script sceglie ${st.fights}`} : "",
     p.walked ? {text: `entrando, poi ${p.walked.steps} ${p.walked.steps === 1 ? "passo" : "passi"}`, title: walkedText(p)} : PLACE_VIA[p.via] ? {text: PLACE_VIA[p.via]} : "",
     isLeague(p) ? (/^TRAINER_CHAMPION_/.test(p.trainer_const) ? "Campione" : "Superquattro") : isLeader(p) ? "capopalestra"
       : isRematch(p) ? "rivincita" : isGymTrainer(p) ? `palestra (Medaglia ${badgeName(p.badge)})` : ""];
@@ -2274,7 +2276,7 @@ function placeRows() {
   // A place's row: the star, who, what the save has of them and how the scene starts, and the map under them.
   const group = (title, list) => list.map(([p, i]) => { const [where, ...tags] = placeTags(i);
     return comboRow(`p${i}`, name(p), {group: title, label: `${name(p)} · ${where}`, before: `<span class="star">★</span>`, tags, sub: esc(where),
-                                      words: `${where} ${p.key} ${p.trainer_const || ""} ${p.trainer} capopalestra davanti`}); });
+                                      words: `${where} ${p.key} ${p.trainer_const || ""} ${(p.variants || []).join(" ")} ${p.trainer} capopalestra davanti`}); });
   return [...group("★ Capipalestra", places.filter(([p]) => isLeader(p)).sort((a, b) => badgeOrder(a[0]) - badgeOrder(b[0]))),
           ...group("★ Lega Pokémon", places.filter(([p]) => isLeague(p))),
           ...group("★ Altri momenti della storia", places.filter(([p]) => !isLeader(p) && !isLeague(p) && !isGymTrainer(p) && !isRematch(p))),

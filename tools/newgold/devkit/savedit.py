@@ -3876,6 +3876,8 @@ def _write(op, args):
         return "item", args[0], _number(args[1]) or 1     # a count in a variable: one, at least
     if op in ("TakeItem", "TakeItemNoCheck") and args[0].startswith("ITEM_"):
         return "item", args[0], -(_number(args[1]) or 1)
+    if op == "HOFCredits":     # CallTask_GameClear: SetGameClearFlag
+        return "flag", _game_clear_flag(), 1
     if op in ("SubMoneyImmediate", "AddMoney") and _number(args[0]) is not None:
         return "money", "", _number(args[0]) * (-1 if op == "SubMoneyImmediate" else 1)
     if op == "CreateRoamer" and _number(args[0]) in roamer_rules()["kinds"]:
@@ -3883,6 +3885,12 @@ def _write(op, args):
     if op in _NOT_DONE or op in ("GiveItem", "TakeItem"):
         return "other", f"{op} {', '.join(args)}".strip(), 0
     return None
+
+
+@tree_cache
+def _game_clear_flag():
+    """The flag SetGameClearFlag sets: CallTask_GameClear's (HOFCredits)."""
+    return re.search(r"SetScriptFlag\(state, (FLAG_\w+)\)", c_function("src/sys_flags.c", "void SetGameClearFlag(")).group(1)
 
 
 # What a script does to the save that the editor does not do -- a Pokemon or
@@ -4084,8 +4092,11 @@ def _walk(stem, start, save=None, through=(), known=None, outer=False, reloaded=
     game runs the script. `outer`: the walk is inside a conditional stretch
     of another; `reloaded`: it is a script the field runs when built again;
     `found`: filled, with a save, with what each thing written held before
-    the walk first wrote it (_value). Returns the writes as (kind, name,
-    value, conditional), the lines passed and the marker line it stopped at."""
+    the walk first wrote it (_value). A Warp to a map whose entry runs a
+    scene at once (_arrival) goes on into that scene, as the game does:
+    Lance's win warps to the Hall of Fame, whose scene clears the game.
+    Returns the writes as (kind, name, value, conditional), the lines
+    passed as (script file, line) and the marker line it stopped at."""
     script = _script(stem)
     lines, labels = script["lines"], script["labels"]
     writes, passed, pending, stack, subjects, compared = [], set(), set(), [], {}, (None, None)
@@ -4147,8 +4158,14 @@ def _walk(stem, start, save=None, through=(), known=None, outer=False, reloaded=
                                                   outer=bool(pending) or outer, reloaded=True, found=found)
                     writes += more
                     also |= lines_passed
+        arrival = _arrival(args[0]) if op == "Warp" and not reloaded and args[0] in map_headers() else None
+        if arrival and arrival[0] and arrival[1] in _script(arrival[0])["labels"]:
+            more, lines_passed, _ = _walk(arrival[0], _script(arrival[0])["labels"][arrival[1]], save, known=known,
+                                          outer=bool(pending) or outer, reloaded=True, found=found)
+            writes += more
+            also |= lines_passed
         i += 1
-    return writes, {i for i, _ in passed} | also, stop
+    return writes, {(stem, i) for i, _ in passed} | also, stop
 
 
 def _rejoins(lines, labels, at):
@@ -4496,7 +4513,9 @@ def story():
     (a gate's gym), "writes" [kind, name, value, conditional] as its straight
     line makes them, "gives" those it always makes, "tests" those that say
     it is done, "needs" [[subject, test, value], [ids of the steps that give
-    it]], and "badge" and "order" when it is part of a gym (badge_chains)."""
+    it]], "badge" and "order" when it is part of a gym (badge_chains), and
+    "variants" for a battle the script fights with one trainer or another
+    (Lance or his rematch team): [[trainer, the needs that pick it]]."""
     gates, gate_lines = _gates()
     steps, covered = [], set()
 
@@ -4507,7 +4526,7 @@ def story():
         writes = _net([(*w, False) for w in before] + walked)
         if kind == "flag" and ["flag", key, 1, False] not in writes:
             return stop     # its flag only held for the scene: the scene's next marker starts the step
-        covered.update((stem, j) for j in passed | lines)
+        covered.update(passed | {(stem, j) for j in lines})
         if not _net(walked):
             return stop     # nothing from its marker on: the scene before it is no step of its own
         steps.append({"id": f"{stem[8:12]}:{line + 1}", "script": stem, "line": line + 1, "kind": kind, "key": key,
@@ -4535,24 +4554,41 @@ def story():
             marker = _secondary(op, args, gates)
             if marker and (stem, i) not in covered and (stem, i) not in gate_lines:
                 add(stem, i, *marker)
-    # One step a set of writes in a script: the same scene written twice is one.
-    seen, unique = set(), []
+    # One step a set of writes in a script: the same scene written twice is
+    # one. The same battle with another trainer as the script picks them --
+    # Lance or his rematch team, by VAR_UNK_4135 -- is one step too: the
+    # trainer fought with no test of its own, its needs those every way to
+    # the battle tests, and "variants" each trainer with the tests that pick it.
+    groups, requirements = {}, {}
     for step in sorted(steps, key=lambda s: (s["script"], s["line"])):
         net = (step["script"], tuple(sorted({(w[0], w[1]): tuple(w[:3]) for w in step["writes"]}.values())))
-        if net not in seen:
-            seen.add(net)
-            unique.append(step)
-    steps = unique
+        groups.setdefault(net, []).append(step)
+    steps = []
+    for group in groups.values():
+        if group[0]["script"] not in requirements:
+            requirements[group[0]["script"]] = _requirements(group[0]["script"])
+        ways = [requirements[s["script"]].get(s["start"], []) for s in group]
+        common = [n for n in ways[0] if all(n in w for w in ways[1:])]
+        own = [[n for n in w if n not in common] for w in ways]
+        if len(group) > 1 and all(s["kind"] == "battle" for s in group):
+            pick = min(range(len(group)), key=lambda k: len(own[k]))
+            variants = {}
+            for s, o in sorted(zip(group, own), key=lambda so: len(so[1])):
+                variants.setdefault(s["key"], [list(n) for n in o])
+            if len(variants) > 1:
+                group[pick]["variants"] = [[key, needs] for key, needs in variants.items()]
+            group[pick]["needs"] = [list(n) for n in common]
+            steps.append(group[pick])
+        else:
+            group[0]["needs"] = [list(n) for n in ways[0]]
+            steps.append(group[0])
+    steps.sort(key=lambda s: (s["script"], s["line"]))
     names_sec = bank(MAPSEC_NAMES)
     sections = constants("include/constants/map_sections.h", "MAPSEC_")
-    requirements = {}
     for step in steps:
-        if step["script"] not in requirements:
-            requirements[step["script"]] = _requirements(step["script"])
         step["maps"] = _map_of_scripts().get(step["script"], [])
         sec = map_headers()[step["maps"][0]].get("mapsec") if step["maps"] else None
         step["section"] = names_sec[sections[sec]] if sec in sections and sections[sec] < len(names_sec) else ""
-        step["needs"] = [list(need) for need in requirements[step["script"]].get(step["start"], [])]
         step["said"] = _said(step["script"], step["start"])
     cleared = {args[0] for stem in _script_stems() for op, args in _script(stem)["lines"] if op == "ClearFlag" and args}
     for step in steps:
@@ -4736,13 +4772,12 @@ def _marker(op, args):
     return None
 
 
-def _walked_in(const):
-    """Whether entering the map runs a frame-table script before the player
-    can move -- a temporary variable at 0, as every entry leaves it, or one
-    the map's OnTransition script sets to the value -- that is no gate, and
-    where it walks the player, (dx, dy) from the arrival: the Elite Four's
-    rooms and Lance's walk the player six tiles in, short of the person,
-    and the player walks the rest. None for a map with no such scene."""
+def _arrival(const):
+    """The scene entering the map runs before the player can move: a
+    frame-table script on a temporary variable at 0, as every entry leaves
+    it, or on one the map's OnTransition script sets to the value, that is
+    no gate. (its script file, or None with none, and its label); None for
+    a map with no such scene."""
     hdr = _bank_file(map_headers()[const], "scriptHeaderBank", "scr_seq_", SCRIPTS, ".s")
     if not hdr or not (ROOT / hdr).exists():
         return None
@@ -4759,8 +4794,20 @@ def _walked_in(const):
         if var in gates:
             continue
         if (var.startswith("VAR_TEMP_") and _number(value) == 0) or (var, _number(value)) in set_on_entry:
-            return _player_walk(stem.group(1), label) if stem else (0, 0)
+            return stem.group(1) if stem else None, label
     return None
+
+
+def _walked_in(const):
+    """Whether entering the map runs a scene before the player can move
+    (_arrival), and where it walks the player, (dx, dy) from the arrival:
+    the Elite Four's rooms and Lance's walk the player six tiles in, short
+    of the person, and the player walks the rest. None for a map with no
+    such scene."""
+    arrival = _arrival(const)
+    if arrival is None:
+        return None
+    return _player_walk(*arrival) if arrival[0] else (0, 0)
 
 
 def _player_walk(stem, label):
@@ -4862,8 +4909,9 @@ def story_places():
     variable the battle needs is set first on a fresh entry (Cianwood's
     winch), the place before that instead, and "via": what the player does
     there first ("bg": a sign or switch, "coord": a step onto a trigger),
-    and "trainers": the sight trainers on the map (std_trainer), whom the
-    walk to the person may run into, [constant, name]."""
+    "trainers": the sight trainers on the map (std_trainer), whom the
+    walk to the person may run into, [constant, name], and "variants": the
+    trainers its step's battle may be fought with (story's "variants")."""
     steps = {(s["script"], s["line"]): s for s in story()}
     trainers, names = constants("include/constants/trainers.h", "TRAINER_"), trainer_names()
     out = []
@@ -4959,6 +5007,7 @@ def story_places():
             out.append({"map": map_id, "x": spot[0], "y": spot[1], "direction": spot[2], "kind": what, "key": key,
                         "trainer": names[trainers[trainer]] if trainer in trainers and trainers[trainer] < len(names) else "",
                         "trainer_const": trainer, "step": step["id"] if step else None,
+                        "variants": [key for key, _ in (step or {}).get("variants", [])],
                         "badge": (step or {}).get("badge"), "hide": hide, "walked": walk,
                         "trainers": [[t, names[trainers[t]] if trainers[t] < len(names) else t] for t in sight
                                      if t != trainer and t in trainers],
@@ -4971,9 +5020,10 @@ def place_state(save, place):
     """Where the save stands for a place: whether its person is hidden
     (their flag set), its trainer beaten, the map's sight trainers not
     beaten yet ("left"), the gate keeping the player out of its map, if
-    the save holds it closed (the gate step's id), and the heal spawn a
+    the save holds it closed (the gate step's id), the heal spawn a
     blackout there sends the player to ("spawn", place_spawn's, as
-    blackout_spawn gives it; None with none)."""
+    blackout_spawn gives it; None with none), and the trainer the battle is
+    fought with ("fights", fights(): None for a step of no variants)."""
     names, _, _, trainer_base = _script_names()
     hidden = bool(place["hide"]) and all(h in names and flag_is_set(save, names[h]) for h in place["hide"])
     won = lambda t: bool(t and t in names and flag_is_set(save, trainer_base + names[t]))  # noqa: E731
@@ -4988,9 +5038,22 @@ def place_state(save, place):
                 gate = next((s["id"] for s in story() if s["kind"] == "gate" and s["key"] == var), None) or var
     spawn = place_spawn(save, place["map"], place["x"], place["y"])
     rows, maps = spawns()["rows"], constants("include/constants/maps.h", "MAP_")
-    return {"hidden": hidden, "beaten": beaten, "gate": gate,
+    step = next((s for s in story() if s["id"] == place["step"]), None) if place.get("step") else None
+    return {"hidden": hidden, "beaten": beaten, "gate": gate, "fights": fights(save, step) if step else None,
             "left": [t for t, _ in place.get("trainers", []) if t in names and not won(t)],
             "spawn": {"id": spawn, "map": maps[rows[spawn - 1]["deathSpawnMapNo"]]} if spawn else None}
+
+
+def fights(save, step):
+    """The trainer a step's battle is fought with on this save, as its
+    script picks among its "variants": the first whose tests the save
+    meets, else the one with none (Lance's rematch team once VAR_UNK_4135
+    is 8). None for a step of no variants, or when the save cannot tell
+    (the rival's team, by a starter no variable keeps)."""
+    variants = step.get("variants") or []
+    plain = [key for key, needs in variants if not needs]
+    return next((key for key, needs in variants if needs and all(_need_met(save, n) for n in needs)),
+                plain[0] if len(plain) == 1 else None)
 
 
 def _step(step_id):
@@ -5313,7 +5376,7 @@ def main():
         print(f"story step {step_id}: {len(writes)} writes")
 
     if args.before:
-        place = next((p for p in story_places() if args.before in (p["key"], p["trainer_const"])), None)
+        place = next((p for p in story_places() if args.before in (p["key"], p["trainer_const"], *p["variants"])), None)
         if place is None:
             raise SystemExit(f"--before: nobody runs {args.before} (story_places)")
         names = _script_names()[0]
