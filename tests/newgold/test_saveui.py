@@ -986,7 +986,8 @@ class SaveUiTests(unittest.TestCase):
         """The places' words say what is there: the Champion is no Elite
         Four member, the Fighting Dojo's leaders are rematches and the gym
         trainers who fight from a talk (Fuchsia's, Blaine's quiz) a group of
-        their own, a scene on entering is told from its person (the two
+        their own, the rival on the way to Morty's gym not among them, a
+        scene on entering is told from its person (the two
         Kuni rows), the Pokégear map's level 0 has words, and the notes say
         "davanti alla leva" for Chuck and "chi dà la Medaglia" for the
         Rising Badge, whose places the data has as the page expects."""
@@ -995,6 +996,9 @@ class SaveUiTests(unittest.TestCase):
         self.assertEqual(sorted(str(p["via"]) for p in kuni), ["None", "frame"])
         self.assertTrue(any(p["trainer_const"] == "TRAINER_LEADER_WHITNEY_2" and not p["badge"] for p in places), "a rematch")
         self.assertTrue(any(p["badge"] == "BADGE_SOUL" and not p["trainer_const"].startswith("TRAINER_LEADER_") for p in places))
+        # The Burned Tower's rival is a step of Morty's chain, before its gate: a story moment, no gym trainer.
+        rival = next(p for p in places if p["trainer_const"] == "TRAINER_RIVAL_SILVER_8")
+        self.assertIsNone(rival["badge"])
         page = (ROOT / "tools/newgold/devkit/saveui.html").read_text()
         self.assertIn('/^TRAINER_CHAMPION_/.test(p.trainer_const) ? "Campione" : "Superquattro"', page)
         self.assertIn('isRematch(p) ? "rivincita"', page)

@@ -4994,7 +4994,8 @@ def story_places():
     the player to and the steps from there to the person (to the trigger)
     -- "kind" (battle or badge), "key" (the
     trainer or the badge), "trainer" (its name), "step" (the story step
-    whose marker it is, if one), "badge" (the gym's, if in one), "hide"
+    whose marker it is, if one), "badge" (the gym's, if in one -- not on
+    the way to it, as the Burned Tower's rival before Morty's gate), "hide"
     (the flag that hides the person, if any), "first": where a temporary
     variable the battle needs is set first on a fresh entry (Cianwood's
     winch), the place before that instead, and "via": what the player does
@@ -5009,6 +5010,9 @@ def story_places():
     VAR_SCENE_ROCKET_TAKEOVER 4): Lance, whose script tests nothing the Hall
     of Fame writes."""
     steps = {(s["script"], s["line"]): s for s in story()}
+    kinds = {s["id"]: s["kind"] for s in steps.values()}
+    way = {sid for chain in badge_chains().values()
+           for sid in chain[:next((i for i, sid in enumerate(chain) if kinds[sid] == "gate"), -1) + 1]}
     trainers, names = constants("include/constants/trainers.h", "TRAINER_"), trainer_names()
     out = []
     for map_id, row in map_table().items():
@@ -5110,7 +5114,7 @@ def story_places():
                         "trainer": names[trainers[trainer]] if trainer in trainers and trainers[trainer] < len(names) else "",
                         "trainer_const": trainer, "step": step["id"] if step else None,
                         "variants": [key for key, _ in (step or {}).get("variants", [])],
-                        "badge": (step or {}).get("badge"), "hide": hide, "walked": walk, "again": again,
+                        "badge": None if step and step["id"] in way else (step or {}).get("badge"), "hide": hide, "walked": walk, "again": again,
                         "trainers": [[t, names[trainers[t]] if trainers[t] < len(names) else t] for t in sight
                                      if t != trainer and t in trainers],
                         "via": via if first is not None else kind if kind in ("coord", "frame") else None,
