@@ -102,10 +102,15 @@ def text_data(revision):
         m = TEXT_FIELD.match(line)
         if m and current is not None and m.group(1) not in current:
             current[m.group(1)] = unescape(m.group(2))
-    # New Gold's own species says what its like says, but its name and size.
+    # New Gold's own species says what its like says, but its name and size,
+    # and its entry and category where own_species.py writes them.
     for name, own in own_species.SPECIES.items():
         found[name] = {**found[own["like"]], "name": own["name"],
                        "height": own["height_text"], "weight": own["weight_text"]}
+        if "category" in own:
+            found[name]["classification"] = own["category"]
+        if "entry" in own:
+            found[name]["pokedexEntry"] = own_entry(own["entry"])
     return found
 
 
@@ -289,6 +294,18 @@ def fit_entry(text):
         print(f"an entry needs more than {PAGES * lines} lines of the Dex's window: {text}", file=sys.stderr)
         return text
     return "\\n".join(broken)
+
+
+def own_entry(pages):
+    """An entry written as its pages (own_species.py): each broken for a
+    window as fit_entry breaks one, and each but the last filled to the
+    window's lines with empty ones, so the next starts a page of its own."""
+    lines = entry_window()[1]
+    broken = [fit_entry(page).split("\\n") for page in pages]
+    if not all(fits("\\n".join(page)) for page in broken):
+        raise SystemExit(f"a page needs more than {lines} lines of the Dex's window: {pages}")
+    filled = [page + [""] * (lines - len(page)) for page in broken[:-1]] + broken[-1:]
+    return "\\n".join(line for page in filled for line in page)
 
 
 def finish(bank, text):

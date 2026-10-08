@@ -12,7 +12,9 @@ leaves these banks as retail's; the rows past 493 are this port's own, in
 English:
 
 - an added species takes the reference's entry and category (a form, which has
-  none of its own there, takes its base's), and its name as msg_0237 has it;
+  none of its own there, takes its base's; New Gold's own species, its like's
+  or its own, as import_species_text.text_data gives them), and its name as
+  msg_0237 has it;
   an entry too wide for the Dex's window is broken again as msg_0803's is
   (import_species_text.fit_entry);
 - the egg and the bad egg are blank, and the retail alternate forms 496..507

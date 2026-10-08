@@ -13,7 +13,9 @@ from four rules:
    like's, the way a form walks as its base's, until it is in own_art.py too:
    then import_followers.py gives it a model of its own for his texture. What
    is written here for it (the name, the Dex number, the size and the size
-   page's scales) overrides the like's.
+   page's scales, and the Dex entry and category where it has them)
+   overrides the like's. An entry is written as its pages, a window of the
+   Dex each (import_species_text.own_entry).
 2. What names the species itself is its own: its Dex species, the species
    its egg hatches as (itself, not its like), its trainer seed, its cry and
    its footprint member. It evolves into nothing, and nothing into it.
