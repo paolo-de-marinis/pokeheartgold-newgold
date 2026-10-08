@@ -13,6 +13,11 @@ already compressed in exactly the form this build produces, so the conversion
 is checked both ways: a member here, converted forward, reproduces the
 reference's file byte for byte.
 
+A member is written whenever it is not the print it should be, not only when
+it is missing, so a new MEMBER_OFFSET or a print the reference redraws
+reaches the archive on the next run. Retail's members, 3 to 496, are never
+among them.
+
 Usage: import_footprints.py REFERENCE_CHECKOUT [--write]
 """
 
@@ -79,15 +84,18 @@ def their_numbers(reference, names):
     return found
 
 
-def to_png(source, destination):
-    """The reference ships the archive compressed; the converter reads the
-    format from the extension, so the member is named before it is read."""
+def to_png(source):
+    """The reference's member as this tree's PNG. The reference ships the
+    archive compressed; the converter reads the format from the extension, so
+    the member is named before it is read."""
     with tempfile.TemporaryDirectory(prefix="newgold-footprint-") as temp:
         packed = Path(temp) / "print.NCGR.lz"
         chars = Path(temp) / "print.NCGR"
+        picture = Path(temp) / "print.png"
         packed.write_bytes(Path(source).read_bytes())
         subprocess.run([GFX, packed, chars], check=True, capture_output=True)
-        subprocess.run([GFX, chars, destination, "-palette", PALETTE], check=True, capture_output=True)
+        subprocess.run([GFX, chars, picture, "-palette", PALETTE], check=True, capture_output=True)
+        return picture.read_bytes()
 
 
 def main():
@@ -133,19 +141,25 @@ def main():
             continue
         added[species] = source
 
+    # The reference's prints first: a form's is a copy of its base's, which
+    # may be one of them.
     writing, borrowed = 0, 0
-    for species in sorted(list(wanted) + list(added)):
+    for species in sorted(added) + sorted(wanted):
         target = FOOTPRINTS / f"pokefoot_{species + MEMBER_OFFSET:08d}.png"
-        if target.exists():
+        if species in added:
+            content = to_png(added[species])
+        elif wanted[species].exists() or args.write:
+            content = wanted[species].read_bytes()
+        else:
+            content = None  # its base's is one this run would write
+        if target.exists() and target.read_bytes() == content:
             continue
         if species in added:
             writing += 1
-            if args.write:
-                to_png(added[species], target)
         else:
             borrowed += 1
-            if args.write:
-                target.write_bytes(wanted[species].read_bytes())
+        if args.write:
+            target.write_bytes(content)
 
     print(f"{writing} footprints from the reference, {borrowed} borrowed for the forms")
     members = sorted(int(p.stem.split("_")[1]) for p in FOOTPRINTS.glob("pokefoot_*.png"))
