@@ -1,5 +1,5 @@
 {
-  "about": "Where six wild foes' front pictures stand over the ground line (front1.lift, as in added_fronts_stand.json). Gourgeist, which stands on its feet in the latest games' model, stands on the line as retail's grounded fronts with a medium shadow do (0), not 5 rows up. The floaters float by their height (import_sprite_offsets' float_rule: 16 rows up to 47 rows tall, a row lower for every 4 taller, 8 from 76), the reference's lift kept within 2 rows of it: Elgyem, 45 rows tall, at the reference's 17; Woobat, 36, at 18, not 29; Cofagrigus, 77 rows tall, at 10, not 12, where its lid touched the screen's top; Milcery at 19, its override (a small round blob reads as floating higher, Paolo's pick). Miraidon stands at 0, not 5, read after the Electric Terrain its Hadron Engine sets has ended (five turns of Leer), the platform back under it.",
+  "about": "Where six wild foes' front pictures stand over the ground line (front1.lift, as in added_fronts_stand.json). Gourgeist, which stands on its feet in the latest games' model, stands on the line as retail's grounded fronts with a medium shadow do (0), not 5 rows up. The floaters float by their height (import_sprite_offsets' float_rule: 16 rows up to 47 rows tall, a row lower for every 4 taller, 8 from 76), the reference's lift kept within 2 rows of it: Elgyem, 45 rows tall, at the reference's 17; Woobat, 36, at 18, not 29; Cofagrigus, 77 rows tall, at 10, not 12, where its lid touched the screen's top; Milcery at 19, its override (a small round blob reads as floating higher, Paolo's pick); Dragapult, 78 rows tall, which the reference stood on the ground, at the rule's 8, floating as Dreepy and Drakloak do. Miraidon stands at 0, not 5, read after the Electric Terrain its Hadron Engine sets has ended (five turns of Leer), the platform back under it.",
   "save": "route29-official.sav",
   "edit": ["--party", "CYNDAQUIL:46::LEER+FLAMETHROWER"],
   "hold": {"gDiagBattleSeed": 1},
@@ -18,8 +18,11 @@
             "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=892", "LEFT", "fight:0:0",
             {"expect": {"battler1.species": "SPECIES_MILCERY", "front1.lift": 19}},
             "fight", "field",
-            "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=1026", "RIGHT", "fight:1:5", "wait:60",
+            "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=911", "RIGHT", "fight:0:0",
+            {"expect": {"battler1.species": "SPECIES_DRAGAPULT", "front1.lift": 8}},
+            "fight", "field",
+            "poke:sLCRNG_State=0xbb160215", "poke:gDiagForceBattleSpecies=1026", "LEFT", "fight:1:5", "wait:60",
             {"expect": {"battler1.species": "SPECIES_MIRAIDON", "front1.lift": 0}},
             "fight", "field"],
-  "expect": {"lines": ["Gourgeist", "Elgyem", "Woobat", "Cofagrigus", "Milcery", "Miraidon"]}
+  "expect": {"lines": ["Gourgeist", "Elgyem", "Woobat", "Cofagrigus", "Milcery", "Dragapult", "Miraidon"]}
 }

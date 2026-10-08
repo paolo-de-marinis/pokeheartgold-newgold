@@ -62,8 +62,10 @@ the third the shadow (the record's last two bytes) goes with it:
   stays where it is within 2 rows of the rule's and comes to the nearer of
   those otherwise: a Woobat drawn 29 rows up floats at 18, Cofagrigus, 77
   rows tall, at 10, not 12, where its lid touched the screen's top. None
-  rises so high its top leaves the screen. OVERRIDES are the few that look
-  better in play at another lift, each with its reason.
+  rises so high its top leaves the screen. A species the reference stands
+  on the ground that floats (FLOATING) floats too, at the rule's lift:
+  Dragapult, 78 rows tall, at 8, as Dreepy and Drakloak do. OVERRIDES are the few
+  that look better in play at another lift, each with its reason.
 
 A species with a picture of its own whose record was never placed, and not
 a form taking its base's, has the medium shadow nobody chose for it. Its
@@ -109,6 +111,9 @@ GROUNDED = {"SPECIES_TIRTOUGA", "SPECIES_CLAWITZER", "SPECIES_STEENEE", "SPECIES
             "SPECIES_REVAVROOM", "SPECIES_ORTHWORM", "SPECIES_IRON_TREADS", "SPECIES_ENAMORUS_THERIAN",
             "SPECIES_TERAPAGOS_TERASTAL", "SPECIES_GOURGEIST", "SPECIES_MIRAIDON", "SPECIES_LEAVANNY",
             "SPECIES_FERROSEED", "SPECIES_FERROTHORN", "SPECIES_FLITTLE", "SPECIES_POLTCHAGEIST"}
+# Floaters the reference stands on the ground: the rule's lift, theirs being a
+# grounded one. Dragapult hovers as Dreepy and Drakloak do (Paolo, 2026-10-08).
+FLOATING = {"SPECIES_DRAGAPULT"}
 GROUNDED_TOP = 3    # retail's highest grounded front, Pikachu: over it a front floats
 # The screen row ov12 stands a front's lowest row on at an offset of 0
 # (ov07_022377F4's 50 and the frame's 39, scene.py's front_lift): a front
@@ -210,10 +215,11 @@ def float_rule(height):
 
 def float_lift(name, picture, lift):
     """A floater's lift: the reference's, brought within 2 rows of the
-    rule's for its height, or its OVERRIDES; never so high its top is cut."""
+    rule's for its height, the rule's for one in FLOATING, or its OVERRIDES;
+    never so high its top is cut."""
     height = drawn_height(picture)
     rule = float_rule(height)
-    lift = OVERRIDES.get(name, min(max(lift, rule - 2), rule + 2))
+    lift = OVERRIDES.get(name, rule if name in FLOATING else min(max(lift, rule - 2), rule + 2))
     if lift > GROUND_LINE + 1 - height:
         raise ValueError(f"{name}: {height} rows at a lift of {lift} come over the screen's top")
     return lift
@@ -257,7 +263,7 @@ def records(reference):
                 if ours and fronts.get(name, -1) >= 0:
                     struct.pack_into("<b", record, Y_OFFSET, tail[0] + ours[0] - fronts[name])
                 lift = struct.unpack_from("<b", record, Y_OFFSET)[0]
-                if picture and (lift > GROUNDED_TOP or name in OVERRIDES):
+                if picture and (lift > GROUNDED_TOP or name in OVERRIDES or name in FLOATING):
                     struct.pack_into("<b", record, Y_OFFSET, float_lift(name, picture, lift))
             record = bytes(record)
         out.append(record)
