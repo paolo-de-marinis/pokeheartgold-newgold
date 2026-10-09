@@ -19,3 +19,15 @@ SPECIES = (
     "BRAMBLIN",     # Paolo, 2026-10-08: the reference drew Bulbasaur's battle pictures for it
     "BABY_LUGIA",   # Paolo, 2026-10-07: New Gold's own; its battle pictures and follower are his
 )
+
+# The battle pictures' entry animations Paolo chose for one of these, in place
+# of the reference's (made for a picture that is not his): front, then back,
+# each (cry delay, motion, motion delay, [(pose, ticks, x shift), ...]) as
+# SpriteFrameData holds them. import_sprite_offsets.py writes them into the
+# species' record; a species not listed keeps the reference's.
+MOTIONS = {
+    # Paolo, 2026-10-09: round 19's candidates F2 and B4, Cleffa's and Pichu's
+    # squash and spring (motion 0), the wings beating, the cry at the top.
+    "BABY_LUGIA": ((11, 0, 0, [(0, 3, 0), (1, 1, 0), (0, 1, 0), (1, 1, 0), (0, 1, 0), (1, 12, 0)]),
+                   (11, 0, 0, [(0, 3, 0), (1, 1, 0), (0, 1, 0), (1, 1, 0), (0, 1, 0), (1, 12, 0)])),
+}

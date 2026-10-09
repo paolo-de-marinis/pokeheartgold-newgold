@@ -80,7 +80,9 @@ size for 71% of its 492 fronts with a shadow, and one a size off but for 7.
 A species whose pictures are Paolo's own (own_art.py) has no record the
 reference placed for them: its front stands where convert_chatgpt.py drew
 it in its frame, the offset its clearance (ov12 moves it neither up nor
-down), over a shadow centred under it and sized by the picture.
+down), over a shadow centred under it and sized by the picture. Its entry
+animations are the reference's too, unless Paolo chose others
+(own_art.MOTIONS).
 
     import_sprite_offsets.py [--reference PATH] [--write]
 """
@@ -233,6 +235,15 @@ def float_lift(name, picture, lift):
     return lift
 
 
+def motion_bytes(side):
+    """A picture's half of the record: the cry delay, the motion and its
+    delay, then ten frames of (pose, ticks, x shift, y shift), a pose of -1
+    ending the script."""
+    cry, motion, delay, frames = side
+    frames = list(frames) + [(-1, 0, 0)] * (10 - len(frames))
+    return bytes(v & 0xFF for v in (cry, motion, delay, *(v for frame in frames for v in (*frame, 0))))
+
+
 def records(reference):
     theirs = reference_records(reference)
     fronts = reference_front_heights(reference)
@@ -257,6 +268,8 @@ def records(reference):
                 record[Y_OFFSET:] = out[owner][Y_OFFSET:]
             elif name[len("SPECIES_"):] in own_art.SPECIES:
                 record[Y_OFFSET:] = struct.pack("<bbB", ours[0], 0, shadow_size(picture))
+                if name[len("SPECIES_"):] in own_art.MOTIONS:
+                    record[:Y_OFFSET] = b"".join(map(motion_bytes, own_art.MOTIONS[name[len("SPECIES_"):]]))
             elif name in GROUNDED:
                 if tail in UNPLACED:
                     record[-1] = shadow_size(picture)

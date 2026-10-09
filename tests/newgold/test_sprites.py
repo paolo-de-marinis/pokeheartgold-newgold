@@ -277,6 +277,22 @@ class OwnPicturesTests(unittest.TestCase):
         self.assertEqual(struct.unpack_from("<bbB", member, number_of("BABY_LUGIA") * offsets.RECORD + offsets.Y_OFFSET),
                          (1, 0, 3))
 
+    def test_the_entry_animations_paolo_chose_are_the_records(self):
+        """own_art.MOTIONS replaces the reference's entry animations: Baby
+        Lugia's front and back squash and spring (motion 0, the cry 11 ticks
+        in), its poses 0, 1, 0, 1, 0, 1, the script ending after six."""
+        import import_sprite_offsets as offsets
+        from wotbl import read_narc
+        member = read_narc(offsets.ARCHIVE.read_bytes())[0][0]
+        for name, sides in own_art.MOTIONS.items():
+            at = number_of(name) * offsets.RECORD
+            self.assertEqual(member[at:at + offsets.Y_OFFSET], b"".join(map(offsets.motion_bytes, sides)), name)
+        at = number_of("BABY_LUGIA") * offsets.RECORD
+        for side in (at, at + offsets.Y_OFFSET // 2):
+            self.assertEqual(member[side:side + 3], bytes([11, 0, 0]))
+            self.assertEqual([struct.unpack_from("<bBbb", member, side + 3 + 4 * k)[:2] for k in range(7)],
+                             [(0, 3), (1, 1), (0, 1), (1, 1), (0, 1), (1, 12), (-1, 0)])
+
     def test_a_record_the_reference_placed_does_not_move_the_picture(self):
         """The reference's record for Bramblin was never placed, and the path
         for those gives the same bytes today; one it placed for its
