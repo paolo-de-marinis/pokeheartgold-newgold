@@ -799,7 +799,13 @@ copia, quindi nel suo gioco si vedono (lo sforamento in memoria è di hg-engine,
 
 **Dove:** f6d878a53, 5cfd84cc7 e 8bfbf98b8. `data/Trainers.c:2329` e `:17080`.
 
-**Nel port:** tenuto com'è (56b3cfacf, 80fc2f0a1).
+**Nel port:** decisione di Paolo (10 ottobre): tornano al retail (eb6cf8314). Mikey e Peter hanno di
+nuovo il nome e tutte le frasi di hg-engine (`d0380a487`), e Peter non ha più la frase di vittoria
+che gli avevi aggiunto. Le squadre restano le tue. La correzione sta nell'importer
+(`import_trainers.RETAIL_TEXT`): vale finché i tuoi dati li chiamano Pippo Franco e Pietro
+Pacciani, e se li cambi ce lo dice. Visto in gioco: la tappa 04b del playthrough dice "You are
+challenged by Youngster Mikey!". Fino ad allora erano tenuti com'erano (56b3cfacf). I nomi da 12
+unità restano, come in hg-engine (80fc2f0a1).
 
 ---
 
