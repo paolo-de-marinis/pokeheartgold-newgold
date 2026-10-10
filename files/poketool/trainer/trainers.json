@@ -2602,7 +2602,7 @@
     {
       "type": "TRTYPE_MON",
       "class": "TRAINERCLASS_YOUNGSTER",
-      "name": "{TRNAME}Pippo Franco",
+      "name": "{TRNAME}Mikey",
       "items": [
         "ITEM_SUPER_POTION"
       ],
@@ -2629,15 +2629,15 @@
       "messages": [
         {
           "type": "TRMSG_INTRO",
-          "message": "Mi scappa la pip\u00ec, pap\u00e0!\\r"
+          "message": "You\u2019re a Pok\u00e9mon Trainer, right?\\nThen you have to battle!\\r"
         },
         {
           "type": "TRMSG_LOSE",
-          "message": "Non mi sono vaccinato.\\nSe vuoi conosco un medico.\\n"
+          "message": "That\u2019s strange.\\nI won before.\\n"
         },
         {
           "type": "TRMSG_AFTER",
-          "message": "Non mi sono vaccinato.\\nSe hai problemi col green pass\\fti presento un medico amico mio.\\n"
+          "message": "Becoming a good Trainer is really tough.\\nI\u2019m going to battle other people to\\fget better.\\n"
         }
       ]
     },
@@ -19370,7 +19370,7 @@
     {
       "type": "TRTYPE_MON",
       "class": "TRAINERCLASS_BIRD_KEEPER_GS",
-      "name": "{TRNAME}Pietro Pacciani",
+      "name": "{TRNAME}Peter",
       "items": [
         "ITEM_SUPER_POTION"
       ],
@@ -19413,15 +19413,11 @@
       "messages": [
         {
           "type": "TRMSG_INTRO",
-          "message": "Se nel mondo ci fosse un po\u2019 di bene\\ne ognun si considerasse suo fratello,\\rci sarebbe meno pensieri e meno pene\\ne il mondo ne sarebbe assai piu\u2019 bello.\\r"
+          "message": "That Badge!\\rIt\u2019s from Violet City!\\nYou beat Falkner?\\r"
         },
         {
           "type": "TRMSG_LOSE",
-          "message": "Un\u2019ultima parola: viva il Duce,\\nil lavoro e la liberta\u2019!\\rRitorneremo!\\n"
-        },
-        {
-          "type": "TRMSG_WIN",
-          "message": "Possi parla da i\u2019banco?\\n"
+          "message": "I know what my weaknesses are.\\n"
         },
         {
           "type": "TRMSG_AFTER",

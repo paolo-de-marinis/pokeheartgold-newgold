@@ -75,11 +75,15 @@ def generate(revision):
     trainers = [blocks[i + 1] for i in range(1, len(blocks), 2)]
     if [int(blocks[i]) for i in range(1, len(blocks), 2)] != list(range(len(trainers))):
         raise SystemExit(f"{revision}: trainers are not 0..{len(trainers) - 1} in order")
+    # Mikey #47 and Peter #383 named and speaking as retail does, while his
+    # data still calls them Pippo Franco and Pietro Pacciani: the correction
+    # import_trainers.py makes (RETAIL_TEXT). KONEFR-NOTES.md, Testi 3.
+    trainers = [import_trainers.retail_text(index, block) for index, block in enumerate(trainers)]
 
     names = [msg_cat(c_string(re.search(r"\.name\s*=\s*" + STRING, block)[1])) for block in trainers]
     texts = [[(kind, msg_cat(c_string(text))) for kind, text in
               re.findall(r"\.type\s*=\s*(\w+),\s*\.text\s*=\s*" + STRING, block)] for block in trainers]
-    if sum(map(len, texts)) != source.count(".type = TRMSG_"):
+    if sum(map(len, texts)) != sum(block.count(".type = TRMSG_") for block in trainers):
         raise SystemExit(f"{revision}: a text entry this reader does not understand")
     # A double battle prints its trainer's defeat line from TRMSG_DBL_LOSE_1
     # (subscript_0004_BattleWin.s), and hg-engine's rule for a double without

@@ -1,5 +1,5 @@
 {
-  "about": "The playthrough from Route 30, just north of Joey, to Violet City's Pokemon Center. Youngster Mikey, konefr's 'Pippo Franco', and his Hoothoot beat the Cyndaquil, come on from Joey's battle with what it had left, until it has level 10, the cap until Sprout Tower, and Ember: each time it blacks out to Cherrygrove and walks back through the grass, and at 10 it wins (on 9e2956609's ROM he wins twice, at levels 8 and 9, 33559 frames in all; where the leg was written, once; played by round 16's gym.py, the Cyndaquil lost four times and beat him at the fifth, at 9: the leg takes 9 or 10); the mother's call where Route 30 meets 31 (FLAG_TALKED_TO_MOM_AFTER_NAMING_RIVAL). At the cap a wild battle gives the Cyndaquil nothing, so from Route 31 on it runs from every one (flee:100) to Violet City and its Pokemon Center, where the game saves. The field's RNG is pinned and the battle's seed fixed.",
+  "about": "The playthrough from Route 30, just north of Joey, to Violet City's Pokemon Center. Youngster Mikey (konefr's party, retail's name and lines) and his Hoothoot beat the Cyndaquil, come on from Joey's battle with what it had left, until it has level 10, the cap until Sprout Tower, and Ember: each time it blacks out to Cherrygrove and walks back through the grass, and at 10 it wins (on 9e2956609's ROM he wins twice, at levels 8 and 9, 33559 frames in all; where the leg was written, once; played by round 16's gym.py, the Cyndaquil lost four times and beat him at the fifth, at 9: the leg takes 9 or 10); the mother's call where Route 30 meets 31 (FLAG_TALKED_TO_MOM_AFTER_NAMING_RIVAL). At the cap a wild battle gives the Cyndaquil nothing, so from Route 31 on it runs from every one (flee:100) to Violet City and its Pokemon Center, where the game saves. The field's RNG is pinned and the battle's seed fixed.",
   "from": "playthrough_04_route_30",
   "hold": {
     "gDiagBattleSeed": 1
@@ -33,8 +33,8 @@
     "party": 1,
     "music": "SEQ_GS_POKESEN",
     "lines": [
-      "You are challenged by Youngster Pippo Franco!",
-      "You defeated Youngster Pippo Franco!"
+      "You are challenged by Youngster Mikey!",
+      "You defeated Youngster Mikey!"
     ]
   }
 }

@@ -893,7 +893,9 @@ class TrainerTests(unittest.TestCase):
         and one that does not fit is not copied at all: 'You defeated' then
         read whatever the stack held. Retail's eight units hold ten packed
         characters; konefr's Pippo Franco is nine units and the terminator,
-        Pietro Pacciani ten and it. The record keeps retail's layout."""
+        Pietro Pacciani ten and it -- his names, Mikey and Peter's again
+        here, but the twelve units are hg-engine's. The record keeps
+        retail's layout."""
         units, name, win, size = trainer_layout()
         self.assertEqual((name, win, size), (0x14, 0x24, 0x34))
         init = function((ROOT / "src/trainer_data.c").read_text(), "EnemyTrainerSet_Init")
@@ -918,35 +920,46 @@ class TrainerTests(unittest.TestCase):
         self.assertIsNotNone(rule, "no rule makes $(TRNAME_GMM)")
         self.assertLessEqual({"$(TRAINER_JSON)", "$(TRNAME_TEMPLATE)"}, set(rule.group(1).split()))
 
-    def test_konefr_s_names_and_lines(self):
-        """New Gold: Youngster Mikey and Bird Keeper Peter as konefr renamed
-        them, their lines where his trtbl map puts them -- with the win line
-        he gave Peter inserted as row 661 and everything after it one along.
-        hg-engine's Mikey and Peter are the engine layer, the commit before
-        his text."""
-        self.assertEqual(self.trainers[47]["name"], "{TRNAME}Pippo Franco")
-        self.assertEqual(self.trainers[383]["name"], "{TRNAME}Pietro Pacciani")
+    def test_mikey_and_peter_are_retail_s_with_konefr_s_parties(self):
+        """konefr renamed Youngster Mikey #47 "Pippo Franco" and Bird Keeper
+        Peter #383 "Pietro Pacciani" as jokes and gave them Italian lines,
+        Peter a win line retail does not have. Paolo, 2026-10-10: both back
+        to retail (import_trainers.RETAIL_TEXT). Their names and lines are
+        the engine's, where its trtbl map puts them -- Peter's three rows
+        from 659, bank 728 as long as the engine's -- and their parties his."""
+        self.assertEqual(self.trainers[47]["name"], "{TRNAME}Mikey")
+        self.assertEqual(self.trainers[383]["name"], "{TRNAME}Peter")
+        self.assertEqual([m["species"] for m in self.trainers[47]["party"]], ["SPECIES_HOOTHOOT", "SPECIES_SENTRET"])
         lines = [row["text"] for row in gmm.read(728)]
-        self.assertEqual(len(lines), 1718)
-        self.assertEqual(lines[649], "Mi scappa la pipì, papà!\\r")
-        self.assertEqual(lines[662], "I should train again at the Gym in\\nViolet City.\\n")
+        self.assertEqual(len(lines), 1717)
+        self.assertEqual(lines[649], "You’re a Pokémon Trainer, right?\\nThen you have to battle!\\r")
+        self.assertEqual(lines[659:662], ["That Badge!\\rIt’s from Violet City!\\nYou beat Falkner?\\r",
+                                          "I know what my weaknesses are.\\n",
+                                          "I should train again at the Gym in\\nViolet City.\\n"])
         trtbl = wotbl.read_narc((ROOT / "files/poketool/trmsg/trtbl.narc").read_bytes())[0][0]
-        self.assertEqual(struct.unpack_from("<HH", trtbl, 4 * 649), (47, 0))     # TRMSG_INTRO
-        self.assertEqual(struct.unpack_from("<HH", trtbl, 4 * 661), (383, 20))   # TRMSG_WIN, his
-        self.assertEqual(struct.unpack_from("<HH", trtbl, 4 * 662), (383, 2))    # TRMSG_AFTER
+        rows = [struct.unpack_from("<HH", trtbl, at) for at in range(0, len(trtbl), 4)]
+        self.assertEqual(rows[649:652], [(47, 0), (47, 1), (47, 2)])        # TRMSG_INTRO, LOSE, AFTER
+        self.assertEqual(rows[659:662], [(383, 0), (383, 1), (383, 2)])
+        self.assertNotIn((383, 20), rows)                                   # his TRMSG_WIN
+        if REFERENCE is not None:
+            engine = import_trainer_text.generate(gmm.ENGINE)[1]
+            for index in (47, 383):
+                self.assertEqual([{"type": kind, "message": text} for trainer, kind, text in engine if trainer == index],
+                                 self.trainers[index]["messages"])
 
     @unittest.skipIf(REFERENCE is None, "the reference checkout is not here")
     def test_the_text_is_what_the_generator_makes_at_new_gold(self):
         """import_trainer_text.py is trainerdatagen and msg_cat.py again; at
         ccf2c9f5 it reproduces every name, bank 728 and both map archives, and
-        at d0380a487 it differs only in konefr's three trainers."""
+        at d0380a487 it differs in no name: the two konefr renamed are
+        retail's again (RETAIL_TEXT)."""
         names, rows, trtbl, trtblofs = import_trainer_text.generate(gmm.NEWGOLD)
         self.assertEqual([trainer["name"] for trainer in self.trainers], ["{TRNAME}" + name for name in names])
         self.assertEqual([row["text"] for row in gmm.read(728)], [gmm.escape(text) for _, _, text in rows])
         self.assertEqual((ROOT / "files/poketool/trmsg/trtbl.narc").read_bytes(), wotbl.build_narc([trtbl], 4))
         self.assertEqual((ROOT / "files/poketool/trmsg/trtblofs.narc").read_bytes(), wotbl.build_narc([trtblofs], 4))
         engine_names = import_trainer_text.generate(gmm.ENGINE)[0]
-        self.assertEqual({i for i, (a, b) in enumerate(zip(engine_names, names)) if a != b}, {47, 383})
+        self.assertEqual(engine_names, names)
 
 if __name__ == "__main__":
     unittest.main()

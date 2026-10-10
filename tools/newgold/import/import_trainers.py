@@ -28,6 +28,8 @@ import re
 import sys
 from pathlib import Path
 
+import gmm
+
 ROOT = Path(__file__).resolve().parents[3]
 TRAINERS = ROOT / "files/poketool/trainer/trainers.json"
 
@@ -163,6 +165,37 @@ def azalea_silver(party, croconaw):
     return [dict(m, level=22, difficulty=100) if m["species"] == "SPECIES_LARVITAR" else m for m in party]
 
 
+# Youngster #47 on Route 30 and Bird Keeper #383 on Route 32, retail's Mikey
+# and Peter, are konefr's jokes, in Italian. f6d878a53 renamed Mikey "Pippo
+# Franco" and wrote his lines, two of them on not being vaccinated and the
+# green pass (data/Trainers.c:2329 at 8fe483d5a), and 5cfd84cc7 retuned his
+# party under that name; 8bfbf98b8 renamed Peter "Pietro Pacciani" and gave
+# him a poem, a "viva il Duce" and a win line quoting the trial, his
+# after-battle line left retail's (:17350). Paolo, 2026-10-10: both go back to
+# retail. While his data still calls them so, the name and every .text entry,
+# types and order, are the engine's (d0380a487) for the same index; the party
+# stays his. import_trainer_text.py reads the same correction. KONEFR-NOTES.md,
+# Testi 3.
+RETAIL_TEXT = {47: "Pippo Franco", 383: "Pietro Pacciani"}
+
+
+@functools.lru_cache(maxsize=1)
+def engine_entries():
+    return blocks(gmm.git_show(gmm.ENGINE, "data/Trainers.c"))
+
+
+def retail_text(index, block):
+    """A trainer's block with RETAIL_TEXT's correction: the engine's .name and
+    .text in his block while it still has his joke name, his block as it is
+    otherwise."""
+    name = re.search(r'\.name\s*=\s*"([^"]*)"', block).group(1)
+    if RETAIL_TEXT.get(index) != name:
+        return block
+    engine = engine_entries()[index]
+    retail = re.search(r'\.name\s*=\s*"([^"]*)"', engine).group(1)
+    return block.replace(section(block, "text"), section(engine, "text")).replace(f'"{name}"', f'"{retail}"', 1)
+
+
 def battle_type(index, block):
     """A trainer's .battleType, with konefr's no-partner slips corrected."""
     name = re.search(r"\.battleType\s*=\s*(\w+)", block).group(1)
@@ -259,9 +292,12 @@ def flag_values(reference):
 
 
 def entries(reference):
-    source = (reference / "data/Trainers.c").read_text(errors="replace")
-    blocks = re.split(r"\n\s*\[(\d+)\] = \{", source)
-    return {int(blocks[i]): blocks[i + 1] for i in range(1, len(blocks), 2)}
+    return blocks((reference / "data/Trainers.c").read_text(errors="replace"))
+
+
+def blocks(source):
+    parts = re.split(r"\n\s*\[(\d+)\] = \{", source)
+    return {int(parts[i]): parts[i + 1] for i in range(1, len(parts), 2)}
 
 
 def section(block, name):
@@ -405,7 +441,9 @@ def main():
             continue
         block = table[index]
         try:
-            wanted = translate(block, flags, types)
+            wanted = translate(retail_text(index, block), flags, types)
+            if index in RETAIL_TEXT and retail_text(index, block) == block and block != engine_entries()[index]:
+                stale.append(f"{index}: not {RETAIL_TEXT[index]} any more (RETAIL_TEXT)")
             if index in FIRST_SILVER:
                 his = translate(table[FIRST_SILVER[index]], flags, types)
                 if (not wanted["items"] and his["type"] == wanted["type"]
